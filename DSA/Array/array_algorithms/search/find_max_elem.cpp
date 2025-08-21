@@ -1,15 +1,18 @@
 #include <vector>
 
+
 template< typename T>
-T max_elem( std::vector<T>& array ){
+T find_elem( std::vector<T>& array, bool (*cmpr)( T, T ) ){
     
     if( array.empty() ){
-        throw std::out_of_range();
+        throw std::out_of_range( "The array is emtpy." );
     }
-    T max = array[0];
 
+    T result = array[0];
     for( const auto& item: array ){
-        max = ( max < item ) ? item : max ;    
+        if( compr( result, item ) ){
+            result = item;
+        }   
     }
-    return max;
+    return result;
 };

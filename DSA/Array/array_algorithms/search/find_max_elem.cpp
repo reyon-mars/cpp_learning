@@ -1,7 +1,7 @@
 #include <vector>
 
 template< typename T>
-T max_elem( std::vector<T> array ){
+T max_elem( std::vector<T>& array ){
     
     if( array.empty() ){
         throw std::out_of_range();

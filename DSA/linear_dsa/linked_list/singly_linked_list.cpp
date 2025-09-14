@@ -2,7 +2,7 @@
 
 class list{
   public:
-    list() : head( nullptr ) {};
+    list() : head( nullptr ), tail( nullptr ) {};
     
 
   private:
@@ -13,4 +13,5 @@ class list{
     };
 
     Node* head;
-}
+    Node* tail;
+};

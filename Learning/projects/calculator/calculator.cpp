@@ -15,7 +15,7 @@ int power( int a , int b ){
 }
 
 unsigned long long factorial( int a ) {
-    using long long result = 1;
+    unsigned long long result = 1;
     for( int i = 2; i <= a; i++ ){
         result *= i;
     }

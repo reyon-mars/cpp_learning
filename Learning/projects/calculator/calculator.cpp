@@ -14,6 +14,14 @@ int power( int a , int b ){
     return power( a, b-1 ) * a;
 }
 
+unsigned long long factorial( int a ) {
+    using long long result = 1;
+    for( int i = 2; i <= a; i++ ){
+        result *= i;
+    }
+    return result;
+}
+
 
 int main(){
 

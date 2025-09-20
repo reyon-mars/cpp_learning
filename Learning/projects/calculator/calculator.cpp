@@ -14,9 +14,12 @@ int power( int a , int b ){
     return power( a, b-1 ) * a;
 }
 
-unsigned long long factorial( int a ) {
+unsigned long long factorial( int a ) 
+{
+    if( a > 20 ) throw std::out_of_range();
     unsigned long long result = 1;
-    for( int i = 2; i <= a; i++ ){
+    for( int i = 2; i <= a; i++ )
+    {
         result *= i;
     }
     return result;

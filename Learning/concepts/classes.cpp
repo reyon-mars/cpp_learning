@@ -100,5 +100,4 @@ int main( void ) {
   DoIt( class_object );
 
   return 0;
-
 }

@@ -1,7 +1,6 @@
 #include <iostream>
 typedef char string[100];
 
-
 void strcpy( const char *str, char *dest ){
     int i = 0;    
     for( ; str[i] != '\0' && i < 100; i++ ){
@@ -9,7 +8,6 @@ void strcpy( const char *str, char *dest ){
     }
     dest[i] = '\0';
 }
-
 
 int sterlen( const char* str ){
     int size(0);

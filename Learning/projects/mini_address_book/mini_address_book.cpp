@@ -44,8 +44,6 @@ int curr_arr_size(0);
 int main(){
     std::cout << "Contact list" << "\n";
     
-    
-
     while( true ){
         int option(0);
         std::cout << "Please select an option: " << "\n";

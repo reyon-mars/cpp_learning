@@ -66,6 +66,7 @@ void DoIt( const Class &c ){
 }
 
 int main( void ) {
+  
   Pet* pet1 = new Cat("Tom");
   Pet* pet2 = new Dog("Huckelberry");
   Cat* cat1 = new Cat("Oreo");

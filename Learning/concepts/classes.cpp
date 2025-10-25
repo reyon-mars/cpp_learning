@@ -6,11 +6,13 @@ using namespace std;
 class Animal{
   protected:
     string name;
+
   public:
     Animal( string name ) : name(name){ MakeSound();}
     virtual void MakeSound( void ) { cout << name << " is Making a sound " << endl; } // defining a virtual function
     void WakeUp( void ) { cout << name << " just woke up "; MakeSound(); return ; } // invoking the virtual method from within the class
 };
+
 // Defining a base class called Pet
 class Pet {
   protected:
@@ -21,6 +23,7 @@ class Pet {
     void MakeSound( void ) { cout << name << " is making sound " << endl; }
     void WakeUp( void ) { MakeSound(); return; }
 };
+
 // Creating a child class called Cat , inheriting from the base parent class Pet with public visibility
 class Cat: public Pet {
   public:

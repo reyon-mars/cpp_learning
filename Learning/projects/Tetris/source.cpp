@@ -1,6 +1,7 @@
 #include <iostream>
 
 std::wstring tetromino[7];
+
 int nFieldWidth = 12;
 int nFieldHeight  = 18;
 unsigned char *pField = nullptr;

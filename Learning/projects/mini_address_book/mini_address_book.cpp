@@ -3,6 +3,7 @@
 #include <string>
 
 struct Contact{
+
     std::string name;
     int phone_number;
     std::string email;
@@ -21,6 +22,7 @@ struct Contact{
 };
 
 Contact& search_contact( const std::array<Contact, 10> contact_list, const std::string name ){
+    
     for( int i = 0; i < 10; i++ ){
         if( contact_list[i].name == name ){
             return &contact_list[i];

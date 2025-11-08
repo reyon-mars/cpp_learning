@@ -17,6 +17,7 @@ class Animal{
 class Pet {
   protected:
     string name; // creating a protected attribute to allow inheritance but keeping the data hidden
+
   public:
     Pet(string n) : name(n) {}; // Defining a constructor to initialize the name attribute during the object creation
     void Run( void ){ cout << name << " is running" << endl; } // Run Action of the pet
@@ -51,6 +52,7 @@ class Class{
     friend void DoIt( const Class &c ); // declaring a friend function
     int data;
     string name;
+
   private:
     void print( void ) const{ cout << "Friend and Class are friends forever " << data << name << endl; }
 };

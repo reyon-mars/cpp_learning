@@ -11,6 +11,8 @@ std::string replace_idx( std::string& s, const std::string& old_val, const std::
 
 
 int main() {
+    std::string prefix = "mr";
+    std::string suffix = "smith";
     std::string text = "Hello Mars";
     replace_idx(text, "Mars", "World");
     std::cout << text << '\n';  // Output: Hello World

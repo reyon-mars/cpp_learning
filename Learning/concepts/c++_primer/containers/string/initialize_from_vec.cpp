@@ -4,6 +4,8 @@
 
 int main ( void ){
     std::vector<char> v;
+
+    std::string str_v( v.begin(), v.end() );
     std::string str;
 
 

@@ -15,5 +15,5 @@ void log_msg_( std::string tag , std::string msg )
 
 
 int main ( void ){
-    
+    return 0;
 }

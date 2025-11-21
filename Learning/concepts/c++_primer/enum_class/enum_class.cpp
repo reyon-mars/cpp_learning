@@ -45,8 +45,8 @@ void describe( Vehicle v ){
     }
 }
 
-int main( void ){
-    
+int main( void )
+{    
 
     Animal a = Animal::Cat;
     Vehicle v  = Vehicle::Car;

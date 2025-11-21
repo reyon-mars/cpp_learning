@@ -13,6 +13,11 @@ auto sum_vector( std::vector<int> vec ){
 int main() {
     std::vector<int> vec = {1, 2, 3, 4, 5};
 
+    // IILE ( Immediately Invoked Lambda Expressoin )
+    int x = [ vec ] ( int a, int b ){
+      return std::accumulate( vec.begin(), vec.end(), 0 ) * a * b ;
+    }( 1, 1 );
+
     auto fn = sum_vector(vec);
     int s1 = fn();   // returns 15
     int s2 = fn();   // returns 0 (vector already cleared)

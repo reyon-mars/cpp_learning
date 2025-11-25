@@ -18,5 +18,4 @@ int main ( void ){
         std::cout << "U is nullptr ";
     }
     return 0;
-
 }

@@ -12,4 +12,8 @@ class file_guard{
     ~file_guard(){
         f_handle.close();
     }
+
+    file_guard( const file_guard& rhs ) = delete;
+
+    file_guard& operator=( const file_guard& rhs ) = delete;
 }

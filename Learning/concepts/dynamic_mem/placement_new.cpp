@@ -22,6 +22,7 @@ int main( void ) {
     
     obj1->~base();
     obj2->~base();
+    delete[] memory;
 
     return 0;
 }

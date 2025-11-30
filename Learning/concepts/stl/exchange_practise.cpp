@@ -20,7 +20,7 @@ class counter{
 int main ( void ){
 
     counter countr;
-    for( int i = 0; i < 100; i++ ){
+    for( int i = 1; i < 100; i++ ){
         std::cout << countr.increment( i ) << " ";
     }
     std::cout << countr.reset(); 

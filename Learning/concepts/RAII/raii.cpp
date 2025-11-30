@@ -6,14 +6,22 @@ class file_guard{
     std::fstream f_handle;
 
     public:
-    file_guard( std::string filename ){
-        f_handle = std::fstream.open( filename.cstr() , std::input );
+    explicit file_guard ( const std::string& filename ) : f_handle( filename, std::ios::in ) 
+    {
+        if( !( f_handle.is_open() ) ){
+            throw std::runtime_error( "Failed to open " + filename );
+        }   
     }
     ~file_guard(){
-        f_handle.close();
+        if( f_handle.is_open() ){
+            f_handle.close();
+        }
     }
 
-    file_guard( const file_guard& rhs ) = delete;
+    file_guard( const file_guard& ) = delete;
+    file_guard& operator=( const file_guard&  ) = delete;
 
-    file_guard& operator=( const file_guard& rhs ) = delete;
-}
+    std::fstream& get(){ return f_handle; }
+
+    
+};

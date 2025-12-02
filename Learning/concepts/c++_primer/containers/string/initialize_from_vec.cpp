@@ -23,6 +23,26 @@ int main ( void ){
     std::cout << "\nString created using constructor: " << str_v << std::endl;
     // --------------------
 
+    // ---------- MORE ADDED CODE BELOW ----------
+    
+    // print size of vector
+    std::cout << "Vector size: " << v.size() << std::endl;
+
+    // append another character
+    v.push_back('~');
+    std::cout << "After adding '~', vector size: " << v.size() << std::endl;
+
+    // print updated vector as string
+    std::string updated(v.begin(), v.end());
+    std::cout << "Updated string: " << updated << std::endl;
+
+    // reverse print
+    std::cout << "Reverse: ";
+    for(auto it = v.rbegin(); it != v.rend(); ++it)
+        std::cout << *it;
+    std::cout << std::endl;
+
+    // ------------------------------------------
+
     return 0;
 }
-

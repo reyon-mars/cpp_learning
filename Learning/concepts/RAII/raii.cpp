@@ -25,3 +25,9 @@ class file_guard{
 
     
 };
+
+int main ( void ) {
+    file_guard fg_;
+    return 0;
+    
+}

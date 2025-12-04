@@ -47,13 +47,38 @@ void describe( Vehicle v ){
 
 int main( void )
 {    
-
     Animal a = Animal::Cat;
     Vehicle v  = Vehicle::Car;
 
     describe( a );
     describe( v );
 
+    // -----------------------------
+    // EXTRA ADDED CODE BELOW
+    // -----------------------------
+
+    enum class Food : u_int8_t {
+        Pizza,
+        Burger,
+        Sushi
+    };
+
+    auto describe = [](Food f){
+        switch(f){
+            case Food::Pizza:
+                std::cout << "Pizza is cheesy!" << '\n';
+                break;
+            case Food::Burger:
+                std::cout << "Burger is juicy!" << '\n';
+                break;
+            case Food::Sushi:
+                std::cout << "Sushi is fresh!" << '\n';
+                break;
+        }
+    };
+
+    Food myFood = Food::Pizza;
+    describe(myFood);
+
     return 0;
-    
 }

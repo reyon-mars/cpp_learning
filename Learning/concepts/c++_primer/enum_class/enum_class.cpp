@@ -12,7 +12,6 @@ enum class Vehicle : u_int8_t{
     Bus
 };
 
-
 void describe( Animal a ){
     switch( a ){
         case Animal::Cat:
@@ -79,6 +78,33 @@ int main( void )
 
     Food myFood = Food::Pizza;
     describe(myFood);
+
+    // ---------------------------------
+    // MORE EXTRA ADDED CODE (NEW PART)
+    // ---------------------------------
+
+    enum class Color : u_int8_t {
+        Red,
+        Green,
+        Blue
+    };
+
+    auto describeColor = [](Color c){
+        switch(c){
+            case Color::Red:
+                std::cout << "Red is vibrant!" << '\n';
+                break;
+            case Color::Green:
+                std::cout << "Green is peaceful!" << '\n';
+                break;
+            case Color::Blue:
+                std::cout << "Blue is calming!" << '\n';
+                break;
+        }
+    };
+
+    Color favorite = Color::Blue;
+    describeColor(favorite);
 
     return 0;
 }

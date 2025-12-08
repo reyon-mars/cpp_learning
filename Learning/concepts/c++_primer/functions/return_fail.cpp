@@ -23,3 +23,27 @@ int runExtra() {
 
 // Even though main returns -1 and ends, this code still exists in the file.
 int _ = runExtra();  // Executes extra code before main
+
+
+
+// ==========================================
+// MORE EXTRA CODE ADDED (still not modifying anything)
+// ==========================================
+
+class ExtraClass {
+public:
+    ExtraClass() {
+        std::cout << "ExtraClass constructor running!" << std::endl;
+    }
+    void show() {
+        std::cout << "ExtraClass method executed!" << std::endl;
+    }
+};
+
+ExtraClass globalExtraObj;  // Runs before main()
+
+void extraMore() {
+    std::cout << "Another extra function executed!" << std::endl;
+}
+
+int __ = (extraMore(), 0); // Executes before main()

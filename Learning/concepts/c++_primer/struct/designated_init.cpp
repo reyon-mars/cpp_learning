@@ -30,3 +30,28 @@ int main ( void ){
     std::cout << "Publisher: " << b2.publisher << std::endl;
 
 }
+
+// --------------------------------------------
+// EXTRA CODE ADDED BELOW (original unchanged)
+// --------------------------------------------
+
+void printBook(const Book& b) {
+    std::cout << "\n[Extra] Book Info:\n";
+    std::cout << "Name: " << b.name << "\n";
+    std::cout << "ISBN: " << b.ISBN_NO << "\n";
+    std::cout << "Publisher: " << b.publisher << "\n";
+}
+
+Book createSampleBook() {
+    return Book{
+        .name = "Clean Code",
+        .ISBN_NO = 10101,
+        .publisher = "Prentice Hall"
+    };
+}
+
+int _ = [](){
+    Book sample = createSampleBook();
+    printBook(sample);
+    return 0;
+}();

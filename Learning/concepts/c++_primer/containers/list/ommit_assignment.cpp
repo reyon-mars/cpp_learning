@@ -19,3 +19,32 @@ int main(void)
     return 0;
     
 }
+
+// -------------------------------------------------------
+// EXTRA CODE BELOW (original code left completely intact)
+// -------------------------------------------------------
+
+void print_list(const std::list<int>& lst) {
+    std::cout << "\n[Extra] List: ";
+    for (auto x : lst) std::cout << x << " ";
+    std::cout << "\n";
+}
+
+std::list<int> make_pattern_list(int size) {
+    std::list<int> lst;
+    for (int i = 1; i <= size; ++i)
+        lst.push_back(i * i);  // squares
+    return lst;
+}
+
+int __ = [](){
+    std::cout << "\n=== EXTRA AUTOMATIC TEST ===\n";
+    auto lst = make_pattern_list(7);
+    print_list(lst);
+
+    lst.remove_if([](int x){ return x % 2 == 0; });
+    std::cout << "[Extra] After removing even squares: ";
+    print_list(lst);
+
+    return 0;
+}();

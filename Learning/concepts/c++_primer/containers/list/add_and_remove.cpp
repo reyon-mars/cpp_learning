@@ -20,3 +20,32 @@ int main( void ){
     std::cout << std::endl;
     return 0;
 }
+
+// --------------------------------------------------------
+// EXTRA CODE ADDED BELOW (original code remains unchanged)
+// --------------------------------------------------------
+
+void printList(const std::list<int>& L) {
+    std::cout << "[Extra] List: ";
+    for (auto v : L) std::cout << v << " ";
+    std::cout << "\n";
+}
+
+std::list<int> makeList(int start, int end) {
+    std::list<int> L;
+    for (int i = start; i <= end; ++i)
+        L.push_back(i);
+    return L;
+}
+
+int __ = [](){
+    std::list<int> extraList = makeList(10, 20);
+    printList(extraList);
+
+    // Modify the list a bit
+    extraList.remove_if([](int x){ return x % 3 == 0; });
+    std::cout << "[Extra] After removing multiples of 3: ";
+    printList(extraList);
+
+    return 0;
+}();

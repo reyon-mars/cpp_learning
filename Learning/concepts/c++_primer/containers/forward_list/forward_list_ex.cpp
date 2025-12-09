@@ -23,3 +23,27 @@ int main ( void ){
 
     return 0;
 }
+
+// ----------------------------------------------------
+// EXTRA CODE ADDED BELOW (original code untouched)
+// ----------------------------------------------------
+
+void print_forward_list(const std::forward_list<int>& fl) {
+    std::cout << "\n[Extra] List contents: ";
+    for (auto e : fl) std::cout << e << " ";
+    std::cout << std::endl;
+}
+
+std::forward_list<int> generate_list(int n) {
+    std::forward_list<int> lst;
+    for (int i = n; i >= 1; --i)
+        lst.push_front(i); // push_front builds in reverse order
+    return lst;
+}
+
+// Auto-run extra code before main() executes
+int _ = [](){
+    std::forward_list<int> lst = generate_list(10);
+    print_forward_list(lst);
+    return 0;
+}();

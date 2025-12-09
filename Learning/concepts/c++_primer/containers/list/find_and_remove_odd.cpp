@@ -63,3 +63,23 @@ int main() {
 
     return 0;
 }
+
+// ------------------------------------------------
+// EXTRA ADDED CODE BELOW (original code untouched)
+// ------------------------------------------------
+
+std::forward_list<int> generate_random_list(int n) {
+    std::forward_list<int> lst;
+    for (int i = n; i >= 1; --i)
+        lst.push_front((i * 7) % 13); // some pattern-based pseudo-random numbers
+    return lst;
+}
+
+void test_random_list() {
+    auto lst = generate_random_list(10);
+    std::cout << "\n[Extra] Random list: ";
+    print_list(lst);
+
+    find_and_remove_odd(lst);
+
+    std::cout << "[Extra] After removing

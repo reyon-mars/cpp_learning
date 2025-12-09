@@ -46,3 +46,29 @@ int __ = [](){
     print_series(10);
     return 0;
 }();
+
+// ----------------------------------------------------
+// ADDITIONAL EXTRA CODE (still NOT touching original)
+// ----------------------------------------------------
+
+int factorial(int n) {
+    int f = 1;
+    for(int i = 1; i <= n; i++)
+        f *= i;
+    return f;
+}
+
+void print_even_series(int n) {
+    std::cout << "Even numbers up to " << n << ": ";
+    for(int i = 2; i <= n; i += 2)
+        std::cout << i << " ";
+    std::cout << "\n";
+}
+
+// auto-run extra test
+int ___ = [](){
+    std::cout << "\nMore Extra:\n";
+    std::cout << "Factorial(6) = " << factorial(6) << std::endl;
+    print_even_series(20);
+    return 0;
+}();

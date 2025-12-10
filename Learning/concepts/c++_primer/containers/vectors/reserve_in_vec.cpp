@@ -19,3 +19,23 @@ int main ( void ){
 
     return 0;
 }
+
+// ---------------------------------------------------------
+// EXTRA CODE ADDED BELOW (original code untouched)
+// ---------------------------------------------------------
+
+void print_vector(const std::vector<int>& v) {
+    std::cout << "[Extra] Vector: ";
+    for (int x : v) std::cout << x << " ";
+    std::cout << "\n";
+}
+
+std::vector<int> generate_even_vector(int n) {
+    std::vector<int> v;
+    v.reserve(n);
+    for (int i = 0; i < n; i++)
+        v.push_back(i * 2);
+    return v;
+}
+
+int __ = [](){

@@ -71,7 +71,7 @@ int main() {
 std::forward_list<int> generate_random_list(int n) {
     std::forward_list<int> lst;
     for (int i = n; i >= 1; --i)
-        lst.push_front((i * 7) % 13); // some pattern-based pseudo-random numbers
+        lst.push_front((i * 7) % 13); // pattern-based pseudo-random numbers
     return lst;
 }
 
@@ -82,4 +82,12 @@ void test_random_list() {
 
     find_and_remove_odd(lst);
 
-    std::cout << "[Extra] After removing
+    std::cout << "[Extra] After removing odd numbers: ";
+    print_list(lst);
+}
+
+int ___ = [](){
+    std::cout << "\n[Extra] --- Running extra random test ---\n";
+    test_random_list();
+    return 0;
+}();

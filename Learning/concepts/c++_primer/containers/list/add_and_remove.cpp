@@ -49,3 +49,15 @@ int __ = [](){
 
     return 0;
 }();
+
+// --------------------------------------------------------
+// MORE EXTRA CODE ADDED BELOW (original + extra untouched)
+// --------------------------------------------------------
+
+std::list<int> squareList(const std::list<int>& L) {
+    std::list<int> squared;
+    for (int v : L) squared.push_back(v * v);
+    return squared;
+}
+
+void printReversed(const std::list

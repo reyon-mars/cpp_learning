@@ -49,3 +49,30 @@ int runExtraStuff() {
 
 // Automatically executed before main()
 int __dummy = runExtraStuff();
+
+// ------------------------------------------------------
+// MORE EXTRA CODE ADDED BELOW (still untouched above)
+// ------------------------------------------------------
+
+class MoreDemo {
+public:
+    void info() {
+        std::cout << "MoreDemo class executing additional logic!" << std::endl;
+    }
+};
+
+MoreDemo globalMoreDemo;
+
+void printBanner() {
+    std::cout << "=== Extra Banner ===" << std::endl;
+}
+
+int runMore() {
+    printBanner();
+    globalMoreDemo.info();
+    std::cout << "Add(10, 20) = " << add(10, 20) << std::endl;
+    return 0;
+}
+
+// Runs before main as well
+int __dummy2 = runMore();

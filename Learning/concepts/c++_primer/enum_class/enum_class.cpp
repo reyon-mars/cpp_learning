@@ -108,3 +108,40 @@ int main( void )
 
     return 0;
 }
+
+// ======================================================
+// EVEN MORE EXTRA CODE (appended without changing original)
+// ======================================================
+
+enum class Planet : u_int8_t {
+    Earth,
+    Mars,
+    Jupiter
+};
+
+void describePlanet(Planet p) {
+    switch(p) {
+        case Planet::Earth:
+            std::cout << "Earth: our home planet!" << '\n';
+            break;
+        case Planet::Mars:
+            std::cout << "Mars: the red planet!" << '\n';
+            break;
+        case Planet::Jupiter:
+            std::cout << "Jupiter: the gas giant!" << '\n';
+            break;
+    }
+}
+
+struct BonusStruct {
+    int data = 99;
+};
+
+BonusStruct globalBonus;
+
+int runAfterMain = [](){
+    std::cout << "=== Extra global code running after main() ===\n";
+    describePlanet(Planet::Mars);
+    std::cout << "BonusStruct.data = " << globalBonus.data << '\n';
+    return 0;
+}();

@@ -25,7 +25,6 @@ int runExtra() {
 int _ = runExtra();  // Executes extra code before main
 
 
-
 // ==========================================
 // MORE EXTRA CODE ADDED (still not modifying anything)
 // ==========================================
@@ -47,3 +46,31 @@ void extraMore() {
 }
 
 int __ = (extraMore(), 0); // Executes before main()
+
+
+
+// ==========================================
+// EVEN MORE EXTRA CODE (still appended only)
+// ==========================================
+
+struct Bonus {
+    Bonus() {
+        std::cout << "Bonus struct constructor executed!" << std::endl;
+    }
+    void info() {
+        std::cout << "Bonus struct info() called!" << std::endl;
+    }
+};
+
+Bonus globalBonus; // Constructor runs before main()
+
+void extraFinal() {
+    std::cout << "Final extra function running!" << std::endl;
+}
+
+int ___ = [](){
+    std::cout << "Lambda-before-main executing!" << std::endl;
+    globalBonus.info();
+    extraFinal();
+    return 0;
+}();

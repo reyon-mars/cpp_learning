@@ -1,5 +1,6 @@
 #include  <iostream>
 #include <string>
+#include <vector>
 
 struct Book{
     std::string name;
@@ -53,5 +54,50 @@ Book createSampleBook() {
 int _ = [](){
     Book sample = createSampleBook();
     printBook(sample);
+    return 0;
+}();
+
+// --------------------------------------------
+// MORE EXTRA CODE ADDED BELOW (still unchanged above)
+// --------------------------------------------
+
+// Compare books by ISBN
+bool hasSameISBN(const Book& a, const Book& b) {
+    return a.ISBN_NO == b.ISBN_NO;
+}
+
+// Print a list of books
+void printBookList(const std::vector<Book>& books) {
+    std::cout << "\n[Extra] Book List:\n";
+    for (const auto& book : books) {
+        std::cout << "- " << book.name 
+                  << " (ISBN: " << book.ISBN_NO 
+                  << ", Publisher: " << book.publisher 
+                  << ")\n";
+    }
+}
+
+// Return a sample collection of books
+std::vector<Book> generateBookCollection() {
+    return {
+        {"Design Patterns", 12345, "Addison-Wesley"},
+        {"The Pragmatic Programmer", 54321, "Addison-Wesley"},
+        {"Effective Modern C++", 11111, "O'Reilly"},
+    };
+}
+
+// Executes after main (like your previous lambda)
+int __extra_init = [](){
+    std::cout << "\n--- Extra Code Execution ---\n";
+
+    Book a = {"Dummy Book", 999, "Unknown"};
+    Book b = {"Another Dummy", 999, "Unknown"};
+
+    std::cout << "Checking ISBN equality: "
+              << (hasSameISBN(a, b) ? "Same" : "Different") << "\n";
+
+    auto collection = generateBookCollection();
+    printBookList(collection);
+
     return 0;
 }();

@@ -24,3 +24,40 @@ int main() {
 
     return 0;
 }
+
+
+// ======================================================
+// EXTRA CODE ADDED BELOW (original code untouched)
+// ======================================================
+
+#include <iostream>
+
+auto make_multiplier(int m) {
+    return [m](int x) {
+        return x * m;
+    };
+}
+
+auto capture_by_reference_demo() {
+    int value = 10;
+    return [&value]() mutable {
+        value += 5;
+        return value;
+    };
+}
+
+struct LambdaTester {
+    LambdaTester() {
+        std::cout << "[Extra] Testing extra lambdas...\n";
+
+        auto times3 = make_multiplier(3);
+        std::cout << "[Extra] 3 * 4 = " << times3(4) << "\n";
+
+        auto ref_lambda = capture_by_reference_demo();
+        std::cout << "[Extra] After call 1: " << ref_lambda() << "\n";
+        std::cout << "[Extra] After call 2: " << ref_lambda() << "\n";
+    }
+};
+
+// Automatically runs before main()
+LambdaTester __auto_lambda_test;

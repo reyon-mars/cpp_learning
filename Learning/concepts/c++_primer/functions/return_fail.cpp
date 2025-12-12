@@ -74,3 +74,50 @@ int ___ = [](){
     extraFinal();
     return 0;
 }();
+// ==========================================
+// EVEN MORE EXTRA CODE (still appended only)
+// ==========================================
+
+class PreMainWorker {
+public:
+    PreMainWorker() {
+        std::cout << "PreMainWorker constructor executed!" << std::endl;
+    }
+    void run() {
+        std::cout << "PreMainWorker::run() executing!" << std::endl;
+    }
+};
+
+PreMainWorker globalWorker; // Runs before main()
+
+int ____ = [](){
+    std::cout << "Another lambda-before-main executing!" << std::endl;
+    globalWorker.run();
+    return 0;
+}();
+
+
+// ==========================================
+// LAST EXTRA CHUNK (still appended only)
+// ==========================================
+
+namespace ExtraNamespace {
+    struct Init {
+        Init() {
+            std::cout << "ExtraNamespace::Init constructor executed!" << std::endl;
+        }
+    };
+
+    void doSomething() {
+        std::cout << "ExtraNamespace::doSomething() running!" << std::endl;
+    }
+}
+
+ExtraNamespace::Init namespaceInit; // Runs before main()
+
+int _____ = [](){
+    std::cout << "Namespace lambda-before-main executing!" << std::endl;
+    ExtraNamespace::doSomething();
+    return 0;
+}();
+

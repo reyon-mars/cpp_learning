@@ -60,4 +60,20 @@ std::list<int> squareList(const std::list<int>& L) {
     return squared;
 }
 
-void printReversed(const std::list
+void printReversed(const std::list<int>& L) {
+    std::cout << "[Extra] Reversed list: ";
+    for (auto it = L.rbegin(); it != L.rend(); ++it)
+        std::cout << *it << " ";
+    std::cout << "\n";
+}
+
+// Runs before main()
+int ___ = [](){
+    std::list<int> demo = makeList(1, 5);
+
+    auto squared = squareList(demo);
+    printList(squared);
+
+    printReversed(squared);
+    return 0;
+}();

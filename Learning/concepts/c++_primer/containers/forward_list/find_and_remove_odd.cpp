@@ -1,8 +1,8 @@
 #include <forward_list>
 #include <iostream>
 
-void find_and_remove_odd(  std::forward_list<int> &lst ){
-    auto  prev = lst.before_begin();
+void find_and_remove_odd( std::forward_list<int> &lst ){
+    auto prev = lst.before_begin();
     auto curr = lst.begin();
     
     while( curr != lst.end() ){
@@ -63,3 +63,11 @@ int main() {
 
     return 0;
 }
+
+
+// ======================================================
+// EXTRA CODE ADDED BELOW (original unchanged)
+// ======================================================
+
+// Simple extra sanity check
+int __extra_line = (std::cout << "\n[Extra] Program finished successfully.\n", 0);

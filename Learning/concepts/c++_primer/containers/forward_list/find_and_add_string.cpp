@@ -2,23 +2,22 @@
 #include <iostream>
 #include <string>
 
-void find_and_add( std::forward_list<std::string>& lst, std::string&s1, std::string& s2 ){
+void find_and_add( std::forward_list<std::string>& lst, std::string& s1, std::string& s2 ){
     auto prev = lst.before_begin();
     auto curr = lst.begin();
     
-    for( auto str: lst ){
+    for( auto str : lst ){
         if( str == s1 ){
             lst.erase_after( prev );
             lst.insert_after( prev, s2 );
             return;
         }
         prev = curr;
-        curr++;
+        ++curr;
     }
     lst.insert_after( prev, s2 );
     return;    
 }
-
 
 void print_list( std::forward_list<std::string> lst ){
     for( auto str : lst ){
@@ -26,8 +25,6 @@ void print_list( std::forward_list<std::string> lst ){
     }
     std::cout << std::endl;
 }
-
-
 
 int main(){
     using namespace std;
@@ -37,7 +34,7 @@ int main(){
     print_list(lst);
     cout << "\n";
 
-    // ✅ Case 1: Replace an element in the middle ("banana" -> "blueberry")
+    // Case 1: Replace an element in the middle
     {
         string s1 = "banana", s2 = "blueberry";
         find_and_add(lst, s1, s2);
@@ -46,7 +43,7 @@ int main(){
         cout << "\n";
     }
 
-    // ✅ Case 2: Replace the first element ("apple" -> "apricot")
+    // Case 2: Replace the first element
     {
         string s1 = "apple", s2 = "apricot";
         find_and_add(lst, s1, s2);
@@ -55,7 +52,7 @@ int main(){
         cout << "\n";
     }
 
-    // ✅ Case 3: Replace the last element ("date" -> "dragonfruit")
+    // Case 3: Replace the last element
     {
         string s1 = "date", s2 = "dragonfruit";
         find_and_add(lst, s1, s2);
@@ -64,7 +61,7 @@ int main(){
         cout << "\n";
     }
 
-    // ✅ Case 4: Add a new element (not found case)
+    // Case 4: Add a new element (not found)
     {
         string s1 = "kiwi", s2 = "kumquat";
         find_and_add(lst, s1, s2);
@@ -75,3 +72,53 @@ int main(){
 
     return 0;
 }
+
+
+// ======================================================
+// EXTRA CODE ADDED BELOW (original unchanged)
+// ======================================================
+
+bool contains(const std::forward_list<std::string>& lst, const std::string& value) {
+    for (const auto& s : lst) {
+        if (s == value) return true;
+    }
+    return false;
+}
+
+std::size_t list_size(const std::forward_list<std::string>& lst) {
+    std::size_t count = 0;
+    for (const auto& _ : lst) {
+        (void)_;
+        ++count;
+    }
+    return count;
+}
+
+struct ForwardListExtraTests {
+    ForwardListExtraTests() {
+        std::cout << "\n=== Extra forward_list tests (before main) ===\n";
+
+        std::forward_list<std::string> test = {"one", "two", "three"};
+
+        std::cout << "Initial test list: ";
+        print_list(test);
+
+        std::cout << "Contains 'two'? "
+                  << (contains(test, "two") ? "yes" : "no") << '\n';
+
+        std::cout << "Contains 'four'? "
+                  << (contains(test, "four") ? "yes" : "no") << '\n';
+
+        std::cout << "List size: " << list_size(test) << '\n';
+
+        std::string s1 = "two";
+        std::string s2 = "TWO";
+        find_and_add(test, s1, s2);
+
+        std::cout << "After replacing 'two' with 'TWO': ";
+        print_list(test);
+    }
+};
+
+// Runs before main()
+ForwardListExtraTests __forward_list_extra_tests;

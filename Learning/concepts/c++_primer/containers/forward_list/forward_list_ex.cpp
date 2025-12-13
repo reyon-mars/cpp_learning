@@ -35,4 +35,28 @@ void show_even_numbers(const std::forward_list<int>& fl) {
     std::cout << std::endl;
 }
 
-std::forward_list<int> multiply_list
+// Multiply all elements by a given factor and return a new list
+std::forward_list<int> multiply_list(const std::forward_list<int>& fl, int factor) {
+    std::forward_list<int> result;
+    auto it = result.before_begin();
+
+    for (int v : fl) {
+        it = result.insert_after(it, v * factor);
+    }
+    return result;
+}
+
+// Automatically executed before main()
+int __extra = [](){
+    std::forward_list<int> test = {2, 4, 6};
+
+    show_even_numbers(test);
+
+    auto multiplied = multiply_list(test, 3);
+    std::cout << "[Extra] Multiplied list: ";
+    for (int v : multiplied)
+        std::cout << v << " ";
+    std::cout << std::endl;
+
+    return 0;
+}();

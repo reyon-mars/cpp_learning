@@ -76,3 +76,49 @@ int runMore() {
 
 // Runs before main as well
 int __dummy2 = runMore();
+
+// ------------------------------------------------------
+// EVEN MORE EXTRA CODE (still appended only)
+// ------------------------------------------------------
+
+struct Counter {
+    Counter() {
+        std::cout << "Counter constructed before main()" << std::endl;
+    }
+    int value = 100;
+};
+
+Counter globalCounter;
+
+void showCounter() {
+    std::cout << "Global counter value = " << globalCounter.value << std::endl;
+}
+
+int __dummy3 = [](){
+    std::cout << "Lambda extra code executing!" << std::endl;
+    showCounter();
+    std::cout << "add(3, 4) = " << add(3, 4) << std::endl;
+    return 0;
+}();
+
+// ------------------------------------------------------
+// FINAL EXTRA BLOCK (no changes above)
+// ------------------------------------------------------
+
+class FinalDemo {
+public:
+    FinalDemo() {
+        std::cout << "FinalDemo constructor running!" << std::endl;
+    }
+    void run() {
+        std::cout << "FinalDemo::run() executed!" << std::endl;
+    }
+};
+
+FinalDemo finalGlobal;
+
+int __dummy4 = [](){
+    finalGlobal.run();
+    std::cout << "End of all extra code blocks." << std::endl;
+    return 0;
+}();

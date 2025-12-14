@@ -28,3 +28,25 @@ int main ( void ){
 
 }
 
+// ----------------------------------------------------
+// EXTRA CODE ADDED BELOW (original code untouched)
+// ----------------------------------------------------
+
+// Simple helper to test counter behavior
+void test_counter(counter& c) {
+    std::cout << "\n[Extra] Testing counter:\n";
+    std::cout << "Increment by 5, previous = " << c.increment(5) << '\n';
+    std::cout << "Increment by 10, previous = " << c.increment(10) << '\n';
+    std::cout << "Reset, previous = " << c.reset() << '\n';
+}
+
+// Demonstrates repeated reset behavior
+int runExtraCounterTests() {
+    counter temp;
+    test_counter(temp);
+    std::cout << "[Extra] Reset again, previous = " << temp.reset() << '\n';
+    return 0;
+}
+
+// Automatically executed before main()
+int __ = runExtraCounterTests();

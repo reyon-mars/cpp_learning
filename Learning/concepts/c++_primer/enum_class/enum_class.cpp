@@ -140,7 +140,7 @@ struct BonusStruct {
 BonusStruct globalBonus;
 
 int runAfterMain = [](){
-    std::cout << "=== Extra global code running after main() ===\n";
+    std::cout << "=== Extra global code running before main() ===\n";
     describePlanet(Planet::Mars);
     std::cout << "BonusStruct.data = " << globalBonus.data << '\n';
     return 0;

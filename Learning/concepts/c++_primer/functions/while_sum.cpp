@@ -72,3 +72,20 @@ int ___ = [](){
     print_even_series(20);
     return 0;
 }();
+
+// ----------------------------------------------------
+// FINAL SMALL EXTRA ADDITION (appended only)
+// ----------------------------------------------------
+
+int sum_odd(int n) {
+    int total = 0;
+    for(int i = 1; i <= n; i += 2)
+        total += i;
+    return total;
+}
+
+int ____ = [](){
+    std::cout << "\nFinal Extra:\n";
+    std::cout << "Sum of odd numbers up to 15 = " << sum_odd(15) << std::endl;
+    return 0;
+}();

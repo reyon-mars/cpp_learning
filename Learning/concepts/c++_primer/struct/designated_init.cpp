@@ -86,7 +86,7 @@ std::vector<Book> generateBookCollection() {
     };
 }
 
-// Executes after main (like your previous lambda)
+// Executes before main()
 int __extra_init = [](){
     std::cout << "\n--- Extra Code Execution ---\n";
 
@@ -99,5 +99,29 @@ int __extra_init = [](){
     auto collection = generateBookCollection();
     printBookList(collection);
 
+    return 0;
+}();
+
+// --------------------------------------------
+// FINAL SMALL EXTRA ADDITION (appended only)
+// --------------------------------------------
+
+// Find a book by ISBN
+const Book* findByISBN(const std::vector<Book>& books, int isbn) {
+    for (const auto& b : books) {
+        if (b.ISBN_NO == isbn)
+            return &b;
+    }
+    return nullptr;
+}
+
+int ___ = [](){
+    auto books = generateBookCollection();
+    const Book* found = findByISBN(books, 11111);
+
+    if (found) {
+        std::cout << "\n[Extra] Found book by ISBN:\n";
+        printBook(*found);
+    }
     return 0;
 }();

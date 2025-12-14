@@ -19,3 +19,32 @@ int main ( void ){
     }
     return 0;
 }
+
+// ----------------------------------------------------
+// EXTRA CODE ADDED BELOW (original code untouched)
+// ----------------------------------------------------
+
+// Helper function to print a User safely
+void print_user(const std::unique_ptr<User>& user) {
+    if (user) {
+        std::cout << "\n[Extra] User: "
+                  << user->name << ", age " << user->age << '\n';
+    } else {
+        std::cout << "\n[Extra] User pointer is null\n";
+    }
+}
+
+// Demonstrate ownership transfer again
+int runExtraUniquePtrDemo() {
+    auto user1 = std::make_unique<User>(User{"Jupiter", 30});
+    print_user(user1);
+
+    std::unique_ptr<User> user2 = std::move(user1);
+    print_user(user1);   // now null
+    print_user(user2);   // owns the object
+
+    return 0;
+}
+
+// Automatically executed before main()
+int __ = runExtraUniquePtrDemo();

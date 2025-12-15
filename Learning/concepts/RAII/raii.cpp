@@ -62,3 +62,71 @@ struct AutoFileTest {
 };
 
 AutoFileTest __auto_file_test;
+
+
+// ======================================================
+// MORE EXTRA CODE (still no changes above)
+// ======================================================
+
+// Read entire file contents safely
+std::string read_all(file_guard& fg) {
+    std::string content, line;
+    auto& f = fg.get();
+
+    while (std::getline(f, line)) {
+        content += line + '\n';
+    }
+    return content;
+}
+
+// File existence check
+bool file_exists(const std::string& name) {
+    std::ifstream f(name);
+    return f.good();
+}
+
+// Auto-run demo for utilities
+int __extra2 = [](){
+    std::cout << "\n[More Extra]\n";
+
+    const std::string fname = "example.txt";
+
+    if (!file_exists(fname)) {
+        std::cout << "File does not exist: " << fname << "\n";
+        return 0;
+    }
+
+    try {
+        file_guard fg(fname);
+        std::string data = read_all(fg);
+        std::cout << "File contents:\n" << data;
+    }
+    catch (const std::exception& e) {
+        std::cout << "Exception: " << e.what() << "\n";
+    }
+
+    return 0;
+}();
+
+
+// ======================================================
+// EVEN MORE EXTRA CODE (RAII demonstration)
+// ======================================================
+
+struct ScopeLogger {
+    std::string name;
+
+    explicit ScopeLogger(std::string n) : name(std::move(n)) {
+        std::cout << "[Scope] Enter " << name << "\n";
+    }
+
+    ~ScopeLogger() {
+        std::cout << "[Scope] Exit " << name << "\n";
+    }
+};
+
+int __extra3 = [](){
+    ScopeLogger log("FileGuard Demo Scope");
+    std::cout << "[Scope] Doing work...\n";
+    return 0;
+}();

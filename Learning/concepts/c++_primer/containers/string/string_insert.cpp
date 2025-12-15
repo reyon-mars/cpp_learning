@@ -48,3 +48,34 @@ int runExtra = [](){
     std::cout << "[Extra] After : " << test << '\n';
     return 0;
 }();
+
+
+// ======================================================
+// MORE EXTRA CODE ADDED (still untouched above)
+// ======================================================
+
+// Count occurrences of a substring
+int count_occurrences(const std::string& s, const std::string& sub) {
+    int count = 0;
+    size_t pos = 0;
+    while ((pos = s.find(sub, pos)) != std::string::npos) {
+        ++count;
+        pos += sub.size();
+    }
+    return count;
+}
+
+// Auto-run another small demo
+int __ = [](){
+    std::cout << "\n[More Extra]\n";
+
+    std::string sample = "one fish two fish red fish blue fish";
+    std::cout << "Sample text: " << sample << '\n';
+    std::cout << "Occurrences of 'fish': "
+              << count_occurrences(sample, "fish") << '\n';
+
+    std::string modified = replace_all(sample, "fish", "cat");
+    std::cout << "After replace_all: " << modified << '\n';
+
+    return 0;
+}();

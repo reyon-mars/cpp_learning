@@ -38,4 +38,19 @@ std::vector<int> generate_even_vector(int n) {
     return v;
 }
 
+// Auto-executed extra demo (runs before main)
 int __ = [](){
+    std::cout << "\n--- Extra Vector Demo ---\n";
+
+    auto evenVec = generate_even_vector(10);
+    print_vector(evenVec);
+
+    std::reverse(evenVec.begin(), evenVec.end());
+    std::cout << "[Extra] Reversed even vector: ";
+    print_vector(evenVec);
+
+    std::cout << "[Extra] Size = " << evenVec.size()
+              << ", Capacity = " << evenVec.capacity() << "\n";
+
+    return 0;
+}();

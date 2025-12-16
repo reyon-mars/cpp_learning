@@ -80,7 +80,7 @@ int main( void )
     describe(myFood);
 
     // ---------------------------------
-    // MORE EXTRA ADDED CODE (NEW PART)
+    // MORE EXTRA ADDED CODE
     // ---------------------------------
 
     enum class Color : u_int8_t {
@@ -110,7 +110,7 @@ int main( void )
 }
 
 // ======================================================
-// EVEN MORE EXTRA CODE (appended without changing original)
+// EVEN MORE EXTRA CODE (appended only)
 // ======================================================
 
 enum class Planet : u_int8_t {
@@ -139,9 +139,66 @@ struct BonusStruct {
 
 BonusStruct globalBonus;
 
-int runAfterMain = [](){
+int runBeforeMain = [](){
     std::cout << "=== Extra global code running before main() ===\n";
     describePlanet(Planet::Mars);
     std::cout << "BonusStruct.data = " << globalBonus.data << '\n';
+    return 0;
+}();
+
+// ======================================================
+// 🔥 EVEN MORE: TEMPLATE + GENERIC DESCRIBE
+// ======================================================
+
+template<typename T>
+void genericDescribe(T value) {
+    std::cout << "Generic describe value = " << static_cast<int>(value) << '\n';
+}
+
+enum class Weather : u_int8_t {
+    Sunny,
+    Rainy,
+    Snowy
+};
+
+void describeWeather(Weather w) {
+    switch(w) {
+        case Weather::Sunny:
+            std::cout << "Weather is sunny ☀️" << '\n';
+            break;
+        case Weather::Rainy:
+            std::cout << "Weather is rainy 🌧️" << '\n';
+            break;
+        case Weather::Snowy:
+            std::cout << "Weather is snowy ❄️" << '\n';
+            break;
+    }
+}
+
+int __extra2 = [](){
+    std::cout << "=== Weather system initialized ===\n";
+    describeWeather(Weather::Sunny);
+    genericDescribe(Weather::Rainy);
+    return 0;
+}();
+
+// ======================================================
+// 🚀 FINAL EXTRA: RAII + ENUM COMPOSITION
+// ======================================================
+
+struct ScopedAnnounce {
+    ScopedAnnounce(const char* msg) {
+        std::cout << "[ENTER] " << msg << '\n';
+    }
+    ~ScopedAnnounce() {
+        std::cout << "[EXIT] Scope ended\n";
+    }
+};
+
+int __extra3 = [](){
+    ScopedAnnounce s("Final enum demo");
+    describePlanet(Planet::Earth);
+    describe(Animal::Dog);
+    describe(Vehicle::Bike);
     return 0;
 }();

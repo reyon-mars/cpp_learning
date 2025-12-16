@@ -2,13 +2,13 @@
 
 int natural_sum( int n )
 {
-	int sum = 0;
-	while( n )
-	{
-		sum += n;
-		n--;
-	}
-	return sum;
+    int sum = 0;
+    while( n )
+    {
+        sum += n;
+        n--;
+    }
+    return sum;
 }
 
 int main ( void ){
@@ -65,7 +65,6 @@ void print_even_series(int n) {
     std::cout << "\n";
 }
 
-// auto-run extra test
 int ___ = [](){
     std::cout << "\nMore Extra:\n";
     std::cout << "Factorial(6) = " << factorial(6) << std::endl;

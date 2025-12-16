@@ -21,12 +21,12 @@ int runExtra() {
     return 0;
 }
 
-// Even though main returns -1 and ends, this code still exists in the file.
-int _ = runExtra();  // Executes extra code before main
+// Executes before main
+int _ = runExtra();
 
 
 // ==========================================
-// MORE EXTRA CODE ADDED (still not modifying anything)
+// MORE EXTRA CODE ADDED (still untouched)
 // ==========================================
 
 class ExtraClass {
@@ -39,18 +39,17 @@ public:
     }
 };
 
-ExtraClass globalExtraObj;  // Runs before main()
+ExtraClass globalExtraObj;
 
 void extraMore() {
     std::cout << "Another extra function executed!" << std::endl;
 }
 
-int __ = (extraMore(), 0); // Executes before main()
-
+int __ = (extraMore(), 0);
 
 
 // ==========================================
-// EVEN MORE EXTRA CODE (still appended only)
+// EVEN MORE EXTRA CODE
 // ==========================================
 
 struct Bonus {
@@ -62,7 +61,7 @@ struct Bonus {
     }
 };
 
-Bonus globalBonus; // Constructor runs before main()
+Bonus globalBonus;
 
 void extraFinal() {
     std::cout << "Final extra function running!" << std::endl;
@@ -74,8 +73,10 @@ int ___ = [](){
     extraFinal();
     return 0;
 }();
+
+
 // ==========================================
-// EVEN MORE EXTRA CODE (still appended only)
+// EVEN MORE EXTRA CODE
 // ==========================================
 
 class PreMainWorker {
@@ -88,7 +89,7 @@ public:
     }
 };
 
-PreMainWorker globalWorker; // Runs before main()
+PreMainWorker globalWorker;
 
 int ____ = [](){
     std::cout << "Another lambda-before-main executing!" << std::endl;
@@ -98,7 +99,7 @@ int ____ = [](){
 
 
 // ==========================================
-// LAST EXTRA CHUNK (still appended only)
+// LAST EXTRA CHUNK
 // ==========================================
 
 namespace ExtraNamespace {
@@ -113,7 +114,7 @@ namespace ExtraNamespace {
     }
 }
 
-ExtraNamespace::Init namespaceInit; // Runs before main()
+ExtraNamespace::Init namespaceInit;
 
 int _____ = [](){
     std::cout << "Namespace lambda-before-main executing!" << std::endl;
@@ -121,3 +122,23 @@ int _____ = [](){
     return 0;
 }();
 
+
+// ==========================================
+// 🚀 FINAL FINAL EXTRA (static object + RAII)
+// ==========================================
+
+struct FinalGuard {
+    FinalGuard() {
+        std::cout << "FinalGuard constructed before main()" << std::endl;
+    }
+    ~FinalGuard() {
+        std::cout << "FinalGuard destroyed after main()" << std::endl;
+    }
+};
+
+FinalGuard finalGuard;
+
+int ______ = [](){
+    std::cout << "Absolutely last lambda-before-main executing!" << std::endl;
+    return 0;
+}();

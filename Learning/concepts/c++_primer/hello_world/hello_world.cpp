@@ -33,7 +33,7 @@ void printExtra() {
     std::cout << "Extra function running!" << std::endl;
 }
 
-Demo demoGlobal; // Global object → constructor runs before main (if any)
+Demo demoGlobal;
 
 int runExtraStuff() {
     greet();
@@ -47,11 +47,10 @@ int runExtraStuff() {
     return 0;
 }
 
-// Automatically executed before main()
 int __dummy = runExtraStuff();
 
 // ------------------------------------------------------
-// MORE EXTRA CODE ADDED BELOW (still untouched above)
+// MORE EXTRA CODE ADDED BELOW
 // ------------------------------------------------------
 
 class MoreDemo {
@@ -74,11 +73,10 @@ int runMore() {
     return 0;
 }
 
-// Runs before main as well
 int __dummy2 = runMore();
 
 // ------------------------------------------------------
-// EVEN MORE EXTRA CODE (still appended only)
+// EVEN MORE EXTRA CODE
 // ------------------------------------------------------
 
 struct Counter {
@@ -102,7 +100,7 @@ int __dummy3 = [](){
 }();
 
 // ------------------------------------------------------
-// FINAL EXTRA BLOCK (no changes above)
+// FINAL EXTRA BLOCK
 // ------------------------------------------------------
 
 class FinalDemo {
@@ -122,3 +120,34 @@ int __dummy4 = [](){
     std::cout << "End of all extra code blocks." << std::endl;
     return 0;
 }();
+
+// ------------------------------------------------------
+// 🔥 ULTRA EXTRA CODE (STATIC + TEMPLATE + RAII)
+// ------------------------------------------------------
+
+template<typename T>
+T multiply(T a, T b) {
+    return a * b;
+}
+
+struct LifetimeTracer {
+    std::string name;
+    LifetimeTracer(std::string n) : name(std::move(n)) {
+        std::cout << "[Lifetime] Construct " << name << std::endl;
+    }
+    ~LifetimeTracer() {
+        std::cout << "[Lifetime] Destruct " << name << std::endl;
+    }
+};
+
+static LifetimeTracer staticTracer("StaticTracer");
+
+int __dummy5 = [](){
+    LifetimeTracer local("LambdaTracer");
+    std::cout << "multiply(6, 7) = " << multiply(6, 7) << std::endl;
+    return 0;
+}();
+
+// ------------------------------------------------------
+// 🚀 END OF FILE
+// ------------------------------------------------------

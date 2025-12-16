@@ -30,6 +30,7 @@ int main ( void ){
     std::cout << "ISBN: " << b2.ISBN_NO << std::endl;
     std::cout << "Publisher: " << b2.publisher << std::endl;
 
+    return 0;
 }
 
 // --------------------------------------------
@@ -61,12 +62,10 @@ int _ = [](){
 // MORE EXTRA CODE ADDED BELOW (still unchanged above)
 // --------------------------------------------
 
-// Compare books by ISBN
 bool hasSameISBN(const Book& a, const Book& b) {
     return a.ISBN_NO == b.ISBN_NO;
 }
 
-// Print a list of books
 void printBookList(const std::vector<Book>& books) {
     std::cout << "\n[Extra] Book List:\n";
     for (const auto& book : books) {
@@ -77,7 +76,6 @@ void printBookList(const std::vector<Book>& books) {
     }
 }
 
-// Return a sample collection of books
 std::vector<Book> generateBookCollection() {
     return {
         {"Design Patterns", 12345, "Addison-Wesley"},
@@ -86,7 +84,6 @@ std::vector<Book> generateBookCollection() {
     };
 }
 
-// Executes before main()
 int __extra_init = [](){
     std::cout << "\n--- Extra Code Execution ---\n";
 
@@ -106,7 +103,6 @@ int __extra_init = [](){
 // FINAL SMALL EXTRA ADDITION (appended only)
 // --------------------------------------------
 
-// Find a book by ISBN
 const Book* findByISBN(const std::vector<Book>& books, int isbn) {
     for (const auto& b : books) {
         if (b.ISBN_NO == isbn)

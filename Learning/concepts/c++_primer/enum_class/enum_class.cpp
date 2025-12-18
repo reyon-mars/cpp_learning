@@ -1,4 +1,9 @@
 #include <iostream>
+#include <cstdint>
+
+// ======================================================
+// ORIGINAL ENUMS
+// ======================================================
 
 enum class Animal : u_int8_t{ 
     Cat,
@@ -12,37 +17,41 @@ enum class Vehicle : u_int8_t{
     Bus
 };
 
+// ======================================================
+// ORIGINAL DESCRIBE FUNCTIONS
+// ======================================================
+
 void describe( Animal a ){
     switch( a ){
         case Animal::Cat:
-        std::cout << "Cat goes meow meow" << '\n';
-        break;
-
+            std::cout << "Cat goes meow meow\n";
+            break;
         case Animal::Dog:
-        std::cout << "Dog goes bark bark" << '\n';
-        break;
-
+            std::cout << "Dog goes bark bark\n";
+            break;
         case Animal::Bird:
-        std::cout << "Bird goes chirp chirp" << '\n';
-        break;
+            std::cout << "Bird goes chirp chirp\n";
+            break;
     }
 }
 
 void describe( Vehicle v ){
     switch( v ){
         case Vehicle::Car:
-        std::cout << "Car goes vroom"<< '\n';
-        break;
-
+            std::cout << "Car goes vroom\n";
+            break;
         case Vehicle::Bus:
-        std::cout << "Car goes honk honk" << '\n';
-        break;
-
+            std::cout << "Car goes honk honk\n";
+            break;
         case Vehicle::Bike:
-        std::cout << "Bike goes ring ring"  << '\n';
-        break;
+            std::cout << "Bike goes ring ring\n";
+            break;
     }
 }
+
+// ======================================================
+// MAIN (UNCHANGED LOGIC)
+// ======================================================
 
 int main( void )
 {    
@@ -65,13 +74,13 @@ int main( void )
     auto describe = [](Food f){
         switch(f){
             case Food::Pizza:
-                std::cout << "Pizza is cheesy!" << '\n';
+                std::cout << "Pizza is cheesy!\n";
                 break;
             case Food::Burger:
-                std::cout << "Burger is juicy!" << '\n';
+                std::cout << "Burger is juicy!\n";
                 break;
             case Food::Sushi:
-                std::cout << "Sushi is fresh!" << '\n';
+                std::cout << "Sushi is fresh!\n";
                 break;
         }
     };
@@ -92,13 +101,13 @@ int main( void )
     auto describeColor = [](Color c){
         switch(c){
             case Color::Red:
-                std::cout << "Red is vibrant!" << '\n';
+                std::cout << "Red is vibrant!\n";
                 break;
             case Color::Green:
-                std::cout << "Green is peaceful!" << '\n';
+                std::cout << "Green is peaceful!\n";
                 break;
             case Color::Blue:
-                std::cout << "Blue is calming!" << '\n';
+                std::cout << "Blue is calming!\n";
                 break;
         }
     };
@@ -110,7 +119,7 @@ int main( void )
 }
 
 // ======================================================
-// EVEN MORE EXTRA CODE (appended only)
+// EVEN MORE EXTRA CODE (BEFORE MAIN)
 // ======================================================
 
 enum class Planet : u_int8_t {
@@ -122,13 +131,13 @@ enum class Planet : u_int8_t {
 void describePlanet(Planet p) {
     switch(p) {
         case Planet::Earth:
-            std::cout << "Earth: our home planet!" << '\n';
+            std::cout << "Earth: our home planet!\n";
             break;
         case Planet::Mars:
-            std::cout << "Mars: the red planet!" << '\n';
+            std::cout << "Mars: the red planet!\n";
             break;
         case Planet::Jupiter:
-            std::cout << "Jupiter: the gas giant!" << '\n';
+            std::cout << "Jupiter: the gas giant!\n";
             break;
     }
 }
@@ -147,12 +156,13 @@ int runBeforeMain = [](){
 }();
 
 // ======================================================
-// 🔥 EVEN MORE: TEMPLATE + GENERIC DESCRIBE
+// TEMPLATE + GENERIC ENUM HANDLING
 // ======================================================
 
 template<typename T>
 void genericDescribe(T value) {
-    std::cout << "Generic describe value = " << static_cast<int>(value) << '\n';
+    std::cout << "Generic describe value = "
+              << static_cast<int>(value) << '\n';
 }
 
 enum class Weather : u_int8_t {
@@ -164,13 +174,13 @@ enum class Weather : u_int8_t {
 void describeWeather(Weather w) {
     switch(w) {
         case Weather::Sunny:
-            std::cout << "Weather is sunny ☀️" << '\n';
+            std::cout << "Weather is sunny ☀️\n";
             break;
         case Weather::Rainy:
-            std::cout << "Weather is rainy 🌧️" << '\n';
+            std::cout << "Weather is rainy 🌧️\n";
             break;
         case Weather::Snowy:
-            std::cout << "Weather is snowy ❄️" << '\n';
+            std::cout << "Weather is snowy ❄️\n";
             break;
     }
 }
@@ -183,7 +193,7 @@ int __extra2 = [](){
 }();
 
 // ======================================================
-// 🚀 FINAL EXTRA: RAII + ENUM COMPOSITION
+// RAII + ENUM COMPOSITION
 // ======================================================
 
 struct ScopedAnnounce {

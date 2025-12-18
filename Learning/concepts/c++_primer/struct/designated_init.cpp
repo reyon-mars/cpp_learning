@@ -1,6 +1,10 @@
-#include  <iostream>
+#include <iostream>
 #include <string>
 #include <vector>
+
+// ======================================================
+// ORIGINAL CODE (UNCHANGED)
+// ======================================================
 
 struct Book{
     std::string name;
@@ -33,9 +37,9 @@ int main ( void ){
     return 0;
 }
 
-// --------------------------------------------
+// ======================================================
 // EXTRA CODE ADDED BELOW (original unchanged)
-// --------------------------------------------
+// ======================================================
 
 void printBook(const Book& b) {
     std::cout << "\n[Extra] Book Info:\n";
@@ -58,9 +62,9 @@ int _ = [](){
     return 0;
 }();
 
-// --------------------------------------------
-// MORE EXTRA CODE ADDED BELOW (still unchanged above)
-// --------------------------------------------
+// ======================================================
+// MORE EXTRA CODE (still no modification above)
+// ======================================================
 
 bool hasSameISBN(const Book& a, const Book& b) {
     return a.ISBN_NO == b.ISBN_NO;
@@ -69,9 +73,9 @@ bool hasSameISBN(const Book& a, const Book& b) {
 void printBookList(const std::vector<Book>& books) {
     std::cout << "\n[Extra] Book List:\n";
     for (const auto& book : books) {
-        std::cout << "- " << book.name 
-                  << " (ISBN: " << book.ISBN_NO 
-                  << ", Publisher: " << book.publisher 
+        std::cout << "- " << book.name
+                  << " (ISBN: " << book.ISBN_NO
+                  << ", Publisher: " << book.publisher
                   << ")\n";
     }
 }
@@ -99,9 +103,9 @@ int __extra_init = [](){
     return 0;
 }();
 
-// --------------------------------------------
-// FINAL SMALL EXTRA ADDITION (appended only)
-// --------------------------------------------
+// ======================================================
+// FINAL EXTRA ADDITION (APPENDED ONLY)
+// ======================================================
 
 const Book* findByISBN(const std::vector<Book>& books, int isbn) {
     for (const auto& b : books) {

@@ -1,47 +1,46 @@
+#include <iostream>
+
+// ---------------- ORIGINAL CODE (UNCHANGED) ----------------
+
 class int_range{
-    private:
+private:
     int start;
     int end;
 
-    public:
-    
+public:
     class Iterator {
-        private:
+    private:
         int current_;
 
-        public:
-        explicit Iterator( int current ) : current_( current ){};
-        
-        int operator*()const{
+    public:
+        explicit Iterator(int current) : current_(current) {}
+
+        int operator*() const {
             return current_;
         }
-        
-        Iterator& operator++( ){
+
+        Iterator& operator++() {
             ++current_;
             return *this;
         }
 
-        bool operator!=( const Iterator& other ){
+        bool operator!=(const Iterator& other) {
             return current_ != other.current_;
         }
     };
 
-    explicit int_range( int s, int e ) : start(s), end(e) {};
-    
-    Iterator begin(){
-        return Iterator( start );
+    explicit int_range(int s, int e) : start(s), end(e) {}
+
+    Iterator begin() {
+        return Iterator(start);
     }
+
     Iterator end() {
-        return Iterator( end );
+        return Iterator(end);
     }
 };
 
-
-// ======================================================
-// EXTRA CODE ADDED BELOW (original class unchanged)
-// ======================================================
-
-#include <iostream>
+// ---------------- EXTRA FUNCTIONS ----------------
 
 // Print all values in the range
 void print_range(const int_range& r) {
@@ -64,30 +63,39 @@ int sum_range(const int_range& r) {
 int count_range(const int_range& r) {
     int count = 0;
     for (int v : r) {
-        (void)v;
+        (void)v; // silence unused warning
         ++count;
     }
     return count;
 }
 
-// Runs automatically before main()
-struct RangeTester {
-    RangeTester() {
-        std::cout << "[Extra] Testing int_range\n";
+// Find maximum value in the range
+int max_in_range(const int_range& r) {
+    int max_val = *r.begin();
+    for (int v : r)
+        if (v > max_val)
+            max_val = v;
+    return max_val;
+}
 
-        int_range r1(1, 6);
-        print_range(r1);
+// ---------------- MAIN (UPDATED) ----------------
 
-        std::cout << "Sum: " << sum_range(r1) << '\n';
-        std::cout << "Count: " << count_range(r1) << '\n';
+int main() {
+    std::cout << "--- int_range Demo ---\n";
 
-        int_range r2(10, 15);
-        print_range(r2);
+    int_range r1(1, 6);
+    print_range(r1);
+    std::cout << "Sum: " << sum_range(r1) << '\n';
+    std::cout << "Count: " << count_range(r1) << '\n';
+    std::cout << "Max: " << max_in_range(r1) << '\n';
 
-        std::cout << "Sum: " << sum_range(r2) << '\n';
-        std::cout << "Count: " << count_range(r2) << '\n';
-    }
-};
+    std::cout << "\n";
 
-// Global object → executes before main()
-RangeTester __range_test;
+    int_range r2(10, 15);
+    print_range(r2);
+    std::cout << "Sum: " << sum_range(r2) << '\n';
+    std::cout << "Count: " << count_range(r2) << '\n';
+    std::cout << "Max: " << max_in_range(r2) << '\n';
+
+    return 0;
+}

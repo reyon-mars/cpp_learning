@@ -1,33 +1,34 @@
 #include <list>
 #include <iostream>
 
-int main( void ){
-    std::list<int> lst = { 1, 2, 3, 4, 5, 6, 7 , 8 , 9 };
-    auto iter = lst.begin();    
+// ---------------- ORIGINAL LOGIC ----------------
 
-    while( iter != lst.end() ){
-        if( *iter % 2 ){
-            iter = lst.insert( iter, *iter );
-            std::advance( iter, 2 );
-        }else{
-            iter = lst.erase( iter );
+void process_original_list() {
+    std::list<int> lst = { 1, 2, 3, 4, 5, 6, 7 , 8 , 9 };
+    auto iter = lst.begin();
+
+    while (iter != lst.end()) {
+        if (*iter % 2) {
+            iter = lst.insert(iter, *iter);
+            std::advance(iter, 2);
+        } else {
+            iter = lst.erase(iter);
         }
     }
 
-    for( auto item: lst ){
-        std::cout << item << " "; 
+    std::cout << "Original processed list: ";
+    for (auto item : lst) {
+        std::cout << item << " ";
     }
-    std::cout << std::endl;
-    return 0;
+    std::cout << "\n";
 }
 
-// --------------------------------------------------------
-// EXTRA CODE ADDED BELOW (original code remains unchanged)
-// --------------------------------------------------------
+// ---------------- EXTRA UTILITIES ----------------
 
 void printList(const std::list<int>& L) {
-    std::cout << "[Extra] List: ";
-    for (auto v : L) std::cout << v << " ";
+    std::cout << "List: ";
+    for (auto v : L)
+        std::cout << v << " ";
     std::cout << "\n";
 }
 
@@ -38,42 +39,46 @@ std::list<int> makeList(int start, int end) {
     return L;
 }
 
-int __ = [](){
-    std::list<int> extraList = makeList(10, 20);
-    printList(extraList);
-
-    // Modify the list a bit
-    extraList.remove_if([](int x){ return x % 3 == 0; });
-    std::cout << "[Extra] After removing multiples of 3: ";
-    printList(extraList);
-
-    return 0;
-}();
-
-// --------------------------------------------------------
-// MORE EXTRA CODE ADDED BELOW (original + extra untouched)
-// --------------------------------------------------------
-
 std::list<int> squareList(const std::list<int>& L) {
     std::list<int> squared;
-    for (int v : L) squared.push_back(v * v);
+    for (int v : L)
+        squared.push_back(v * v);
     return squared;
 }
 
 void printReversed(const std::list<int>& L) {
-    std::cout << "[Extra] Reversed list: ";
+    std::cout << "Reversed list: ";
     for (auto it = L.rbegin(); it != L.rend(); ++it)
         std::cout << *it << " ";
     std::cout << "\n";
 }
 
-// Runs before main()
-int ___ = [](){
-    std::list<int> demo = makeList(1, 5);
+// Demonstrates erase/remove idiom
+void remove_multiples_of_3(std::list<int>& L) {
+    L.remove_if([](int x) { return x % 3 == 0; });
+}
 
-    auto squared = squareList(demo);
+// ---------------- MAIN ----------------
+
+int main(void) {
+
+    // Original behavior
+    process_original_list();
+
+    std::cout << "\n[Extra] Creating list 10..20\n";
+    std::list<int> extraList = makeList(10, 20);
+    printList(extraList);
+
+    std::cout << "[Extra] Removing multiples of 3\n";
+    remove_multiples_of_3(extraList);
+    printList(extraList);
+
+    std::cout << "\n[Extra] Squaring list\n";
+    auto squared = squareList(extraList);
     printList(squared);
 
+    std::cout << "[Extra] Printing reversed squared list\n";
     printReversed(squared);
+
     return 0;
-}();
+}

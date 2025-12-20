@@ -1,43 +1,27 @@
+#include <iostream>
 #include <vector>
 #include <numeric>
 #include <utility>
 
-auto sum_vector( std::vector<int> vec ){
-    return [ v = std::move( vec ) ]() mutable {
-        int sum = std::accumulate( v.begin(), v.end(), 0 );
+// ---------------- ORIGINAL FUNCTION ----------------
+auto sum_vector(std::vector<int> vec) {
+    return [v = std::move(vec)]() mutable {
+        int sum = std::accumulate(v.begin(), v.end(), 0);
         v.clear();
         return sum;
     };
 }
 
-int main() {
-    std::vector<int> vec = {1, 2, 3, 4, 5};
+// ---------------- EXTRA UTILITIES ----------------
 
-    // IILE (Immediately Invoked Lambda Expression)
-    int x = [ vec ] ( int a, int b ){
-        return std::accumulate( vec.begin(), vec.end(), 0 ) * a * b;
-    }( 1, 1 );
-
-    auto fn = sum_vector(vec);
-    int s1 = fn();   // returns 15
-    int s2 = fn();   // returns 0 (vector already cleared)
-
-    return 0;
-}
-
-
-// ======================================================
-// EXTRA CODE ADDED BELOW (original code untouched)
-// ======================================================
-
-#include <iostream>
-
+// multiplier factory
 auto make_multiplier(int m) {
     return [m](int x) {
         return x * m;
     };
 }
 
+// capture-by-reference demo
 auto capture_by_reference_demo() {
     int value = 10;
     return [&value]() mutable {
@@ -46,6 +30,7 @@ auto capture_by_reference_demo() {
     };
 }
 
+// capture-by-value demo
 auto capture_by_value_demo() {
     int value = 20;
     return [value]() mutable {
@@ -54,6 +39,7 @@ auto capture_by_value_demo() {
     };
 }
 
+// helper function
 int sum_range(int a, int b) {
     int s = 0;
     for (int i = a; i <= b; ++i)
@@ -61,27 +47,38 @@ int sum_range(int a, int b) {
     return s;
 }
 
-struct LambdaTester {
-    LambdaTester() {
-        std::cout << "[Extra] Testing extra lambdas...\n";
+// ---------------- MAIN (UPDATED) ----------------
+int main() {
+    std::vector<int> vec = {1, 2, 3, 4, 5};
 
-        auto times3 = make_multiplier(3);
-        std::cout << "[Extra] 3 * 4 = " << times3(4) << "\n";
+    // IILE (Immediately Invoked Lambda Expression)
+    int x = [vec](int a, int b) {
+        return std::accumulate(vec.begin(), vec.end(), 0) * a * b;
+    }(1, 1);
 
-        auto ref_lambda = capture_by_reference_demo();
-        std::cout << "[Extra] Ref lambda call 1: " << ref_lambda() << "\n";
-        std::cout << "[Extra] Ref lambda call 2: " << ref_lambda() << "\n";
+    std::cout << "IILE result: " << x << '\n';
 
-        auto val_lambda = capture_by_value_demo();
-        std::cout << "[Extra] Val lambda call 1: " << val_lambda() << "\n";
-        std::cout << "[Extra] Val lambda call 2: " << val_lambda() << "\n";
+    auto fn = sum_vector(vec);
+    std::cout << "First sum_vector call: " << fn() << '\n';
+    std::cout << "Second sum_vector call: " << fn() << '\n';
 
-        auto sum_lambda = [](int a, int b) {
-            return sum_range(a, b);
-        };
-        std::cout << "[Extra] Sum 1..10 = " << sum_lambda(1, 10) << "\n";
-    }
-};
+    std::cout << "\n--- Extra Lambda Demos ---\n";
 
-// Automatically runs before main()
-LambdaTester __auto_lambda_test;
+    auto times3 = make_multiplier(3);
+    std::cout << "3 * 4 = " << times3(4) << '\n';
+
+    auto ref_lambda = capture_by_reference_demo();
+    std::cout << "Ref lambda call 1: " << ref_lambda() << '\n';
+    std::cout << "Ref lambda call 2: " << ref_lambda() << '\n';
+
+    auto val_lambda = capture_by_value_demo();
+    std::cout << "Val lambda call 1: " << val_lambda() << '\n';
+    std::cout << "Val lambda call 2: " << val_lambda() << '\n';
+
+    auto sum_lambda = [](int a, int b) {
+        return sum_range(a, b);
+    };
+    std::cout << "Sum 1..10 = " << sum_lambda(1, 10) << '\n';
+
+    return 0;
+}

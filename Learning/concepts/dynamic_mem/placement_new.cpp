@@ -1,55 +1,31 @@
-// ======================================================
-// EVEN MORE EXTRA CODE (still untouched above)
-// ======================================================
+#include <iostream>
+#include <new>
+#include <type_traits>
 
-#include <new>          // std::align_val_t, placement new
-#include <type_traits>  // std::aligned_storage
+// ---------------- ORIGINAL CODE ----------------
 
-// --------------------------------------
-// 1. Alignment-safe placement new storage
-// --------------------------------------
+class base {
+private:
+    int a;
 
-using BaseStorage = std::aligned_storage_t<
-    sizeof(base),
-    alignof(base)
->;
+public:
+    base() { std::cout << "Constructor\n"; }
+    ~base() { std::cout << "Destructor\n"; }
+};
 
-void test_aligned_storage() {
-    std::cout << "\n[Extra] Aligned storage placement-new test\n";
+// ---------------- EXTRA CLASSES ----------------
 
-    BaseStorage storage;
-    base* b = new (&storage) base();
-
-    b->~base(); // manual destruction
-}
-
-// --------------------------------------
-// 2. Placement new with arrays (loop)
-// --------------------------------------
-
-void test_array_placement_new() {
-    std::cout << "\n[Extra] Placement-new array construction\n";
-
-    constexpr int N = 3;
-    void* raw = operator new[](sizeof(base) * N);
-
-    base* arr = static_cast<base*>(raw);
-
-    for (int i = 0; i < N; ++i) {
-        new (&arr[i]) base();
+class derived : public base {
+public:
+    derived() {
+        std::cout << "Derived Constructor\n";
     }
-
-    for (int i = N - 1; i >= 0; --i) {
-        arr[i].~base();
+    ~derived() {
+        std::cout << "Derived Destructor\n";
     }
+};
 
-    operator delete[](raw);
-}
-
-// --------------------------------------
-// 3. Virtual destructor demonstration
-// --------------------------------------
-
+// Virtual destructor demo
 class poly_base {
 public:
     poly_base() {
@@ -70,48 +46,109 @@ public:
     }
 };
 
-void test_virtual_destructor() {
-    std::cout << "\n[Extra] Virtual destructor test\n";
+// ---------------- EXTRA FUNCTIONS ----------------
 
-    poly_base* p = new poly_derived();
-    delete p; // correct destruction chain
+// Normal heap allocation
+void test_normal_allocation() {
+    std::cout << "\n[Extra] Normal Allocation (derived)\n";
+    derived* d = new derived();
+    delete d;
 }
 
-// --------------------------------------
-// 4. RAII helper for placement-new objects
-// --------------------------------------
+// Placement new allocation
+void test_placement_new() {
+    std::cout << "\n[Extra] Placement New (derived)\n";
 
+    char* mem = new char[sizeof(derived) * 2];
+
+    derived* d1 = new (&mem[0]) derived();
+    derived* d2 = new (&mem[sizeof(derived)]) derived();
+
+    d1->~derived();
+    d2->~derived();
+
+    delete[] mem;
+}
+
+// Alignment-safe placement new
+void test_aligned_storage() {
+    std::cout << "\n[Extra] Aligned Storage Placement-New\n";
+
+    using Storage = std::aligned_storage_t<sizeof(base), alignof(base)>;
+    Storage storage;
+
+    base* b = new (&storage) base();
+    b->~base();
+}
+
+// Placement-new array
+void test_array_placement_new() {
+    std::cout << "\n[Extra] Placement-New Array\n";
+
+    constexpr int N = 3;
+    void* raw = operator new[](sizeof(base) * N);
+    base* arr = static_cast<base*>(raw);
+
+    for (int i = 0; i < N; ++i)
+        new (&arr[i]) base();
+
+    for (int i = N - 1; i >= 0; --i)
+        arr[i].~base();
+
+    operator delete[](raw);
+}
+
+// Virtual destructor test
+void test_virtual_destructor() {
+    std::cout << "\n[Extra] Virtual Destructor Test\n";
+    poly_base* p = new poly_derived();
+    delete p;
+}
+
+// RAII guard for placement new
 template <typename T>
 struct PlacementGuard {
     T* ptr;
     explicit PlacementGuard(T* p) : ptr(p) {}
     ~PlacementGuard() {
-        if (ptr)
-            ptr->~T();
+        if (ptr) ptr->~T();
     }
 };
 
 void test_raii_guard() {
-    std::cout << "\n[Extra] Placement-new with RAII guard\n";
+    std::cout << "\n[Extra] Placement-New with RAII Guard\n";
 
     alignas(base) char buffer[sizeof(base)];
     base* b = new (buffer) base();
 
-    PlacementGuard<base> guard(b); // ensures destruction
+    PlacementGuard<base> guard(b);
 }
 
-// --------------------------------------
-// Auto execution before main()
-// --------------------------------------
+// ---------------- MAIN ----------------
 
-struct MorePlacementTests {
-    MorePlacementTests() {
-        std::cout << "\n=== Running More Placement-New Tests ===\n";
-        test_aligned_storage();
-        test_array_placement_new();
-        test_virtual_destructor();
-        test_raii_guard();
-    }
-};
+int main(void) {
+    std::cout << "Normal case\n";
+    base* obj = new base();
+    delete obj;
 
-MorePlacementTests __more_placement_tests;
+    std::cout << "\nPlacement New Case\n";
+    char* memory = new char[sizeof(base) * 2];
+
+    base* obj1 = new (&memory[0]) base();
+    base* obj2 = new (&memory[sizeof(base)]) base();
+
+    obj1->~base();
+    obj2->~base();
+    delete[] memory;
+
+    // -------- EXTRA DEMOS --------
+
+    test_normal_allocation();
+    test_placement_new();
+    test_aligned_storage();
+    test_array_placement_new();
+    test_virtual_destructor();
+    test_raii_guard();
+
+    return 0;
+}

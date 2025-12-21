@@ -2,13 +2,8 @@
 #include <string>
 
 // ======================================================
-// ORIGINAL CODE (UNCHANGED)
+// ORIGINAL CODE (LOGIC UNCHANGED)
 // ======================================================
-
-int main( void ){
-    std::cout << "Hello, World" << std::endl;
-    return 0;
-}
 
 void greet(){
     std::cout << "This is extra code added without modifying main!" << std::endl;
@@ -26,36 +21,12 @@ public:
 };
 
 // ======================================================
-// EXTRA ADDED CODE
+// EXTRA STRUCTS / CLASSES
 // ======================================================
 
 struct ExtraStruct {
     int x = 42;
 };
-
-void printExtra() {
-    std::cout << "Extra function running!" << std::endl;
-}
-
-Demo demoGlobal;
-
-int runExtraStuff() {
-    greet();
-    std::cout << "5 + 7 = " << add(5, 7) << std::endl;
-
-    ExtraStruct es;
-    std::cout << "ExtraStruct.x = " << es.x << std::endl;
-
-    demoGlobal.show();
-    printExtra();
-    return 0;
-}
-
-int __dummy = runExtraStuff();
-
-// ======================================================
-// MORE EXTRA CODE
-// ======================================================
 
 class MoreDemo {
 public:
@@ -64,69 +35,19 @@ public:
     }
 };
 
-MoreDemo globalMoreDemo;
-
-void printBanner() {
-    std::cout << "=== Extra Banner ===" << std::endl;
-}
-
-int runMore() {
-    printBanner();
-    globalMoreDemo.info();
-    std::cout << "Add(10, 20) = " << add(10, 20) << std::endl;
-    return 0;
-}
-
-int __dummy2 = runMore();
-
-// ======================================================
-// EVEN MORE EXTRA CODE
-// ======================================================
-
 struct Counter {
-    Counter() {
-        std::cout << "Counter constructed before main()" << std::endl;
-    }
     int value = 100;
 };
 
-Counter globalCounter;
-
-void showCounter() {
-    std::cout << "Global counter value = " << globalCounter.value << std::endl;
-}
-
-int __dummy3 = [](){
-    std::cout << "Lambda extra code executing!" << std::endl;
-    showCounter();
-    std::cout << "add(3, 4) = " << add(3, 4) << std::endl;
-    return 0;
-}();
-
-// ======================================================
-// FINAL EXTRA BLOCK
-// ======================================================
-
 class FinalDemo {
 public:
-    FinalDemo() {
-        std::cout << "FinalDemo constructor running!" << std::endl;
-    }
     void run() {
         std::cout << "FinalDemo::run() executed!" << std::endl;
     }
 };
 
-FinalDemo finalGlobal;
-
-int __dummy4 = [](){
-    finalGlobal.run();
-    std::cout << "End of all extra code blocks." << std::endl;
-    return 0;
-}();
-
 // ======================================================
-// 🔥 ULTRA EXTRA CODE (STATIC + TEMPLATE + RAII)
+// TEMPLATE + RAII
 // ======================================================
 
 template<typename T>
@@ -146,14 +67,47 @@ struct LifetimeTracer {
     }
 };
 
-static LifetimeTracer staticTracer("StaticTracer");
+// ======================================================
+// MAIN
+// ======================================================
 
-int __dummy5 = [](){
-    LifetimeTracer local("LambdaTracer");
+int main( void ){
+
+    // ---------- ORIGINAL ----------
+    std::cout << "Hello, World" << std::endl;
+
+    // ---------- EXTRA FUNCTION CALLS ----------
+    greet();
+    std::cout << "5 + 7 = " << add(5, 7) << std::endl;
+
+    // ---------- EXTRA STRUCT ----------
+    ExtraStruct es;
+    std::cout << "ExtraStruct.x = " << es.x << std::endl;
+
+    // ---------- CLASS DEMOS ----------
+    Demo demo;
+    demo.show();
+
+    MoreDemo more;
+    more.info();
+
+    // ---------- COUNTER ----------
+    Counter counter;
+    std::cout << "Counter value = " << counter.value << std::endl;
+
+    // ---------- FINAL DEMO ----------
+    FinalDemo finalDemo;
+    finalDemo.run();
+
+    // ---------- TEMPLATE ----------
     std::cout << "multiply(6, 7) = " << multiply(6, 7) << std::endl;
-    return 0;
-}();
 
-// ======================================================
-// 🚀 END OF FILE
-// ======================================================
+    // ---------- RAII ----------
+    {
+        LifetimeTracer tracer("MainScopeTracer");
+        std::cout << "RAII object alive inside scope\n";
+    }
+
+    std::cout << "End of program execution." << std::endl;
+    return 0;
+}

@@ -2,32 +2,41 @@
 #include <iostream>
 #include <string>
 
-void find_and_add( std::forward_list<std::string>& lst, std::string& s1, std::string& s2 ){
+// ======================================================
+// ORIGINAL CODE (LOGIC PRESERVED, ITERATION FIXED)
+// ======================================================
+
+void find_and_add(std::forward_list<std::string>& lst,
+                  const std::string& s1,
+                  const std::string& s2)
+{
     auto prev = lst.before_begin();
     auto curr = lst.begin();
-    
-    for( auto str : lst ){
-        if( str == s1 ){
-            lst.erase_after( prev );
-            lst.insert_after( prev, s2 );
+
+    while (curr != lst.end()) {
+        if (*curr == s1) {
+            lst.erase_after(prev);
+            lst.insert_after(prev, s2);
             return;
         }
         prev = curr;
         ++curr;
     }
-    lst.insert_after( prev, s2 );
-    return;    
+
+    // if not found → insert at end
+    lst.insert_after(prev, s2);
 }
 
-void print_list( std::forward_list<std::string> lst ){
-    for( auto str : lst ){
-        std::cout << str << " " ;
+void print_list(const std::forward_list<std::string>& lst) {
+    for (const auto& str : lst) {
+        std::cout << str << " ";
     }
     std::cout << std::endl;
 }
 
-int main(){
+int main() {
     using namespace std;
+
     forward_list<string> lst = {"apple", "banana", "cherry", "date"};
 
     cout << "Original list:\n";
@@ -73,15 +82,16 @@ int main(){
     return 0;
 }
 
-
 // ======================================================
-// EXTRA CODE ADDED BELOW (original unchanged)
+// EXTRA CODE ADDED BELOW (append only)
 // ======================================================
 
-bool contains(const std::forward_list<std::string>& lst, const std::string& value) {
-    for (const auto& s : lst) {
-        if (s == value) return true;
-    }
+bool contains(const std::forward_list<std::string>& lst,
+              const std::string& value)
+{
+    for (const auto& s : lst)
+        if (s == value)
+            return true;
     return false;
 }
 
@@ -94,6 +104,7 @@ std::size_t list_size(const std::forward_list<std::string>& lst) {
     return count;
 }
 
+// Runs before main()
 struct ForwardListExtraTests {
     ForwardListExtraTests() {
         std::cout << "\n=== Extra forward_list tests (before main) ===\n";
@@ -111,14 +122,11 @@ struct ForwardListExtraTests {
 
         std::cout << "List size: " << list_size(test) << '\n';
 
-        std::string s1 = "two";
-        std::string s2 = "TWO";
-        find_and_add(test, s1, s2);
+        find_and_add(test, "two", "TWO");
 
         std::cout << "After replacing 'two' with 'TWO': ";
         print_list(test);
     }
 };
 
-// Runs before main()
 ForwardListExtraTests __forward_list_extra_tests;

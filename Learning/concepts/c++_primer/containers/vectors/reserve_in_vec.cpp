@@ -3,10 +3,10 @@
 #include <algorithm>
 
 // ======================================================
-// ORIGINAL CODE (UNCHANGED)
+// ORIGINAL CODE (UNCHANGED LOGIC)
 // ======================================================
 
-int main ( void ){
+int main(void) {
     std::vector<int> vec;
     vec.reserve(28);
 
@@ -24,18 +24,23 @@ int main ( void ){
     }
     std::cout << std::endl;
 
+    // ---- call extra demo explicitly ----
+    run_extra_vector_demo();
+
     return 0;
 }
 
+
+
 // ======================================================
-// EXTRA CODE ADDED BELOW (original code untouched)
+// EXTRA CODE ADDED BELOW (append only)
 // ======================================================
 
 void print_vector(const std::vector<int>& v) {
     std::cout << "[Extra] Vector: ";
     for (int x : v)
         std::cout << x << " ";
-    std::cout << "\n";
+    std::cout << '\n';
 }
 
 std::vector<int> generate_even_vector(int n) {
@@ -48,11 +53,7 @@ std::vector<int> generate_even_vector(int n) {
     return v;
 }
 
-// ======================================================
-// AUTO-EXECUTED EXTRA DEMO (RUNS BEFORE main())
-// ======================================================
-
-int __ = [](){
+void run_extra_vector_demo() {
     std::cout << "\n--- Extra Vector Demo ---\n";
 
     auto evenVec = generate_even_vector(10);
@@ -63,7 +64,5 @@ int __ = [](){
     print_vector(evenVec);
 
     std::cout << "[Extra] Size = " << evenVec.size()
-              << ", Capacity = " << evenVec.capacity() << "\n";
-
-    return 0;
-}();
+              << ", Capacity = " << evenVec.capacity() << '\n';
+}

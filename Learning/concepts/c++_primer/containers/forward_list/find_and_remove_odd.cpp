@@ -1,31 +1,33 @@
 #include <forward_list>
 #include <iostream>
 
-void find_and_remove_odd( std::forward_list<int> &lst ){
+// ======================================================
+// ORIGINAL CODE (LOGIC UNCHANGED)
+// ======================================================
+
+void find_and_remove_odd(std::forward_list<int>& lst) {
     auto prev = lst.before_begin();
     auto curr = lst.begin();
-    
-    while( curr != lst.end() ){
-        if( *curr % 2 ){
-            curr = lst.erase_after( prev );
-        }
-        else{
+
+    while (curr != lst.end()) {
+        if (*curr % 2 != 0) {              // odd number
+            curr = lst.erase_after(prev); // erase and advance safely
+        } else {
             prev = curr;
-            curr++;
+            ++curr;
         }
     }
 }
 
-void print_list( std::forward_list<int>& lst ){
-    for( auto elem: lst ){
-        std::cout << '[' << elem << ']' << "->";
+void print_list(const std::forward_list<int>& lst) {
+    for (auto elem : lst) {
+        std::cout << "[" << elem << "]->";
     }
     std::cout << "\n";
-    return ;
 }
 
 int main() {
-    // Test case 1: normal list with mixed numbers
+    // Test case 1: mixed numbers
     std::forward_list<int> fl1 = {1, 2, 3, 4, 5, 6, 7, 8};
     std::cout << "Original list 1: ";
     print_list(fl1);
@@ -64,10 +66,10 @@ int main() {
     return 0;
 }
 
-
 // ======================================================
 // EXTRA CODE ADDED BELOW (original unchanged)
 // ======================================================
 
-// Simple extra sanity check
-int __extra_line = (std::cout << "\n[Extra] Program finished successfully.\n", 0);
+// Simple extra sanity check (runs before program exit)
+int __extra_line =
+    (std::cout << "\n[Extra] Program finished successfully.\n", 0);

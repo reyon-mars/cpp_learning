@@ -1,35 +1,34 @@
 #include <forward_list>
 #include <iostream>
+#include <cstddef>
 
 // ------------------------------------------------
 // ORIGINAL CODE (UNCHANGED)
 // ------------------------------------------------
 
-void find_and_remove_odd( std::forward_list<int> &lst ){
-    auto  prev = lst.before_begin();
+void find_and_remove_odd(std::forward_list<int>& lst) {
+    auto prev = lst.before_begin();
     auto curr = lst.begin();
-    
-    while( curr != lst.end() ){
-        if( *curr % 2 ){
-            curr = lst.erase_after( prev );
-        }
-        else{
+
+    while (curr != lst.end()) {
+        if (*curr % 2) {
+            curr = lst.erase_after(prev);
+        } else {
             prev = curr;
-            curr++;
+            ++curr;
         }
     }
 }
 
-void print_list( std::forward_list<int>& lst ){
-    for( auto elem: lst ){
-        std::cout << '[' << elem << ']' << "->";
+void print_list(std::forward_list<int>& lst) {
+    for (auto elem : lst) {
+        std::cout << '[' << elem << "]->";
     }
     std::cout << "\n";
-    return ;
 }
 
 int main() {
-    // Test case 1: normal list with mixed numbers
+    // Test case 1: mixed numbers
     std::forward_list<int> fl1 = {1, 2, 3, 4, 5, 6, 7, 8};
     std::cout << "Original list 1: ";
     print_list(fl1);
@@ -69,7 +68,7 @@ int main() {
 }
 
 // ------------------------------------------------
-// EXTRA CODE ADDED BELOW (original code untouched)
+// EXTRA CODE (append only)
 // ------------------------------------------------
 
 // Generate a pseudo-random forward_list
@@ -100,7 +99,7 @@ bool verify_only_even(const std::forward_list<int>& lst) {
 
 // Alternative odd removal using remove_if
 void remove_odd_using_remove_if(std::forward_list<int>& lst) {
-    lst.remove_if([](int x){
+    lst.remove_if([](int x) {
         return x % 2 != 0;
     });
 }
@@ -133,12 +132,12 @@ void test_random_list() {
 }
 
 // Automatic validation before main()
-int ___ = [](){
+int ___ = []() {
     std::cout << "\n[Extra] --- Running validation tests ---\n";
 
     std::forward_list<int> base = {1,2,3,4,5,6,7,8,9};
 
-    auto manual = duplicate_list(base);
+    auto manual  = duplicate_list(base);
     auto builtin = duplicate_list(base);
 
     find_and_remove_odd(manual);

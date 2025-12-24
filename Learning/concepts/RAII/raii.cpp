@@ -1,8 +1,12 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <stdexcept>
 
-// ---------------- ORIGINAL CLASS ----------------
+// ======================================================
+// ORIGINAL CLASS (UNCHANGED)
+// ======================================================
+
 class file_guard {
 private:
     std::fstream f_handle;
@@ -28,7 +32,9 @@ public:
     std::fstream& get() { return f_handle; }
 };
 
-// ---------------- EXTRA UTILITIES ----------------
+// ======================================================
+// EXTRA UTILITIES (ADDED CODE)
+// ======================================================
 
 // Check if file exists
 bool file_exists(const std::string& filename) {
@@ -36,10 +42,11 @@ bool file_exists(const std::string& filename) {
     return f.good();
 }
 
-// Read entire file safely
+// Read entire file safely using file_guard
 std::string read_all(file_guard& fg) {
     std::string content, line;
     auto& f = fg.get();
+
     while (std::getline(f, line)) {
         content += line + '\n';
     }
@@ -59,7 +66,10 @@ struct ScopeLogger {
     }
 };
 
-// ---------------- MAIN (UPDATED) ----------------
+// ======================================================
+// MAIN
+// ======================================================
+
 int main(void) {
     const std::string filename = "example.txt";
 

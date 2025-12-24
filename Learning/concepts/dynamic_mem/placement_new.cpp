@@ -2,7 +2,7 @@
 #include <new>
 #include <type_traits>
 
-// ---------------- ORIGINAL CODE ----------------
+// ---------------- ORIGINAL CODE (UNCHANGED) ----------------
 
 class base {
 private:
@@ -13,8 +13,29 @@ public:
     ~base() { std::cout << "Destructor\n"; }
 };
 
-// ---------------- EXTRA CLASSES ----------------
+int main(void) {
+    std::cout << "Normal case\n";
+    base* obj = new base();
+    delete obj;
 
+    std::cout << "\nPlacement New Case\n";
+    char* memory = new char[sizeof(base) * 2];
+
+    base* obj1 = new (&memory[0]) base();
+    base* obj2 = new (&memory[sizeof(base)]) base();
+
+    obj1->~base();
+    obj2->~base();
+    delete[] memory;
+
+    return 0;
+}
+
+// ----------------------------------------------------------
+// EXTRA CODE ADDED BELOW (original code untouched)
+// ----------------------------------------------------------
+
+// Derived class demo
 class derived : public base {
 public:
     derived() {
@@ -25,7 +46,7 @@ public:
     }
 };
 
-// Virtual destructor demo
+// Virtual destructor demonstration
 class poly_base {
 public:
     poly_base() {
@@ -46,16 +67,14 @@ public:
     }
 };
 
-// ---------------- EXTRA FUNCTIONS ----------------
-
-// Normal heap allocation
+// Normal heap allocation test
 void test_normal_allocation() {
     std::cout << "\n[Extra] Normal Allocation (derived)\n";
     derived* d = new derived();
     delete d;
 }
 
-// Placement new allocation
+// Placement-new allocation test
 void test_placement_new() {
     std::cout << "\n[Extra] Placement New (derived)\n";
 
@@ -81,7 +100,7 @@ void test_aligned_storage() {
     b->~base();
 }
 
-// Placement-new array
+// Placement-new array demo
 void test_array_placement_new() {
     std::cout << "\n[Extra] Placement-New Array\n";
 
@@ -124,31 +143,20 @@ void test_raii_guard() {
     PlacementGuard<base> guard(b);
 }
 
-// ---------------- MAIN ----------------
+// ----------------------------------------------------------
+// AUTO-EXECUTED EXTRA TESTS (RUN BEFORE main())
+// ----------------------------------------------------------
 
-int main(void) {
-    std::cout << "Normal case\n";
-    base* obj = new base();
-    delete obj;
+struct AutoRunPlacementTests {
+    AutoRunPlacementTests() {
+        std::cout << "\n=== Running Extra Placement-New Tests ===\n";
+        test_normal_allocation();
+        test_placement_new();
+        test_aligned_storage();
+        test_array_placement_new();
+        test_virtual_destructor();
+        test_raii_guard();
+    }
+};
 
-    std::cout << "\nPlacement New Case\n";
-    char* memory = new char[sizeof(base) * 2];
-
-    base* obj1 = new (&memory[0]) base();
-    base* obj2 = new (&memory[sizeof(base)]) base();
-
-    obj1->~base();
-    obj2->~base();
-    delete[] memory;
-
-    // -------- EXTRA DEMOS --------
-
-    test_normal_allocation();
-    test_placement_new();
-    test_aligned_storage();
-    test_array_placement_new();
-    test_virtual_destructor();
-    test_raii_guard();
-
-    return 0;
-}
+AutoRunPlacementTests __auto_run_tests;

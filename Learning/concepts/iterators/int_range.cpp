@@ -1,8 +1,8 @@
 #include <iostream>
 
-// ---------------- ORIGINAL CODE (UNCHANGED) ----------------
+// ---------------- ORIGINAL CODE (FIXED CONST-CORRECTNESS) ----------------
 
-class int_range{
+class int_range {
 private:
     int start;
     int end;
@@ -24,20 +24,18 @@ public:
             return *this;
         }
 
-        bool operator!=(const Iterator& other) {
+        bool operator!=(const Iterator& other) const {
             return current_ != other.current_;
         }
     };
 
     explicit int_range(int s, int e) : start(s), end(e) {}
 
-    Iterator begin() {
-        return Iterator(start);
-    }
+    Iterator begin() { return Iterator(start); }
+    Iterator end()   { return Iterator(end); }
 
-    Iterator end() {
-        return Iterator(end);
-    }
+    Iterator begin() const { return Iterator(start); }
+    Iterator end()   const { return Iterator(end); }
 };
 
 // ---------------- EXTRA FUNCTIONS ----------------
@@ -63,7 +61,7 @@ int sum_range(const int_range& r) {
 int count_range(const int_range& r) {
     int count = 0;
     for (int v : r) {
-        (void)v; // silence unused warning
+        (void)v;
         ++count;
     }
     return count;
@@ -78,7 +76,7 @@ int max_in_range(const int_range& r) {
     return max_val;
 }
 
-// ---------------- MAIN (UPDATED) ----------------
+// ---------------- MAIN ----------------
 
 int main() {
     std::cout << "--- int_range Demo ---\n";

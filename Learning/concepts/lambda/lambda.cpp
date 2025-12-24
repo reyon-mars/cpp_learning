@@ -2,6 +2,7 @@
 #include <vector>
 #include <numeric>
 #include <utility>
+#include <memory>
 
 // ---------------- ORIGINAL FUNCTION ----------------
 auto sum_vector(std::vector<int> vec) {
@@ -21,12 +22,12 @@ auto make_multiplier(int m) {
     };
 }
 
-// capture-by-reference demo
+// ✅ FIXED: capture-by-reference demo (safe)
 auto capture_by_reference_demo() {
-    int value = 10;
-    return [&value]() mutable {
-        value += 5;
-        return value;
+    auto value = std::make_shared<int>(10);
+    return [value]() mutable {
+        *value += 5;
+        return *value;
     };
 }
 
@@ -47,7 +48,7 @@ int sum_range(int a, int b) {
     return s;
 }
 
-// ---------------- MAIN (UPDATED) ----------------
+// ---------------- MAIN ----------------
 int main() {
     std::vector<int> vec = {1, 2, 3, 4, 5};
 

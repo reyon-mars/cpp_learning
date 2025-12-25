@@ -1,10 +1,18 @@
-// ==========================================
-// EXTRA CODE (APPEND ONLY – ORIGINAL UNCHANGED)
-// ==========================================
-
 #include <iostream>
 
-// Extra function
+// ======================================================
+// ORIGINAL MAIN CODE (UNCHANGED)
+// ======================================================
+
+int main(void) {
+    return -1;
+}
+
+// ======================================================
+// EXTRA CODE (APPENDED, ORIGINAL UNCHANGED)
+// ======================================================
+
+// Simple extra function
 void extraFunction() {
     std::cout << "This is extra code added without modifying the original!" << std::endl;
 }
@@ -14,7 +22,7 @@ struct ExtraStruct {
     int value = 10;
 };
 
-// Runs before main()
+// Runs before main
 int runExtra() {
     ExtraStruct e;
     std::cout << "Extra struct value: " << e.value << std::endl;
@@ -23,7 +31,6 @@ int runExtra() {
 }
 
 int _ = runExtra();
-
 
 // ------------------------------------------
 // MORE EXTRA CODE
@@ -41,6 +48,11 @@ public:
 
 ExtraClass globalExtraObj;
 
+void extraMore() {
+    std::cout << "Another extra function executed!" << std::endl;
+}
+
+int __ = (extraMore(), 0);
 
 // ------------------------------------------
 // EVEN MORE EXTRA CODE
@@ -57,15 +69,65 @@ struct Bonus {
 
 Bonus globalBonus;
 
-int __ = [](){
+void extraFinal() {
+    std::cout << "Final extra function running!" << std::endl;
+}
+
+int ___ = [](){
     std::cout << "Lambda-before-main executing!" << std::endl;
     globalBonus.info();
+    extraFinal();
     return 0;
 }();
 
+// ------------------------------------------
+// EVEN MORE EXTRA CODE
+// ------------------------------------------
+
+class PreMainWorker {
+public:
+    PreMainWorker() {
+        std::cout << "PreMainWorker constructor executed!" << std::endl;
+    }
+    void run() {
+        std::cout << "PreMainWorker::run() executing!" << std::endl;
+    }
+};
+
+PreMainWorker globalWorker;
+
+int ____ = [](){
+    std::cout << "Another lambda-before-main executing!" << std::endl;
+    globalWorker.run();
+    return 0;
+}();
 
 // ------------------------------------------
-// FINAL EXTRA CODE (RAII DEMO)
+// NAMESPACE EXTRA
+// ------------------------------------------
+
+namespace ExtraNamespace {
+    struct Init {
+        Init() {
+            std::cout << "ExtraNamespace::Init constructor executed!" << std::endl;
+        }
+    };
+
+    void doSomething() {
+        std::cout << "ExtraNamespace::doSomething() running!" << std::endl;
+    }
+}
+
+ExtraNamespace::Init namespaceInit;
+
+int _____ = [](){
+    std::cout << "Namespace lambda-before-main executing!" << std::endl;
+    ExtraNamespace::doSomething();
+    return 0;
+}();
+
+// ------------------------------------------
+// FINAL RAII EXTRA
 // ------------------------------------------
 
 struct FinalGuard {
@@ -78,3 +140,8 @@ struct FinalGuard {
 };
 
 FinalGuard finalGuard;
+
+int ______ = [](){
+    std::cout << "Absolutely last lambda-before-main executing!" << std::endl;
+    return 0;
+}();

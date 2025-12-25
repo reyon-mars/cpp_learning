@@ -16,6 +16,7 @@ struct Book{
 // EXTRA FUNCTIONS
 // ======================================================
 
+// Print single book details
 void printBook(const Book& b) {
     std::cout << "\nBook Info:\n";
     std::cout << "Name: " << b.name << "\n";
@@ -23,6 +24,7 @@ void printBook(const Book& b) {
     std::cout << "Publisher: " << b.publisher << "\n";
 }
 
+// Factory function to create a sample book
 Book createSampleBook() {
     return Book{
         .name = "Clean Code",
@@ -31,10 +33,12 @@ Book createSampleBook() {
     };
 }
 
+// Compare two books by ISBN
 bool hasSameISBN(const Book& a, const Book& b) {
     return a.ISBN_NO == b.ISBN_NO;
 }
 
+// Print list of books
 void printBookList(const std::vector<Book>& books) {
     std::cout << "\nBook List:\n";
     for (const auto& book : books) {
@@ -45,6 +49,7 @@ void printBookList(const std::vector<Book>& books) {
     }
 }
 
+// Generate a small collection of books
 std::vector<Book> generateBookCollection() {
     return {
         {"Design Patterns", 12345, "Addison-Wesley"},
@@ -53,6 +58,7 @@ std::vector<Book> generateBookCollection() {
     };
 }
 
+// Find a book by ISBN
 const Book* findByISBN(const std::vector<Book>& books, int isbn) {
     for (const auto& b : books) {
         if (b.ISBN_NO == isbn)

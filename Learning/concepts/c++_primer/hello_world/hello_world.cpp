@@ -5,17 +5,17 @@
 // ORIGINAL CODE (LOGIC UNCHANGED)
 // ======================================================
 
-void greet(){
+void greet() {
     std::cout << "This is extra code added without modifying main!" << std::endl;
 }
 
-int add(int a, int b){
+int add(int a, int b) {
     return a + b;
 }
 
-class Demo{
+class Demo {
 public:
-    void show(){
+    void show() {
         std::cout << "Demo class method executed!" << std::endl;
     }
 };
@@ -68,10 +68,37 @@ struct LifetimeTracer {
 };
 
 // ======================================================
+// AUTO-RUN EXTRA DEMOS (BEFORE MAIN)
+// ======================================================
+
+int __pre_main_extra = [](){
+    std::cout << "\n[Pre-main Extra Demo]\n";
+
+    ExtraStruct es;
+    std::cout << "Pre-main ExtraStruct.x = " << es.x << std::endl;
+
+    MoreDemo more;
+    more.info();
+
+    Counter counter;
+    std::cout << "Pre-main Counter value = " << counter.value << std::endl;
+
+    FinalDemo finalDemo;
+    finalDemo.run();
+
+    std::cout << "multiply(3, 4) = " << multiply(3, 4) << std::endl;
+
+    LifetimeTracer tracer("PreMainTracer");
+    std::cout << "RAII object alive inside pre-main lambda\n";
+
+    return 0;
+}();
+
+// ======================================================
 // MAIN
 // ======================================================
 
-int main( void ){
+int main(void) {
 
     // ---------- ORIGINAL ----------
     std::cout << "Hello, World" << std::endl;

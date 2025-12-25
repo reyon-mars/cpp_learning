@@ -2,7 +2,7 @@
 #include <cstdint>
 
 // ======================================================
-// ORIGINAL ENUMS
+// ORIGINAL ENUMS (UNCHANGED)
 // ======================================================
 
 enum class Animal : uint8_t {
@@ -18,7 +18,7 @@ enum class Vehicle : uint8_t {
 };
 
 // ======================================================
-// ORIGINAL DESCRIBE FUNCTIONS
+// ORIGINAL DESCRIBE FUNCTIONS (UNCHANGED)
 // ======================================================
 
 void describe(Animal a) {
@@ -50,7 +50,7 @@ void describe(Vehicle v) {
 }
 
 // ======================================================
-// EXTRA ENUMS + FUNCTIONS
+// EXTRA ENUMS + FUNCTIONS (ADDED)
 // ======================================================
 
 enum class Food : uint8_t {
@@ -134,7 +134,7 @@ void describeWeather(Weather w) {
 }
 
 // ======================================================
-// TEMPLATE + RAII
+// EXTRA TEMPLATE + RAII (ADDED)
 // ======================================================
 
 template<typename T>
@@ -153,7 +153,7 @@ struct ScopedAnnounce {
 };
 
 // ======================================================
-// MAIN
+// MAIN (ORIGINAL LOGIC + ADDED DEMOS)
 // ======================================================
 
 int main(void) {
@@ -179,7 +179,7 @@ int main(void) {
     describeWeather(Weather::Sunny);
     genericDescribe(Weather::Rainy);
 
-    // ---------- RAII + COMPOSITION ----------
+    // ---------- RAII SCOPE DEMO ----------
     {
         ScopedAnnounce scope("Final enum demo");
         describePlanet(Planet::Earth);

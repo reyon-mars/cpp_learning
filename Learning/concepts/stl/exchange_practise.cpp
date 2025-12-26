@@ -15,8 +15,6 @@ public:
     }
 };
 
-
-
 // ----------------------------------------------------
 // EXTRA CODE ADDED BELOW (append only)
 // ----------------------------------------------------
@@ -44,8 +42,6 @@ void run_extra_counter_tests() {
     std::cout << "Reset again, previous = "
               << temp.reset() << '\n';
 }
-
-
 
 // ----------------------------------------------------
 // MAIN (original logic preserved + explicit call)

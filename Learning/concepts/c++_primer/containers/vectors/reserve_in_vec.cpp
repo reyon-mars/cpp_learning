@@ -2,6 +2,11 @@
 #include <vector>
 #include <algorithm>
 
+// ------------------------------------------------------
+// FORWARD DECLARATION (required, no logic change)
+// ------------------------------------------------------
+void run_extra_vector_demo();
+
 // ======================================================
 // ORIGINAL CODE (UNCHANGED LOGIC)
 // ======================================================
@@ -29,8 +34,6 @@ int main(void) {
 
     return 0;
 }
-
-
 
 // ======================================================
 // EXTRA CODE ADDED BELOW (append only)

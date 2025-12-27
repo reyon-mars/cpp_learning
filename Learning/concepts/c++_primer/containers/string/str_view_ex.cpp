@@ -19,7 +19,7 @@ void log_msg_(std::string tag, std::string msg)
 
 int main(void)
 {
-    const int iterations = 1000000;
+    const int iterations = 1'000'000;
     std::string test_tag = "Tag";
     std::string test_msg = "Message";
 
@@ -59,7 +59,7 @@ void test_fast_logger()
 {
     scoped_timer timer_fast("C-string Logger (Total)");
 
-    for (int i = 0; i < 500000; ++i) {
+    for (int i = 0; i < 500'000; ++i) {
         log_msg_fast("FAST", "Logging quickly!");
     }
 }

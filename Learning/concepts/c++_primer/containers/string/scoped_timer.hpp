@@ -31,7 +31,7 @@ public:
 
 // Simulated workload
 void busy_work(int n) {
-    volatile int x = 0; // volatile prevents optimization
+    volatile int x = 0; // prevents compiler optimization
     for (int i = 0; i < n; ++i)
         x += i;
 }
@@ -56,7 +56,7 @@ int __ = []() {
 }();
 
 // ---------------------------------------------------------
-// MAIN (optional demo)
+// MAIN
 // ---------------------------------------------------------
 
 int main() {

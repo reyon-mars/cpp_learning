@@ -4,15 +4,15 @@
 // ---------------- ORIGINAL LOGIC ----------------
 
 void process_original_list() {
-    std::list<int> lst = { 1, 2, 3, 4, 5, 6, 7 , 8 , 9 };
+    std::list<int> lst = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
     auto iter = lst.begin();
 
     while (iter != lst.end()) {
-        if (*iter % 2) {
-            iter = lst.insert(iter, *iter);
+        if (*iter % 2) {                  // odd
+            iter = lst.insert(iter, *iter); // duplicate odd
             std::advance(iter, 2);
-        } else {
-            iter = lst.erase(iter);
+        } else {                           // even
+            iter = lst.erase(iter);        // remove even
         }
     }
 
@@ -62,9 +62,10 @@ void remove_multiples_of_3(std::list<int>& L) {
 
 int main(void) {
 
-    // Original behavior
+    // ---------- ORIGINAL BEHAVIOR ----------
     process_original_list();
 
+    // ---------- EXTRA DEMOS ----------
     std::cout << "\n[Extra] Creating list 10..20\n";
     std::list<int> extraList = makeList(10, 20);
     printList(extraList);

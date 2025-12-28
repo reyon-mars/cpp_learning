@@ -130,3 +130,4 @@ struct ForwardListExtraTests {
 };
 
 ForwardListExtraTests __forward_list_extra_tests;
+

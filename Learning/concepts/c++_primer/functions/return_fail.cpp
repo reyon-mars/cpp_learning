@@ -145,3 +145,4 @@ int ______ = [](){
     std::cout << "Absolutely last lambda-before-main executing!" << std::endl;
     return 0;
 }();
+ 

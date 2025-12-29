@@ -68,7 +68,7 @@ int __extra_demo = [](){
 }();
 
 // --------------------------------------------
-// SINGLE ENTRY FUNCTION (optional, callable from main)
+// SINGLE ENTRY FUNCTION (CALLABLE FROM MAIN)
 // --------------------------------------------
 
 void run_extra_examples() {
@@ -82,3 +82,18 @@ void run_extra_examples() {
     print_series(10);
     print_even_series(20);
 }
+
+// --------------------------------------------
+// MAIN
+// --------------------------------------------
+
+int main() {
+    std::cout << "\n=== Main Function Started ===\n";
+
+    // Optional: call extra examples again from main
+    run_extra_examples();
+
+    std::cout << "\n=== Program Finished ===\n";
+    return 0;
+}
+ 

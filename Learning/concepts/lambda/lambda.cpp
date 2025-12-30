@@ -22,7 +22,7 @@ auto make_multiplier(int m) {
     };
 }
 
-// ✅ FIXED: capture-by-reference demo (safe)
+// capture-by-reference demo (safe via shared_ptr)
 auto capture_by_reference_demo() {
     auto value = std::make_shared<int>(10);
     return [value]() mutable {

@@ -3,7 +3,7 @@
 #include <string>
 
 // ======================================================
-// ORIGINAL CODE (UNCHANGED)
+// ORIGINAL CODE (with SMALL ADDITION ONLY)
 // ======================================================
 
 class scoped_timer {
@@ -25,45 +25,29 @@ public:
     }
 };
 
-// ---------------------------------------------------------
-// EXTRA CODE ADDED BELOW (original code untouched)
-// ---------------------------------------------------------
-
-// Simulated workload
+// Simple workload
 void busy_work(int n) {
-    volatile int x = 0; // prevents compiler optimization
+    volatile int x = 0; // prevents optimization
     for (int i = 0; i < n; ++i)
         x += i;
 }
-
-// Demonstrates scoped lifetime timing
-void timed_function() {
-    scoped_timer t("busy_work(1,000,000)");
-    busy_work(1'000'000);
-}
-
-// Automatically executed before main()
-int __ = []() {
-    std::cout << "--- Extra scoped_timer demo ---\n";
-
-    {
-        scoped_timer t("Block scope timer");
-        busy_work(500'000);
-    } // timer stops here automatically
-
-    timed_function();
-    return 0;
-}();
 
 // ---------------------------------------------------------
 // MAIN
 // ---------------------------------------------------------
 
 int main() {
-    std::cout << "\n--- Inside main() ---\n";
+    std::cout << "--- Scoped Timer Demo ---\n";
 
     scoped_timer t("main workload");
     busy_work(300'000);
+
+    // ---- small added code ----
+    {
+        scoped_timer inner("inner block workload");
+        busy_work(150'000);
+    }
+    // -------------------------
 
     return 0;
 }

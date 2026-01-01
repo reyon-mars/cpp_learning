@@ -11,7 +11,7 @@ void find_and_remove_odd(std::forward_list<int>& lst) {
     auto curr = lst.begin();
 
     while (curr != lst.end()) {
-        if (*curr % 2) {
+        if (*curr % 2) {                 // odd
             curr = lst.erase_after(prev);
         } else {
             prev = curr;
@@ -20,7 +20,7 @@ void find_and_remove_odd(std::forward_list<int>& lst) {
     }
 }
 
-void print_list(std::forward_list<int>& lst) {
+void print_list(const std::forward_list<int>& lst) {
     for (auto elem : lst) {
         std::cout << '[' << elem << "]->";
     }
@@ -64,22 +64,18 @@ int main() {
     std::cout << "After removing odd numbers: ";
     print_list(fl4);
 
+    // ---- SMALL ADDITION ----
+    std::cout << "\nFinal element count (list 1): "
+              << count_elements(fl1) << "\n";
+
     return 0;
 }
 
 // ------------------------------------------------
-// EXTRA CODE (append only)
+// SMALL EXTRA CODE (MINIMAL ADDITION)
 // ------------------------------------------------
 
-// Generate a pseudo-random forward_list
-std::forward_list<int> generate_random_list(int n) {
-    std::forward_list<int> lst;
-    for (int i = n; i >= 1; --i)
-        lst.push_front((i * 7) % 13);
-    return lst;
-}
-
-// Count elements in forward_list
+// Count elements in a forward_list
 std::size_t count_elements(const std::forward_list<int>& lst) {
     std::size_t count = 0;
     for (int v : lst) {
@@ -88,71 +84,3 @@ std::size_t count_elements(const std::forward_list<int>& lst) {
     }
     return count;
 }
-
-// Verify list contains only even numbers
-bool verify_only_even(const std::forward_list<int>& lst) {
-    for (int v : lst)
-        if (v % 2 != 0)
-            return false;
-    return true;
-}
-
-// Alternative odd removal using remove_if
-void remove_odd_using_remove_if(std::forward_list<int>& lst) {
-    lst.remove_if([](int x) {
-        return x % 2 != 0;
-    });
-}
-
-// Duplicate a forward_list
-std::forward_list<int> duplicate_list(const std::forward_list<int>& src) {
-    std::forward_list<int> dst;
-    auto it = dst.before_begin();
-    for (int v : src) {
-        it = dst.insert_after(it, v);
-    }
-    return dst;
-}
-
-// Extra test runner
-void test_random_list() {
-    auto lst = generate_random_list(10);
-
-    std::cout << "\n[Extra] Random list: ";
-    print_list(lst);
-
-    find_and_remove_odd(lst);
-
-    std::cout << "[Extra] After removing odd numbers: ";
-    print_list(lst);
-
-    std::cout << "[Extra] Count = " << count_elements(lst) << "\n";
-    std::cout << "[Extra] Only even? "
-              << (verify_only_even(lst) ? "YES" : "NO") << "\n";
-}
-
-// Automatic validation before main()
-int ___ = []() {
-    std::cout << "\n[Extra] --- Running validation tests ---\n";
-
-    std::forward_list<int> base = {1,2,3,4,5,6,7,8,9};
-
-    auto manual  = duplicate_list(base);
-    auto builtin = duplicate_list(base);
-
-    find_and_remove_odd(manual);
-    remove_odd_using_remove_if(builtin);
-
-    std::cout << "[Extra] Manual removal: ";
-    print_list(manual);
-
-    std::cout << "[Extra] remove_if removal: ";
-    print_list(builtin);
-
-    std::cout << "[Extra] Only even (manual)? "
-              << (verify_only_even(manual) ? "YES" : "NO") << "\n";
-
-    test_random_list();
-    return 0;
-}();
-

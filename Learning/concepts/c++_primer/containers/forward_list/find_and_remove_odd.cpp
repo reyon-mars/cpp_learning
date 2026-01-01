@@ -26,6 +26,23 @@ void print_list(const std::forward_list<int>& lst) {
     std::cout << "\n";
 }
 
+// ------------------------------------------------------
+// SMALL ADDITION (helper function)
+// ------------------------------------------------------
+
+int count_elements(const std::forward_list<int>& lst) {
+    int count = 0;
+    for (int _ : lst) {
+        (void)_;
+        ++count;
+    }
+    return count;
+}
+
+// ======================================================
+// MAIN
+// ======================================================
+
 int main() {
     // Test case 1: mixed numbers
     std::forward_list<int> fl1 = {1, 2, 3, 4, 5, 6, 7, 8};
@@ -35,42 +52,37 @@ int main() {
     find_and_remove_odd(fl1);
     std::cout << "After removing odd numbers: ";
     print_list(fl1);
+    std::cout << "Count: " << count_elements(fl1) << "\n\n";
 
     // Test case 2: all odd numbers
     std::forward_list<int> fl2 = {1, 3, 5, 7, 9};
-    std::cout << "\nOriginal list 2: ";
+    std::cout << "Original list 2: ";
     print_list(fl2);
 
     find_and_remove_odd(fl2);
     std::cout << "After removing odd numbers: ";
     print_list(fl2);
+    std::cout << "Count: " << count_elements(fl2) << "\n\n";
 
     // Test case 3: all even numbers
     std::forward_list<int> fl3 = {2, 4, 6, 8, 10};
-    std::cout << "\nOriginal list 3: ";
+    std::cout << "Original list 3: ";
     print_list(fl3);
 
     find_and_remove_odd(fl3);
     std::cout << "After removing odd numbers: ";
     print_list(fl3);
+    std::cout << "Count: " << count_elements(fl3) << "\n\n";
 
     // Test case 4: empty list
     std::forward_list<int> fl4;
-    std::cout << "\nOriginal list 4 (empty): ";
+    std::cout << "Original list 4 (empty): ";
     print_list(fl4);
 
     find_and_remove_odd(fl4);
     std::cout << "After removing odd numbers: ";
     print_list(fl4);
+    std::cout << "Count: " << count_elements(fl4) << "\n";
 
     return 0;
 }
-
-// ======================================================
-// EXTRA CODE ADDED BELOW (append only, original unchanged)
-// ======================================================
-
-// Simple extra sanity check (runs at static initialization)
-int __extra_line =
-    (std::cout << "\n[Extra] Program finished successfully.\n", 0);
-

@@ -1,7 +1,7 @@
 #include <iostream>
 
 // --------------------------------------------
-// ORIGINAL EXTRA FUNCTIONS
+// ORIGINAL FUNCTIONS (UNCHANGED LOGIC)
 // --------------------------------------------
 
 // Sum of first n natural numbers
@@ -50,37 +50,18 @@ void print_even_series(int n) {
 }
 
 // --------------------------------------------
-// AUTO-EXECUTED EXTRA DEMOS (RUNS BEFORE MAIN)
+// SMALL ADDITIONAL FUNCTION
 // --------------------------------------------
 
-int __extra_demo = [](){
-    std::cout << "\n--- Extra Examples (Auto-run before main) ---\n";
-
-    std::cout << "natural_sum(10) = " << natural_sum(10) << std::endl;
-    std::cout << "sum_even(20) = " << sum_even(20) << std::endl;
-    std::cout << "sum_odd(15) = " << sum_odd(15) << std::endl;
-    std::cout << "factorial(6) = " << factorial(6) << std::endl;
-
-    print_series(10);
-    print_even_series(20);
-
-    return 0;
-}();
-
-// --------------------------------------------
-// SINGLE ENTRY FUNCTION (CALLABLE FROM MAIN)
-// --------------------------------------------
-
-void run_extra_examples() {
-    std::cout << "\n--- Extra Examples (Callable from main) ---\n";
-
-    std::cout << "natural_sum(10) = " << natural_sum(10) << std::endl;
-    std::cout << "sum_even(20) = " << sum_even(20) << std::endl;
-    std::cout << "sum_odd(15) = " << sum_odd(15) << std::endl;
-    std::cout << "factorial(6) = " << factorial(6) << std::endl;
-
-    print_series(10);
-    print_even_series(20);
+// Display all results together
+void show_results(int n) {
+    std::cout << "\nResults for n = " << n << std::endl;
+    std::cout << "Natural sum: " << natural_sum(n) << std::endl;
+    std::cout << "Even sum: " << sum_even(n) << std::endl;
+    std::cout << "Odd sum: " << sum_odd(n) << std::endl;
+    std::cout << "Factorial: " << factorial(n) << std::endl;
+    print_series(n);
+    print_even_series(n);
 }
 
 // --------------------------------------------
@@ -88,12 +69,11 @@ void run_extra_examples() {
 // --------------------------------------------
 
 int main() {
-    std::cout << "\n=== Main Function Started ===\n";
 
-    // Optional: call extra examples again from main
-    run_extra_examples();
+    std::cout << "=== Program Started ===" << std::endl;
 
-    std::cout << "\n=== Program Finished ===\n";
+    show_results(10);   // small extra usage
+
+    std::cout << "\n=== Program Finished ===" << std::endl;
     return 0;
 }
- 

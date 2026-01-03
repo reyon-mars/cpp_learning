@@ -76,6 +76,13 @@ int max_in_range(const int_range& r) {
     return max_val;
 }
 
+// ---------------- SMALL ADDITION ----------------
+
+// Compute average of values in the range
+double average_range(const int_range& r) {
+    return static_cast<double>(sum_range(r)) / count_range(r);
+}
+
 // ---------------- MAIN ----------------
 
 int main() {
@@ -86,6 +93,7 @@ int main() {
     std::cout << "Sum: " << sum_range(r1) << '\n';
     std::cout << "Count: " << count_range(r1) << '\n';
     std::cout << "Max: " << max_in_range(r1) << '\n';
+    std::cout << "Average: " << average_range(r1) << '\n';
 
     std::cout << "\n";
 
@@ -94,7 +102,7 @@ int main() {
     std::cout << "Sum: " << sum_range(r2) << '\n';
     std::cout << "Count: " << count_range(r2) << '\n';
     std::cout << "Max: " << max_in_range(r2) << '\n';
+    std::cout << "Average: " << average_range(r2) << '\n';
 
     return 0;
 }
- 

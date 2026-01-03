@@ -1,6 +1,10 @@
 #include <iostream>
 #include <utility>
 
+// ======================================================
+// ORIGINAL CLASS (UNCHANGED LOGIC)
+// ======================================================
+
 class counter {
 private:
     int value = 0;   // safe initialization
@@ -15,49 +19,40 @@ public:
     }
 };
 
-// ----------------------------------------------------
-// EXTRA CODE ADDED BELOW (append only)
-// ----------------------------------------------------
+// ======================================================
+// SMALL EXTRA CODE (ADDED)
+// ======================================================
 
-// Helper to test counter behavior
-void test_counter(counter& c) {
-    std::cout << "\n[Extra] Testing counter\n";
+// Simple helper function to demonstrate counter usage
+void demo_counter() {
+    std::cout << "\n[Extra Demo]\n";
 
-    std::cout << "Increment by 5, previous = "
-              << c.increment(5) << '\n';
+    counter c;
+    std::cout << "Increment by 5, previous value = "
+              << c.increment(5) << std::endl;
 
-    std::cout << "Increment by 10, previous = "
-              << c.increment(10) << '\n';
+    std::cout << "Increment by 3, previous value = "
+              << c.increment(3) << std::endl;
 
-    std::cout << "Reset, previous = "
-              << c.reset() << '\n';
+    std::cout << "Reset, previous value = "
+              << c.reset() << std::endl;
 }
 
-// Demonstrates multiple operations safely
-void run_extra_counter_tests() {
-    counter temp;
-
-    test_counter(temp);
-
-    std::cout << "Reset again, previous = "
-              << temp.reset() << '\n';
-}
-
-// ----------------------------------------------------
-// MAIN (original logic preserved + explicit call)
-// ----------------------------------------------------
+// ======================================================
+// MAIN
+// ======================================================
 
 int main(void) {
 
+    // Original behavior
     counter countr;
     for (int i = 1; i < 100; i++) {
         std::cout << countr.increment(i) << " ";
     }
-    std::cout << countr.reset() << '\n';
+    std::cout << countr.reset() << std::endl;
 
-    // ---- extra code call ----
-    run_extra_counter_tests();
+    // Small extra demo call
+    demo_counter();
 
     return 0;
 }
- 

@@ -160,4 +160,3 @@ struct AutoRunPlacementTests {
 };
 
 AutoRunPlacementTests __auto_run_tests;
- 

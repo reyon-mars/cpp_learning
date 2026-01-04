@@ -18,14 +18,20 @@ std::string replace_idx(std::string& s,
     return s;
 }
 
-// ---- small added helper ----
+// ======================================================
+// SMALL EXTRA HELPER (ADDED ONLY)
+// ======================================================
+
 std::string to_uppercase(std::string s)
 {
     std::transform(s.begin(), s.end(), s.begin(),
                    [](unsigned char c) { return std::toupper(c); });
     return s;
 }
-// ----------------------------
+
+// ======================================================
+// MAIN
+// ======================================================
 
 int main() {
     std::string prefix = "mr";
@@ -46,3 +52,4 @@ int main() {
     std::cout << "\n--- End of main() ---\n";
     return 0;
 }
+

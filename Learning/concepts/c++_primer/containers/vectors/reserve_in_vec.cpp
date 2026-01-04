@@ -69,4 +69,3 @@ void run_extra_vector_demo() {
     std::cout << "[Extra] Size = " << evenVec.size()
               << ", Capacity = " << evenVec.capacity() << '\n';
 }
- 

@@ -8,7 +8,7 @@ void process_original_list() {
     auto iter = lst.begin();
 
     while (iter != lst.end()) {
-        if (*iter % 2) {                   // odd
+        if (*iter % 2) {                    // odd
             iter = lst.insert(iter, *iter); // duplicate odd
             std::advance(iter, 2);
         } else {                            // even

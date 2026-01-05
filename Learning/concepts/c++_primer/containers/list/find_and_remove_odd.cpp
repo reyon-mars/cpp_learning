@@ -3,6 +3,11 @@
 #include <cstddef>
 
 // ------------------------------------------------
+// FORWARD DECLARATION (SMALL ADDITION)
+// ------------------------------------------------
+std::size_t count_elements(const std::forward_list<int>& lst);
+
+// ------------------------------------------------
 // ORIGINAL CODE (UNCHANGED)
 // ------------------------------------------------
 

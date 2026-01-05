@@ -2,6 +2,11 @@
 #include <iostream>
 
 // ======================================================
+// FORWARD DECLARATION (minimal, required)
+// ======================================================
+int count_elements(const std::forward_list<int>& fl);
+
+// ======================================================
 // ORIGINAL CODE (UNCHANGED LOGIC)
 // ======================================================
 

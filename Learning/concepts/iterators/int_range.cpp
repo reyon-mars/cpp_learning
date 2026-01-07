@@ -43,9 +43,8 @@ public:
 // Print all values in the range
 void print_range(const int_range& r) {
     std::cout << "Range: ";
-    for (int v : r) {
+    for (int v : r)
         std::cout << v << ' ';
-    }
     std::cout << '\n';
 }
 

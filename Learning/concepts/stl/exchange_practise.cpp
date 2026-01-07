@@ -44,14 +44,14 @@ void demo_counter() {
 
 int main(void) {
 
-    // Original behavior
+    // ---------- ORIGINAL BEHAVIOR ----------
     counter countr;
     for (int i = 1; i < 100; i++) {
         std::cout << countr.increment(i) << " ";
     }
     std::cout << countr.reset() << std::endl;
 
-    // Small extra demo call
+    // ---------- SMALL EXTRA DEMO ----------
     demo_counter();
 
     return 0;

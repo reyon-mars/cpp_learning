@@ -32,7 +32,7 @@ void extra_demo() {
     auto user = std::make_unique<User>(User{"Venus", 28});
     print_user(user);
 
-    user.reset();
+    user.reset();   // release ownership
     print_user(user);
 }
 
@@ -47,7 +47,7 @@ int main(void) {
     std::cout << u->name << " " << u->age << '\n';
 
     std::unique_ptr<User> v;
-    v = std::move(u);
+    v = std::move(u);   // transfer ownership
 
     if (u == nullptr) {
         std::cout << "U is nullptr\n";

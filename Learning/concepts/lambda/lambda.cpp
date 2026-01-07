@@ -68,7 +68,7 @@ int main() {
     auto times3 = make_multiplier(3);
     std::cout << "3 * 4 = " << times3(4) << '\n';
 
-    auto ref_lambda = capture_by_reference_demo();
+    auto ref_lambda = capture_by_reference_demo(); 
     std::cout << "Ref lambda call 1: " << ref_lambda() << '\n';
     std::cout << "Ref lambda call 2: " << ref_lambda() << '\n';
 

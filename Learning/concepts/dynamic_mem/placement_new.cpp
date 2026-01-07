@@ -19,14 +19,14 @@ int main(void) {
     delete obj;
 
     std::cout << "\nPlacement New Case\n";
-    char* memory = new char[sizeof(base) * 2];
+
+    alignas(base) char memory[sizeof(base) * 2];
 
     base* obj1 = new (&memory[0]) base();
     base* obj2 = new (&memory[sizeof(base)]) base();
 
     obj1->~base();
     obj2->~base();
-    delete[] memory;
 
     return 0;
 }
@@ -62,7 +62,7 @@ public:
     poly_derived() {
         std::cout << "poly_derived ctor\n";
     }
-    ~poly_derived() {
+    ~poly_derived() override {
         std::cout << "poly_derived dtor\n";
     }
 };
@@ -78,15 +78,13 @@ void test_normal_allocation() {
 void test_placement_new() {
     std::cout << "\n[Extra] Placement New (derived)\n";
 
-    char* mem = new char[sizeof(derived) * 2];
+    alignas(derived) char mem[sizeof(derived) * 2];
 
     derived* d1 = new (&mem[0]) derived();
     derived* d2 = new (&mem[sizeof(derived)]) derived();
 
     d1->~derived();
     d2->~derived();
-
-    delete[] mem;
 }
 
 // Alignment-safe placement new
@@ -105,16 +103,15 @@ void test_array_placement_new() {
     std::cout << "\n[Extra] Placement-New Array\n";
 
     constexpr int N = 3;
-    void* raw = operator new[](sizeof(base) * N);
-    base* arr = static_cast<base*>(raw);
+    alignas(base) char buffer[sizeof(base) * N];
+
+    base* arr = reinterpret_cast<base*>(buffer);
 
     for (int i = 0; i < N; ++i)
         new (&arr[i]) base();
 
     for (int i = N - 1; i >= 0; --i)
         arr[i].~base();
-
-    operator delete[](raw);
 }
 
 // Virtual destructor test

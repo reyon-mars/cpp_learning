@@ -65,8 +65,7 @@ int __ = [](){
     std::cout << "[Extra] After removing even squares:";
     print_list(lst);
 
-    auto lst2 = {1, 2, 3, 4, 5, 6, 7};
-    std::list<int> lst3(lst2);
+    std::list<int> lst3 = {1, 2, 3, 4, 5, 6, 7};
     erase_odd_numbers(lst3);
     std::cout << "[Extra] After erasing odd numbers:";
     print_list(lst3);

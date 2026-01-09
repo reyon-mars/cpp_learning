@@ -84,7 +84,7 @@ int main() {
 std::size_t count_elements(const std::forward_list<int>& lst) {
     std::size_t count = 0;
     for (int v : lst) {
-        (void)v;
+        (void)v; // silence unused warning
         ++count;
     }
     return count;

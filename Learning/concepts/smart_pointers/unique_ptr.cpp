@@ -25,6 +25,11 @@ void print_user(const std::unique_ptr<User>& user) {
     }
 }
 
+// Small helper to increase age
+void birthday(User& user) {
+    user.age++;
+}
+
 // Simple demo function
 void extra_demo() {
     std::cout << "\n[Extra Demo]\n";
@@ -32,7 +37,11 @@ void extra_demo() {
     auto user = std::make_unique<User>(User{"Venus", 28});
     print_user(user);
 
-    user.reset();   // release ownership
+    birthday(*user);   // small added behavior
+    std::cout << "After birthday:\n";
+    print_user(user);
+
+    user.reset();      // release ownership
     print_user(user);
 }
 
@@ -52,6 +61,11 @@ int main(void) {
     if (u == nullptr) {
         std::cout << "U is nullptr\n";
     }
+
+    // ---- small added usage ----
+    birthday(*v);
+    std::cout << "After birthday: "
+              << v->name << " " << v->age << '\n';
 
     // ---------- SMALL EXTRA CALL ----------
     extra_demo();

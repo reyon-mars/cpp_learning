@@ -27,7 +27,7 @@ void print_list(const std::forward_list<int>& lst) {
 }
 
 // ------------------------------------------------------
-// SMALL ADDITION (helper functions)
+// SMALL ADDITION (helper functions only)
 // ------------------------------------------------------
 
 int count_elements(const std::forward_list<int>& lst) {
@@ -66,8 +66,8 @@ int main() {
     find_and_remove_odd(fl2);
     std::cout << "After removing odd numbers: ";
     print_list(fl2);
-    std::cout << "Count: " << count_elements(fl2);
-    std::cout << (is_empty(fl2) ? " (empty)\n\n" : "\n\n");
+    std::cout << "Count: " << count_elements(fl2)
+              << (is_empty(fl2) ? " (empty)\n\n" : "\n\n");
 
     // Test case 3: all even numbers
     std::forward_list<int> fl3 = {2, 4, 6, 8, 10};
@@ -87,8 +87,8 @@ int main() {
     find_and_remove_odd(fl4);
     std::cout << "After removing odd numbers: ";
     print_list(fl4);
-    std::cout << "Count: " << count_elements(fl4);
-    std::cout << (is_empty(fl4) ? " (empty)\n" : "\n");
+    std::cout << "Count: " << count_elements(fl4)
+              << (is_empty(fl4) ? " (empty)\n" : "\n");
 
     return 0;
 }

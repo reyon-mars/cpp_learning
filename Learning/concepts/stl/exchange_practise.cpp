@@ -17,6 +17,16 @@ public:
     int reset() {
         return std::exchange(value, 0);
     }
+
+    // -------- small additions --------
+    int current() const {
+        return value;
+    }
+
+    bool is_zero() const {
+        return value == 0;
+    }
+    // --------------------------------
 };
 
 // ======================================================
@@ -34,8 +44,14 @@ void demo_counter() {
     std::cout << "Increment by 3, previous value = "
               << c.increment(3) << std::endl;
 
+    std::cout << "Current value = "
+              << c.current() << std::endl;
+
     std::cout << "Reset, previous value = "
               << c.reset() << std::endl;
+
+    std::cout << "Is counter zero? "
+              << (c.is_zero() ? "Yes" : "No") << std::endl;
 }
 
 // ======================================================
@@ -50,6 +66,10 @@ int main(void) {
         std::cout << countr.increment(i) << " ";
     }
     std::cout << countr.reset() << std::endl;
+
+    // ---- small added usage ----
+    std::cout << "Counter after reset = "
+              << countr.current() << std::endl;
 
     // ---------- SMALL EXTRA DEMO ----------
     demo_counter();

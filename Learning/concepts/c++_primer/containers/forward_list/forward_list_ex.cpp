@@ -17,9 +17,9 @@ int main(void) {
     auto curr = f_lst.begin();
 
     while (curr != f_lst.end()) {
-        if (*curr % 2) {
+        if (*curr % 2) {                 // odd → remove
             curr = f_lst.erase_after(prev);
-        } else {
+        } else {                         // even → keep
             prev = curr;
             ++curr;
         }

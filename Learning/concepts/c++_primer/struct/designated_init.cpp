@@ -78,6 +78,13 @@ int main(void) {
     std::cout << "\nISBN Comparison Result: ";
     std::cout << (hasSameISBN(b2, sample) ? "Same ISBN\n" : "Different ISBN\n");
 
+    // ---------- VERY SMALL EXTRA ADDITION ----------
+    std::vector<Book> library;
+    library.push_back(b1);
+    library.push_back(b2);
+    library.push_back(sample);
+
+    std::cout << "\nTotal books in library: " << library.size() << std::endl;
+
     return 0;
 }
- 

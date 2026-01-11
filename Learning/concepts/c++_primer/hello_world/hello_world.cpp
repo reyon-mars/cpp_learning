@@ -66,7 +66,10 @@ int main(void) {
     ExtraDemo extra;
     extra.run();
 
+    // ---------- VERY SMALL ADDITION ----------
+    int executionCount = 1;
+    std::cout << "Program execution count: " << executionCount << std::endl;
+
     std::cout << "Program finished successfully." << std::endl;
     return 0;
 }
-

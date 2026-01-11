@@ -1,6 +1,6 @@
 #include <iostream>
 
-// ---------------- ORIGINAL CODE (FIXED CONST-CORRECTNESS) ----------------
+// ---------------- ORIGINAL CODE (UNCHANGED) ----------------
 
 class int_range {
 private:
@@ -38,48 +38,15 @@ public:
     Iterator end()   const { return Iterator(end); }
 };
 
-// ---------------- EXTRA FUNCTIONS ----------------
+// ---------------- SMALL EXTRA CODE ----------------
 
-// Print all values in the range
-void print_range(const int_range& r) {
-    std::cout << "Range: ";
-    for (int v : r)
-        std::cout << v << ' ';
-    std::cout << '\n';
-}
-
-// Sum all values in the range
-int sum_range(const int_range& r) {
-    int total = 0;
-    for (int v : r)
-        total += v;
-    return total;
-}
-
-// Count number of elements in the range
-int count_range(const int_range& r) {
-    int count = 0;
+// Check if a value exists in the range
+bool contains(const int_range& r, int value) {
     for (int v : r) {
-        (void)v;
-        ++count;
+        if (v == value)
+            return true;
     }
-    return count;
-}
-
-// Find maximum value in the range
-int max_in_range(const int_range& r) {
-    int max_val = *r.begin();
-    for (int v : r)
-        if (v > max_val)
-            max_val = v;
-    return max_val;
-}
-
-// ---------------- SMALL ADDITION ----------------
-
-// Compute average of values in the range
-double average_range(const int_range& r) {
-    return static_cast<double>(sum_range(r)) / count_range(r);
+    return false;
 }
 
 // ---------------- MAIN ----------------
@@ -87,21 +54,18 @@ double average_range(const int_range& r) {
 int main() {
     std::cout << "--- int_range Demo ---\n";
 
-    int_range r1(1, 6);
-    print_range(r1);
-    std::cout << "Sum: " << sum_range(r1) << '\n';
-    std::cout << "Count: " << count_range(r1) << '\n';
-    std::cout << "Max: " << max_in_range(r1) << '\n';
-    std::cout << "Average: " << average_range(r1) << '\n';
+    int_range r(1, 6);
 
-    std::cout << "\n";
+    std::cout << "Range: ";
+    for (int v : r)
+        std::cout << v << ' ';
+    std::cout << '\n';
 
-    int_range r2(10, 15);
-    print_range(r2);
-    std::cout << "Sum: " << sum_range(r2) << '\n';
-    std::cout << "Count: " << count_range(r2) << '\n';
-    std::cout << "Max: " << max_in_range(r2) << '\n';
-    std::cout << "Average: " << average_range(r2) << '\n';
+    std::cout << "Contains 3? "
+              << (contains(r, 3) ? "Yes" : "No") << '\n';
+
+    std::cout << "Contains 10? "
+              << (contains(r, 10) ? "Yes" : "No") << '\n';
 
     return 0;
 }

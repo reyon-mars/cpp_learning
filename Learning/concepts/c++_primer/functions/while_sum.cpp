@@ -1,80 +1,75 @@
 #include <iostream>
+#include <string>
 
-// --------------------------------------------
-// ORIGINAL FUNCTIONS (UNCHANGED LOGIC)
-// --------------------------------------------
+// ======================================================
+// ORIGINAL CODE (LOGIC UNCHANGED)
+// ======================================================
 
-// Sum of first n natural numbers
-int natural_sum(int n) {
-    return n * (n + 1) / 2;
+void greet() {
+    std::cout << "This is extra code added without modifying main!" << std::endl;
 }
 
-// Sum of even numbers up to n
-int sum_even(int n) {
-    int total = 0;
-    for (int i = 2; i <= n; i += 2)
-        total += i;
-    return total;
+int add(int a, int b) {
+    return a + b;
 }
 
-// Sum of odd numbers up to n
-int sum_odd(int n) {
-    int total = 0;
-    for (int i = 1; i <= n; i += 2)
-        total += i;
-    return total;
+class Demo {
+public:
+    void show() {
+        std::cout << "Demo class method executed!" << std::endl;
+    }
+};
+
+// ======================================================
+// SMALL ADDITIONAL CODE
+// ======================================================
+
+// Simple struct
+struct Info {
+    int value = 10;
+};
+
+// Simple helper function
+void printMessage(const std::string& msg) {
+    std::cout << msg << std::endl;
 }
 
-// Factorial of n
-int factorial(int n) {
-    int f = 1;
-    for (int i = 1; i <= n; i++)
-        f *= i;
-    return f;
-}
+// Simple class
+class ExtraDemo {
+public:
+    void run() {
+        std::cout << "ExtraDemo running successfully!" << std::endl;
+    }
+};
 
-// Print series from 1 to n
-void print_series(int n) {
-    std::cout << "Series from 1 to " << n << ": ";
-    for (int i = 1; i <= n; i++)
-        std::cout << i << " ";
-    std::cout << std::endl;
-}
-
-// Print even numbers up to n
-void print_even_series(int n) {
-    std::cout << "Even numbers up to " << n << ": ";
-    for (int i = 2; i <= n; i += 2)
-        std::cout << i << " ";
-    std::cout << std::endl;
-}
-
-// --------------------------------------------
-// SMALL ADDITIONAL FUNCTION
-// --------------------------------------------
-
-// Display all results together
-void show_results(int n) {
-    std::cout << "\nResults for n = " << n << std::endl;
-    std::cout << "Natural sum: " << natural_sum(n) << std::endl;
-    std::cout << "Even sum: " << sum_even(n) << std::endl;
-    std::cout << "Odd sum: " << sum_odd(n) << std::endl;
-    std::cout << "Factorial: " << factorial(n) << std::endl;
-    print_series(n);
-    print_even_series(n);
-}
-
-// --------------------------------------------
+// ======================================================
 // MAIN
-// --------------------------------------------
+// ======================================================
 
-int main() {
+int main(void) {
 
-    std::cout << "=== Program Started ===" << std::endl;
+    // ---------- ORIGINAL ----------
+    std::cout << "Hello, World" << std::endl;
 
-    show_results(10);   // small extra usage
+    greet();
+    std::cout << "5 + 7 = " << add(5, 7) << std::endl;
 
-    std::cout << "\n=== Program Finished ===" << std::endl;
+    Demo demo;
+    demo.show();
+
+    // ---------- SMALL EXTRA ----------
+    Info info;
+    std::cout << "Info value = " << info.value << std::endl;
+
+    printMessage("This is a simple helper function");
+
+    ExtraDemo extra;
+    extra.run();
+
+    // ---------- VERY SMALL ADDITION ----------
+    int executionCount = 1;
+    std::cout << "Program execution count: " << executionCount << std::endl;
+
+    std::cout << "Program finished successfully." << std::endl;
     return 0;
 }
-

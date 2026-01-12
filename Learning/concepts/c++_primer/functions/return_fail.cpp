@@ -32,4 +32,3 @@ int runExtra() {
 
 // Global initialization (executes before main)
 int _ = runExtra();
-

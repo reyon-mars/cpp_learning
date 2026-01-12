@@ -50,7 +50,7 @@ void describe(Vehicle v) {
 }
 
 // ======================================================
-// SMALL EXTRA CODE (ADDED)
+// SMALL EXTRA CODE (ADDED ONLY)
 // ======================================================
 
 enum class Food : uint8_t {

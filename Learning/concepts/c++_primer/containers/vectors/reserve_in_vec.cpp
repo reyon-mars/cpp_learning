@@ -29,14 +29,14 @@ int main(void) {
     }
     std::cout << std::endl;
 
-    // ---- call extra demo explicitly ----
+    // ---- small extra call ----
     run_extra_vector_demo();
 
     return 0;
 }
 
 // ======================================================
-// EXTRA CODE ADDED BELOW (append only)
+// EXTRA CODE (SMALL & APPENDED ONLY)
 // ======================================================
 
 void print_vector(const std::vector<int>& v) {
@@ -63,10 +63,8 @@ void run_extra_vector_demo() {
     print_vector(evenVec);
 
     std::reverse(evenVec.begin(), evenVec.end());
-    std::cout << "[Extra] Reversed even vector: ";
     print_vector(evenVec);
 
     std::cout << "[Extra] Size = " << evenVec.size()
               << ", Capacity = " << evenVec.capacity() << '\n';
 }
-

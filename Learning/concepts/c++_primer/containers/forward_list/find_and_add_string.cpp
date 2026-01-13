@@ -79,6 +79,11 @@ int main() {
     print_list(lst);
     cout << "Size: " << list_size(lst) << "\n";
 
+    // ---- very small addition ----
+    if (!lst.empty()) {
+        cout << "First element: " << lst.front() << "\n";
+    }
+    // ----------------------------
+
     return 0;
 }
- 

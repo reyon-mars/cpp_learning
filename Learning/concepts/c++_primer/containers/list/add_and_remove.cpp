@@ -46,6 +46,11 @@ int main(void) {
     std::cout << "\nExtra list: ";
     printList(demo);
 
+    // ---- very small added code ----
+    std::cout << "Demo list size: " << demo.size() << "\n";
+    std::cout << (demo.empty() ? "Demo list is empty\n"
+                               : "Demo list is not empty\n");
+    // ------------------------------
+
     return 0;
 }
- 

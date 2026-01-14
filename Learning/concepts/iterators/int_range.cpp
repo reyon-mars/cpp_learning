@@ -49,6 +49,16 @@ bool contains(const int_range& r, int value) {
     return false;
 }
 
+// Small helper: count elements in range
+int range_size(const int_range& r) {
+    int count = 0;
+    for (int _ : r) {
+        (void)_;
+        ++count;
+    }
+    return count;
+}
+
 // ---------------- MAIN ----------------
 
 int main() {
@@ -66,6 +76,9 @@ int main() {
 
     std::cout << "Contains 10? "
               << (contains(r, 10) ? "Yes" : "No") << '\n';
+
+    // ---- small added usage ----
+    std::cout << "Range size: " << range_size(r) << '\n';
 
     return 0;
 }

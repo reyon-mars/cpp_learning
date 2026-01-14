@@ -81,10 +81,17 @@ int main() {
     };
     std::cout << "Sum 1..10 = " << sum_lambda(1, 10) << '\n';
 
-    // ---------------- SMALL ADDITION ----------------
+    // ---------------- SMALL ADDITIONS ----------------
+
+    // simple square lambda
     auto square = [](int x) { return x * x; };
     std::cout << "Square of 6 = " << square(6) << '\n';
 
+    // simple constant lambda
+    auto say_done = []() {
+        std::cout << "Program finished successfully.\n";
+    };
+    say_done();
+
     return 0;
 }
- 

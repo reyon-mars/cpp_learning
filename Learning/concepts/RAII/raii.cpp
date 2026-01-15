@@ -66,6 +66,29 @@ struct ScopeLogger {
     }
 };
 
+// ---------------- SMALL ADDITIONS ----------------
+
+// Reset file stream to beginning
+void rewind_file(file_guard& fg) {
+    auto& f = fg.get();
+    f.clear();
+    f.seekg(0);
+}
+
+// Count number of lines in file
+int count_lines(file_guard& fg) {
+    rewind_file(fg);
+
+    int count = 0;
+    std::string line;
+    auto& f = fg.get();
+
+    while (std::getline(f, line))
+        ++count;
+
+    return count;
+}
+
 // ======================================================
 // MAIN
 // ======================================================
@@ -86,6 +109,10 @@ int main(void) {
         std::cout << "File opened successfully.\n";
         std::cout << "File contents:\n";
         std::cout << read_all(fg);
+
+        // ---- small added usage ----
+        std::cout << "\nLine count: "
+                  << count_lines(fg) << '\n';
 
     } catch (const std::exception& e) {
         std::cout << "Error: " << e.what() << '\n';

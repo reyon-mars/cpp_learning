@@ -37,6 +37,14 @@ bool hasSameISBN(const Book& a, const Book& b) {
     return a.ISBN_NO == b.ISBN_NO;
 }
 
+// ---- very small added helper ----
+void printLibrary(const std::vector<Book>& lib) {
+    std::cout << "\nLibrary contents:\n";
+    for (const auto& b : lib) {
+        std::cout << "- " << b.name << " (" << b.publisher << ")\n";
+    }
+}
+
 // ======================================================
 // MAIN
 // ======================================================
@@ -84,7 +92,11 @@ int main(void) {
     library.push_back(b2);
     library.push_back(sample);
 
-    std::cout << "\nTotal books in library: " << library.size() << std::endl;
+    std::cout << "\nTotal books in library: "
+              << library.size() << std::endl;
+
+    // small added usage
+    printLibrary(library);
 
     return 0;
 }

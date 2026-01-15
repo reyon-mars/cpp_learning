@@ -2,6 +2,12 @@
 #include <new>
 #include <type_traits>
 
+// ----------------------------------------------------------
+// FORWARD DECLARATIONS (SMALL REQUIRED ADDITION)
+// ----------------------------------------------------------
+void test_derived_allocation();
+void test_virtual_destructor();
+
 // ---------------- ORIGINAL CODE (UNCHANGED) ----------------
 
 class base {

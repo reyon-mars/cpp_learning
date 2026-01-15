@@ -42,6 +42,11 @@ public:
     }
 };
 
+// ---- very small added helper ----
+int increment(int x) {
+    return x + 1;
+}
+
 // ======================================================
 // MAIN
 // ======================================================
@@ -68,7 +73,9 @@ int main(void) {
 
     // ---------- VERY SMALL ADDITION ----------
     int executionCount = 1;
-    std::cout << "Program execution count: " << executionCount << std::endl;
+    executionCount = increment(executionCount);
+    std::cout << "Program execution count: "
+              << executionCount << std::endl;
 
     std::cout << "Program finished successfully." << std::endl;
     return 0;

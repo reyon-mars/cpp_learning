@@ -3,7 +3,7 @@
 #include <string>
 
 // ======================================================
-// ORIGINAL CODE (with SMALL ADDITION ONLY)
+// ORIGINAL CODE (UNCHANGED LOGIC)
 // ======================================================
 
 class scoped_timer {
@@ -32,6 +32,16 @@ void busy_work(int n) {
         x += i;
 }
 
+// ======================================================
+// SMALL ADDITION ONLY
+// ======================================================
+
+// Reusable helper to measure a workload
+void timed_work(const std::string& label, int n) {
+    scoped_timer t(label);
+    busy_work(n);
+}
+
 // ---------------------------------------------------------
 // MAIN
 // ---------------------------------------------------------
@@ -48,6 +58,10 @@ int main() {
         busy_work(150'000);
     }
     // -------------------------
+
+    // ---- very small extra usage ----
+    timed_work("helper function workload", 200'000);
+    // -------------------------------
 
     return 0;
 }

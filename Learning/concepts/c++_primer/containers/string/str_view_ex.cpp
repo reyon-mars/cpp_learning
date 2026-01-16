@@ -4,7 +4,7 @@
 #include "scoped_timer.hpp"
 
 // ======================================================
-// ORIGINAL CODE (with SMALL ADDITION ONLY)
+// ORIGINAL CODE (UNCHANGED LOGIC)
 // ======================================================
 
 void log_msg(std::string_view tag, std::string_view msg)
@@ -17,12 +17,19 @@ void log_msg_(std::string tag, std::string msg)
     std::cout << '[' << tag << ']' << msg << '\n';
 }
 
-// ---- small added function ----
-void log_msg_fast(const char* tag, const char* msg)
+// ======================================================
+// SMALL ADDITION ONLY
+// ======================================================
+
+// inline logger to avoid function call overhead
+inline void log_msg_inline(std::string_view tag, std::string_view msg)
 {
     std::cout << '[' << tag << ']' << msg << '\n';
 }
-// ------------------------------
+
+// ======================================================
+// MAIN
+// ======================================================
 
 int main(void)
 {
@@ -50,14 +57,14 @@ int main(void)
 
     std::cout << "\n";
 
-    // ---- small added benchmark ----
+    // ---- very small added benchmark ----
     {
-        scoped_timer timer_fast("C-string Logger (Total)");
+        scoped_timer timer_inline("Inline Logger (Total)");
         for (int i = 0; i < iterations; ++i) {
-            log_msg_fast("FAST", "Message");
+            log_msg_inline(test_tag, test_msg);
         }
     }
-    // -------------------------------
+    // -----------------------------------
 
     return 0;
 }

@@ -69,6 +69,13 @@ void describe(Food f) {
     }
 }
 
+// ---- very small helper addition ----
+template <typename T>
+void printEnumValue(T e) {
+    std::cout << "Enum numeric value: "
+              << static_cast<int>(e) << '\n';
+}
+
 // ======================================================
 // MAIN
 // ======================================================
@@ -82,9 +89,13 @@ int main(void) {
     describe(a);
     describe(v);
 
+    printEnumValue(a);
+    printEnumValue(v);
+
     // Small extra demo
     Food f = Food::Pizza;
     describe(f);
+    printEnumValue(f);
 
     return 0;
 }

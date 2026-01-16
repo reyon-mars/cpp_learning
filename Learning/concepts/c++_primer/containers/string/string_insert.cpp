@@ -19,14 +19,21 @@ std::string replace_idx(std::string& s,
 }
 
 // ======================================================
-// SMALL EXTRA HELPER (ADDED ONLY)
+// SMALL EXTRA HELPERS (ADDED ONLY)
 // ======================================================
 
+// Convert string to uppercase
 std::string to_uppercase(std::string s)
 {
     std::transform(s.begin(), s.end(), s.begin(),
                    [](unsigned char c) { return std::toupper(c); });
     return s;
+}
+
+// Count characters in a string
+std::size_t count_chars(const std::string& s)
+{
+    return s.size();
 }
 
 // ======================================================
@@ -47,9 +54,11 @@ int main() {
     // ---- small added usage ----
     std::string upper = to_uppercase(text);
     std::cout << "Uppercase: " << upper << '\n';
+
+    std::cout << "Character count: "
+              << count_chars(text) << '\n';
     // ---------------------------
 
     std::cout << "\n--- End of main() ---\n";
     return 0;
 }
- 

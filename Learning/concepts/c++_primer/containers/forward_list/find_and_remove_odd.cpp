@@ -43,6 +43,15 @@ bool is_empty(const std::forward_list<int>& lst) {
     return lst.begin() == lst.end();
 }
 
+// ---- very small extra helper ----
+int sum_elements(const std::forward_list<int>& lst) {
+    int sum = 0;
+    for (int v : lst)
+        sum += v;
+    return sum;
+}
+// --------------------------------
+
 // ======================================================
 // MAIN
 // ======================================================
@@ -56,7 +65,8 @@ int main() {
     find_and_remove_odd(fl1);
     std::cout << "After removing odd numbers: ";
     print_list(fl1);
-    std::cout << "Count: " << count_elements(fl1) << "\n\n";
+    std::cout << "Count: " << count_elements(fl1) << "\n";
+    std::cout << "Sum: " << sum_elements(fl1) << "\n\n";
 
     // Test case 2: all odd numbers
     std::forward_list<int> fl2 = {1, 3, 5, 7, 9};
@@ -77,7 +87,8 @@ int main() {
     find_and_remove_odd(fl3);
     std::cout << "After removing odd numbers: ";
     print_list(fl3);
-    std::cout << "Count: " << count_elements(fl3) << "\n\n";
+    std::cout << "Count: " << count_elements(fl3) << "\n";
+    std::cout << "Sum: " << sum_elements(fl3) << "\n\n";
 
     // Test case 4: empty list
     std::forward_list<int> fl4;
@@ -92,4 +103,3 @@ int main() {
 
     return 0;
 }
- 

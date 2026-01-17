@@ -1,6 +1,11 @@
 #include <iostream>
 #include <list>
 
+// -------------------------------------------------------
+// SMALL ADDITION (FORWARD DECLARATION ONLY)
+// -------------------------------------------------------
+void print_list(const std::list<int>& lst);
+
 // ---------------- ORIGINAL CODE (UNCHANGED) ----------------
 
 int main(void)

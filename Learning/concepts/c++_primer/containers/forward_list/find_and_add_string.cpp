@@ -44,6 +44,16 @@ std::size_t list_size(const std::forward_list<std::string>& lst)
     }
     return count;
 }
+
+// ---- very small extra helper ----
+bool contains(const std::forward_list<std::string>& lst,
+              const std::string& value)
+{
+    for (const auto& s : lst)
+        if (s == value)
+            return true;
+    return false;
+}
 // ----------------------------
 
 int main() {
@@ -83,6 +93,9 @@ int main() {
     if (!lst.empty()) {
         cout << "First element: " << lst.front() << "\n";
     }
+
+    cout << "Contains 'cherry'? "
+         << (contains(lst, "cherry") ? "Yes\n" : "No\n");
     // ----------------------------
 
     return 0;

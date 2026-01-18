@@ -84,8 +84,12 @@ int main() {
     // ---------------- SMALL ADDITIONS ----------------
 
     // simple square lambda
-    auto square = [](int x) { return x * x; };
+    auto square = [](int n) { return n * n; };
     std::cout << "Square of 6 = " << square(6) << '\n';
+
+    // simple check lambda
+    auto is_even = [](int n) { return n % 2 == 0; };
+    std::cout << "Is 10 even? " << (is_even(10) ? "Yes" : "No") << '\n';
 
     // simple constant lambda
     auto say_done = []() {

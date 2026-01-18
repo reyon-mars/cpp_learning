@@ -2,9 +2,10 @@
 #include <iostream>
 
 // ======================================================
-// FORWARD DECLARATION (minimal, required)
+// FORWARD DECLARATIONS (minimal, required)
 // ======================================================
 int count_elements(const std::forward_list<int>& fl);
+bool is_empty(const std::forward_list<int>& fl);
 
 // ======================================================
 // ORIGINAL CODE (UNCHANGED LOGIC)
@@ -31,12 +32,15 @@ int main(void) {
 
     // ---- small added usage ----
     std::cout << "\nEven count: " << count_elements(f_lst) << std::endl;
+    std::cout << (is_empty(f_lst) ? "List is empty\n"
+                                  : "List is not empty\n");
+    // --------------------------
 
     return 0;
 }
 
 // ======================================================
-// MINIMAL EXTRA CODE (helper only)
+// MINIMAL EXTRA CODE (helpers only)
 // ======================================================
 
 int count_elements(const std::forward_list<int>& fl) {
@@ -47,4 +51,7 @@ int count_elements(const std::forward_list<int>& fl) {
     }
     return count;
 }
- 
+
+bool is_empty(const std::forward_list<int>& fl) {
+    return fl.begin() == fl.end();
+}

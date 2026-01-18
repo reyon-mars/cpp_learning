@@ -59,6 +59,16 @@ int range_size(const int_range& r) {
     return count;
 }
 
+// ---- very small added helper ----
+// Sum of all elements in the range
+int range_sum(const int_range& r) {
+    int sum = 0;
+    for (int v : r)
+        sum += v;
+    return sum;
+}
+// ---------------------------------
+
 // ---------------- MAIN ----------------
 
 int main() {
@@ -79,6 +89,8 @@ int main() {
 
     // ---- small added usage ----
     std::cout << "Range size: " << range_size(r) << '\n';
+    std::cout << "Range sum: " << range_sum(r) << '\n';
+    // --------------------------
 
     return 0;
 }

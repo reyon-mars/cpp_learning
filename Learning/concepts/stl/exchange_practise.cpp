@@ -30,8 +30,13 @@ public:
 };
 
 // ======================================================
-// SMALL EXTRA CODE (ADDED)
+// VERY SMALL EXTRA CODE (ADDED)
 // ======================================================
+
+// Stream output helper
+std::ostream& operator<<(std::ostream& os, const counter& c) {
+    return os << c.current();
+}
 
 // Simple helper function to demonstrate counter usage
 void demo_counter() {
@@ -71,9 +76,12 @@ int main(void) {
     std::cout << "Counter after reset = "
               << countr.current() << std::endl;
 
+    // ---- very small addition ----
+    std::cout << "Printed via operator<< : "
+              << countr << std::endl;
+
     // ---------- SMALL EXTRA DEMO ----------
     demo_counter();
 
     return 0;
 }
- 

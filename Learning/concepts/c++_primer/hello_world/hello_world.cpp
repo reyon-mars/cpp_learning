@@ -42,9 +42,14 @@ public:
     }
 };
 
-// ---- very small added helper ----
+// Very small helper
 int increment(int x) {
     return x + 1;
+}
+
+// Another tiny helper (added)
+bool isPositive(int x) {
+    return x > 0;
 }
 
 // ======================================================
@@ -74,8 +79,14 @@ int main(void) {
     // ---------- VERY SMALL ADDITION ----------
     int executionCount = 1;
     executionCount = increment(executionCount);
+
     std::cout << "Program execution count: "
               << executionCount << std::endl;
+
+    // tiny added check
+    std::cout << "Execution count is "
+              << (isPositive(executionCount) ? "positive" : "not positive")
+              << std::endl;
 
     std::cout << "Program finished successfully." << std::endl;
     return 0;

@@ -1,93 +1,101 @@
 #include <iostream>
-#include <new>
-#include <type_traits>
+#include <vector>
+#include <numeric>
+#include <utility>
+#include <memory>
 
-// ----------------------------------------------------------
-// FORWARD DECLARATIONS (SMALL REQUIRED ADDITION)
-// ----------------------------------------------------------
-void test_derived_allocation();
-void test_virtual_destructor();
+// ---------------- ORIGINAL FUNCTION ----------------
+auto sum_vector(std::vector<int> vec) {
+    return [v = std::move(vec)]() mutable {
+        int sum = std::accumulate(v.begin(), v.end(), 0);
+        v.clear();
+        return sum;
+    };
+}
 
-// ---------------- ORIGINAL CODE (UNCHANGED) ----------------
+// ---------------- EXTRA UTILITIES ----------------
 
-class base {
-private:
-    int a;
+// multiplier factory
+auto make_multiplier(int m) {
+    return [m](int x) {
+        return x * m;
+    };
+}
 
-public:
-    base() { std::cout << "Constructor\n"; }
-    ~base() { std::cout << "Destructor\n"; }
-};
+// capture-by-reference demo (safe via shared_ptr)
+auto capture_by_reference_demo() {
+    auto value = std::make_shared<int>(10);
+    return [value]() mutable {
+        *value += 5;
+        return *value;
+    };
+}
 
-int main(void) {
-    std::cout << "Normal case\n";
-    base* obj = new base();
-    delete obj;
+// capture-by-value demo
+auto capture_by_value_demo() {
+    int value = 20;
+    return [value]() mutable {
+        value += 10;
+        return value;
+    };
+}
 
-    std::cout << "\nPlacement New Case\n";
+// helper function
+int sum_range(int a, int b) {
+    int s = 0;
+    for (int i = a; i <= b; ++i)
+        s += i;
+    return s;
+}
 
-    alignas(base) char memory[sizeof(base) * 2];
+// ---------------- MAIN ----------------
+int main() {
+    std::vector<int> vec = {1, 2, 3, 4, 5};
 
-    base* obj1 = new (&memory[0]) base();
-    base* obj2 = new (&memory[sizeof(base)]) base();
+    // IILE (Immediately Invoked Lambda Expression)
+    int x = [vec](int a, int b) {
+        return std::accumulate(vec.begin(), vec.end(), 0) * a * b;
+    }(1, 1);
 
-    obj1->~base();
-    obj2->~base();
+    std::cout << "IILE result: " << x << '\n';
 
-    // -------- SMALL ADDED USAGE --------
-    test_derived_allocation();
-    test_virtual_destructor();
-    // ----------------------------------
+    auto fn = sum_vector(vec);
+    std::cout << "First sum_vector call: " << fn() << '\n';
+    std::cout << "Second sum_vector call: " << fn() << '\n';
+
+    std::cout << "\n--- Extra Lambda Demos ---\n";
+
+    auto times3 = make_multiplier(3);
+    std::cout << "3 * 4 = " << times3(4) << '\n';
+
+    auto ref_lambda = capture_by_reference_demo(); 
+    std::cout << "Ref lambda call 1: " << ref_lambda() << '\n';
+    std::cout << "Ref lambda call 2: " << ref_lambda() << '\n';
+
+    auto val_lambda = capture_by_value_demo();
+    std::cout << "Val lambda call 1: " << val_lambda() << '\n';
+    std::cout << "Val lambda call 2: " << val_lambda() << '\n';
+
+    auto sum_lambda = [](int a, int b) {
+        return sum_range(a, b);
+    };
+    std::cout << "Sum 1..10 = " << sum_lambda(1, 10) << '\n';
+
+    // ---------------- SMALL ADDITIONS ----------------
+
+    // simple square lambda
+    auto square = [](int n) { return n * n; };
+    std::cout << "Square of 6 = " << square(6) << '\n';
+
+    // simple check lambda
+    auto is_even = [](int n) { return n % 2 == 0; };
+    std::cout << "Is 10 even? " << (is_even(10) ? "Yes" : "No") << '\n';
+
+    // simple constant lambda
+    auto say_done = []() {
+        std::cout << "Program finished successfully.\n";
+    };
+    say_done();
 
     return 0;
-}
-
-// ----------------------------------------------------------
-// SMALL EXTRA CODE (ADDED ONLY)
-// ----------------------------------------------------------
-
-// Derived class demo
-class derived : public base {
-public:
-    derived() {
-        std::cout << "Derived Constructor\n";
-    }
-    ~derived() {
-        std::cout << "Derived Destructor\n";
-    }
-};
-
-// Virtual destructor demo
-class poly_base {
-public:
-    poly_base() {
-        std::cout << "poly_base ctor\n";
-    }
-    virtual ~poly_base() {
-        std::cout << "poly_base dtor\n";
-    }
-};
-
-class poly_derived : public poly_base {
-public:
-    poly_derived() {
-        std::cout << "poly_derived ctor\n";
-    }
-    ~poly_derived() override {
-        std::cout << "poly_derived dtor\n";
-    }
-};
-
-// Simple derived allocation test
-void test_derived_allocation() {
-    std::cout << "\n[Extra] Derived Allocation\n";
-    derived* d = new derived();
-    delete d;
-}
-
-// Virtual destructor test
-void test_virtual_destructor() {
-    std::cout << "\n[Extra] Virtual Destructor Test\n";
-    poly_base* p = new poly_derived();
-    delete p;
 }

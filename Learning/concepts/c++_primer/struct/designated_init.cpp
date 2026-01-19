@@ -37,7 +37,7 @@ bool hasSameISBN(const Book& a, const Book& b) {
     return a.ISBN_NO == b.ISBN_NO;
 }
 
-// ---- very small added helper ----
+// Very small added helper
 void printLibrary(const std::vector<Book>& lib) {
     std::cout << "\nLibrary contents:\n";
     for (const auto& b : lib) {
@@ -74,7 +74,6 @@ int main(void) {
     std::cout << "Publisher: " << b2.publisher << std::endl;
 
     // ---------- SMALL ADDITION ----------
-
     std::cout << "\nPrinted using helper function:\n";
     printBook(b1);
     printBook(b2);
@@ -95,7 +94,6 @@ int main(void) {
     std::cout << "\nTotal books in library: "
               << library.size() << std::endl;
 
-    // small added usage
     printLibrary(library);
 
     return 0;

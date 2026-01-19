@@ -33,7 +33,7 @@ public:
 };
 
 // ======================================================
-// EXTRA UTILITIES (ADDED CODE)
+// SMALL EXTRA CODE (ADDED ONLY)
 // ======================================================
 
 // Check if file exists
@@ -42,7 +42,7 @@ bool file_exists(const std::string& filename) {
     return f.good();
 }
 
-// Read entire file safely using file_guard
+// Read entire file safely
 std::string read_all(file_guard& fg) {
     std::string content, line;
     auto& f = fg.get();
@@ -53,7 +53,7 @@ std::string read_all(file_guard& fg) {
     return content;
 }
 
-// RAII scope logger
+// Simple RAII scope logger
 struct ScopeLogger {
     std::string name;
 
@@ -65,8 +65,6 @@ struct ScopeLogger {
         std::cout << "[Scope] Exit " << name << '\n';
     }
 };
-
-// ---------------- SMALL ADDITIONS ----------------
 
 // Reset file stream to beginning
 void rewind_file(file_guard& fg) {

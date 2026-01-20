@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <numeric>
 
 // ------------------------------------------------------
 // FORWARD DECLARATION (required, no logic change)
@@ -56,6 +57,11 @@ std::vector<int> generate_even_vector(int n) {
     return v;
 }
 
+// ---- very small added helper ----
+int sum_vector(const std::vector<int>& v) {
+    return std::accumulate(v.begin(), v.end(), 0);
+}
+
 void run_extra_vector_demo() {
     std::cout << "\n--- Extra Vector Demo ---\n";
 
@@ -65,7 +71,9 @@ void run_extra_vector_demo() {
     std::reverse(evenVec.begin(), evenVec.end());
     print_vector(evenVec);
 
+    // ---- tiny added usage ----
+    std::cout << "[Extra] Sum = " << sum_vector(evenVec) << '\n';
+
     std::cout << "[Extra] Size = " << evenVec.size()
               << ", Capacity = " << evenVec.capacity() << '\n';
 }
-v 

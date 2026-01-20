@@ -25,8 +25,10 @@ int main(void) {
 
     // --- small added code ---
     std::cout << "Vector size: " << v.size() << std::endl;
+    std::cout << "Vector capacity: " << v.capacity() << std::endl;
 
     if (!v.empty()) {
+        std::cout << "First character: " << v.front() << std::endl;
         std::cout << "Last character: " << v.back() << std::endl;
     }
     // -----------------------
@@ -36,4 +38,3 @@ int main(void) {
 
     return 0;
 }
-

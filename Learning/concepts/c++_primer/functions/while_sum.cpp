@@ -1,50 +1,48 @@
 #include <iostream>
 #include <string>
+#include <vector>
 
 // ======================================================
 // ORIGINAL CODE (LOGIC UNCHANGED)
 // ======================================================
 
-void greet() {
-    std::cout << "This is extra code added without modifying main!" << std::endl;
-}
-
-int add(int a, int b) {
-    return a + b;
-}
-
-class Demo {
-public:
-    void show() {
-        std::cout << "Demo class method executed!" << std::endl;
-    }
+struct Book {
+    std::string name;
+    int ISBN_NO;
+    std::string publisher;
 };
 
 // ======================================================
-// SMALL ADDITIONAL CODE
+// SMALL EXTRA FUNCTIONS (ADDITION ONLY)
 // ======================================================
 
-// Simple struct
-struct Info {
-    int value = 10;
-};
-
-// Simple helper function
-void printMessage(const std::string& msg) {
-    std::cout << msg << std::endl;
+// Print book details using a helper function
+void printBook(const Book& b) {
+    std::cout << "Name: " << b.name << "\n";
+    std::cout << "ISBN: " << b.ISBN_NO << "\n";
+    std::cout << "Publisher: " << b.publisher << "\n";
 }
 
-// Simple class
-class ExtraDemo {
-public:
-    void run() {
-        std::cout << "ExtraDemo running successfully!" << std::endl;
-    }
-};
+// Create a sample book
+Book createSampleBook() {
+    return {
+        "Clean Code",
+        10101,
+        "Prentice Hall"
+    };
+}
 
-// ---- small added helper ----
-int increment(int x) {
-    return x + 1;
+// Compare ISBN numbers
+bool hasSameISBN(const Book& a, const Book& b) {
+    return a.ISBN_NO == b.ISBN_NO;
+}
+
+// Very small added helper
+void printLibrary(const std::vector<Book>& lib) {
+    std::cout << "\nLibrary contents:\n";
+    for (const auto& b : lib) {
+        std::cout << "- " << b.name << " (" << b.publisher << ")\n";
+    }
 }
 
 // ======================================================
@@ -53,29 +51,50 @@ int increment(int x) {
 
 int main(void) {
 
-    // ---------- ORIGINAL ----------
-    std::cout << "Hello, World" << std::endl;
+    // ---------- ORIGINAL LOGIC ----------
+    Book b1 = {
+        "test",
+        12,
+        "O'Rilley"
+    };
 
-    greet();
-    std::cout << "5 + 7 = " << add(5, 7) << std::endl;
+    std::cout << "Book Details:\n";
+    std::cout << "Name: " << b1.name << std::endl;
+    std::cout << "ISBN: " << b1.ISBN_NO << std::endl;
+    std::cout << "Publisher: " << b1.publisher << std::endl;
 
-    Demo demo;
-    demo.show();
+    Book b2;
+    b2.name = "C++ Primer";
+    b2.ISBN_NO = 999;
+    b2.publisher = "Pearson";
 
-    // ---------- SMALL EXTRA ----------
-    Info info;
-    std::cout << "Info value = " << info.value << std::endl;
+    std::cout << "\nSecond Book:\n";
+    std::cout << "Name: " << b2.name << std::endl;
+    std::cout << "ISBN: " << b2.ISBN_NO << std::endl;
+    std::cout << "Publisher: " << b2.publisher << std::endl;
 
-    printMessage("This is a simple helper function");
+    // ---------- SMALL ADDITION ----------
+    std::cout << "\nPrinted using helper function:\n";
+    printBook(b1);
+    printBook(b2);
 
-    ExtraDemo extra;
-    extra.run();
+    Book sample = createSampleBook();
+    std::cout << "\nSample Book:\n";
+    printBook(sample);
 
-    // ---------- VERY SMALL ADDITION ----------
-    int executionCount = 1;
-    executionCount = increment(executionCount);
-    std::cout << "Program execution count: " << executionCount << std::endl;
+    std::cout << "\nISBN Comparison Result: ";
+    std::cout << (hasSameISBN(b2, sample) ? "Same ISBN\n" : "Different ISBN\n");
 
-    std::cout << "Program finished successfully." << std::endl;
+    // ---------- VERY SMALL EXTRA ADDITION ----------
+    std::vector<Book> library;
+    library.push_back(b1);
+    library.push_back(b2);
+    library.push_back(sample);
+
+    std::cout << "\nTotal books in library: "
+              << library.size() << std::endl;
+
+    printLibrary(library);
+
     return 0;
 }

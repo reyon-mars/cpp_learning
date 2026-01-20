@@ -63,5 +63,6 @@ int main() {
     timed_work("helper function workload", 200'000);
     // -------------------------------
 
+    std::cout << "--- Program Finished ---\n";
     return 0;
 }

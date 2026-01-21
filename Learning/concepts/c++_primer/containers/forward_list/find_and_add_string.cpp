@@ -34,7 +34,11 @@ void print_list(const std::forward_list<std::string>& lst) {
     std::cout << std::endl;
 }
 
-// ---- small added helper ----
+// ======================================================
+// SMALL EXTRA HELPERS (ADDITION ONLY)
+// ======================================================
+
+// Count elements in the list
 std::size_t list_size(const std::forward_list<std::string>& lst)
 {
     std::size_t count = 0;
@@ -45,7 +49,7 @@ std::size_t list_size(const std::forward_list<std::string>& lst)
     return count;
 }
 
-// ---- very small extra helper ----
+// Check if a value exists
 bool contains(const std::forward_list<std::string>& lst,
               const std::string& value)
 {
@@ -54,7 +58,10 @@ bool contains(const std::forward_list<std::string>& lst,
             return true;
     return false;
 }
-// ----------------------------
+
+// ======================================================
+// MAIN
+// ======================================================
 
 int main() {
     using namespace std;

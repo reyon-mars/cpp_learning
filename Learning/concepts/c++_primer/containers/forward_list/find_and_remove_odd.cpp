@@ -26,9 +26,9 @@ void print_list(const std::forward_list<int>& lst) {
     std::cout << "\n";
 }
 
-// ------------------------------------------------------
-// SMALL ADDITION (helper functions only)
-// ------------------------------------------------------
+// ======================================================
+// SMALL ADDITION (HELPER FUNCTIONS ONLY)
+// ======================================================
 
 int count_elements(const std::forward_list<int>& lst) {
     int count = 0;
@@ -43,14 +43,12 @@ bool is_empty(const std::forward_list<int>& lst) {
     return lst.begin() == lst.end();
 }
 
-// ---- very small extra helper ----
 int sum_elements(const std::forward_list<int>& lst) {
     int sum = 0;
     for (int v : lst)
         sum += v;
     return sum;
 }
-// --------------------------------
 
 // ======================================================
 // MAIN

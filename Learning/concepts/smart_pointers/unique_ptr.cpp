@@ -47,11 +47,11 @@ int main(void) {
     }
 
     // ---------- SMALL ADDITIONS ----------
-    birthday(*v);               // added behavior
-    print_user(v);               // safe printing
+    birthday(*v);        // increment age
+    print_user(v);       // safe printing
 
-    v.reset();                   // release ownership
-    print_user(v);               // check after reset
+    v.reset();           // release ownership
+    print_user(v);       // check after reset
 
     return 0;
 }

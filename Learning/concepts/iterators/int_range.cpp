@@ -38,18 +38,17 @@ public:
     Iterator end()   const { return Iterator(end); }
 };
 
-// ---------------- SMALL EXTRA CODE ----------------
+// ---------------- SMALL EXTRA CODE (ADDED ONLY) ----------------
 
-// Check if a value exists in the range
+// check if value exists in range
 bool contains(const int_range& r, int value) {
-    for (int v : r) {
+    for (int v : r)
         if (v == value)
             return true;
-    }
     return false;
 }
 
-// Small helper: count elements in range
+// count elements in range
 int range_size(const int_range& r) {
     int count = 0;
     for (int _ : r) {
@@ -59,37 +58,30 @@ int range_size(const int_range& r) {
     return count;
 }
 
-// ---- very small added helper ----
-// Sum of all elements in the range
+// very small helper: sum of range
 int range_sum(const int_range& r) {
     int sum = 0;
     for (int v : r)
         sum += v;
     return sum;
 }
-// ---------------------------------
 
 // ---------------- MAIN ----------------
 
-int main() {
-    std::cout << "--- int_range Demo ---\n";
-
+int main(void) {
     int_range r(1, 6);
 
-    std::cout << "Range: ";
+    std::cout << "Range values: ";
     for (int v : r)
-        std::cout << v << ' ';
-    std::cout << '\n';
-
-    std::cout << "Contains 3? "
-              << (contains(r, 3) ? "Yes" : "No") << '\n';
-
-    std::cout << "Contains 10? "
-              << (contains(r, 10) ? "Yes" : "No") << '\n';
+        std::cout << v << " ";
+    std::cout << "\n";
 
     // ---- small added usage ----
-    std::cout << "Range size: " << range_size(r) << '\n';
-    std::cout << "Range sum: " << range_sum(r) << '\n';
+    std::cout << "Contains 3? "
+              << (contains(r, 3) ? "Yes" : "No") << "\n";
+
+    std::cout << "Range size: " << range_size(r) << "\n";
+    std::cout << "Range sum: " << range_sum(r) << "\n";
     // --------------------------
 
     return 0;

@@ -22,14 +22,24 @@ struct ExtraStruct {
     int value = 10;
 };
 
+// ---- very small added helper ----
+bool isPositive(int x) {
+    return x > 0;
+}
+
 // Runs before main()
 int runExtra() {
     ExtraStruct e;
     std::cout << "ExtraStruct value: " << e.value << std::endl;
+
+    // small added usage
+    std::cout << "Value is "
+              << (isPositive(e.value) ? "positive" : "not positive")
+              << std::endl;
+
     extraFunction();
     return 0;
 }
 
 // Global initialization (executes before main)
 int _ = runExtra();
- 

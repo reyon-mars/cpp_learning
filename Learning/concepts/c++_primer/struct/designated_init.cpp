@@ -45,6 +45,38 @@ void printLibrary(const std::vector<Book>& lib) {
     }
 }
 
+// ---- VERY SMALL EXTRA HELPERS ----
+
+// Count books by publisher
+int countByPublisher(const std::vector<Book>& lib,
+                     const std::string& publisher)
+{
+    int count = 0;
+    for (const auto& b : lib)
+        if (b.publisher == publisher)
+            ++count;
+    return count;
+}
+
+// Check if book exists by name
+bool containsBook(const std::vector<Book>& lib,
+                  const std::string& name)
+{
+    for (const auto& b : lib)
+        if (b.name == name)
+            return true;
+    return false;
+}
+
+// Print first book safely
+void printFirstBook(const std::vector<Book>& lib) {
+    if (!lib.empty()) {
+        std::cout << "\nFirst book in library:\n";
+        printBook(lib.front());
+    }
+}
+// ----------------------------------
+
 // ======================================================
 // MAIN
 // ======================================================
@@ -95,6 +127,16 @@ int main(void) {
               << library.size() << std::endl;
 
     printLibrary(library);
+
+    // ---- tiny added usage ----
+    printFirstBook(library);
+
+    std::cout << "\nBooks published by Pearson: "
+              << countByPublisher(library, "Pearson") << "\n";
+
+    std::cout << "Contains 'Clean Code'? "
+              << (containsBook(library, "Clean Code") ? "Yes\n" : "No\n");
+    // -------------------------
 
     return 0;
 }

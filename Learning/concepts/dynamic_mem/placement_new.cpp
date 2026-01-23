@@ -68,7 +68,7 @@ int main() {
     auto times3 = make_multiplier(3);
     std::cout << "3 * 4 = " << times3(4) << '\n';
 
-    auto ref_lambda = capture_by_reference_demo(); 
+    auto ref_lambda = capture_by_reference_demo();
     std::cout << "Ref lambda call 1: " << ref_lambda() << '\n';
     std::cout << "Ref lambda call 2: " << ref_lambda() << '\n';
 
@@ -83,15 +83,21 @@ int main() {
 
     // ---------------- SMALL ADDITIONS ----------------
 
-    // simple square lambda
+    // square lambda
     auto square = [](int n) { return n * n; };
     std::cout << "Square of 6 = " << square(6) << '\n';
 
-    // simple check lambda
+    // even check lambda
     auto is_even = [](int n) { return n % 2 == 0; };
     std::cout << "Is 10 even? " << (is_even(10) ? "Yes" : "No") << '\n';
 
-    // simple constant lambda
+    // max of two numbers lambda
+    auto max_of_two = [](int a, int b) {
+        return (a > b) ? a : b;
+    };
+    std::cout << "Max of 7 and 3 = " << max_of_two(7, 3) << '\n';
+
+    // constant lambda
     auto say_done = []() {
         std::cout << "Program finished successfully.\n";
     };

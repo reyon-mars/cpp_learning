@@ -47,10 +47,23 @@ int increment(int x) {
     return x + 1;
 }
 
-// Another tiny helper (added)
+// Another tiny helper
 bool isPositive(int x) {
     return x > 0;
 }
+
+// ---- VERY SMALL EXTRA HELPERS ----
+
+// Check if number is even
+bool isEven(int x) {
+    return x % 2 == 0;
+}
+
+// Print divider line
+void printDivider() {
+    std::cout << "-----------------------------\n";
+}
+// --------------------------------
 
 // ======================================================
 // MAIN
@@ -83,10 +96,17 @@ int main(void) {
     std::cout << "Program execution count: "
               << executionCount << std::endl;
 
-    // tiny added check
     std::cout << "Execution count is "
               << (isPositive(executionCount) ? "positive" : "not positive")
               << std::endl;
+
+    // ---- tiny added usage ----
+    std::cout << "Execution count is "
+              << (isEven(executionCount) ? "even" : "odd")
+              << std::endl;
+
+    printDivider();
+    // --------------------------
 
     std::cout << "Program finished successfully." << std::endl;
     return 0;

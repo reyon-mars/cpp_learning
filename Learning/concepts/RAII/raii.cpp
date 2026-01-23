@@ -87,6 +87,26 @@ int count_lines(file_guard& fg) {
     return count;
 }
 
+// ---- very small extra helpers ----
+
+// Check if stream is open
+bool is_open(file_guard& fg) {
+    return fg.get().is_open();
+}
+
+// Get file size in bytes
+std::streamsize file_size(file_guard& fg) {
+    auto& f = fg.get();
+    rewind_file(fg);
+
+    f.seekg(0, std::ios::end);
+    auto size = f.tellg();
+    rewind_file(fg);
+
+    return size;
+}
+// ---------------------------------
+
 // ======================================================
 // MAIN
 // ======================================================
@@ -105,12 +125,19 @@ int main(void) {
         file_guard fg(filename);
 
         std::cout << "File opened successfully.\n";
-        std::cout << "File contents:\n";
+        std::cout << "Is open? "
+                  << (is_open(fg) ? "Yes\n" : "No\n");
+
+        std::cout << "\nFile contents:\n";
         std::cout << read_all(fg);
 
         // ---- small added usage ----
         std::cout << "\nLine count: "
                   << count_lines(fg) << '\n';
+
+        std::cout << "File size: "
+                  << file_size(fg) << " bytes\n";
+        // --------------------------
 
     } catch (const std::exception& e) {
         std::cout << "Error: " << e.what() << '\n';

@@ -19,9 +19,14 @@ public:
 
     ~scoped_timer() {
         auto end = std::chrono::steady_clock::now();
+
+        auto us = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
         std::cout << name << ": "
-                  << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()
-                  << " us\n";
+                  << us << " us"
+                  << " (" << ms << " ms)"
+                  << "\n";
     }
 };
 

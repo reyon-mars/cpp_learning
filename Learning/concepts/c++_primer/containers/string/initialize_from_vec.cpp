@@ -3,11 +3,15 @@
 #include <string>
 
 // ==================================================
-// ORIGINAL CODE (with SMALL ADDITION)
+// ORIGINAL CODE (with SMALL ADDITIONS)
 // ==================================================
 
 int main(void) {
     std::vector<char> v;
+
+    // --- small extra (capacity hint) ---
+    v.reserve(10);
+    // ----------------------------------
 
     // --- original additions ---
     v.push_back('H');
@@ -32,6 +36,13 @@ int main(void) {
         std::cout << "Last character: " << v.back() << std::endl;
     }
     // -----------------------
+
+    // --- tiny extra output ---
+    std::cout << "Vector as C-string style: ";
+    for (char c : v)
+        std::cout << c;
+    std::cout << std::endl;
+    // ------------------------
 
     std::cout << "String created using constructor: "
               << str_v << std::endl;

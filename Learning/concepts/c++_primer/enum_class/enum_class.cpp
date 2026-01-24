@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cstdint>
+#include <vector>
 
 // ======================================================
 // ORIGINAL ENUMS (UNCHANGED)
@@ -50,7 +51,7 @@ void describe(Vehicle v) {
 }
 
 // ======================================================
-// SMALL EXTRA CODE (ADDED ONLY)
+// SMALL EXTRA CODE (ADDITION ONLY)
 // ======================================================
 
 enum class Food : uint8_t {
@@ -76,6 +77,15 @@ void printEnumValue(T e) {
               << static_cast<int>(e) << '\n';
 }
 
+// ---- tiny extra helper ----
+template <typename T>
+void describeAll(const std::vector<T>& items) {
+    for (const auto& i : items) {
+        describe(i);
+        printEnumValue(i);
+    }
+}
+
 // ======================================================
 // MAIN
 // ======================================================
@@ -97,6 +107,15 @@ int main(void) {
     describe(f);
     printEnumValue(f);
 
+    // ---- very small extra usage ----
+    std::vector<Animal> animals = {
+        Animal::Cat,
+        Animal::Dog,
+        Animal::Bird
+    };
+
+    std::cout << "\nAll animals:\n";
+    describeAll(animals);
+
     return 0;
 }
- 

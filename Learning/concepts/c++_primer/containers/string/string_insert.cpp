@@ -36,6 +36,12 @@ std::size_t count_chars(const std::string& s)
     return s.size();
 }
 
+// Check if substring exists
+bool contains(const std::string& s, const std::string& sub)
+{
+    return s.find(sub) != std::string::npos;
+}
+
 // ======================================================
 // MAIN
 // ======================================================
@@ -57,9 +63,12 @@ int main() {
 
     std::cout << "Character count: "
               << count_chars(text) << '\n';
+
+    if (contains(text, "World")) {
+        std::cout << "Substring \"World\" found\n";
+    }
     // ---------------------------
 
     std::cout << "\n--- End of main() ---\n";
     return 0;
 }
- 

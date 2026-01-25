@@ -25,8 +25,11 @@ int main(void)
 
     std::cout << std::endl;
 
-    // -------- SMALL ADDITION --------
+    // -------- SMALL ADDITIONS --------
     print_list(v);
+    std::cout << "List size: " << v.size() << std::endl;
+    std::cout << (v.empty() ? "List is empty\n"
+                            : "List is not empty\n");
     // -------------------------------
 
     return 0;
@@ -43,4 +46,3 @@ void print_list(const std::list<int>& lst)
         std::cout << x << " ";
     std::cout << std::endl;
 }
- 

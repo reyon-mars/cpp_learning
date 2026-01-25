@@ -33,6 +33,11 @@ inline void log_msg_inline(std::string_view tag, std::string_view msg)
 
 int main(void)
 {
+    // ---- tiny performance-related addition ----
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    // -------------------------------------------
+
     const int iterations = 1'000'000;
     std::string test_tag = "Tag";
     std::string test_msg = "Message";
@@ -68,4 +73,3 @@ int main(void)
 
     return 0;
 }
- 

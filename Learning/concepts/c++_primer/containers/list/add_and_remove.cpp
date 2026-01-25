@@ -34,6 +34,14 @@ void printList(const std::list<int>& L) {
     std::cout << "\n";
 }
 
+// Count odd numbers in a list
+std::size_t count_odds(const std::list<int>& L) {
+    std::size_t count = 0;
+    for (int v : L)
+        if (v % 2) ++count;
+    return count;
+}
+
 // ---------------- MAIN ----------------
 
 int main(void) {
@@ -50,6 +58,9 @@ int main(void) {
     std::cout << "Demo list size: " << demo.size() << "\n";
     std::cout << (demo.empty() ? "Demo list is empty\n"
                                : "Demo list is not empty\n");
+
+    std::cout << "Odd numbers in demo list: "
+              << count_odds(demo) << "\n";
     // ------------------------------
 
     return 0;

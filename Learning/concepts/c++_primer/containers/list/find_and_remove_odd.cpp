@@ -41,6 +41,8 @@ int main() {
     find_and_remove_odd(fl1);
     std::cout << "After removing odd numbers: ";
     print_list(fl1);
+    std::cout << "Count: " << count_elements(fl1) << "\n";
+    std::cout << (fl1.empty() ? "List is empty\n" : "List is not empty\n");
 
     // Test case 2: all odd numbers
     std::forward_list<int> fl2 = {1, 3, 5, 7, 9};
@@ -50,6 +52,8 @@ int main() {
     find_and_remove_odd(fl2);
     std::cout << "After removing odd numbers: ";
     print_list(fl2);
+    std::cout << "Count: " << count_elements(fl2) << "\n";
+    std::cout << (fl2.empty() ? "List is empty\n" : "List is not empty\n");
 
     // Test case 3: all even numbers
     std::forward_list<int> fl3 = {2, 4, 6, 8, 10};
@@ -59,6 +63,8 @@ int main() {
     find_and_remove_odd(fl3);
     std::cout << "After removing odd numbers: ";
     print_list(fl3);
+    std::cout << "Count: " << count_elements(fl3) << "\n";
+    std::cout << (fl3.empty() ? "List is empty\n" : "List is not empty\n");
 
     // Test case 4: empty list
     std::forward_list<int> fl4;
@@ -68,10 +74,8 @@ int main() {
     find_and_remove_odd(fl4);
     std::cout << "After removing odd numbers: ";
     print_list(fl4);
-
-    // ---- SMALL ADDITION ----
-    std::cout << "\nFinal element count (list 1): "
-              << count_elements(fl1) << "\n";
+    std::cout << "Count: " << count_elements(fl4) << "\n";
+    std::cout << (fl4.empty() ? "List is empty\n" : "List is not empty\n");
 
     return 0;
 }
@@ -84,9 +88,8 @@ int main() {
 std::size_t count_elements(const std::forward_list<int>& lst) {
     std::size_t count = 0;
     for (int v : lst) {
-        (void)v; // silence unused warning
+        (void)v;
         ++count;
     }
     return count;
 }
- 

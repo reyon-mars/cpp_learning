@@ -29,6 +29,16 @@ void birthday(User& user) {
     ++user.age;
 }
 
+// Stream output helper
+std::ostream& operator<<(std::ostream& os, const User& u) {
+    return os << u.name << " (" << u.age << ")";
+}
+
+// Small helper check
+bool is_adult(const User& user) {
+    return user.age >= 18;
+}
+
 // ----------------------------------------------------
 // MAIN (ORIGINAL + FEW ADDITIONS)
 // ----------------------------------------------------
@@ -47,11 +57,17 @@ int main(void) {
     }
 
     // ---------- SMALL ADDITIONS ----------
-    birthday(*v);        // increment age
-    print_user(v);       // safe printing
+    birthday(*v);                  // increment age
+    print_user(v);                 // safe printing
 
-    v.reset();           // release ownership
-    print_user(v);       // check after reset
+    std::cout << "Printed via operator<< : "
+              << *v << std::endl;
+
+    std::cout << (is_adult(*v) ? "User is adult\n"
+                               : "User is minor\n");
+
+    v.reset();                     // release ownership
+    print_user(v);                 // check after reset
 
     return 0;
 }

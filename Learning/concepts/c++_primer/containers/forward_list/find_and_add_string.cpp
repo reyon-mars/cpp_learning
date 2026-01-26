@@ -96,14 +96,21 @@ int main() {
     print_list(lst);
     cout << "Size: " << list_size(lst) << "\n";
 
-    // ---- very small addition ----
+    // ---- small additions ----
+    cout << "List is "
+         << (lst.empty() ? "empty\n" : "not empty\n");
+
     if (!lst.empty()) {
         cout << "First element: " << lst.front() << "\n";
     }
 
     cout << "Contains 'cherry'? "
          << (contains(lst, "cherry") ? "Yes\n" : "No\n");
-    // ----------------------------
+
+    // Clear list
+    lst.clear();
+    cout << "After clear, size: " << list_size(lst) << "\n";
+    // -------------------------
 
     return 0;
 }

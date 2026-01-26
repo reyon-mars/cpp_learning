@@ -26,6 +26,14 @@ public:
     bool is_zero() const {
         return value == 0;
     }
+
+    int decrement(int amount) {
+        return std::exchange(value, value - amount);
+    }
+
+    bool is_positive() const {
+        return value > 0;
+    }
     // --------------------------------
 };
 
@@ -48,6 +56,9 @@ void demo_counter() {
 
     std::cout << "Increment by 3, previous value = "
               << c.increment(3) << std::endl;
+
+    std::cout << "Decrement by 4, previous value = "
+              << c.decrement(4) << std::endl;
 
     std::cout << "Current value = "
               << c.current() << std::endl;
@@ -76,13 +87,14 @@ int main(void) {
     std::cout << "Counter after reset = "
               << countr.current() << std::endl;
 
-    // ---- very small addition ----
     std::cout << "Printed via operator<< : "
               << countr << std::endl;
+
+    std::cout << "Is counter positive? "
+              << (countr.is_positive() ? "Yes" : "No") << std::endl;
 
     // ---------- SMALL EXTRA DEMO ----------
     demo_counter();
 
     return 0;
 }
- 

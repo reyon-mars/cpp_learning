@@ -50,6 +50,15 @@ int sum_elements(const std::forward_list<int>& lst) {
     return sum;
 }
 
+// ---- very small added helper ----
+int last_element(const std::forward_list<int>& lst) {
+    int last = 0;
+    for (int v : lst)
+        last = v;
+    return last;
+}
+// --------------------------------
+
 // ======================================================
 // MAIN
 // ======================================================
@@ -63,8 +72,16 @@ int main() {
     find_and_remove_odd(fl1);
     std::cout << "After removing odd numbers: ";
     print_list(fl1);
+
     std::cout << "Count: " << count_elements(fl1) << "\n";
-    std::cout << "Sum: " << sum_elements(fl1) << "\n\n";
+    std::cout << "Sum: " << sum_elements(fl1) << "\n";
+
+    // ---- small addition ----
+    if (!is_empty(fl1)) {
+        std::cout << "First element: " << fl1.front() << "\n";
+        std::cout << "Last element: " << last_element(fl1) << "\n";
+    }
+    std::cout << "\n";
 
     // Test case 2: all odd numbers
     std::forward_list<int> fl2 = {1, 3, 5, 7, 9};
@@ -74,6 +91,7 @@ int main() {
     find_and_remove_odd(fl2);
     std::cout << "After removing odd numbers: ";
     print_list(fl2);
+
     std::cout << "Count: " << count_elements(fl2)
               << (is_empty(fl2) ? " (empty)\n\n" : "\n\n");
 
@@ -85,6 +103,7 @@ int main() {
     find_and_remove_odd(fl3);
     std::cout << "After removing odd numbers: ";
     print_list(fl3);
+
     std::cout << "Count: " << count_elements(fl3) << "\n";
     std::cout << "Sum: " << sum_elements(fl3) << "\n\n";
 
@@ -96,8 +115,15 @@ int main() {
     find_and_remove_odd(fl4);
     std::cout << "After removing odd numbers: ";
     print_list(fl4);
+
     std::cout << "Count: " << count_elements(fl4)
               << (is_empty(fl4) ? " (empty)\n" : "\n");
+
+    // ---- very small addition ----
+    fl3.clear();
+    std::cout << "\nAfter clearing list 3, is empty? "
+              << (is_empty(fl3) ? "Yes\n" : "No\n");
+    // ----------------------------
 
     return 0;
 }

@@ -3,6 +3,7 @@
 #include <numeric>
 #include <utility>
 #include <memory>
+#include <algorithm>
 
 // ---------------- ORIGINAL FUNCTION ----------------
 auto sum_vector(std::vector<int> vec) {
@@ -91,6 +92,21 @@ int main() {
     auto is_even = [](int n) { return n % 2 == 0; };
     std::cout << "Is 10 even? " << (is_even(10) ? "Yes" : "No") << '\n';
 
+    // transform vector using lambda
+    std::vector<int> doubled(vec.size());
+    std::transform(vec.begin(), vec.end(), doubled.begin(),
+                   [](int n) { return n * 2; });
+
+    std::cout << "Doubled vector: ";
+    for (int n : doubled)
+        std::cout << n << " ";
+    std::cout << '\n';
+
+    // count even numbers using lambda
+    int even_count = std::count_if(doubled.begin(), doubled.end(), is_even);
+    std::cout << "Even numbers in doubled vector: "
+              << even_count << '\n';
+
     // simple constant lambda
     auto say_done = []() {
         std::cout << "Program finished successfully.\n";
@@ -99,4 +115,3 @@ int main() {
 
     return 0;
 }
- 

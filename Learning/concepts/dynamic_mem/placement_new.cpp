@@ -97,6 +97,22 @@ int main() {
     };
     std::cout << "Max of 7 and 3 = " << max_of_two(7, 3) << '\n';
 
+    // count even numbers in vector
+    auto count_even = [](const std::vector<int>& v) {
+        return std::count_if(v.begin(), v.end(),
+                             [](int n) { return n % 2 == 0; });
+    };
+    std::cout << "Even numbers count = " << count_even(vec) << '\n';
+
+    // stateful mutable lambda (running counter)
+    auto running_counter = [count = 0]() mutable {
+        return ++count;
+    };
+    std::cout << "Counter calls: "
+              << running_counter() << " "
+              << running_counter() << " "
+              << running_counter() << '\n';
+
     // constant lambda
     auto say_done = []() {
         std::cout << "Program finished successfully.\n";

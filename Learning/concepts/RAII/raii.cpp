@@ -105,6 +105,27 @@ std::streamsize file_size(file_guard& fg) {
 
     return size;
 }
+
+// Read only the first line
+std::string read_first_line(file_guard& fg) {
+    rewind_file(fg);
+    std::string line;
+    std::getline(fg.get(), line);
+    return line;
+}
+
+// Print first N characters as preview
+void print_preview(file_guard& fg, std::size_t n) {
+    rewind_file(fg);
+    char ch;
+    std::size_t count = 0;
+
+    while (fg.get().get(ch) && count < n) {
+        std::cout << ch;
+        ++count;
+    }
+    std::cout << "\n";
+}
 // ---------------------------------
 
 // ======================================================
@@ -137,6 +158,12 @@ int main(void) {
 
         std::cout << "File size: "
                   << file_size(fg) << " bytes\n";
+
+        std::cout << "First line: "
+                  << read_first_line(fg) << '\n';
+
+        std::cout << "Preview (30 chars):\n";
+        print_preview(fg, 30);
         // --------------------------
 
     } catch (const std::exception& e) {

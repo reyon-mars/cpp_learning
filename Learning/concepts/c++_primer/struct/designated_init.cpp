@@ -37,7 +37,7 @@ bool hasSameISBN(const Book& a, const Book& b) {
     return a.ISBN_NO == b.ISBN_NO;
 }
 
-// Very small added helper
+// Print entire library
 void printLibrary(const std::vector<Book>& lib) {
     std::cout << "\nLibrary contents:\n";
     for (const auto& b : lib) {
@@ -74,6 +74,31 @@ void printFirstBook(const std::vector<Book>& lib) {
         std::cout << "\nFirst book in library:\n";
         printBook(lib.front());
     }
+}
+
+// Stream output operator (tiny addition)
+std::ostream& operator<<(std::ostream& os, const Book& b) {
+    return os << b.name << " | ISBN: " << b.ISBN_NO
+              << " | Publisher: " << b.publisher;
+}
+
+// Find book by ISBN
+const Book* findByISBN(const std::vector<Book>& lib, int isbn) {
+    for (const auto& b : lib)
+        if (b.ISBN_NO == isbn)
+            return &b;
+    return nullptr;
+}
+
+// Remove book by name
+bool removeBook(std::vector<Book>& lib, const std::string& name) {
+    for (auto it = lib.begin(); it != lib.end(); ++it) {
+        if (it->name == name) {
+            lib.erase(it);
+            return true;
+        }
+    }
+    return false;
 }
 // ----------------------------------
 
@@ -128,7 +153,6 @@ int main(void) {
 
     printLibrary(library);
 
-    // ---- tiny added usage ----
     printFirstBook(library);
 
     std::cout << "\nBooks published by Pearson: "
@@ -136,6 +160,18 @@ int main(void) {
 
     std::cout << "Contains 'Clean Code'? "
               << (containsBook(library, "Clean Code") ? "Yes\n" : "No\n");
+
+    // ---- tiny new usage ----
+    std::cout << "\nPrinted via operator<<:\n";
+    std::cout << sample << "\n";
+
+    if (const Book* found = findByISBN(library, 999)) {
+        std::cout << "\nFound by ISBN:\n" << *found << "\n";
+    }
+
+    removeBook(library, "test");
+    std::cout << "\nAfter removing 'test': "
+              << library.size() << " books\n";
     // -------------------------
 
     return 0;

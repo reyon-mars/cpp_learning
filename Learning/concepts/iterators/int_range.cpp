@@ -58,12 +58,24 @@ int range_size(const int_range& r) {
     return count;
 }
 
-// very small helper: sum of range
+// sum of range
 int range_sum(const int_range& r) {
     int sum = 0;
     for (int v : r)
         sum += v;
     return sum;
+}
+
+// check if range is empty
+bool empty(const int_range& r) {
+    return range_size(r) == 0;
+}
+
+// reusable printer helper
+void print_range(const int_range& r) {
+    for (int v : r)
+        std::cout << v << " ";
+    std::cout << "\n";
 }
 
 // ---------------- MAIN ----------------
@@ -72,9 +84,7 @@ int main(void) {
     int_range r(1, 6);
 
     std::cout << "Range values: ";
-    for (int v : r)
-        std::cout << v << " ";
-    std::cout << "\n";
+    print_range(r);
 
     // ---- small added usage ----
     std::cout << "Contains 3? "
@@ -82,6 +92,8 @@ int main(void) {
 
     std::cout << "Range size: " << range_size(r) << "\n";
     std::cout << "Range sum: " << range_sum(r) << "\n";
+    std::cout << "Is range empty? "
+              << (empty(r) ? "Yes" : "No") << "\n";
     // --------------------------
 
     return 0;

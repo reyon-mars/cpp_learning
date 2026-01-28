@@ -51,7 +51,7 @@ void describe(Vehicle v) {
 }
 
 // ======================================================
-// SMALL EXTRA CODE (ADDITION ONLY)
+// SMALL EXTRA CODE (ADDED ONLY)
 // ======================================================
 
 enum class Food : uint8_t {
@@ -70,14 +70,14 @@ void describe(Food f) {
     }
 }
 
-// ---- very small helper addition ----
+// Print enum numeric value
 template <typename T>
 void printEnumValue(T e) {
     std::cout << "Enum numeric value: "
               << static_cast<int>(e) << '\n';
 }
 
-// ---- tiny extra helper ----
+// Describe all items in a container
 template <typename T>
 void describeAll(const std::vector<T>& items) {
     for (const auto& i : items) {
@@ -85,6 +85,20 @@ void describeAll(const std::vector<T>& items) {
         printEnumValue(i);
     }
 }
+
+// ---- VERY SMALL EXTRA HELPERS ----
+
+// Count items in enum vector
+template <typename T>
+std::size_t countItems(const std::vector<T>& items) {
+    return items.size();
+}
+
+// Simple divider
+void printDivider() {
+    std::cout << "----------------------\n";
+}
+// ---------------------------------
 
 // ======================================================
 // MAIN
@@ -102,10 +116,14 @@ int main(void) {
     printEnumValue(a);
     printEnumValue(v);
 
+    printDivider();
+
     // Small extra demo
     Food f = Food::Pizza;
     describe(f);
     printEnumValue(f);
+
+    printDivider();
 
     // ---- very small extra usage ----
     std::vector<Animal> animals = {
@@ -114,8 +132,11 @@ int main(void) {
         Animal::Bird
     };
 
-    std::cout << "\nAll animals:\n";
+    std::cout << "All animals:\n";
     describeAll(animals);
+
+    std::cout << "Total animals: "
+              << countItems(animals) << '\n';
 
     return 0;
 }

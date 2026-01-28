@@ -13,10 +13,10 @@ struct Book {
 };
 
 // ======================================================
-// SMALL EXTRA FUNCTIONS (ADDITION ONLY)
+// SMALL EXTRA FUNCTIONS (ADDED ONLY)
 // ======================================================
 
-// Print book details using a helper function
+// Print book details
 void printBook(const Book& b) {
     std::cout << "Name: " << b.name << "\n";
     std::cout << "ISBN: " << b.ISBN_NO << "\n";
@@ -25,11 +25,7 @@ void printBook(const Book& b) {
 
 // Create a sample book
 Book createSampleBook() {
-    return {
-        "Clean Code",
-        10101,
-        "Prentice Hall"
-    };
+    return { "Clean Code", 10101, "Prentice Hall" };
 }
 
 // Compare ISBN numbers
@@ -45,10 +41,21 @@ void printLibrary(const std::vector<Book>& lib) {
     }
 }
 
-// Small extra utility
+// ---- SMALL ADDED HELPERS ----
+
+// Count total books
 int totalBooks(const std::vector<Book>& lib) {
     return lib.size();
 }
+
+// Check if a book exists by name
+bool containsBook(const std::vector<Book>& lib, const std::string& name) {
+    for (const auto& b : lib)
+        if (b.name == name)
+            return true;
+    return false;
+}
+// ----------------------------
 
 // ======================================================
 // MAIN
@@ -57,11 +64,7 @@ int totalBooks(const std::vector<Book>& lib) {
 int main(void) {
 
     // ---------- ORIGINAL LOGIC ----------
-    Book b1 = {
-        "test",
-        12,
-        "O'Rilley"
-    };
+    Book b1 = { "test", 12, "O'Rilley" };
 
     std::cout << "Book Details:\n";
     std::cout << "Name: " << b1.name << std::endl;
@@ -79,27 +82,22 @@ int main(void) {
     std::cout << "Publisher: " << b2.publisher << std::endl;
 
     // ---------- SMALL ADDITION ----------
-    std::cout << "\nPrinted using helper function:\n";
     printBook(b1);
     printBook(b2);
 
     Book sample = createSampleBook();
-    std::cout << "\nSample Book:\n";
     printBook(sample);
 
-    std::cout << "\nISBN Comparison Result: ";
     std::cout << (hasSameISBN(b2, sample) ? "Same ISBN\n" : "Different ISBN\n");
 
-    // ---------- VERY SMALL EXTRA ADDITION ----------
-    std::vector<Book> library;
-    library.push_back(b1);
-    library.push_back(b2);
-    library.push_back(sample);
+    // ---------- VERY SMALL EXTRA ----------
+    std::vector<Book> library = { b1, b2, sample };
 
-    std::cout << "\nTotal books in library: "
-              << totalBooks(library) << std::endl;
-
+    std::cout << "\nTotal books: " << totalBooks(library) << "\n";
     printLibrary(library);
+
+    std::cout << "Contains 'Clean Code'? "
+              << (containsBook(library, "Clean Code") ? "Yes\n" : "No\n");
 
     return 0;
 }

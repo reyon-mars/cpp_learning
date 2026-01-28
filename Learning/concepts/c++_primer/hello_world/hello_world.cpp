@@ -63,6 +63,21 @@ bool isEven(int x) {
 void printDivider() {
     std::cout << "-----------------------------\n";
 }
+
+// Multiply two numbers
+int multiply(int a, int b) {
+    return a * b;
+}
+
+// Tiny stats struct
+struct Stats {
+    int runs = 1;
+};
+
+// Goodbye helper
+void sayGoodbye() {
+    std::cout << "Goodbye! End of program.\n";
+}
 // --------------------------------
 
 // ======================================================
@@ -106,8 +121,15 @@ int main(void) {
               << std::endl;
 
     printDivider();
+
+    Stats stats;
+    std::cout << "Total runs recorded: "
+              << stats.runs << std::endl;
+
+    std::cout << "3 * 4 = " << multiply(3, 4) << std::endl;
     // --------------------------
 
     std::cout << "Program finished successfully." << std::endl;
+    sayGoodbye();
     return 0;
 }

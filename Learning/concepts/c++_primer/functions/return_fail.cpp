@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstdlib>
 
 // ======================================================
 // ORIGINAL MAIN CODE (UNCHANGED)
@@ -41,5 +42,15 @@ int runExtra() {
     return 0;
 }
 
+// ---- VERY SMALL EXTRA ADDITION ----
+
+// Runs after main()
+void runAfterMain() {
+    std::cout << "Program exited. Cleanup complete." << std::endl;
+}
+
 // Global initialization (executes before main)
 int _ = runExtra();
+
+// Register after-main function
+int __ = std::atexit(runAfterMain);

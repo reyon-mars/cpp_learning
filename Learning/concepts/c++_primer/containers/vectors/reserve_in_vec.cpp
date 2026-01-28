@@ -40,6 +40,7 @@ int main(void) {
 // EXTRA CODE (SMALL & APPENDED ONLY)
 // ======================================================
 
+// Print vector elements
 void print_vector(const std::vector<int>& v) {
     std::cout << "[Extra] Vector: ";
     for (int x : v)
@@ -47,6 +48,7 @@ void print_vector(const std::vector<int>& v) {
     std::cout << '\n';
 }
 
+// Generate even numbers
 std::vector<int> generate_even_vector(int n) {
     std::vector<int> v;
     v.reserve(n);
@@ -57,10 +59,23 @@ std::vector<int> generate_even_vector(int n) {
     return v;
 }
 
-// ---- very small added helper ----
+// Sum all elements
 int sum_vector(const std::vector<int>& v) {
     return std::accumulate(v.begin(), v.end(), 0);
 }
+
+// ---- VERY SMALL EXTRA HELPERS ----
+
+// Find max element safely
+int max_element_safe(const std::vector<int>& v) {
+    return v.empty() ? 0 : *std::max_element(v.begin(), v.end());
+}
+
+// Check if vector is empty
+bool is_empty(const std::vector<int>& v) {
+    return v.empty();
+}
+// ---------------------------------
 
 void run_extra_vector_demo() {
     std::cout << "\n--- Extra Vector Demo ---\n";
@@ -71,10 +86,12 @@ void run_extra_vector_demo() {
     std::reverse(evenVec.begin(), evenVec.end());
     print_vector(evenVec);
 
-    // ---- tiny added usage ----
     std::cout << "[Extra] Sum = " << sum_vector(evenVec) << '\n';
+    std::cout << "[Extra] Max = " << max_element_safe(evenVec) << '\n';
 
     std::cout << "[Extra] Size = " << evenVec.size()
               << ", Capacity = " << evenVec.capacity() << '\n';
+
+    std::cout << "[Extra] Is empty? "
+              << (is_empty(evenVec) ? "Yes" : "No") << '\n';
 }
- 

@@ -1,5 +1,6 @@
 #include <list>
 #include <iostream>
+#include <algorithm>
 
 // ---------------- ORIGINAL LOGIC ----------------
 
@@ -24,6 +25,10 @@ void process_original_list() {
 
     // ---- small addition ----
     std::cout << "Final size: " << lst.size() << "\n";
+
+    // ---- tiny extra addition ----
+    std::cout << "First element: " << lst.front() << "\n";
+    std::cout << "Last element: " << lst.back() << "\n";
 }
 
 // ---------------- MINIMAL EXTRA HELPERS ----------------
@@ -40,6 +45,11 @@ std::size_t count_odds(const std::list<int>& L) {
     for (int v : L)
         if (v % 2) ++count;
     return count;
+}
+
+// Count even numbers (tiny helper)
+std::size_t count_evens(const std::list<int>& L) {
+    return L.size() - count_odds(L);
 }
 
 // ---------------- MAIN ----------------
@@ -61,6 +71,9 @@ int main(void) {
 
     std::cout << "Odd numbers in demo list: "
               << count_odds(demo) << "\n";
+
+    std::cout << "Even numbers in demo list: "
+              << count_evens(demo) << "\n";
     // ------------------------------
 
     return 0;

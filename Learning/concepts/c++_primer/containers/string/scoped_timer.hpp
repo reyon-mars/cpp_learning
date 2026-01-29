@@ -47,6 +47,13 @@ void timed_work(const std::string& label, int n) {
     busy_work(n);
 }
 
+// Very small extra helper
+void counted_work(const std::string& label, int n, int& counter) {
+    scoped_timer t(label);
+    busy_work(n);
+    ++counter;
+}
+
 // ---------------------------------------------------------
 // MAIN
 // ---------------------------------------------------------
@@ -54,19 +61,31 @@ void timed_work(const std::string& label, int n) {
 int main() {
     std::cout << "--- Scoped Timer Demo ---\n";
 
+    // ---- total runtime timer ----
+    scoped_timer total("total program time");
+
     scoped_timer t("main workload");
     busy_work(300'000);
 
-    // ---- small added code ----
+    // ---- small added scope ----
     {
         scoped_timer inner("inner block workload");
         busy_work(150'000);
     }
-    // -------------------------
+    // ---------------------------
 
     // ---- very small extra usage ----
     timed_work("helper function workload", 200'000);
     // -------------------------------
+
+    // ---- tiny added logic ----
+    int workCount = 0;
+    counted_work("counted workload 1", 100'000, workCount);
+    counted_work("counted workload 2", 120'000, workCount);
+
+    std::cout << "Work functions executed: "
+              << workCount << std::endl;
+    // --------------------------
 
     std::cout << "--- Program Finished ---\n";
     return 0;

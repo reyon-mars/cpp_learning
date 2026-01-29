@@ -3,7 +3,7 @@
 #include <string>
 
 // ==================================================
-// ORIGINAL CODE (with SMALL ADDITIONS)
+// ORIGINAL CODE (LOGIC UNCHANGED)
 // ==================================================
 
 int main(void) {
@@ -46,6 +46,16 @@ int main(void) {
 
     std::cout << "String created using constructor: "
               << str_v << std::endl;
+
+    // --- VERY SMALL EXTRA ADDITION ---
+    std::cout << "Is vector empty? "
+              << (v.empty() ? "Yes" : "No") << std::endl;
+
+    std::cout << "ASCII values: ";
+    for (char c : v)
+        std::cout << static_cast<int>(c) << " ";
+    std::cout << std::endl;
+    // --------------------------------
 
     return 0;
 }

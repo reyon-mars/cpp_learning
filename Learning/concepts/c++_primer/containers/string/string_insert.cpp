@@ -30,6 +30,14 @@ std::string to_uppercase(std::string s)
     return s;
 }
 
+// Convert string to lowercase
+std::string to_lowercase(std::string s)
+{
+    std::transform(s.begin(), s.end(), s.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+    return s;
+}
+
 // Count characters in a string
 std::size_t count_chars(const std::string& s)
 {
@@ -40,6 +48,12 @@ std::size_t count_chars(const std::string& s)
 bool contains(const std::string& s, const std::string& sub)
 {
     return s.find(sub) != std::string::npos;
+}
+
+// Check if string starts with prefix
+bool starts_with(const std::string& s, const std::string& prefix)
+{
+    return s.rfind(prefix, 0) == 0;
 }
 
 // ======================================================
@@ -61,11 +75,18 @@ int main() {
     std::string upper = to_uppercase(text);
     std::cout << "Uppercase: " << upper << '\n';
 
+    std::string lower = to_lowercase(text);
+    std::cout << "Lowercase: " << lower << '\n';
+
     std::cout << "Character count: "
               << count_chars(text) << '\n';
 
     if (contains(text, "World")) {
         std::cout << "Substring \"World\" found\n";
+    }
+
+    if (starts_with(text, "Hello")) {
+        std::cout << "Text starts with \"Hello\"\n";
     }
     // ---------------------------
 

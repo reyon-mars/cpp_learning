@@ -39,6 +39,19 @@ bool is_adult(const User& user) {
     return user.age >= 18;
 }
 
+// ---- very small extra helpers ----
+
+// Factory helper
+std::unique_ptr<User> make_user(std::string name, int age) {
+    return std::make_unique<User>(User{std::move(name), age});
+}
+
+// Print adult status
+void print_status(const User& user) {
+    std::cout << (is_adult(user) ? "Adult\n" : "Minor\n");
+}
+// ---------------------------------
+
 // ----------------------------------------------------
 // MAIN (ORIGINAL + FEW ADDITIONS)
 // ----------------------------------------------------
@@ -63,8 +76,13 @@ int main(void) {
     std::cout << "Printed via operator<< : "
               << *v << std::endl;
 
-    std::cout << (is_adult(*v) ? "User is adult\n"
-                               : "User is minor\n");
+    print_status(*v);
+
+    // ---- very small extra usage ----
+    auto w = make_user("Nova", 16);
+    print_user(w);
+    print_status(*w);
+    // -------------------------------
 
     v.reset();                     // release ownership
     print_user(v);                 // check after reset

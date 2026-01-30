@@ -59,6 +59,15 @@ bool contains(const std::forward_list<std::string>& lst,
     return false;
 }
 
+// Get last element safely (tiny helper)
+std::string last_element(const std::forward_list<std::string>& lst)
+{
+    std::string last;
+    for (const auto& s : lst)
+        last = s;
+    return last;
+}
+
 // ======================================================
 // MAIN
 // ======================================================
@@ -102,6 +111,7 @@ int main() {
 
     if (!lst.empty()) {
         cout << "First element: " << lst.front() << "\n";
+        cout << "Last element: " << last_element(lst) << "\n";
     }
 
     cout << "Contains 'cherry'? "

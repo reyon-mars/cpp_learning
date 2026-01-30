@@ -50,12 +50,27 @@ int sum_elements(const std::forward_list<int>& lst) {
     return sum;
 }
 
-// ---- very small added helper ----
+// ---- very small added helpers ----
+
+// Return last element safely (assumes non-empty)
 int last_element(const std::forward_list<int>& lst) {
     int last = 0;
     for (int v : lst)
         last = v;
     return last;
+}
+
+// Check if all elements are even
+bool all_even(const std::forward_list<int>& lst) {
+    for (int v : lst)
+        if (v % 2 != 0)
+            return false;
+    return true;
+}
+
+// Print divider
+void print_divider() {
+    std::cout << "-----------------------------\n";
 }
 // --------------------------------
 
@@ -80,8 +95,10 @@ int main() {
     if (!is_empty(fl1)) {
         std::cout << "First element: " << fl1.front() << "\n";
         std::cout << "Last element: " << last_element(fl1) << "\n";
+        std::cout << "All even? "
+                  << (all_even(fl1) ? "Yes\n" : "No\n");
     }
-    std::cout << "\n";
+    print_divider();
 
     // Test case 2: all odd numbers
     std::forward_list<int> fl2 = {1, 3, 5, 7, 9};
@@ -93,7 +110,8 @@ int main() {
     print_list(fl2);
 
     std::cout << "Count: " << count_elements(fl2)
-              << (is_empty(fl2) ? " (empty)\n\n" : "\n\n");
+              << (is_empty(fl2) ? " (empty)\n" : "\n");
+    print_divider();
 
     // Test case 3: all even numbers
     std::forward_list<int> fl3 = {2, 4, 6, 8, 10};
@@ -105,7 +123,8 @@ int main() {
     print_list(fl3);
 
     std::cout << "Count: " << count_elements(fl3) << "\n";
-    std::cout << "Sum: " << sum_elements(fl3) << "\n\n";
+    std::cout << "Sum: " << sum_elements(fl3) << "\n";
+    print_divider();
 
     // Test case 4: empty list
     std::forward_list<int> fl4;

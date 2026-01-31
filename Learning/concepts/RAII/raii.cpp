@@ -42,30 +42,6 @@ bool file_exists(const std::string& filename) {
     return f.good();
 }
 
-// Read entire file safely
-std::string read_all(file_guard& fg) {
-    std::string content, line;
-    auto& f = fg.get();
-
-    while (std::getline(f, line)) {
-        content += line + '\n';
-    }
-    return content;
-}
-
-// Simple RAII scope logger
-struct ScopeLogger {
-    std::string name;
-
-    explicit ScopeLogger(std::string n) : name(std::move(n)) {
-        std::cout << "[Scope] Enter " << name << '\n';
-    }
-
-    ~ScopeLogger() {
-        std::cout << "[Scope] Exit " << name << '\n';
-    }
-};
-
 // Reset file stream to beginning
 void rewind_file(file_guard& fg) {
     auto& f = fg.get();
@@ -73,40 +49,30 @@ void rewind_file(file_guard& fg) {
     f.seekg(0);
 }
 
-// Count number of lines in file
+// Read entire file
+std::string read_all(file_guard& fg) {
+    rewind_file(fg);
+
+    std::string content, line;
+    while (std::getline(fg.get(), line)) {
+        content += line + '\n';
+    }
+    return content;
+}
+
+// Count number of lines
 int count_lines(file_guard& fg) {
     rewind_file(fg);
 
     int count = 0;
     std::string line;
-    auto& f = fg.get();
-
-    while (std::getline(f, line))
+    while (std::getline(fg.get(), line))
         ++count;
 
     return count;
 }
 
-// ---- very small extra helpers ----
-
-// Check if stream is open
-bool is_open(file_guard& fg) {
-    return fg.get().is_open();
-}
-
-// Get file size in bytes
-std::streamsize file_size(file_guard& fg) {
-    auto& f = fg.get();
-    rewind_file(fg);
-
-    f.seekg(0, std::ios::end);
-    auto size = f.tellg();
-    rewind_file(fg);
-
-    return size;
-}
-
-// Read only the first line
+// Read first line
 std::string read_first_line(file_guard& fg) {
     rewind_file(fg);
     std::string line;
@@ -114,25 +80,24 @@ std::string read_first_line(file_guard& fg) {
     return line;
 }
 
-// Print first N characters as preview
+// Print preview (first N characters)
 void print_preview(file_guard& fg, std::size_t n) {
     rewind_file(fg);
+
     char ch;
     std::size_t count = 0;
-
     while (fg.get().get(ch) && count < n) {
         std::cout << ch;
         ++count;
     }
-    std::cout << "\n";
+    std::cout << '\n';
 }
-// ---------------------------------
 
 // ======================================================
 // MAIN
 // ======================================================
 
-int main(void) {
+int main() {
     const std::string filename = "example.txt";
 
     if (!file_exists(filename)) {
@@ -141,30 +106,21 @@ int main(void) {
     }
 
     try {
-        ScopeLogger scope("file_guard demo");
-
         file_guard fg(filename);
 
-        std::cout << "File opened successfully.\n";
-        std::cout << "Is open? "
-                  << (is_open(fg) ? "Yes\n" : "No\n");
+        std::cout << "File opened successfully.\n\n";
 
-        std::cout << "\nFile contents:\n";
-        std::cout << read_all(fg);
+        std::cout << "File contents:\n";
+        std::cout << read_all(fg) << '\n';
 
-        // ---- small added usage ----
-        std::cout << "\nLine count: "
+        std::cout << "Line count: "
                   << count_lines(fg) << '\n';
-
-        std::cout << "File size: "
-                  << file_size(fg) << " bytes\n";
 
         std::cout << "First line: "
                   << read_first_line(fg) << '\n';
 
         std::cout << "Preview (30 chars):\n";
         print_preview(fg, 30);
-        // --------------------------
 
     } catch (const std::exception& e) {
         std::cout << "Error: " << e.what() << '\n';

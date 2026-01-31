@@ -78,6 +78,24 @@ void print_range(const int_range& r) {
     std::cout << "\n";
 }
 
+// ---- VERY SMALL EXTRA HELPERS ----
+
+// get first element (if exists)
+int range_front(const int_range& r) {
+    for (int v : r)
+        return v;
+    return 0;
+}
+
+// get last element
+int range_back(const int_range& r) {
+    int last = 0;
+    for (int v : r)
+        last = v;
+    return last;
+}
+// --------------------------------
+
 // ---------------- MAIN ----------------
 
 int main(void) {
@@ -92,9 +110,17 @@ int main(void) {
 
     std::cout << "Range size: " << range_size(r) << "\n";
     std::cout << "Range sum: " << range_sum(r) << "\n";
+
     std::cout << "Is range empty? "
               << (empty(r) ? "Yes" : "No") << "\n";
-    // --------------------------
+
+    // ---- very small extra usage ----
+    if (!empty(r)) {
+        std::cout << "First element: " << range_front(r) << "\n";
+        std::cout << "Last element: " << range_back(r) << "\n";
+    }
+    // ------------------------------
 
     return 0;
 }
+

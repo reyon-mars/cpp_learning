@@ -16,7 +16,7 @@ struct Book {
 // SMALL EXTRA FUNCTIONS (ADDITION ONLY)
 // ======================================================
 
-// Print book details using a helper function
+// Print book details
 void printBook(const Book& b) {
     std::cout << "Name: " << b.name << "\n";
     std::cout << "ISBN: " << b.ISBN_NO << "\n";
@@ -25,11 +25,7 @@ void printBook(const Book& b) {
 
 // Create a sample book
 Book createSampleBook() {
-    return {
-        "Clean Code",
-        10101,
-        "Prentice Hall"
-    };
+    return { "Clean Code", 10101, "Prentice Hall" };
 }
 
 // Compare ISBN numbers
@@ -45,12 +41,9 @@ void printLibrary(const std::vector<Book>& lib) {
     }
 }
 
-// ---- VERY SMALL EXTRA HELPERS ----
-
 // Count books by publisher
 int countByPublisher(const std::vector<Book>& lib,
-                     const std::string& publisher)
-{
+                     const std::string& publisher) {
     int count = 0;
     for (const auto& b : lib)
         if (b.publisher == publisher)
@@ -60,8 +53,7 @@ int countByPublisher(const std::vector<Book>& lib,
 
 // Check if book exists by name
 bool containsBook(const std::vector<Book>& lib,
-                  const std::string& name)
-{
+                  const std::string& name) {
     for (const auto& b : lib)
         if (b.name == name)
             return true;
@@ -76,7 +68,7 @@ void printFirstBook(const std::vector<Book>& lib) {
     }
 }
 
-// Stream output operator (tiny addition)
+// Stream output operator
 std::ostream& operator<<(std::ostream& os, const Book& b) {
     return os << b.name << " | ISBN: " << b.ISBN_NO
               << " | Publisher: " << b.publisher;
@@ -100,7 +92,6 @@ bool removeBook(std::vector<Book>& lib, const std::string& name) {
     }
     return false;
 }
-// ----------------------------------
 
 // ======================================================
 // MAIN
@@ -109,11 +100,7 @@ bool removeBook(std::vector<Book>& lib, const std::string& name) {
 int main(void) {
 
     // ---------- ORIGINAL LOGIC ----------
-    Book b1 = {
-        "test",
-        12,
-        "O'Rilley"
-    };
+    Book b1 = { "test", 12, "O'Rilley" };
 
     std::cout << "Book Details:\n";
     std::cout << "Name: " << b1.name << std::endl;
@@ -130,7 +117,7 @@ int main(void) {
     std::cout << "ISBN: " << b2.ISBN_NO << std::endl;
     std::cout << "Publisher: " << b2.publisher << std::endl;
 
-    // ---------- SMALL ADDITION ----------
+    // ---------- SMALL ADDITIONS ----------
     std::cout << "\nPrinted using helper function:\n";
     printBook(b1);
     printBook(b2);
@@ -139,20 +126,16 @@ int main(void) {
     std::cout << "\nSample Book:\n";
     printBook(sample);
 
-    std::cout << "\nISBN Comparison Result: ";
-    std::cout << (hasSameISBN(b2, sample) ? "Same ISBN\n" : "Different ISBN\n");
+    std::cout << "\nISBN Comparison Result: "
+              << (hasSameISBN(b2, sample) ? "Same ISBN\n" : "Different ISBN\n");
 
-    // ---------- VERY SMALL EXTRA ADDITION ----------
-    std::vector<Book> library;
-    library.push_back(b1);
-    library.push_back(b2);
-    library.push_back(sample);
+    // ---------- VERY SMALL EXTRA ADDITIONS ----------
+    std::vector<Book> library = { b1, b2, sample };
 
     std::cout << "\nTotal books in library: "
               << library.size() << std::endl;
 
     printLibrary(library);
-
     printFirstBook(library);
 
     std::cout << "\nBooks published by Pearson: "
@@ -161,7 +144,6 @@ int main(void) {
     std::cout << "Contains 'Clean Code'? "
               << (containsBook(library, "Clean Code") ? "Yes\n" : "No\n");
 
-    // ---- tiny new usage ----
     std::cout << "\nPrinted via operator<<:\n";
     std::cout << sample << "\n";
 
@@ -172,7 +154,6 @@ int main(void) {
     removeBook(library, "test");
     std::cout << "\nAfter removing 'test': "
               << library.size() << " books\n";
-    // -------------------------
 
     return 0;
 }

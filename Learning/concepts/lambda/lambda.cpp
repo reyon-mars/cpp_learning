@@ -107,11 +107,27 @@ int main() {
     std::cout << "Even numbers in doubled vector: "
               << even_count << '\n';
 
+    // ---- VERY SMALL EXTRA ADDITION ----
+
+    // lambda with no capture
+    auto print_size = [&]() {
+        std::cout << "Original vector size: " << vec.size() << '\n';
+    };
+    print_size();
+
+    // lambda returning lambda
+    auto make_adder = [](int base) {
+        return [base](int x) { return base + x; };
+    };
+    auto add10 = make_adder(10);
+    std::cout << "10 + 5 = " << add10(5) << '\n';
+
     // simple constant lambda
     auto say_done = []() {
         std::cout << "Program finished successfully.\n";
     };
     say_done();
+    // ----------------------------------
 
     return 0;
 }

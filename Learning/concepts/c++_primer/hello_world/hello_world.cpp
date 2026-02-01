@@ -78,7 +78,30 @@ struct Stats {
 void sayGoodbye() {
     std::cout << "Goodbye! End of program.\n";
 }
-// --------------------------------
+
+// ======================================================
+// NEW TINY ADDITIONS (JUST FEW MORE LINES)
+// ======================================================
+
+// Square a number
+int square(int x) {
+    return x * x;
+}
+
+// Simple status printer
+void printStatus(const std::string& status) {
+    std::cout << "[STATUS] " << status << std::endl;
+}
+
+// Tiny config struct
+struct Config {
+    bool debug = false;
+};
+
+// Check if number is zero
+bool isZero(int x) {
+    return x == 0;
+}
 
 // ======================================================
 // MAIN
@@ -127,6 +150,23 @@ int main(void) {
               << stats.runs << std::endl;
 
     std::cout << "3 * 4 = " << multiply(3, 4) << std::endl;
+
+    // ======================================================
+    // NEW TINY USAGE (VERY SMALL EXTRA)
+    // ======================================================
+
+    printStatus("Program running normally");
+
+    Config cfg;
+    std::cout << "Debug mode: "
+              << (cfg.debug ? "ON" : "OFF") << std::endl;
+
+    std::cout << "Square of 5 = " << square(5) << std::endl;
+
+    std::cout << "Execution count is "
+              << (isZero(executionCount) ? "zero" : "not zero")
+              << std::endl;
+
     // --------------------------
 
     std::cout << "Program finished successfully." << std::endl;

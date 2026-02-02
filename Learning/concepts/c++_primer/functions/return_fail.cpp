@@ -28,6 +28,23 @@ bool isPositive(int x) {
     return x > 0;
 }
 
+// ---- NEW SMALL HELPERS ----
+
+// Check if number is even
+bool isEven(int x) {
+    return x % 2 == 0;
+}
+
+// Print separator line
+void printLine() {
+    std::cout << "----------------------" << std::endl;
+}
+
+// Small counter struct
+struct Counter {
+    int count = 1;
+};
+
 // Runs before main()
 int runExtra() {
     ExtraStruct e;
@@ -37,6 +54,16 @@ int runExtra() {
     std::cout << "Value is "
               << (isPositive(e.value) ? "positive" : "not positive")
               << std::endl;
+
+    // ---- NEW SMALL USAGE ----
+    std::cout << "Value is "
+              << (isEven(e.value) ? "even" : "odd")
+              << std::endl;
+
+    Counter c;
+    std::cout << "Counter value: " << c.count << std::endl;
+
+    printLine();
 
     extraFunction();
     return 0;

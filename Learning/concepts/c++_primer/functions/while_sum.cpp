@@ -55,7 +55,37 @@ bool containsBook(const std::vector<Book>& lib, const std::string& name) {
             return true;
     return false;
 }
-// ----------------------------
+
+// ======================================================
+// NEW VERY SMALL EXTRA ADDITIONS
+// ======================================================
+
+// Find book by ISBN
+bool findBookByISBN(const std::vector<Book>& lib, int isbn) {
+    for (const auto& b : lib)
+        if (b.ISBN_NO == isbn)
+            return true;
+    return false;
+}
+
+// Print divider line
+void printDivider() {
+    std::cout << "-----------------------------\n";
+}
+
+// Simple stats struct
+struct LibraryStats {
+    int visits = 1;
+};
+
+// Convert book name to uppercase (simple demo)
+std::string toUpperCase(std::string text) {
+    for (char& c : text) {
+        if (c >= 'a' && c <= 'z')
+            c = c - 32;
+    }
+    return text;
+}
 
 // ======================================================
 // MAIN
@@ -98,6 +128,18 @@ int main(void) {
 
     std::cout << "Contains 'Clean Code'? "
               << (containsBook(library, "Clean Code") ? "Yes\n" : "No\n");
+
+    // ---------- NEW VERY SMALL USAGE ----------
+    printDivider();
+
+    std::cout << "Searching ISBN 999: "
+              << (findBookByISBN(library, 999) ? "Found\n" : "Not Found\n");
+
+    LibraryStats stats;
+    std::cout << "Library visits recorded: " << stats.visits << std::endl;
+
+    std::cout << "Uppercase sample book name: "
+              << toUpperCase(sample.name) << std::endl;
 
     return 0;
 }

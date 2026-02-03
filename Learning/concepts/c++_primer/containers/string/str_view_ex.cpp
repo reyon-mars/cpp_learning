@@ -33,6 +33,31 @@ void print_header(const std::string& title)
     std::cout << "\n--- " << title << " ---\n";
 }
 
+// ===== VERY SMALL EXTRA HELPERS =====
+
+// default tag (compile-time)
+constexpr std::string_view DEFAULT_TAG = "Default";
+
+// tiny counter printer
+void print_counter(const std::string& label, int value)
+{
+    std::cout << label << ": " << value << '\n';
+}
+
+// warmup logger (helps realistic benchmarking)
+void warmup_logger()
+{
+    log_msg(DEFAULT_TAG, "Warmup");
+}
+
+// force flush helper
+void flush_output()
+{
+    std::cout << std::flush;
+}
+
+// ====================================
+
 // ======================================================
 // MAIN
 // ======================================================
@@ -49,6 +74,10 @@ int main(void)
     std::string test_msg = "Message";
 
     int call_count = 0;
+
+    // ---- VERY TINY EXTRA ----
+    warmup_logger();
+    // -------------------------
 
     // Benchmark log_msg (std::string_view)
     print_header("String View Logger");
@@ -81,8 +110,14 @@ int main(void)
     }
     // -----------------------------------
 
+    flush_output();
+
     std::cout << "\nTotal log calls executed: "
               << call_count << '\n';
+
+    // ---- tiny extra output ----
+    print_counter("Final Call Count", call_count);
+    // ---------------------------
 
     return 0;
 }

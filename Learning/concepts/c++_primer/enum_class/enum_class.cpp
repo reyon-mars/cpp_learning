@@ -98,6 +98,25 @@ std::size_t countItems(const std::vector<T>& items) {
 void printDivider() {
     std::cout << "----------------------\n";
 }
+
+// ---- NEW SMALL ADDITIONS ----
+
+// Check if enum value is zero
+template <typename T>
+bool isFirstEnumValue(T e) {
+    return static_cast<int>(e) == 0;
+}
+
+// Print vector numeric values only
+template <typename T>
+void printEnumNumbers(const std::vector<T>& items) {
+    std::cout << "Enum numbers: ";
+    for (const auto& i : items) {
+        std::cout << static_cast<int>(i) << " ";
+    }
+    std::cout << "\n";
+}
+
 // ---------------------------------
 
 // ======================================================
@@ -115,6 +134,9 @@ int main(void) {
 
     printEnumValue(a);
     printEnumValue(v);
+
+    std::cout << (isFirstEnumValue(a) ? "First enum value\n"
+                                      : "Not first enum value\n");
 
     printDivider();
 
@@ -137,6 +159,8 @@ int main(void) {
 
     std::cout << "Total animals: "
               << countItems(animals) << '\n';
+
+    printEnumNumbers(animals);
 
     return 0;
 }

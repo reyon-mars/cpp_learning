@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <algorithm>
 
 // ==================================================
 // ORIGINAL CODE (LOGIC UNCHANGED)
@@ -55,7 +56,32 @@ int main(void) {
     for (char c : v)
         std::cout << static_cast<int>(c) << " ";
     std::cout << std::endl;
-    // --------------------------------
+
+    // ===== NEW VERY SMALL EXTRAS =====
+
+    // Count uppercase letters
+    int uppercase_count = 0;
+    for (char c : v)
+        if (c >= 'A' && c <= 'Z')
+            uppercase_count++;
+
+    std::cout << "Uppercase letters count: "
+              << uppercase_count << std::endl;
+
+    // Check if vector contains 'i'
+    bool contains_i =
+        std::find(v.begin(), v.end(), 'i') != v.end();
+
+    std::cout << "Contains 'i'? "
+              << (contains_i ? "Yes" : "No") << std::endl;
+
+    // Print reversed characters (without modifying vector)
+    std::cout << "Reversed view: ";
+    for (auto it = v.rbegin(); it != v.rend(); ++it)
+        std::cout << *it;
+    std::cout << std::endl;
+
+    // =================================
 
     return 0;
 }

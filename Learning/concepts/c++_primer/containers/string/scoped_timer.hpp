@@ -54,12 +54,37 @@ void counted_work(const std::string& label, int n, int& counter) {
     ++counter;
 }
 
+// ===== VERY SMALL EXTRA HELPERS =====
+
+// Run same work multiple times
+void repeat_work(const std::string& label, int n, int times) {
+    scoped_timer t(label);
+    for (int i = 0; i < times; ++i)
+        busy_work(n);
+}
+
+// Average style runner (simple demo only)
+void average_work_demo(const std::string& label, int n, int runs) {
+    scoped_timer t(label);
+    for (int i = 0; i < runs; ++i)
+        busy_work(n);
+}
+
+// Simple status print
+void print_status(const std::string& msg) {
+    std::cout << "[Status] " << msg << std::endl;
+}
+
+// ====================================
+
 // ---------------------------------------------------------
 // MAIN
 // ---------------------------------------------------------
 
 int main() {
     std::cout << "--- Scoped Timer Demo ---\n";
+
+    print_status("Program started");
 
     // ---- total runtime timer ----
     scoped_timer total("total program time");
@@ -85,7 +110,13 @@ int main() {
 
     std::cout << "Work functions executed: "
               << workCount << std::endl;
-    // --------------------------
+
+    // ---- NEW VERY SMALL EXTRAS ----
+    repeat_work("repeat workload x3", 80'000, 3);
+    average_work_demo("average demo workload", 60'000, 5);
+    // ------------------------------
+
+    print_status("Program ending");
 
     std::cout << "--- Program Finished ---\n";
     return 0;

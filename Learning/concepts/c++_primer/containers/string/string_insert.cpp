@@ -56,6 +56,33 @@ bool starts_with(const std::string& s, const std::string& prefix)
     return s.rfind(prefix, 0) == 0;
 }
 
+// ===== VERY SMALL EXTRA HELPERS =====
+
+// Check if string ends with suffix
+bool ends_with(const std::string& s, const std::string& suffix)
+{
+    if (suffix.size() > s.size()) return false;
+    return std::equal(suffix.rbegin(), suffix.rend(), s.rbegin());
+}
+
+// Tiny divider printer
+void print_divider()
+{
+    std::cout << "---------------------\n";
+}
+
+// Safe replace wrapper (uses original function)
+std::string safe_replace(std::string& s,
+                         const std::string& old_val,
+                         const std::string& new_val)
+{
+    if (!old_val.empty())
+        return replace_idx(s, old_val, new_val);
+    return s;
+}
+
+// ====================================
+
 // ======================================================
 // MAIN
 // ======================================================
@@ -66,6 +93,8 @@ int main() {
 
     std::string concat = prefix + suffix;
     std::cout << concat << std::endl;
+
+    print_divider();
 
     std::string text = "Hello Mars";
     replace_idx(text, "Mars", "World");
@@ -88,7 +117,17 @@ int main() {
     if (starts_with(text, "Hello")) {
         std::cout << "Text starts with \"Hello\"\n";
     }
-    // ---------------------------
+
+    // ---- VERY SMALL EXTRA USAGE ----
+    if (ends_with(text, "World")) {
+        std::cout << "Text ends with \"World\"\n";
+    }
+
+    safe_replace(text, "World", "C++");
+    std::cout << "After safe replace: " << text << '\n';
+    // --------------------------------
+
+    print_divider();
 
     std::cout << "\n--- End of main() ---\n";
     return 0;

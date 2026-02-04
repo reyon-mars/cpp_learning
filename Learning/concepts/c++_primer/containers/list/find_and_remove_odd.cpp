@@ -1,11 +1,18 @@
 #include <forward_list>
 #include <iostream>
 #include <cstddef>
+#include <algorithm>   // tiny addition
+#include <numeric>     // tiny addition
 
 // ------------------------------------------------
 // FORWARD DECLARATION (SMALL ADDITION)
 // ------------------------------------------------
 std::size_t count_elements(const std::forward_list<int>& lst);
+
+// ---- tiny extra forward declarations ----
+int sum_elements(const std::forward_list<int>& lst);
+int max_element_safe(const std::forward_list<int>& lst);
+void print_divider();
 
 // ------------------------------------------------
 // ORIGINAL CODE (UNCHANGED)
@@ -44,6 +51,12 @@ int main() {
     std::cout << "Count: " << count_elements(fl1) << "\n";
     std::cout << (fl1.empty() ? "List is empty\n" : "List is not empty\n");
 
+    // ---- tiny extra usage ----
+    std::cout << "Sum: " << sum_elements(fl1) << "\n";
+    std::cout << "Max: " << max_element_safe(fl1) << "\n";
+
+    print_divider();
+
     // Test case 2: all odd numbers
     std::forward_list<int> fl2 = {1, 3, 5, 7, 9};
     std::cout << "\nOriginal list 2: ";
@@ -54,6 +67,12 @@ int main() {
     print_list(fl2);
     std::cout << "Count: " << count_elements(fl2) << "\n";
     std::cout << (fl2.empty() ? "List is empty\n" : "List is not empty\n");
+
+    // ---- tiny extra usage ----
+    std::cout << "Sum: " << sum_elements(fl2) << "\n";
+    std::cout << "Max: " << max_element_safe(fl2) << "\n";
+
+    print_divider();
 
     // Test case 3: all even numbers
     std::forward_list<int> fl3 = {2, 4, 6, 8, 10};
@@ -66,6 +85,12 @@ int main() {
     std::cout << "Count: " << count_elements(fl3) << "\n";
     std::cout << (fl3.empty() ? "List is empty\n" : "List is not empty\n");
 
+    // ---- tiny extra usage ----
+    std::cout << "Sum: " << sum_elements(fl3) << "\n";
+    std::cout << "Max: " << max_element_safe(fl3) << "\n";
+
+    print_divider();
+
     // Test case 4: empty list
     std::forward_list<int> fl4;
     std::cout << "\nOriginal list 4 (empty): ";
@@ -76,6 +101,10 @@ int main() {
     print_list(fl4);
     std::cout << "Count: " << count_elements(fl4) << "\n";
     std::cout << (fl4.empty() ? "List is empty\n" : "List is not empty\n");
+
+    // ---- tiny extra usage ----
+    std::cout << "Sum: " << sum_elements(fl4) << "\n";
+    std::cout << "Max: " << max_element_safe(fl4) << "\n";
 
     return 0;
 }
@@ -92,4 +121,22 @@ std::size_t count_elements(const std::forward_list<int>& lst) {
         ++count;
     }
     return count;
+}
+
+// ---- VERY SMALL EXTRA HELPERS ----
+
+// Sum elements
+int sum_elements(const std::forward_list<int>& lst) {
+    return std::accumulate(lst.begin(), lst.end(), 0);
+}
+
+// Safe max finder
+int max_element_safe(const std::forward_list<int>& lst) {
+    if (lst.begin() == lst.end()) return 0;
+    return *std::max_element(lst.begin(), lst.end());
+}
+
+// Tiny divider
+void print_divider() {
+    std::cout << "----------------------\n";
 }

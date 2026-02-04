@@ -1,6 +1,7 @@
 #include <list>
 #include <iostream>
 #include <algorithm>
+#include <numeric>   // tiny addition for accumulate
 
 // ---------------- ORIGINAL LOGIC ----------------
 
@@ -52,12 +53,34 @@ std::size_t count_evens(const std::list<int>& L) {
     return L.size() - count_odds(L);
 }
 
+// -------- VERY SMALL EXTRA HELPERS --------
+
+// Sum of list elements
+int sum_list(const std::list<int>& L) {
+    return std::accumulate(L.begin(), L.end(), 0);
+}
+
+// Safe max element finder
+int max_list(const std::list<int>& L) {
+    if (L.empty()) return 0;
+    return *std::max_element(L.begin(), L.end());
+}
+
+// Tiny divider
+void print_divider() {
+    std::cout << "----------------------\n";
+}
+
+// ------------------------------------------
+
 // ---------------- MAIN ----------------
 
 int main(void) {
 
     // ---------- ORIGINAL BEHAVIOR ----------
     process_original_list();
+
+    print_divider();
 
     // ---------- SMALL EXTRA DEMO ----------
     std::list<int> demo = {2, 4, 6, 8};
@@ -74,6 +97,13 @@ int main(void) {
 
     std::cout << "Even numbers in demo list: "
               << count_evens(demo) << "\n";
+
+    // ---- VERY SMALL EXTRA USAGE ----
+    std::cout << "Sum of demo list: "
+              << sum_list(demo) << "\n";
+
+    std::cout << "Max value in demo list: "
+              << max_list(demo) << "\n";
     // ------------------------------
 
     return 0;

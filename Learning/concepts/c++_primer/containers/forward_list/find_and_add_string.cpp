@@ -68,6 +68,25 @@ std::string last_element(const std::forward_list<std::string>& lst)
     return last;
 }
 
+// ---- VERY SMALL EXTRA HELPERS ----
+
+// Count occurrences of a value
+std::size_t count_value(const std::forward_list<std::string>& lst,
+                        const std::string& value)
+{
+    std::size_t count = 0;
+    for (const auto& s : lst)
+        if (s == value)
+            ++count;
+    return count;
+}
+
+// Tiny divider
+void print_divider()
+{
+    std::cout << "----------------------\n";
+}
+
 // ======================================================
 // MAIN
 // ======================================================
@@ -116,6 +135,12 @@ int main() {
 
     cout << "Contains 'cherry'? "
          << (contains(lst, "cherry") ? "Yes\n" : "No\n");
+
+    // ---- very tiny extra usage ----
+    cout << "Count of 'cherry': "
+         << count_value(lst, "cherry") << "\n";
+
+    print_divider();
 
     // Clear list
     lst.clear();

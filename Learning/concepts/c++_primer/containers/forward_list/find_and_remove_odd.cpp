@@ -68,6 +68,25 @@ bool all_even(const std::forward_list<int>& lst) {
     return true;
 }
 
+// Check if list contains a value
+bool contains(const std::forward_list<int>& lst, int value) {
+    for (int v : lst)
+        if (v == value)
+            return true;
+    return false;
+}
+
+// Get maximum element (assumes non-empty)
+int max_element(const std::forward_list<int>& lst) {
+    auto it = lst.begin();
+    int maxVal = *it;
+    ++it;
+    for (; it != lst.end(); ++it)
+        if (*it > maxVal)
+            maxVal = *it;
+    return maxVal;
+}
+
 // Print divider
 void print_divider() {
     std::cout << "-----------------------------\n";
@@ -91,10 +110,12 @@ int main() {
     std::cout << "Count: " << count_elements(fl1) << "\n";
     std::cout << "Sum: " << sum_elements(fl1) << "\n";
 
-    // ---- small addition ----
     if (!is_empty(fl1)) {
         std::cout << "First element: " << fl1.front() << "\n";
         std::cout << "Last element: " << last_element(fl1) << "\n";
+        std::cout << "Max element: " << max_element(fl1) << "\n";
+        std::cout << "Contains 6? "
+                  << (contains(fl1, 6) ? "Yes\n" : "No\n");
         std::cout << "All even? "
                   << (all_even(fl1) ? "Yes\n" : "No\n");
     }

@@ -50,12 +50,10 @@ int runExtra() {
     ExtraStruct e;
     std::cout << "ExtraStruct value: " << e.value << std::endl;
 
-    // small added usage
     std::cout << "Value is "
               << (isPositive(e.value) ? "positive" : "not positive")
               << std::endl;
 
-    // ---- NEW SMALL USAGE ----
     std::cout << "Value is "
               << (isEven(e.value) ? "even" : "odd")
               << std::endl;
@@ -64,7 +62,6 @@ int runExtra() {
     std::cout << "Counter value: " << c.count << std::endl;
 
     printLine();
-
     extraFunction();
     return 0;
 }
@@ -77,7 +74,7 @@ void runAfterMain() {
 }
 
 // Global initialization (executes before main)
-int _ = runExtra();
+static int init_guard = runExtra();
 
 // Register after-main function
-int __ = std::atexit(runAfterMain);
+static int atexit_guard = std::atexit(runAfterMain);

@@ -45,7 +45,7 @@ void printLibrary(const std::vector<Book>& lib) {
 
 // Count total books
 int totalBooks(const std::vector<Book>& lib) {
-    return lib.size();
+    return static_cast<int>(lib.size());
 }
 
 // Check if a book exists by name
@@ -82,7 +82,7 @@ struct LibraryStats {
 std::string toUpperCase(std::string text) {
     for (char& c : text) {
         if (c >= 'a' && c <= 'z')
-            c = c - 32;
+            c = static_cast<char>(c - ('a' - 'A'));
     }
     return text;
 }

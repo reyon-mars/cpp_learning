@@ -1,6 +1,7 @@
 #include <forward_list>
 #include <iostream>
 #include <string>
+#include <cstddef>
 
 // ======================================================
 // ORIGINAL CODE (LOGIC PRESERVED)

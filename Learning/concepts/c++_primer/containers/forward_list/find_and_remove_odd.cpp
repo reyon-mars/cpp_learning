@@ -10,8 +10,8 @@ void find_and_remove_odd(std::forward_list<int>& lst) {
     auto curr = lst.begin();
 
     while (curr != lst.end()) {
-        if (*curr % 2 != 0) {              // odd number
-            curr = lst.erase_after(prev); // erase and advance safely
+        if (*curr % 2 != 0) {
+            curr = lst.erase_after(prev);
         } else {
             prev = curr;
             ++curr;
@@ -20,10 +20,10 @@ void find_and_remove_odd(std::forward_list<int>& lst) {
 }
 
 void print_list(const std::forward_list<int>& lst) {
-    for (auto elem : lst) {
+    for (int elem : lst) {
         std::cout << "[" << elem << "]->";
     }
-    std::cout << "\n";
+    std::cout << "null\n";
 }
 
 // ======================================================
@@ -50,9 +50,7 @@ int sum_elements(const std::forward_list<int>& lst) {
     return sum;
 }
 
-// ---- very small added helpers ----
-
-// Return last element safely (assumes non-empty)
+// Return last element safely (returns 0 if empty)
 int last_element(const std::forward_list<int>& lst) {
     int last = 0;
     for (int v : lst)
@@ -76,14 +74,18 @@ bool contains(const std::forward_list<int>& lst, int value) {
     return false;
 }
 
-// Get maximum element (assumes non-empty)
-int max_element(const std::forward_list<int>& lst) {
+// Get maximum element safely (returns 0 if empty)
+int max_element_safe(const std::forward_list<int>& lst) {
+    if (is_empty(lst)) return 0;
+
     auto it = lst.begin();
     int maxVal = *it;
     ++it;
+
     for (; it != lst.end(); ++it)
         if (*it > maxVal)
             maxVal = *it;
+
     return maxVal;
 }
 
@@ -91,14 +93,12 @@ int max_element(const std::forward_list<int>& lst) {
 void print_divider() {
     std::cout << "-----------------------------\n";
 }
-// --------------------------------
 
 // ======================================================
 // MAIN
 // ======================================================
 
 int main() {
-    // Test case 1: mixed numbers
     std::forward_list<int> fl1 = {1, 2, 3, 4, 5, 6, 7, 8};
     std::cout << "Original list 1: ";
     print_list(fl1);
@@ -113,7 +113,7 @@ int main() {
     if (!is_empty(fl1)) {
         std::cout << "First element: " << fl1.front() << "\n";
         std::cout << "Last element: " << last_element(fl1) << "\n";
-        std::cout << "Max element: " << max_element(fl1) << "\n";
+        std::cout << "Max element: " << max_element_safe(fl1) << "\n";
         std::cout << "Contains 6? "
                   << (contains(fl1, 6) ? "Yes\n" : "No\n");
         std::cout << "All even? "
@@ -121,7 +121,6 @@ int main() {
     }
     print_divider();
 
-    // Test case 2: all odd numbers
     std::forward_list<int> fl2 = {1, 3, 5, 7, 9};
     std::cout << "Original list 2: ";
     print_list(fl2);
@@ -134,7 +133,6 @@ int main() {
               << (is_empty(fl2) ? " (empty)\n" : "\n");
     print_divider();
 
-    // Test case 3: all even numbers
     std::forward_list<int> fl3 = {2, 4, 6, 8, 10};
     std::cout << "Original list 3: ";
     print_list(fl3);
@@ -147,7 +145,6 @@ int main() {
     std::cout << "Sum: " << sum_elements(fl3) << "\n";
     print_divider();
 
-    // Test case 4: empty list
     std::forward_list<int> fl4;
     std::cout << "Original list 4 (empty): ";
     print_list(fl4);
@@ -159,11 +156,9 @@ int main() {
     std::cout << "Count: " << count_elements(fl4)
               << (is_empty(fl4) ? " (empty)\n" : "\n");
 
-    // ---- very small addition ----
     fl3.clear();
     std::cout << "\nAfter clearing list 3, is empty? "
               << (is_empty(fl3) ? "Yes\n" : "No\n");
-    // ----------------------------
 
     return 0;
 }

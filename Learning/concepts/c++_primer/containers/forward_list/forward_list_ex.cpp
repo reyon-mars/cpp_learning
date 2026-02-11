@@ -33,13 +33,13 @@ int main(void) {
 
     // Print remaining elements (even numbers)
     std::cout << "Even elements: ";
-    for (auto elem : f_lst) {
+    for (int elem : f_lst) {
         std::cout << elem << " ";
     }
-    std::cout << std::endl;
+    std::cout << "\n";
 
     // ---- small added usage ----
-    std::cout << "Even count: " << count_elements(f_lst) << std::endl;
+    std::cout << "Even count: " << count_elements(f_lst) << "\n";
     std::cout << (is_empty(f_lst) ? "List is empty\n"
                                   : "List is not empty\n");
 
@@ -83,4 +83,3 @@ int last_element(const std::forward_list<int>& fl) {
         last = v;
     return last;
 }
- 

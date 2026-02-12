@@ -104,7 +104,6 @@ int main(void) {
     std::cout << "Range values: ";
     print_range(r);
 
-    // ---- small added usage ----
     std::cout << "Contains 3? "
               << (contains(r, 3) ? "Yes" : "No") << "\n";
 
@@ -114,12 +113,10 @@ int main(void) {
     std::cout << "Is range empty? "
               << (empty(r) ? "Yes" : "No") << "\n";
 
-    // ---- very small extra usage ----
     if (!empty(r)) {
         std::cout << "First element: " << range_front(r) << "\n";
         std::cout << "Last element: " << range_back(r) << "\n";
     }
-    // ------------------------------
 
     return 0;
 }

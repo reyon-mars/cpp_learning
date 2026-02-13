@@ -78,3 +78,4 @@ static int init_guard = runExtra();
 
 // Register after-main function
 static int atexit_guard = std::atexit(runAfterMain);
+ 

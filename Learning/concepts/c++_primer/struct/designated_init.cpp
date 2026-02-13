@@ -97,15 +97,13 @@ bool removeBook(std::vector<Book>& lib, const std::string& name) {
 // MAIN
 // ======================================================
 
-int main(void) {
+int main() {
 
     // ---------- ORIGINAL LOGIC ----------
-    Book b1 = { "test", 12, "O'Rilley" };
+    Book b1 = { "test", 12, "O'Reilly" };
 
     std::cout << "Book Details:\n";
-    std::cout << "Name: " << b1.name << std::endl;
-    std::cout << "ISBN: " << b1.ISBN_NO << std::endl;
-    std::cout << "Publisher: " << b1.publisher << std::endl;
+    printBook(b1);
 
     Book b2;
     b2.name = "C++ Primer";
@@ -113,27 +111,22 @@ int main(void) {
     b2.publisher = "Pearson";
 
     std::cout << "\nSecond Book:\n";
-    std::cout << "Name: " << b2.name << std::endl;
-    std::cout << "ISBN: " << b2.ISBN_NO << std::endl;
-    std::cout << "Publisher: " << b2.publisher << std::endl;
-
-    // ---------- SMALL ADDITIONS ----------
-    std::cout << "\nPrinted using helper function:\n";
-    printBook(b1);
     printBook(b2);
 
+    // ---------- SMALL ADDITIONS ----------
     Book sample = createSampleBook();
     std::cout << "\nSample Book:\n";
     printBook(sample);
 
     std::cout << "\nISBN Comparison Result: "
-              << (hasSameISBN(b2, sample) ? "Same ISBN\n" : "Different ISBN\n");
+              << (hasSameISBN(b2, sample) ? "Same ISBN\n"
+                                          : "Different ISBN\n");
 
     // ---------- VERY SMALL EXTRA ADDITIONS ----------
     std::vector<Book> library = { b1, b2, sample };
 
     std::cout << "\nTotal books in library: "
-              << library.size() << std::endl;
+              << library.size() << "\n";
 
     printLibrary(library);
     printFirstBook(library);
@@ -157,4 +150,3 @@ int main(void) {
 
     return 0;
 }
- 

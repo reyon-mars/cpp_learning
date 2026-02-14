@@ -38,51 +38,27 @@ int main(void) {
     }
     // -----------------------
 
-    // --- tiny extra output ---
-    std::cout << "Vector as C-string style: ";
-    for (char c : v)
-        std::cout << c;
-    std::cout << std::endl;
-    // ------------------------
-
     std::cout << "String created using constructor: "
               << str_v << std::endl;
 
-    // --- VERY SMALL EXTRA ADDITION ---
-    std::cout << "Is vector empty? "
-              << (v.empty() ? "Yes" : "No") << std::endl;
+    // ===== VERY SMALL NEW ADDITIONS =====
 
-    std::cout << "ASCII values: ";
-    for (char c : v)
-        std::cout << static_cast<int>(c) << " ";
-    std::cout << std::endl;
+    // Print ASCII of first element
+    std::cout << "ASCII of first char: "
+              << static_cast<int>(v.front()) << std::endl;
 
-    // ===== NEW VERY SMALL EXTRAS =====
+    // Check if '!' exists
+    std::cout << "Contains '!': "
+              << (std::find(v.begin(), v.end(), '!') != v.end()
+                  ? "Yes" : "No") << std::endl;
 
-    // Count uppercase letters
-    int uppercase_count = 0;
-    for (char c : v)
-        if (c >= 'A' && c <= 'Z')
-            uppercase_count++;
-
-    std::cout << "Uppercase letters count: "
-              << uppercase_count << std::endl;
-
-    // Check if vector contains 'i'
-    bool contains_i =
-        std::find(v.begin(), v.end(), 'i') != v.end();
-
-    std::cout << "Contains 'i'? "
-              << (contains_i ? "Yes" : "No") << std::endl;
-
-    // Print reversed characters (without modifying vector)
+    // Print reversed view (no modification)
     std::cout << "Reversed view: ";
     for (auto it = v.rbegin(); it != v.rend(); ++it)
         std::cout << *it;
     std::cout << std::endl;
 
-    // =================================
+    // ===================================
 
     return 0;
 }
- 

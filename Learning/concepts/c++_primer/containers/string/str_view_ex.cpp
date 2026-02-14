@@ -35,8 +35,17 @@ void print_header(const std::string& title)
 
 // ===== VERY SMALL EXTRA HELPERS =====
 
-// default tag (compile-time)
 constexpr std::string_view DEFAULT_TAG = "Default";
+
+// toggle logging (compile-time)
+constexpr bool ENABLE_LOGGING = true;
+
+// conditional logger (tiny wrapper)
+inline void log_if_enabled(std::string_view tag, std::string_view msg)
+{
+    if constexpr (ENABLE_LOGGING)
+        log_msg(tag, msg);
+}
 
 // tiny counter printer
 void print_counter(const std::string& label, int value)
@@ -56,18 +65,14 @@ void flush_output()
     std::cout << std::flush;
 }
 
-// ====================================
-
 // ======================================================
 // MAIN
 // ======================================================
 
 int main(void)
 {
-    // ---- tiny performance-related addition ----
     std::ios::sync_with_stdio(false);
     std::cin.tie(nullptr);
-    // -------------------------------------------
 
     const int iterations = 1'000'000;
     std::string test_tag = "Tag";
@@ -75,19 +80,20 @@ int main(void)
 
     int call_count = 0;
 
-    // ---- VERY TINY EXTRA ----
     warmup_logger();
-    // -------------------------
 
     // Benchmark log_msg (std::string_view)
     print_header("String View Logger");
     {
         scoped_timer timer_sv("String View (Total)");
         for (int i = 0; i < iterations; ++i) {
-            log_msg(test_tag, test_msg);
+            log_if_enabled(test_tag, test_msg);
             ++call_count;
         }
     }
+
+    // reset counter for clarity (tiny addition)
+    call_count = 0;
 
     // Benchmark log_msg_ (std::string copy)
     print_header("String Copy Logger");
@@ -99,7 +105,7 @@ int main(void)
         }
     }
 
-    // ---- very small added benchmark ----
+    // Inline logger benchmark
     print_header("Inline Logger");
     {
         scoped_timer timer_inline("Inline Logger (Total)");
@@ -108,17 +114,17 @@ int main(void)
             ++call_count;
         }
     }
-    // -----------------------------------
 
     flush_output();
 
     std::cout << "\nTotal log calls executed: "
               << call_count << '\n';
 
-    // ---- tiny extra output ----
     print_counter("Final Call Count", call_count);
-    // ---------------------------
+
+    // tiny derived metric
+    std::cout << "Average logs per test: "
+              << (call_count / 3) << '\n';
 
     return 0;
 }
- 

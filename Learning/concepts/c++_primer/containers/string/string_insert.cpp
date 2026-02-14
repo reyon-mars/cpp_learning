@@ -81,8 +81,6 @@ std::string safe_replace(std::string& s,
     return s;
 }
 
-// ====================================
-
 // ======================================================
 // MAIN
 // ======================================================
@@ -98,38 +96,27 @@ int main() {
 
     std::string text = "Hello Mars";
     replace_idx(text, "Mars", "World");
-    std::cout << text << '\n';  // Hello World
+    std::cout << text << '\n';
 
     // ---- small added usage ----
-    std::string upper = to_uppercase(text);
-    std::cout << "Uppercase: " << upper << '\n';
+    std::cout << "Uppercase: " << to_uppercase(text) << '\n';
+    std::cout << "Lowercase: " << to_lowercase(text) << '\n';
+    std::cout << "Character count: " << count_chars(text) << '\n';
 
-    std::string lower = to_lowercase(text);
-    std::cout << "Lowercase: " << lower << '\n';
-
-    std::cout << "Character count: "
-              << count_chars(text) << '\n';
-
-    if (contains(text, "World")) {
+    if (contains(text, "World"))
         std::cout << "Substring \"World\" found\n";
-    }
 
-    if (starts_with(text, "Hello")) {
+    if (starts_with(text, "Hello"))
         std::cout << "Text starts with \"Hello\"\n";
-    }
 
-    // ---- VERY SMALL EXTRA USAGE ----
-    if (ends_with(text, "World")) {
+    if (ends_with(text, "World"))
         std::cout << "Text ends with \"World\"\n";
-    }
 
     safe_replace(text, "World", "C++");
     std::cout << "After safe replace: " << text << '\n';
-    // --------------------------------
 
     print_divider();
 
-    std::cout << "\n--- End of main() ---\n";
+    std::cout << "--- End of program ---\n";
     return 0;
 }
- 

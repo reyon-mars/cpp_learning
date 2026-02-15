@@ -140,4 +140,3 @@ int max_element_safe(const std::forward_list<int>& lst) {
 void print_divider() {
     std::cout << "----------------------\n";
 }
- 

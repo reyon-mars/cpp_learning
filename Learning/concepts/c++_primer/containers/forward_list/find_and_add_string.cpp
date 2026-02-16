@@ -146,7 +146,6 @@ int main() {
     // Clear list
     lst.clear();
     cout << "After clear, size: " << list_size(lst) << "\n";
-    // -------------------------
 
     return 0;
 }

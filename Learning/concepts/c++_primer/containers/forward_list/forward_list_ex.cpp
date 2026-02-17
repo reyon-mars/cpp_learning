@@ -2,17 +2,6 @@
 #include <iostream>
 
 // ======================================================
-// FORWARD DECLARATIONS (minimal helpers)
-// ======================================================
-int count_elements(const std::forward_list<int>& fl);
-bool is_empty(const std::forward_list<int>& fl);
-
-// ---- very small extra helpers ----
-int sum_elements(const std::forward_list<int>& fl);
-int last_element(const std::forward_list<int>& fl);
-// ---------------------------------
-
-// ======================================================
 // ORIGINAL CODE (LOGIC UNCHANGED)
 // ======================================================
 
@@ -38,48 +27,29 @@ int main(void) {
     }
     std::cout << "\n";
 
-    // ---- small added usage ----
-    std::cout << "Even count: " << count_elements(f_lst) << "\n";
-    std::cout << (is_empty(f_lst) ? "List is empty\n"
-                                  : "List is not empty\n");
+    // ==================================================
+    // SMALL ADDITION ONLY
+    // ==================================================
 
-    if (!is_empty(f_lst)) {
-        std::cout << "Last element: " << last_element(f_lst) << "\n";
-        std::cout << "Sum of elements: " << sum_elements(f_lst) << "\n";
+    int count = 0;
+    int sum = 0;
+    int last = 0;
+
+    for (int v : f_lst) {
+        ++count;
+        sum += v;
+        last = v;
     }
-    // --------------------------
+
+    std::cout << "Count: " << count << "\n";
+    std::cout << "Sum: " << sum << "\n";
+
+    if (!f_lst.empty())
+        std::cout << "Last element: " << last << "\n";
+    else
+        std::cout << "List is empty\n";
+
+    // ==================================================
 
     return 0;
-}
-
-// ======================================================
-// MINIMAL EXTRA CODE (helpers only)
-// ======================================================
-
-int count_elements(const std::forward_list<int>& fl) {
-    int count = 0;
-    for (int _ : fl) {
-        (void)_;
-        ++count;
-    }
-    return count;
-}
-
-bool is_empty(const std::forward_list<int>& fl) {
-    return fl.begin() == fl.end();
-}
-
-// ---- very small helpers ----
-int sum_elements(const std::forward_list<int>& fl) {
-    int sum = 0;
-    for (int v : fl)
-        sum += v;
-    return sum;
-}
-
-int last_element(const std::forward_list<int>& fl) {
-    int last = 0;
-    for (int v : fl)
-        last = v;
-    return last;
 }

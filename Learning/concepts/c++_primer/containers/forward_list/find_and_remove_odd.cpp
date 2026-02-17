@@ -89,6 +89,15 @@ int max_element_safe(const std::forward_list<int>& lst) {
     return maxVal;
 }
 
+// ---- VERY SMALL EXTRA ADDITION ----
+
+// Average of elements (returns 0 if empty)
+double average_elements(const std::forward_list<int>& lst) {
+    int count = count_elements(lst);
+    if (count == 0) return 0.0;
+    return static_cast<double>(sum_elements(lst)) / count;
+}
+
 // Print divider
 void print_divider() {
     std::cout << "-----------------------------\n";
@@ -109,6 +118,7 @@ int main() {
 
     std::cout << "Count: " << count_elements(fl1) << "\n";
     std::cout << "Sum: " << sum_elements(fl1) << "\n";
+    std::cout << "Average: " << average_elements(fl1) << "\n";
 
     if (!is_empty(fl1)) {
         std::cout << "First element: " << fl1.front() << "\n";
@@ -143,6 +153,7 @@ int main() {
 
     std::cout << "Count: " << count_elements(fl3) << "\n";
     std::cout << "Sum: " << sum_elements(fl3) << "\n";
+    std::cout << "Average: " << average_elements(fl3) << "\n";
     print_divider();
 
     std::forward_list<int> fl4;

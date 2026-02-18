@@ -3,7 +3,7 @@
 #include <string>
 
 // ----------------------------------------------------
-// ORIGINAL STRUCT (UNCHANGED)
+// ORIGINAL STRUCT (LOGIC UNCHANGED)
 // ----------------------------------------------------
 
 struct User {
@@ -12,21 +12,25 @@ struct User {
 };
 
 // ----------------------------------------------------
-// SMALL ADDED CODE
+// SMALL ADDED CODE (HELPERS ONLY)
 // ----------------------------------------------------
 
-// Helper to print user safely
+// Print user safely
 void print_user(const std::unique_ptr<User>& user) {
-    if (user) {
+    if (user)
         std::cout << user->name << " " << user->age << '\n';
-    } else {
+    else
         std::cout << "User is nullptr\n";
-    }
 }
 
-// Small helper to update age
+// Increment age
 void birthday(User& user) {
     ++user.age;
+}
+
+// Check adult status
+bool is_adult(const User& user) {
+    return user.age >= 18;
 }
 
 // Stream output helper
@@ -34,26 +38,8 @@ std::ostream& operator<<(std::ostream& os, const User& u) {
     return os << u.name << " (" << u.age << ")";
 }
 
-// Small helper check
-bool is_adult(const User& user) {
-    return user.age >= 18;
-}
-
-// ---- very small extra helpers ----
-
-// Factory helper
-std::unique_ptr<User> make_user(std::string name, int age) {
-    return std::make_unique<User>(User{std::move(name), age});
-}
-
-// Print adult status
-void print_status(const User& user) {
-    std::cout << (is_adult(user) ? "Adult\n" : "Minor\n");
-}
-// ---------------------------------
-
 // ----------------------------------------------------
-// MAIN (ORIGINAL + FEW ADDITIONS)
+// MAIN
 // ----------------------------------------------------
 
 int main(void) {
@@ -70,22 +56,17 @@ int main(void) {
     }
 
     // ---------- SMALL ADDITIONS ----------
-    birthday(*v);                  // increment age
-    print_user(v);                 // safe printing
+    birthday(*v);
+    print_user(v);
 
-    std::cout << "Printed via operator<< : "
+    std::cout << "Printed via operator<<: "
               << *v << std::endl;
 
-    print_status(*v);
+    std::cout << "Adult? "
+              << (is_adult(*v) ? "Yes\n" : "No\n");
 
-    // ---- very small extra usage ----
-    auto w = make_user("Nova", 16);
-    print_user(w);
-    print_status(*w);
-    // -------------------------------
-
-    v.reset();                     // release ownership
-    print_user(v);                 // check after reset
+    v.reset();
+    print_user(v);
 
     return 0;
 }

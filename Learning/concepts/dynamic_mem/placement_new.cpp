@@ -3,7 +3,7 @@
 #include <numeric>
 #include <utility>
 #include <memory>
-#include <algorithm>   // ✅ small required addition
+#include <algorithm>   // ✅ added for count_if
 
 // ---------------- ORIGINAL FUNCTION ----------------
 auto sum_vector(std::vector<int> vec) {

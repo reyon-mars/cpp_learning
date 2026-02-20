@@ -15,9 +15,7 @@ public:
     public:
         explicit Iterator(int current) : current_(current) {}
 
-        int operator*() const {
-            return current_;
-        }
+        int operator*() const { return current_; }
 
         Iterator& operator++() {
             ++current_;
@@ -38,9 +36,9 @@ public:
     Iterator end()   const { return Iterator(end); }
 };
 
-// ---------------- SMALL EXTRA CODE (ADDED ONLY) ----------------
+// ---------------- SMALL ADDITIONS ----------------
 
-// check if value exists in range
+// check if value exists
 bool contains(const int_range& r, int value) {
     for (int v : r)
         if (v == value)
@@ -48,7 +46,7 @@ bool contains(const int_range& r, int value) {
     return false;
 }
 
-// count elements in range
+// count elements
 int range_size(const int_range& r) {
     int count = 0;
     for (int _ : r) {
@@ -58,7 +56,7 @@ int range_size(const int_range& r) {
     return count;
 }
 
-// sum of range
+// sum of elements
 int range_sum(const int_range& r) {
     int sum = 0;
     for (int v : r)
@@ -66,35 +64,22 @@ int range_sum(const int_range& r) {
     return sum;
 }
 
-// check if range is empty
-bool empty(const int_range& r) {
-    return range_size(r) == 0;
+// ---- VERY SMALL EXTRA ----
+
+// average of range
+double range_average(const int_range& r) {
+    int sz = range_size(r);
+    return sz ? static_cast<double>(range_sum(r)) / sz : 0.0;
 }
 
-// reusable printer helper
-void print_range(const int_range& r) {
-    for (int v : r)
-        std::cout << v << " ";
+// print reversed view (no modification)
+void print_reverse(const int_range& r) {
+    int last = 0;
+    for (int v : r) last = v;
+    for (int i = last; contains(r, i); --i)
+        std::cout << i << " ";
     std::cout << "\n";
 }
-
-// ---- VERY SMALL EXTRA HELPERS ----
-
-// get first element (if exists)
-int range_front(const int_range& r) {
-    for (int v : r)
-        return v;
-    return 0;
-}
-
-// get last element
-int range_back(const int_range& r) {
-    int last = 0;
-    for (int v : r)
-        last = v;
-    return last;
-}
-// --------------------------------
 
 // ---------------- MAIN ----------------
 
@@ -102,21 +87,19 @@ int main(void) {
     int_range r(1, 6);
 
     std::cout << "Range values: ";
-    print_range(r);
+    for (int v : r)
+        std::cout << v << " ";
+    std::cout << "\n";
 
     std::cout << "Contains 3? "
               << (contains(r, 3) ? "Yes" : "No") << "\n";
 
     std::cout << "Range size: " << range_size(r) << "\n";
     std::cout << "Range sum: " << range_sum(r) << "\n";
+    std::cout << "Range average: " << range_average(r) << "\n";
 
-    std::cout << "Is range empty? "
-              << (empty(r) ? "Yes" : "No") << "\n";
-
-    if (!empty(r)) {
-        std::cout << "First element: " << range_front(r) << "\n";
-        std::cout << "Last element: " << range_back(r) << "\n";
-    }
+    std::cout << "Reversed view: ";
+    print_reverse(r);
 
     return 0;
 }

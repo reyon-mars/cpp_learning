@@ -2,19 +2,11 @@
 #include <string>
 #include <vector>
 
-// ======================================================
-// ORIGINAL CODE (LOGIC UNCHANGED)
-// ======================================================
-
 struct Book {
     std::string name;
     int ISBN_NO;
     std::string publisher;
 };
-
-// ======================================================
-// SMALL EXTRA FUNCTIONS (ADDITION ONLY)
-// ======================================================
 
 // Print book details
 void printBook(const Book& b) {
@@ -99,7 +91,6 @@ bool removeBook(std::vector<Book>& lib, const std::string& name) {
 
 int main() {
 
-    // ---------- ORIGINAL LOGIC ----------
     Book b1 = { "test", 12, "O'Reilly" };
 
     std::cout << "Book Details:\n";
@@ -113,7 +104,6 @@ int main() {
     std::cout << "\nSecond Book:\n";
     printBook(b2);
 
-    // ---------- SMALL ADDITIONS ----------
     Book sample = createSampleBook();
     std::cout << "\nSample Book:\n";
     printBook(sample);
@@ -122,7 +112,6 @@ int main() {
               << (hasSameISBN(b2, sample) ? "Same ISBN\n"
                                           : "Different ISBN\n");
 
-    // ---------- VERY SMALL EXTRA ADDITIONS ----------
     std::vector<Book> library = { b1, b2, sample };
 
     std::cout << "\nTotal books in library: "

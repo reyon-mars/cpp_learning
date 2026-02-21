@@ -1,28 +1,21 @@
 #include <iostream>
 #include <string>
 
-// ======================================================
-// ORIGINAL CODE (LOGIC UNCHANGED)
-// ======================================================
 
 void greet() {
-    std::cout << "This is extra code added without modifying main!" << std::endl;
+    std::cout << "Hello, User !" << std::endl;
 }
 
-int add(int a, int b) {
+inline int add(int a, int b) {
     return a + b;
 }
-
+// Simple Class
 class Demo {
 public:
     void show() {
         std::cout << "Demo class method executed!" << std::endl;
     }
 };
-
-// ======================================================
-// SMALL ADDITIONAL CODE
-// ======================================================
 
 // Simple struct
 struct Info {
@@ -34,25 +27,15 @@ void printMessage(const std::string& msg) {
     std::cout << msg << std::endl;
 }
 
-// Simple class
-class ExtraDemo {
-public:
-    void run() {
-        std::cout << "ExtraDemo running successfully!" << std::endl;
-    }
-};
-
-// Very small helper
+// Increment 
 int increment(int x) {
     return x + 1;
 }
 
-// Another tiny helper
 bool isPositive(int x) {
     return x > 0;
 }
 
-// ---- VERY SMALL EXTRA HELPERS ----
 
 // Check if number is even
 bool isEven(int x) {
@@ -79,9 +62,6 @@ void sayGoodbye() {
     std::cout << "Goodbye! End of program.\n";
 }
 
-// ======================================================
-// NEW TINY ADDITIONS (JUST FEW MORE LINES)
-// ======================================================
 
 // Square a number
 int square(int x) {
@@ -109,7 +89,6 @@ bool isZero(int x) {
 
 int main(void) {
 
-    // ---------- ORIGINAL ----------
     std::cout << "Hello, World" << std::endl;
 
     greet();
@@ -118,16 +97,12 @@ int main(void) {
     Demo demo;
     demo.show();
 
-    // ---------- SMALL EXTRA ----------
     Info info;
     std::cout << "Info value = " << info.value << std::endl;
 
     printMessage("This is a simple helper function");
 
-    ExtraDemo extra;
-    extra.run();
 
-    // ---------- VERY SMALL ADDITION ----------
     int executionCount = 1;
     executionCount = increment(executionCount);
 
@@ -138,7 +113,6 @@ int main(void) {
               << (isPositive(executionCount) ? "positive" : "not positive")
               << std::endl;
 
-    // ---- tiny added usage ----
     std::cout << "Execution count is "
               << (isEven(executionCount) ? "even" : "odd")
               << std::endl;
@@ -151,9 +125,6 @@ int main(void) {
 
     std::cout << "3 * 4 = " << multiply(3, 4) << std::endl;
 
-    // ======================================================
-    // NEW TINY USAGE (VERY SMALL EXTRA)
-    // ======================================================
 
     printStatus("Program running normally");
 
@@ -167,7 +138,6 @@ int main(void) {
               << (isZero(executionCount) ? "zero" : "not zero")
               << std::endl;
 
-    // --------------------------
 
     std::cout << "Program finished successfully." << std::endl;
     sayGoodbye();

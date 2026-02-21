@@ -2,19 +2,12 @@
 #include <string>
 #include <vector>
 
-// ======================================================
-// ORIGINAL CODE (LOGIC UNCHANGED)
-// ======================================================
-
 struct Book {
     std::string name;
     int ISBN_NO;
     std::string publisher;
 };
 
-// ======================================================
-// SMALL EXTRA FUNCTIONS (ADDED ONLY)
-// ======================================================
 
 // Print book details
 void printBook(const Book& b) {
@@ -41,8 +34,6 @@ void printLibrary(const std::vector<Book>& lib) {
     }
 }
 
-// ---- SMALL ADDED HELPERS ----
-
 // Count total books
 int totalBooks(const std::vector<Book>& lib) {
     return static_cast<int>(lib.size());
@@ -56,10 +47,6 @@ bool containsBook(const std::vector<Book>& lib, const std::string& name) {
     return false;
 }
 
-// ======================================================
-// NEW VERY SMALL EXTRA ADDITIONS
-// ======================================================
-
 // Find book by ISBN
 bool findBookByISBN(const std::vector<Book>& lib, int isbn) {
     for (const auto& b : lib)
@@ -68,17 +55,15 @@ bool findBookByISBN(const std::vector<Book>& lib, int isbn) {
     return false;
 }
 
-// Print divider line
+
 void printDivider() {
     std::cout << "-----------------------------\n";
 }
 
-// Simple stats struct
 struct LibraryStats {
     int visits = 1;
 };
 
-// Convert book name to uppercase (simple demo)
 std::string toUpperCase(std::string text) {
     for (char& c : text) {
         if (c >= 'a' && c <= 'z')
@@ -93,7 +78,6 @@ std::string toUpperCase(std::string text) {
 
 int main(void) {
 
-    // ---------- ORIGINAL LOGIC ----------
     Book b1 = { "test", 12, "O'Rilley" };
 
     std::cout << "Book Details:\n";
@@ -111,7 +95,6 @@ int main(void) {
     std::cout << "ISBN: " << b2.ISBN_NO << std::endl;
     std::cout << "Publisher: " << b2.publisher << std::endl;
 
-    // ---------- SMALL ADDITION ----------
     printBook(b1);
     printBook(b2);
 
@@ -120,7 +103,6 @@ int main(void) {
 
     std::cout << (hasSameISBN(b2, sample) ? "Same ISBN\n" : "Different ISBN\n");
 
-    // ---------- VERY SMALL EXTRA ----------
     std::vector<Book> library = { b1, b2, sample };
 
     std::cout << "\nTotal books: " << totalBooks(library) << "\n";
@@ -129,7 +111,6 @@ int main(void) {
     std::cout << "Contains 'Clean Code'? "
               << (containsBook(library, "Clean Code") ? "Yes\n" : "No\n");
 
-    // ---------- NEW VERY SMALL USAGE ----------
     printDivider();
 
     std::cout << "Searching ISBN 999: "

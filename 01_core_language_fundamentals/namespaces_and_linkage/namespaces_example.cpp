@@ -1,6 +1,3 @@
-// Namespaces and Linkage Exercise
-// Internal vs external linkage, namespace scoping
-
 #include <iostream>
 
 namespace my_lib {

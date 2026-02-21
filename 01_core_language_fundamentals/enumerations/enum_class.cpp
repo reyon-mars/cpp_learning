@@ -3,7 +3,7 @@
 #include <vector>
 
 // ======================================================
-// ORIGINAL ENUMS (UNCHANGED)
+// ENUMS 
 // ======================================================
 
 enum class Animal : uint8_t {
@@ -18,9 +18,6 @@ enum class Vehicle : uint8_t {
     Bus
 };
 
-// ======================================================
-// ORIGINAL DESCRIBE FUNCTIONS (UNCHANGED)
-// ======================================================
 
 void describe(Animal a) {
     switch (a) {
@@ -50,9 +47,6 @@ void describe(Vehicle v) {
     }
 }
 
-// ======================================================
-// SMALL EXTRA CODE (ADDED ONLY)
-// ======================================================
 
 enum class Food : uint8_t {
     Pizza,
@@ -86,7 +80,6 @@ void describeAll(const std::vector<T>& items) {
     }
 }
 
-// ---- VERY SMALL EXTRA HELPERS ----
 
 // Count items in enum vector
 template <typename T>
@@ -94,12 +87,9 @@ std::size_t countItems(const std::vector<T>& items) {
     return items.size();
 }
 
-// Simple divider
 void printDivider() {
     std::cout << "----------------------\n";
 }
-
-// ---- NEW SMALL ADDITIONS ----
 
 // Check if enum value is zero
 template <typename T>
@@ -123,7 +113,6 @@ void printEnumNumbers(const std::vector<T>& items) {
 
 int main(void) {
 
-    // Original usage
     Animal a = Animal::Cat;
     Vehicle v = Vehicle::Car;
 
@@ -138,14 +127,12 @@ int main(void) {
 
     printDivider();
 
-    // Small extra demo
     Food f = Food::Pizza;
     describe(f);
     printEnumValue(f);
 
     printDivider();
 
-    // ---- very small extra usage ----
     std::vector<Animal> animals = {
         Animal::Cat,
         Animal::Dog,

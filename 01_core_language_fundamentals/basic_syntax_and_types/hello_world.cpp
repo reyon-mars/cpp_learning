@@ -1,7 +1,6 @@
 #include <iostream>
 #include <string>
 
-
 void greet() {
     std::cout << "Hello, User !" << std::endl;
 }
@@ -9,6 +8,7 @@ void greet() {
 inline int add(int a, int b) {
     return a + b;
 }
+
 // Simple Class
 class Demo {
 public:
@@ -36,7 +36,6 @@ bool isPositive(int x) {
     return x > 0;
 }
 
-
 // Check if number is even
 bool isEven(int x) {
     return x % 2 == 0;
@@ -62,7 +61,6 @@ void sayGoodbye() {
     std::cout << "Goodbye! End of program.\n";
 }
 
-
 // Square a number
 int square(int x) {
     return x * x;
@@ -83,9 +81,26 @@ bool isZero(int x) {
     return x == 0;
 }
 
-// ======================================================
+// ---------------- SMALL ADDITIONS ----------------
+
+// Toggle debug flag
+void toggleDebug(Config& cfg) {
+    cfg.debug = !cfg.debug;
+}
+
+// Increment stats runs
+void recordRun(Stats& stats) {
+    ++stats.runs;
+}
+
+// Absolute value helper
+int absolute(int x) {
+    return x < 0 ? -x : x;
+}
+
+// --------------------------------------------------
 // MAIN
-// ======================================================
+// --------------------------------------------------
 
 int main(void) {
 
@@ -101,7 +116,6 @@ int main(void) {
     std::cout << "Info value = " << info.value << std::endl;
 
     printMessage("This is a simple helper function");
-
 
     int executionCount = 1;
     executionCount = increment(executionCount);
@@ -120,15 +134,16 @@ int main(void) {
     printDivider();
 
     Stats stats;
+    recordRun(stats);
     std::cout << "Total runs recorded: "
               << stats.runs << std::endl;
 
     std::cout << "3 * 4 = " << multiply(3, 4) << std::endl;
 
-
     printStatus("Program running normally");
 
     Config cfg;
+    toggleDebug(cfg);
     std::cout << "Debug mode: "
               << (cfg.debug ? "ON" : "OFF") << std::endl;
 
@@ -138,6 +153,7 @@ int main(void) {
               << (isZero(executionCount) ? "zero" : "not zero")
               << std::endl;
 
+    std::cout << "Absolute of -7 = " << absolute(-7) << std::endl;
 
     std::cout << "Program finished successfully." << std::endl;
     sayGoodbye();

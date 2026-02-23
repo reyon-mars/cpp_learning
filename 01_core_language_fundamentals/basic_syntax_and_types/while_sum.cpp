@@ -55,7 +55,6 @@ bool findBookByISBN(const std::vector<Book>& lib, int isbn) {
     return false;
 }
 
-
 void printDivider() {
     std::cout << "-----------------------------\n";
 }
@@ -71,6 +70,28 @@ std::string toUpperCase(std::string text) {
     }
     return text;
 }
+
+// ---------------- SMALL ADDITIONS ----------------
+
+// Add a book to library
+void addBook(std::vector<Book>& lib, const Book& b) {
+    lib.push_back(b);
+}
+
+// Get publisher by book name
+std::string getPublisher(const std::vector<Book>& lib, const std::string& name) {
+    for (const auto& b : lib)
+        if (b.name == name)
+            return b.publisher;
+    return "Unknown";
+}
+
+// Print simple library summary
+void printSummary(const std::vector<Book>& lib) {
+    std::cout << "Library has " << lib.size() << " books.\n";
+}
+// ------------------------------------------------
+
 
 // ======================================================
 // MAIN
@@ -121,6 +142,15 @@ int main(void) {
 
     std::cout << "Uppercase sample book name: "
               << toUpperCase(sample.name) << std::endl;
+
+    // -------- Added usage --------
+    Book extra = { "Design Patterns", 555, "Addison-Wesley" };
+    addBook(library, extra);
+
+    printSummary(library);
+    std::cout << "Publisher of C++ Primer: "
+              << getPublisher(library, "C++ Primer") << std::endl;
+    // ----------------------------
 
     return 0;
 }

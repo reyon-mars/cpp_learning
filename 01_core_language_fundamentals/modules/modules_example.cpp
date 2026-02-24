@@ -7,7 +7,19 @@
 
 #include <iostream>
 
+// ---- small added helper ----
+void printModuleHint() {
+    std::cout << "Modules replace headers in C++20\n";
+}
+// ----------------------------
+
 int main() {
+
     std::cout << "C++20 Modules support\n";
+
+    // ---- small added usage ----
+    printModuleHint();
+    // ---------------------------
+
     return 0;
 }

@@ -85,6 +85,34 @@ bool removeBook(std::vector<Book>& lib, const std::string& name) {
     return false;
 }
 
+// ---------------- SMALL ADDITIONS ----------------
+
+// Print last book safely
+void printLastBook(const std::vector<Book>& lib) {
+    if (!lib.empty()) {
+        std::cout << "\nLast book in library:\n";
+        printBook(lib.back());
+    }
+}
+
+// Count total ISBN sum
+int totalISBN(const std::vector<Book>& lib) {
+    int sum = 0;
+    for (const auto& b : lib)
+        sum += b.ISBN_NO;
+    return sum;
+}
+
+// Check if library is empty
+bool isEmpty(const std::vector<Book>& lib) {
+    return lib.empty();
+}
+
+// Divider
+void printDivider() {
+    std::cout << "-----------------------------\n";
+}
+
 // ======================================================
 // MAIN
 // ======================================================
@@ -119,6 +147,7 @@ int main() {
 
     printLibrary(library);
     printFirstBook(library);
+    printLastBook(library);
 
     std::cout << "\nBooks published by Pearson: "
               << countByPublisher(library, "Pearson") << "\n";
@@ -132,6 +161,14 @@ int main() {
     if (const Book* found = findByISBN(library, 999)) {
         std::cout << "\nFound by ISBN:\n" << *found << "\n";
     }
+
+    printDivider();
+
+    std::cout << "Total ISBN sum: "
+              << totalISBN(library) << "\n";
+
+    std::cout << "Library empty? "
+              << (isEmpty(library) ? "Yes\n" : "No\n");
 
     removeBook(library, "test");
     std::cout << "\nAfter removing 'test': "

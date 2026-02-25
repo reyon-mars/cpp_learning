@@ -6,6 +6,12 @@
 class Base {
 public:
     int pub_member = 0;
+
+    void print() const {
+        std::cout << "pub: " << pub_member
+                  << " prot: " << prot_member
+                  << " priv: " << priv_member << "\n";
+    }
     
 protected:
     int prot_member = 0;
@@ -36,13 +42,26 @@ public:
 void friend_function() {
     Base obj;
     obj.priv_member = 20;  // OK - friend function
+    obj.print();
 }
 
 int main() {
     Base obj;
     obj.pub_member = 5;  // OK
-    // obj.prot_member;  // Error
-    // obj.priv_member;  // Error
-    
+    // obj.prot_member = 1;  // Error
+    // obj.priv_member = 2;  // Error
+
+    obj.print();
+
+    Derived d;
+    d.access();           // modifies public & protected
+    d.print();
+
+    Friend f;
+    f.access(obj);        // modifies private member
+    obj.print();
+
+    friend_function();    // friend function access
+
     return 0;
 }

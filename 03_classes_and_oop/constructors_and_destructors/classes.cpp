@@ -2,108 +2,161 @@
 #include <string>
 using namespace std;
 
-// Defining a base class called Animal
-class Animal{
-  protected:
+// ======================================================
+// Animal base class
+// ======================================================
+class Animal {
+protected:
     string name;
 
-  public:
-    Animal( string name ) : name(name){ MakeSound();}
-    virtual void MakeSound( void ) { cout << name << " is Making a sound " << endl; } // defining a virtual function
-    void WakeUp( void ) { cout << name << " just woke up "; MakeSound(); return ; } // invoking the virtual method from within the class
-};
+public:
+    Animal(string name) : name(name) {
+        MakeSound();
+    }
 
-// Defining a base class called Pet
-class Pet {
-  protected:
-    string name; // creating a protected attribute to allow inheritance but keeping the data hidden
+    virtual ~Animal() { }   // 🔹 added virtual destructor
 
-  public:
-    Pet(string n) : name(n) {}; // Defining a constructor to initialize the name attribute during the object creation
-    void Run( void ){ cout << name << " is running" << endl; } // Run Action of the pet
-    void MakeSound( void ) { cout << name << " is making sound " << endl; }
-    void WakeUp( void ) { MakeSound(); return; }
-};
+    virtual void MakeSound(void) {
+        cout << name << " is making a sound " << endl;
+    }
 
-// Creating a child class called Cat , inheriting from the base parent class Pet with public visibility
-class Cat: public Pet {
-  public:
-    Cat( string n) : Pet(n) {}; // constructor of the child class to initialize the attribute of the parent class
-    void MakeSound( void ) { cout << Pet::name <<" Meow meow meow... " << endl; return ; } // the original function in the Pet super class is overridden
-};
-
-class Dog: public Pet {
-  public:
-    Dog( string n ) : Pet(n) {};
-    void MakeSound( void ) { cout << Pet::name <<  " Woof woof woof... " << endl; return ; }
-};
-// Creating a child class inheriting from the Animal class called Parrot
-class Parrot: public Animal{
-  protected:
-    string name;
-  public:
-    Parrot( string n ) : Animal(n), name(n) {};
-    void MakeSound( void ) { cout << name << " Caw Caw Caw Caw... " << endl; return ; } // polymorphing the MakeSound function
-};
-
-class Class{
-  private:
-    friend class Friend; // declaring that the Friend class is a friend
-    friend void DoIt( const Class &c ); // declaring a friend function
-    int data;
-    string name;
-
-  private:
-    void print( void ) const{ cout << "Friend and Class are friends forever " << data << name << endl; }
-};
-
-class Friend{
-  public:
-    void DoIt( Class &c ) {
-      c.data = 2; // accessing the private of the Class class
-      c.name = "Friends";
-      c.print();
+    void WakeUp(void) {
+        cout << name << " just woke up ";
+        MakeSound();
     }
 };
-// friend function of the Class class
-void DoIt( const Class &c ){
-  c.print();
+
+// ======================================================
+// Pet base class
+// ======================================================
+class Pet {
+protected:
+    string name;
+
+public:
+    Pet(string n) : name(n) {}
+
+    virtual ~Pet() { }   // 🔹 added virtual destructor
+
+    void Run(void) {
+        cout << name << " is running" << endl;
+    }
+
+    virtual void MakeSound(void) {   // 🔹 made virtual
+        cout << name << " is making sound " << endl;
+    }
+
+    void WakeUp(void) {
+        MakeSound();
+    }
+};
+
+// ======================================================
+// Cat
+// ======================================================
+class Cat : public Pet {
+public:
+    Cat(string n) : Pet(n) {}
+
+    void MakeSound(void) override {   // 🔹 override keyword
+        cout << Pet::name << " Meow meow meow... " << endl;
+    }
+};
+
+// ======================================================
+// Dog
+// ======================================================
+class Dog : public Pet {
+public:
+    Dog(string n) : Pet(n) {}
+
+    void MakeSound(void) override {
+        cout << Pet::name << " Woof woof woof... " << endl;
+    }
+};
+
+// ======================================================
+// Parrot
+// ======================================================
+class Parrot : public Animal {
+public:
+    Parrot(string n) : Animal(n) {}
+
+    void MakeSound(void) override {
+        cout << name << " Caw Caw Caw Caw... " << endl;
+    }
+};
+
+// ======================================================
+// Friend & Class example
+// ======================================================
+class Class {
+private:
+    friend class Friend;
+    friend void DoIt(const Class& c);
+
+    int data = 0;
+    string name = "None";
+
+    void print(void) const {
+        cout << "Friend and Class are friends forever "
+             << data << " " << name << endl;
+    }
+};
+
+class Friend {
+public:
+    void DoIt(Class& c) {
+        c.data = 2;
+        c.name = "Friends";
+        c.print();
+    }
+};
+
+void DoIt(const Class& c) {
+    c.print();
 }
 
-int main( void ) {
-  
-  Pet* pet1 = new Cat("Tom");
-  Pet* pet2 = new Dog("Huckelberry");
-  Cat* cat1 = new Cat("Oreo");
+// ======================================================
+// MAIN
+// ======================================================
+int main(void) {
 
-  Pet *pet3, *pet4;
-  Dog* dog1;
-  Cat* cat2;
-  pet3 = dog1 = new Dog("Max");
-  pet4 = cat2 = new Cat("Garfield");
-  pet1 -> Run();
-  pet2 -> MakeSound();
-  static_cast< Cat* > ( pet1 ) -> MakeSound(); // Example of static_cast to temporarily change the Pet* to Cat*
-  pet2 -> Run();
-  static_cast< Dog* > ( pet1 ) -> MakeSound(); // Misusing the static_cast to point to incompatible object using pointer of another type
-  cat1 -> MakeSound();
-  static_cast< Pet * > ( cat1 ) -> MakeSound(); // using the static_cast to reverse the overriding of the MakeSound() method
-  dog1 -> MakeSound();
-  pet3 -> MakeSound();
-  pet4 -> MakeSound();
-  cat2 -> MakeSound();
+    Pet* pet1 = new Cat("Tom");
+    Pet* pet2 = new Dog("Huckelberry");
 
-  Parrot* parrot;
-  Animal* animal1 = parrot = new Parrot("Jack");
-  animal1 -> MakeSound();
-  parrot -> MakeSound();
-  parrot -> WakeUp();
+    pet1->Run();
+    pet2->MakeSound();
 
-  Class class_object;
-  Friend friend_object;
+    // 🔹 unsafe static_cast (kept intentionally)
+    static_cast<Cat*>(pet1)->MakeSound();
 
-  friend_object.DoIt( class_object );
-  DoIt( class_object );
+    // 🔹 safe dynamic_cast example
+    if (Cat* safeCat = dynamic_cast<Cat*>(pet1)) {
+        cout << "dynamic_cast successful: ";
+        safeCat->MakeSound();
+    }
 
-  return 0;
+    Cat* cat1 = new Cat("Oreo");
+    static_cast<Pet*>(cat1)->MakeSound(); // reverse overriding
+
+    Parrot* parrot;
+    Animal* animal1 = parrot = new Parrot("Jack");
+
+    animal1->MakeSound();   // polymorphism
+    parrot->WakeUp();
+
+    Class class_object;
+    Friend friend_object;
+
+    friend_object.DoIt(class_object);
+    DoIt(class_object);
+
+    // 🔹 cleanup
+    delete pet1;
+    delete pet2;
+    delete cat1;
+    delete parrot;
+
+    return 0;
 }

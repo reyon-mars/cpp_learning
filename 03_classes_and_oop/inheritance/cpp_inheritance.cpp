@@ -1,5 +1,6 @@
 #include <iostream>
 using namespace std;
+
 // Definition of a Super Class or Base Class
 class Super {
   private:
@@ -7,39 +8,69 @@ class Super {
   protected:
     int accessible_storage; // protected attribute copy of storage
   public:
-    Super(){ storage = 0; accessible_storage = 0; } // constructor  to initialize the storage and accessible_storage value
-    void set( int val ) { storage = accessible_storage = val; } // setter method
-    int get() { return storage; } // getter method
+    Super() { storage = 0; accessible_storage = 0; } // default constructor
+    Super(int val) { storage = accessible_storage = val; } // 🔹 added constructor
+
+    void set(int val) { storage = accessible_storage = val; } // setter
+    int get() { return storage; } // getter
+
+    void reset() { storage = accessible_storage = 0; } // 🔹 added helper
 };
+
 // Definition of another Base class
 class Base {
   protected:
     int storage;
   public:
-    Base() { storage = 0; };
-    void set( int val ) { storage = val; }
+    Base() { storage = 0; }
+    Base(int val) { storage = val; } // 🔹 added constructor
+
+    void set(int val) { storage = val; }
     int get() { return storage; }
+
+    void reset() { storage = 0; } // 🔹 added helper
 };
-// Sub Class inheriting from the Super class as public inheritance and single inheritance
+
+// Sub Class inheriting from the Super class (single inheritance)
 class Sub : public Super {
   public:
-    void  print( void ) { cout << " Storage = " << accessible_storage << endl; } // accessible_storage can be used because it is protected
+    void print(void) {
+      cout << " Storage = " << accessible_storage << endl;
+    }
 };
-// Sub Class inheriting from multiple class Super and Base with public visibility
-class SubMulti: public Super, public Base {
+
+// Sub Class inheriting from multiple classes
+class SubMulti : public Super, public Base {
   public:
-    void print( void ) {
-      cout << " Storage Super = " << Super:: accessible_storage << endl;
-      cout << " Storage Base = " << Base :: storage << endl;
-      return ;
-      }
+    void print(void) {
+      cout << " Storage Super = " << Super::accessible_storage << endl;
+      cout << " Storage Base  = " << Base::storage << endl;
+    }
+
+    // 🔹 extra combined operation
+    int totalStorage() {
+      return Super::accessible_storage + Base::storage;
+    }
 };
 
+int main(void) {
 
-int main( void ) {
   SubMulti object;
-  object.Super::set( 100 );
-  object.Super::set( object.Super::get() + 1 );
+
+  object.Super::set(100);
+  object.Base::set(50);
+
+  object.Super::set(object.Super::get() + 1);
+
+  object.print();
+
+  cout << " Total Storage = "
+       << object.totalStorage() << endl; // 🔹 extra usage
+
+  object.Super::reset(); // 🔹 reset demo
+  object.Base::reset();
+
+  cout << "\nAfter reset:\n";
   object.print();
 
   return 0;

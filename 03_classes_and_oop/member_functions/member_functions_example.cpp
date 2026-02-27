@@ -2,6 +2,7 @@
 // const, non-const, ref-qualified, virtual member functions
 
 #include <iostream>
+#include <utility>
 
 class MyClass {
 private:
@@ -26,11 +27,32 @@ public:
     }
 };
 
+// 🔹 Added derived class
+class Derived : public MyClass {
+public:
+    Derived(int v) : MyClass(v) {}
+
+    void display() const override {
+        std::cout << "Derived display\n";
+    }
+};
+
 int main() {
     MyClass obj(42);
     obj.setValue(100);
+
     std::cout << "Value: " << obj.getValue() << "\n";
     obj.display();
-    
+
+    // 🔹 Call ref-qualified functions
+    obj.process();                 // lvalue
+    std::move(obj).process();      // rvalue
+
+    // 🔹 Virtual dispatch demonstration
+    MyClass* basePtr = new Derived(200);
+    basePtr->display();            // calls Derived::display
+
+    delete basePtr;
+
     return 0;
 }

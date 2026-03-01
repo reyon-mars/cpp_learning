@@ -9,28 +9,42 @@ template<typename T>
 class SimpleAllocator {
 public:
     using value_type = T;
-    
-    SimpleAllocator() = default;
-    
+
+    SimpleAllocator() noexcept = default;
+
     template<typename U>
-    SimpleAllocator(const SimpleAllocator<U>&) {}
-    
+    SimpleAllocator(const SimpleAllocator<U>&) noexcept {}
+
     T* allocate(std::size_t n) {
-        std::cout << "Allocating " << n << " objects\n";
-        return new T[n];
+        std::cout << "[Allocator] Allocating "
+                  << n << " object(s) ("
+                  << n * sizeof(T) << " bytes)\n";
+
+        return static_cast<T*>(::operator new(n * sizeof(T)));
     }
-    
-    void deallocate(T* p, std::size_t n) {
-        std::cout << "Deallocating " << n << " objects\n";
-        delete[] p;
+
+    void deallocate(T* p, std::size_t n) noexcept {
+        std::cout << "[Allocator] Deallocating "
+                  << n << " object(s)\n";
+
+        ::operator delete(p);
     }
 };
 
 int main() {
+
     std::vector<int, SimpleAllocator<int>> vec;
+
+    std::cout << "\n--- Pushing Elements ---\n";
+
     vec.push_back(1);
     vec.push_back(2);
     vec.push_back(3);
-    
+
+    std::cout << "\n--- Reserving More Capacity ---\n";
+    vec.reserve(10);   // forces reallocation
+
+    std::cout << "\n--- End of main ---\n";
+
     return 0;
 }

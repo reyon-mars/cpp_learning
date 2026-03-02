@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <stdexcept>
+#include <sstream>
 
 // ======================================================
 // ORIGINAL CLASS (UNCHANGED LOGIC)
@@ -93,6 +94,41 @@ void print_preview(file_guard& fg, std::size_t n) {
     std::cout << '\n';
 }
 
+// ---------------- NEW SMALL ADDITIONS ----------------
+
+// Get file size
+std::size_t file_size(file_guard& fg) {
+    rewind_file(fg);
+    auto& f = fg.get();
+
+    f.seekg(0, std::ios::end);
+    std::size_t size = f.tellg();
+    rewind_file(fg);
+    return size;
+}
+
+// Count words
+int count_words(file_guard& fg) {
+    rewind_file(fg);
+
+    int count = 0;
+    std::string word;
+    while (fg.get() >> word)
+        ++count;
+
+    rewind_file(fg);
+    return count;
+}
+
+// Append text to file
+void append_to_file(const std::string& filename,
+                    const std::string& text) {
+    std::ofstream out(filename, std::ios::app);
+    if (out.is_open()) {
+        out << text << '\n';
+    }
+}
+
 // ======================================================
 // MAIN
 // ======================================================
@@ -116,11 +152,23 @@ int main() {
         std::cout << "Line count: "
                   << count_lines(fg) << '\n';
 
+        std::cout << "Word count: "
+                  << count_words(fg) << '\n';
+
+        std::cout << "File size (bytes): "
+                  << file_size(fg) << '\n';
+
         std::cout << "First line: "
                   << read_first_line(fg) << '\n';
 
         std::cout << "Preview (30 chars):\n";
         print_preview(fg, 30);
+
+        // Append demo
+        append_to_file(filename, "Appended line.");
+
+        std::cout << "\nLine count after append (reopen to verify): "
+                  << count_lines(fg) << '\n';
 
     } catch (const std::exception& e) {
         std::cout << "Error: " << e.what() << '\n';

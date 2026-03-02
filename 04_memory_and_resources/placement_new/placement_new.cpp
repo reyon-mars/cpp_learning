@@ -3,7 +3,7 @@
 #include <numeric>
 #include <utility>
 #include <memory>
-#include <algorithm>   // ✅ added for count_if
+#include <algorithm>
 
 // ---------------- ORIGINAL FUNCTION ----------------
 auto sum_vector(std::vector<int> vec) {
@@ -84,41 +84,48 @@ int main() {
 
     // ---------------- SMALL ADDITIONS ----------------
 
-    // square lambda
-    auto square = [](int n) { return n * n; };
-    std::cout << "Square of 6 = " << square(6) << '\n';
-
-    // even check lambda
-    auto is_even = [](int n) { return n % 2 == 0; };
-    std::cout << "Is 10 even? " << (is_even(10) ? "Yes" : "No") << '\n';
-
-    // max of two numbers lambda
-    auto max_of_two = [](int a, int b) {
-        return (a > b) ? a : b;
+    // generic lambda
+    auto add = [](auto a, auto b) {
+        return a + b;
     };
-    std::cout << "Max of 7 and 3 = " << max_of_two(7, 3) << '\n';
+    std::cout << "Add 5 + 7 = " << add(5, 7) << '\n';
 
-    // count even numbers in vector
-    auto count_even = [](const std::vector<int>& v) {
-        return std::count_if(v.begin(), v.end(),
-                             [](int n) { return n % 2 == 0; });
+    // lambda capturing by reference
+    int counter = 0;
+    auto increment = [&counter]() {
+        return ++counter;
     };
-    std::cout << "Even numbers count = " << count_even(vec) << '\n';
+    std::cout << "Counter: "
+              << increment() << " "
+              << increment() << " "
+              << increment() << '\n';
 
-    // stateful mutable lambda (running counter)
-    auto running_counter = [count = 0]() mutable {
-        return ++count;
+    // lambda returning another lambda
+    auto make_adder = [](int base) {
+        return [base](int value) {
+            return base + value;
+        };
     };
-    std::cout << "Counter calls: "
-              << running_counter() << " "
-              << running_counter() << " "
-              << running_counter() << '\n';
+    auto add10 = make_adder(10);
+    std::cout << "10 + 5 = " << add10(5) << '\n';
 
-    // constant lambda
-    auto say_done = []() {
-        std::cout << "Program finished successfully.\n";
+    // transform vector using lambda
+    std::vector<int> doubled(vec.size());
+    std::transform(vec.begin(), vec.end(), doubled.begin(),
+                   [](int n) { return n * 2; });
+
+    std::cout << "Doubled values: ";
+    for (int n : doubled)
+        std::cout << n << " ";
+    std::cout << '\n';
+
+    // constexpr lambda
+    constexpr auto square = [](int n) constexpr {
+        return n * n;
     };
-    say_done();
+    std::cout << "Square of 8 = " << square(8) << '\n';
+
+    std::cout << "Program finished successfully.\n";
 
     return 0;
 }

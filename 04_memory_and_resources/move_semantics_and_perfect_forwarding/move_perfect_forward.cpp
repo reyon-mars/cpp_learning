@@ -7,26 +7,56 @@
 class Widget {
 public:
     int data;
-    
-    Widget(int d) : data(d) { std::cout << "Constructor\n"; }
-    Widget(const Widget&) { std::cout << "Copy constructor\n"; }
-    Widget(Widget&&) noexcept { std::cout << "Move constructor\n"; }
+
+    Widget(int d) : data(d) {
+        std::cout << "Constructor\n";
+    }
+
+    Widget(const Widget&) {
+        std::cout << "Copy constructor\n";
+    }
+
+    Widget(Widget&&) noexcept {
+        std::cout << "Move constructor\n";
+    }
 };
 
-// Perfect forwarding
+// ❌ Bad forwarding (loses rvalue-ness)
+template<typename Func, typename... Args>
+auto bad_forward_call(Func func, Args&&... args) {
+    return func(args...);  // args are always lvalues here
+}
+
+// ✅ Perfect forwarding
 template<typename Func, typename... Args>
 auto forward_call(Func func, Args&&... args) {
     return func(std::forward<Args>(args)...);
 }
 
-void process(const Widget&) { std::cout << "process(const Widget&)\n"; }
-void process(Widget&&) { std::cout << "process(Widget&&)\n"; }
+void process(const Widget&) {
+    std::cout << "process(const Widget&)\n";
+}
+
+void process(Widget&&) {
+    std::cout << "process(Widget&&)\n";
+}
 
 int main() {
+
+    std::cout << "\n--- Creating lvalue ---\n";
     Widget w(42);
-    
-    forward_call(process, w);           // Forwards as lvalue
-    forward_call(process, Widget(100)); // Forwards as rvalue
-    
+
+    std::cout << "\n--- Forward lvalue ---\n";
+    forward_call(process, w);  // should call const& version
+
+    std::cout << "\n--- Forward rvalue ---\n";
+    forward_call(process, Widget(100));  // should call && version
+
+    std::cout << "\n--- Bad forward rvalue ---\n";
+    bad_forward_call(process, Widget(200));  // loses rvalue
+
+    std::cout << "\n--- Explicit std::move ---\n";
+    forward_call(process, std::move(w));  // forces rvalue
+
     return 0;
 }

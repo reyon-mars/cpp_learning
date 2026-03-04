@@ -3,6 +3,9 @@
 
 #include <iostream>
 
+// -----------------------------------
+// Recursive constexpr
+// -----------------------------------
 constexpr int factorial(int n) {
     return n <= 1 ? 1 : n * factorial(n - 1);
 }
@@ -11,33 +14,86 @@ constexpr int fibonacci(int n) {
     return n <= 1 ? n : fibonacci(n - 1) + fibonacci(n - 2);
 }
 
+// -----------------------------------
+// Iterative constexpr (more efficient)
+// -----------------------------------
+constexpr int factorial_iter(int n) {
+    int result = 1;
+    for (int i = 2; i <= n; ++i)
+        result *= i;
+    return result;
+}
+
+// -----------------------------------
+// consteval (must run at compile-time)
+// -----------------------------------
+consteval int square(int x) {
+    return x * x;
+}
+
+// -----------------------------------
+// Constexpr class
+// -----------------------------------
 class ConstexprArray {
 private:
     int data[10];
-    
+
 public:
     constexpr ConstexprArray() : data{} {}
-    
+
     constexpr void set(int index, int value) {
         data[index] = value;
     }
-    
+
     constexpr int get(int index) const {
         return data[index];
     }
 };
 
+// -----------------------------------
+// Template with if constexpr
+// -----------------------------------
+template<typename T>
+constexpr T add(T a, T b) {
+    if constexpr (std::is_integral_v<T>)
+        return a + b;
+    else
+        return a + b + static_cast<T>(0.0);
+}
+
+// -----------------------------------
+// Main
+// -----------------------------------
 int main() {
+
     // Compile-time computation
     constexpr int fact5 = factorial(5);
     constexpr int fib10 = fibonacci(10);
-    
+    constexpr int fact6_iter = factorial_iter(6);
+    constexpr int sq = square(4);
+
+    static_assert(fact5 == 120, "Factorial incorrect!");
+    static_assert(fact6_iter == 720, "Iterative factorial incorrect!");
+
     std::cout << "5! = " << fact5 << "\n";
     std::cout << "fib(10) = " << fib10 << "\n";
-    
+    std::cout << "6! (iter) = " << fact6_iter << "\n";
+    std::cout << "square(4) = " << sq << "\n";
+
     // Runtime computation
     int n = 6;
     std::cout << n << "! = " << factorial(n) << "\n";
-    
+
+    // Constexpr object usage
+    constexpr ConstexprArray arr{};
+    ConstexprArray runtime_arr;
+    runtime_arr.set(0, 42);
+    std::cout << "Runtime array[0] = "
+              << runtime_arr.get(0) << "\n";
+
+    // if constexpr demo
+    std::cout << "Add int: " << add(3, 4) << "\n";
+    std::cout << "Add double: " << add(1.5, 2.5) << "\n";
+
     return 0;
 }

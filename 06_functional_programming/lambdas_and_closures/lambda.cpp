@@ -54,11 +54,51 @@ int main() {
     std::cout << "Even numbers in doubled vector: "
               << even_count << '\n';
 
-    // Capture demo
+    // Capture by reference demo
     auto print_size = [&]() {
         std::cout << "Original vector size: " << vec.size() << '\n';
     };
     print_size();
+
+    // Mutable capture demo
+    auto counter = [count = 0]() mutable {
+        return ++count;
+    };
+    std::cout << "Counter calls: "
+              << counter() << ", "
+              << counter() << ", "
+              << counter() << '\n';
+
+    // Move capture (unique_ptr)
+    auto ptr_lambda = [ptr = std::make_unique<int>(42)]() {
+        return *ptr;
+    };
+    std::cout << "Moved unique_ptr value: "
+              << ptr_lambda() << '\n';
+
+    // Generic lambda (C++14+)
+    auto add = [](auto a, auto b) {
+        return a + b;
+    };
+    std::cout << "Generic add: "
+              << add(3, 4.5) << '\n';
+
+    // Lambda returning lambda
+    auto make_multiplier = [](int factor) {
+        return [factor](int x) {
+            return x * factor;
+        };
+    };
+    auto triple = make_multiplier(3);
+    std::cout << "Triple of 7: "
+              << triple(7) << '\n';
+
+    // for_each accumulation
+    int total = 0;
+    std::for_each(vec.begin(), vec.end(),
+                  [&](int n) { total += n; });
+    std::cout << "Sum using for_each: "
+              << total << '\n';
 
     return 0;
 }

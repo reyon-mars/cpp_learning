@@ -2,6 +2,7 @@
 // Alternative error handling patterns
 
 #include <iostream>
+#include <string>
 
 enum class ErrorCode {
     OK = 0,
@@ -23,6 +24,17 @@ public:
     ErrorCode get_error() const { return error; }
 };
 
+// Helper: convert error to string
+std::string to_string(ErrorCode e) {
+    switch (e) {
+        case ErrorCode::OK: return "OK";
+        case ErrorCode::InvalidInput: return "Invalid Input";
+        case ErrorCode::DivisionByZero: return "Division By Zero";
+        default: return "Unknown Error";
+    }
+}
+
+// Example operation
 Result divide(int a, int b) {
     if (b == 0) {
         return Result(ErrorCode::DivisionByZero);
@@ -30,18 +42,31 @@ Result divide(int a, int b) {
     return Result(a / b);
 }
 
-int main() {
-    auto result = divide(10, 2);
-    if (result.is_ok()) {
-        std::cout << "Result: " << result.get_value() << "\n";
+// Another operation
+Result safe_add(int a, int b) {
+    return Result(a + b);
+}
+
+// Helper printer
+void print_result(const Result& r) {
+    if (r.is_ok()) {
+        std::cout << "Result: " << r.get_value() << "\n";
     } else {
-        std::cout << "Error code: " << static_cast<int>(result.get_error()) << "\n";
+        std::cout << "Error: " << to_string(r.get_error()) << "\n";
     }
-    
+}
+
+int main() {
+
+    auto result = divide(10, 2);
+    print_result(result);
+
     auto bad_result = divide(10, 0);
-    if (!bad_result.is_ok()) {
-        std::cout << "Division by zero error\n";
-    }
-    
+    print_result(bad_result);
+
+    // Additional example
+    auto add_result = safe_add(5, 7);
+    print_result(add_result);
+
     return 0;
 }

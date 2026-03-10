@@ -30,6 +30,26 @@ int main() {
     std::cout << "After partition: ";
     for (int v : data) std::cout << v << " ";
     std::cout << "\n";
-    
+
+    // ---- additional small examples ----
+
+    // check if sorted
+    bool sorted = std::is_sorted(data.begin(), data.end());
+    std::cout << "Is data sorted? " << (sorted ? "Yes" : "No") << "\n";
+
+    // reverse the data
+    std::reverse(data.begin(), data.end());
+    std::cout << "Reversed data: ";
+    for (int v : data) std::cout << v << " ";
+    std::cout << "\n";
+
+    // partition_point (works after partition)
+    auto point = std::partition_point(data.begin(), data.end(),
+                                     [](int x) { return x < 5; });
+    std::cout << "Partition point index: "
+              << std::distance(data.begin(), point) << "\n";
+
+    // -----------------------------------
+
     return 0;
 }

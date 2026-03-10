@@ -21,6 +21,10 @@ public:
     // ---- small added helpers ----
     int current() const { return value; }
     bool is_zero() const { return value == 0; }
+
+    void print() const {
+        std::cout << "Counter value: " << value << std::endl;
+    }
     // -----------------------------
 };
 
@@ -43,6 +47,13 @@ int main(void) {
 
     std::cout << "Is counter zero? "
               << (countr.is_zero() ? "Yes" : "No") << std::endl;
+
+    // Additional small tests
+    countr.increment(10);
+    countr.print();
+
+    countr.reset();
+    countr.print();
     // -------------------------------
 
     return 0;

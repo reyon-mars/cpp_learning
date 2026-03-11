@@ -72,6 +72,24 @@ double range_average(const int_range& r) {
     return sz ? static_cast<double>(range_sum(r)) / sz : 0.0;
 }
 
+// find min value
+int range_min(const int_range& r) {
+    int min = *r.begin();
+    for (int v : r)
+        if (v < min)
+            min = v;
+    return min;
+}
+
+// find max value
+int range_max(const int_range& r) {
+    int max = *r.begin();
+    for (int v : r)
+        if (v > max)
+            max = v;
+    return max;
+}
+
 // print reversed view (no modification)
 void print_reverse(const int_range& r) {
     int last = 0;
@@ -97,6 +115,9 @@ int main(void) {
     std::cout << "Range size: " << range_size(r) << "\n";
     std::cout << "Range sum: " << range_sum(r) << "\n";
     std::cout << "Range average: " << range_average(r) << "\n";
+
+    std::cout << "Range min: " << range_min(r) << "\n";
+    std::cout << "Range max: " << range_max(r) << "\n";
 
     std::cout << "Reversed view: ";
     print_reverse(r);

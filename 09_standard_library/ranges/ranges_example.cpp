@@ -25,6 +25,34 @@ int main() {
         std::cout << v << " ";
     }
     std::cout << "\n";
-    
+
+    // ---- Additional small examples ----
+
+    // take first 5 elements
+    auto first_five = vec | std::views::take(5);
+    std::cout << "First five: ";
+    for (int v : first_five) {
+        std::cout << v << " ";
+    }
+    std::cout << "\n";
+
+    // drop first 5 elements
+    auto after_five = vec | std::views::drop(5);
+    std::cout << "After five: ";
+    for (int v : after_five) {
+        std::cout << v << " ";
+    }
+    std::cout << "\n";
+
+    // reverse view
+    auto reversed = vec | std::views::reverse;
+    std::cout << "Reversed: ";
+    for (int v : reversed) {
+        std::cout << v << " ";
+    }
+    std::cout << "\n";
+
+    // -----------------------------------
+
     return 0;
 }

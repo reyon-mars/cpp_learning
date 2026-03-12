@@ -2,6 +2,7 @@
 #include <string>
 #include <algorithm>
 #include <cctype>
+#include <sstream>
 
 // ======================================================
 // ORIGINAL CODE (UNCHANGED LOGIC)
@@ -65,6 +66,23 @@ bool ends_with(const std::string& s, const std::string& suffix)
     return std::equal(suffix.rbegin(), suffix.rend(), s.rbegin());
 }
 
+// Reverse a string
+std::string reverse_string(std::string s)
+{
+    std::reverse(s.begin(), s.end());
+    return s;
+}
+
+// Count words in a string
+int count_words(const std::string& s)
+{
+    std::stringstream ss(s);
+    std::string word;
+    int count = 0;
+    while (ss >> word) ++count;
+    return count;
+}
+
 // Tiny divider printer
 void print_divider()
 {
@@ -114,6 +132,10 @@ int main() {
 
     safe_replace(text, "World", "C++");
     std::cout << "After safe replace: " << text << '\n';
+
+    // --- very small new demos ---
+    std::cout << "Reversed text: " << reverse_string(text) << '\n';
+    std::cout << "Word count: " << count_words(text) << '\n';
 
     print_divider();
 

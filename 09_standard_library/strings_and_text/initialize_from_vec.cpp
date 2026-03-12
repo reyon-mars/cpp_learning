@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <cctype>
 
 // ==================================================
 // ORIGINAL CODE (LOGIC UNCHANGED)
@@ -56,6 +57,18 @@ int main(void) {
     std::cout << "Reversed view: ";
     for (auto it = v.rbegin(); it != v.rend(); ++it)
         std::cout << *it;
+    std::cout << std::endl;
+
+    // ===== ADDITIONAL SMALL EXAMPLES =====
+
+    // Count occurrences of 'i'
+    std::cout << "Count of 'i': "
+              << std::count(v.begin(), v.end(), 'i') << std::endl;
+
+    // Uppercase view (without modifying original vector)
+    std::cout << "Uppercase view: ";
+    for (char c : v)
+        std::cout << static_cast<char>(std::toupper(c));
     std::cout << std::endl;
 
     // ===================================

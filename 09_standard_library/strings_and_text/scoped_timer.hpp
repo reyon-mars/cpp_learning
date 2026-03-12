@@ -1,6 +1,8 @@
 #include <iostream>
 #include <chrono>
 #include <string>
+#include <thread>
+#include <ctime>
 
 // ======================================================
 // ORIGINAL CODE (UNCHANGED LOGIC)
@@ -22,7 +24,7 @@ public:
 
         auto us = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
         auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-        auto sec = std::chrono::duration_cast<std::chrono::seconds>(end - start).count(); // NEW
+        auto sec = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
 
         std::cout << name << ": "
                   << us << " us"
@@ -34,7 +36,7 @@ public:
 
 // Simple workload
 void busy_work(int n) {
-    volatile int x = 0; // prevents optimization
+    volatile int x = 0;
     for (int i = 0; i < n; ++i)
         x += i;
 }
@@ -66,6 +68,18 @@ void print_status(const std::string& msg) {
     std::cout << "[Status] " << msg << std::endl;
 }
 
+// --- Small new helper: simulate delay ---
+void timed_sleep(const std::string& label, int ms) {
+    scoped_timer t(label);
+    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+}
+
+// --- Small new helper: print current time ---
+void print_current_time() {
+    auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    std::cout << "[Current time] " << std::ctime(&now);
+}
+
 // ---------------------------------------------------------
 // MAIN
 // ---------------------------------------------------------
@@ -74,8 +88,9 @@ int main() {
     std::cout << "--- Scoped Timer Demo ---\n";
 
     print_status("Program started");
+    print_current_time();
 
-    int timerRuns = 0; // NEW tiny counter
+    int timerRuns = 0;
 
     scoped_timer total("total program time"); ++timerRuns;
 
@@ -97,8 +112,11 @@ int main() {
 
     repeat_work("repeat workload x3", 80'000, 3); ++timerRuns;
 
+    // small demo of timed sleep
+    timed_sleep("sleep test (200ms)", 200); ++timerRuns;
+
     std::cout << "Work functions executed: " << workCount << std::endl;
-    std::cout << "Total timed sections: " << timerRuns << std::endl; // NEW
+    std::cout << "Total timed sections: " << timerRuns << std::endl;
 
     print_status("Program ending");
     std::cout << "--- Program Finished ---\n";

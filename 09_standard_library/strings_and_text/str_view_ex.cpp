@@ -1,6 +1,8 @@
 #include <string>
 #include <string_view>
 #include <iostream>
+#include <chrono>
+#include <ctime>
 #include "scoped_timer.hpp"
 
 // ======================================================
@@ -65,6 +67,22 @@ void flush_output()
     std::cout << std::flush;
 }
 
+// ===== NEW VERY SMALL ADDITIONS =====
+
+// print separator line
+void print_separator()
+{
+    std::cout << "---------------------------------\n";
+}
+
+// print current timestamp
+void print_timestamp()
+{
+    auto now = std::chrono::system_clock::to_time_t(
+        std::chrono::system_clock::now());
+    std::cout << "[Time] " << std::ctime(&now);
+}
+
 // ======================================================
 // MAIN
 // ======================================================
@@ -80,6 +98,7 @@ int main(void)
 
     int call_count = 0;
 
+    print_timestamp();
     warmup_logger();
 
     // Benchmark log_msg (std::string_view)
@@ -92,7 +111,9 @@ int main(void)
         }
     }
 
-    // reset counter for clarity (tiny addition)
+    print_separator();
+
+    // reset counter for clarity
     call_count = 0;
 
     // Benchmark log_msg_ (std::string copy)
@@ -104,6 +125,8 @@ int main(void)
             ++call_count;
         }
     }
+
+    print_separator();
 
     // Inline logger benchmark
     print_header("Inline Logger");

@@ -21,6 +21,39 @@ int main() {
     std::cout << "Doubled doubles: ";
     std::for_each(doubles.begin(), doubles.end(), print_double);
     std::cout << "\n";
-    
+
+    // ---- Additional small generic lambda examples ----
+
+    // Generic sum lambda
+    auto add = [](auto a, auto b) {
+        return a + b;
+    };
+
+    std::cout << "Sum (int): " << add(5, 3) << "\n";
+    std::cout << "Sum (double): " << add(2.5, 4.1) << "\n";
+
+    // Generic comparison lambda
+    auto is_greater = [](auto a, auto b) {
+        return a > b;
+    };
+
+    std::cout << "Is 10 > 5? "
+              << (is_greater(10, 5) ? "Yes" : "No") << "\n";
+
+    // Generic container printer
+    auto print_container = [](const auto& container) {
+        for (const auto& item : container)
+            std::cout << item << " ";
+        std::cout << "\n";
+    };
+
+    std::cout << "Ints: ";
+    print_container(ints);
+
+    std::cout << "Doubles: ";
+    print_container(doubles);
+
+    // --------------------------------------------------
+
     return 0;
 }

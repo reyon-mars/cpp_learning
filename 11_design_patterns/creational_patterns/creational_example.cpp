@@ -3,8 +3,10 @@
 
 #include <iostream>
 #include <memory>
+#include <string>
 
-// Singleton
+// ---------------- Singleton ----------------
+
 class Database {
 private:
     static Database* instance;
@@ -25,7 +27,8 @@ public:
 
 Database* Database::instance = nullptr;
 
-// Factory
+// ---------------- Factory ----------------
+
 class Animal {
 public:
     virtual ~Animal() = default;
@@ -51,11 +54,73 @@ public:
     }
 };
 
+// ---------------- Builder (Small Addition) ----------------
+
+class Computer {
+public:
+    std::string cpu;
+    std::string ram;
+    std::string storage;
+
+    void show() const {
+        std::cout << "Computer specs:\n";
+        std::cout << "CPU: " << cpu << "\n";
+        std::cout << "RAM: " << ram << "\n";
+        std::cout << "Storage: " << storage << "\n";
+    }
+};
+
+class ComputerBuilder {
+private:
+    Computer computer;
+
+public:
+    ComputerBuilder& set_cpu(const std::string& c) {
+        computer.cpu = c;
+        return *this;
+    }
+
+    ComputerBuilder& set_ram(const std::string& r) {
+        computer.ram = r;
+        return *this;
+    }
+
+    ComputerBuilder& set_storage(const std::string& s) {
+        computer.storage = s;
+        return *this;
+    }
+
+    Computer build() {
+        return computer;
+    }
+};
+
+// ---------------- Main ----------------
+
 int main() {
+
+    // Singleton usage
     Database::get_instance()->query("SELECT * FROM users");
-    
+
+    std::cout << "\n";
+
+    // Factory usage
     auto dog = AnimalFactory::create("dog");
-    dog->speak();
-    
+    auto cat = AnimalFactory::create("cat");
+
+    if (dog) dog->speak();
+    if (cat) cat->speak();
+
+    std::cout << "\n";
+
+    // Builder usage
+    Computer pc = ComputerBuilder()
+                    .set_cpu("Intel i7")
+                    .set_ram("16GB")
+                    .set_storage("1TB SSD")
+                    .build();
+
+    pc.show();
+
     return 0;
 }

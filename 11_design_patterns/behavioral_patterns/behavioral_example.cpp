@@ -4,8 +4,10 @@
 #include <iostream>
 #include <vector>
 #include <memory>
+#include <string>
 
-// Observer
+// ---------------- Observer ----------------
+
 class Observer {
 public:
     virtual ~Observer() = default;
@@ -40,7 +42,8 @@ public:
     }
 };
 
-// Strategy
+// ---------------- Strategy ----------------
+
 class Strategy {
 public:
     virtual ~Strategy() = default;
@@ -57,11 +60,116 @@ public:
     int execute(int a, int b) override { return a * b; }
 };
 
+// Context for Strategy
+class Calculator {
+private:
+    std::shared_ptr<Strategy> strategy;
+
+public:
+    void set_strategy(std::shared_ptr<Strategy> s) {
+        strategy = s;
+    }
+
+    int compute(int a, int b) {
+        if (strategy)
+            return strategy->execute(a, b);
+        return 0;
+    }
+};
+
+// ---------------- Command ----------------
+
+class Command {
+public:
+    virtual ~Command() = default;
+    virtual void execute() = 0;
+};
+
+class PrintCommand : public Command {
+private:
+    std::string message;
+
+public:
+    PrintCommand(const std::string& msg) : message(msg) {}
+
+    void execute() override {
+        std::cout << "Command executed: " << message << "\n";
+    }
+};
+
+// ---------------- State ----------------
+
+class State {
+public:
+    virtual ~State() = default;
+    virtual void handle() = 0;
+};
+
+class IdleState : public State {
+public:
+    void handle() override {
+        std::cout << "System is idle\n";
+    }
+};
+
+class WorkingState : public State {
+public:
+    void handle() override {
+        std::cout << "System is working\n";
+    }
+};
+
+class Context {
+private:
+    std::shared_ptr<State> state;
+
+public:
+    void set_state(std::shared_ptr<State> s) {
+        state = s;
+    }
+
+    void request() {
+        if (state)
+            state->handle();
+    }
+};
+
+// ---------------- Main ----------------
+
 int main() {
+
+    // Observer demo
     Subject subject;
     subject.attach(std::make_shared<ConcreteObserver>("Observer1"));
     subject.attach(std::make_shared<ConcreteObserver>("Observer2"));
     subject.notify("Event occurred");
-    
+
+    std::cout << "\n";
+
+    // Strategy demo
+    Calculator calc;
+    calc.set_strategy(std::make_shared<AddStrategy>());
+    std::cout << "Add result: " << calc.compute(3, 4) << "\n";
+
+    calc.set_strategy(std::make_shared<MultiplyStrategy>());
+    std::cout << "Multiply result: " << calc.compute(3, 4) << "\n";
+
+    std::cout << "\n";
+
+    // Command demo
+    std::shared_ptr<Command> cmd =
+        std::make_shared<PrintCommand>("Hello from command pattern");
+    cmd->execute();
+
+    std::cout << "\n";
+
+    // State demo
+    Context context;
+    context.set_state(std::make_shared<IdleState>());
+    context.request();
+
+    context.set_state(std::make_shared<WorkingState>());
+    context.request();
+
     return 0;
 }

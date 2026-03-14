@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <memory>
+#include <string>
 
 // Model
 class User {
@@ -34,6 +35,18 @@ public:
     const std::vector<User>& get_all() const {
         return users;
     }
+
+    // ---- small addition ----
+    bool remove_by_id(int id) {
+        for (auto it = users.begin(); it != users.end(); ++it) {
+            if (it->id == id) {
+                users.erase(it);
+                return true;
+            }
+        }
+        return false;
+    }
+    // ------------------------
 };
 
 // View
@@ -42,6 +55,19 @@ public:
     void display_user(const User& user) {
         std::cout << "User: " << user.name << " (ID: " << user.id << ")\n";
     }
+
+    // ---- small addition ----
+    void display_all(const std::vector<User>& users) {
+        std::cout << "--- User List ---\n";
+        for (const auto& user : users) {
+            display_user(user);
+        }
+    }
+
+    void show_message(const std::string& msg) {
+        std::cout << msg << "\n";
+    }
+    // ------------------------
 };
 
 // Controller
@@ -60,13 +86,33 @@ public:
             view.display_user(*user);
         }
     }
+
+    // ---- small additions ----
+    void list_users() {
+        view.display_all(repository.get_all());
+    }
+
+    void remove_user(int id) {
+        if (repository.remove_by_id(id))
+            view.show_message("User removed");
+        else
+            view.show_message("User not found");
+    }
+    // -------------------------
 };
 
 int main() {
     UserController controller;
+
     controller.add_user(1, "Alice");
     controller.add_user(2, "Bob");
+
     controller.display_user(1);
-    
+
+    // small extra usage
+    controller.list_users();
+    controller.remove_user(2);
+    controller.list_users();
+
     return 0;
 }

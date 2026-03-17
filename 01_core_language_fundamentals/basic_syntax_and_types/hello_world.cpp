@@ -1,6 +1,9 @@
 #include <iostream>
 #include <string>
 
+// Put helpers in a small namespace (good practice)
+namespace utils {
+
 void greet() {
     std::cout << "Hello, User !" << std::endl;
 }
@@ -12,7 +15,7 @@ inline int add(int a, int b) {
 // Simple Class
 class Demo {
 public:
-    void show() {
+    void show() const {   // const correctness
         std::cout << "Demo class method executed!" << std::endl;
     }
 };
@@ -23,31 +26,31 @@ struct Info {
 };
 
 // Simple helper function
-void printMessage(const std::string& msg) {
+inline void printMessage(const std::string& msg) {
     std::cout << msg << std::endl;
 }
 
 // Increment 
-int increment(int x) {
+inline int increment(int x) {
     return x + 1;
 }
 
-bool isPositive(int x) {
+inline bool isPositive(int x) {
     return x > 0;
 }
 
 // Check if number is even
-bool isEven(int x) {
+inline bool isEven(int x) {
     return x % 2 == 0;
 }
 
 // Print divider line
-void printDivider() {
+inline void printDivider() {
     std::cout << "-----------------------------\n";
 }
 
 // Multiply two numbers
-int multiply(int a, int b) {
+inline int multiply(int a, int b) {
     return a * b;
 }
 
@@ -57,17 +60,17 @@ struct Stats {
 };
 
 // Goodbye helper
-void sayGoodbye() {
+inline void sayGoodbye() {
     std::cout << "Goodbye! End of program.\n";
 }
 
-// Square a number
-int square(int x) {
+// Square a number (constexpr example)
+constexpr int square(int x) {
     return x * x;
 }
 
 // Simple status printer
-void printStatus(const std::string& status) {
+inline void printStatus(const std::string& status) {
     std::cout << "[STATUS] " << status << std::endl;
 }
 
@@ -77,32 +80,36 @@ struct Config {
 };
 
 // Check if number is zero
-bool isZero(int x) {
+inline bool isZero(int x) {
     return x == 0;
 }
 
 // ---------------- SMALL ADDITIONS ----------------
 
 // Toggle debug flag
-void toggleDebug(Config& cfg) {
+inline void toggleDebug(Config& cfg) {
     cfg.debug = !cfg.debug;
 }
 
 // Increment stats runs
-void recordRun(Stats& stats) {
+inline void recordRun(Stats& stats) {
     ++stats.runs;
 }
 
 // Absolute value helper
-int absolute(int x) {
+constexpr int absolute(int x) {
     return x < 0 ? -x : x;
 }
+
+} // namespace utils
 
 // --------------------------------------------------
 // MAIN
 // --------------------------------------------------
 
 int main(void) {
+
+    using namespace utils;
 
     std::cout << "Hello, World" << std::endl;
 
@@ -157,5 +164,6 @@ int main(void) {
 
     std::cout << "Program finished successfully." << std::endl;
     sayGoodbye();
+
     return 0;
 }

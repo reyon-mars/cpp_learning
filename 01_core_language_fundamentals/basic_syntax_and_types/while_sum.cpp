@@ -93,6 +93,53 @@ void printSummary(const std::vector<Book>& lib) {
 // ------------------------------------------------
 
 
+// ----------- NEWLY ADDED FUNCTIONS -----------
+
+// Remove a book by name
+void removeBook(std::vector<Book>& lib, const std::string& name) {
+    for (auto it = lib.begin(); it != lib.end(); ++it) {
+        if (it->name == name) {
+            lib.erase(it);
+            std::cout << name << " removed from library.\n";
+            return;
+        }
+    }
+    std::cout << name << " not found.\n";
+}
+
+// Update publisher of a book
+void updatePublisher(std::vector<Book>& lib, const std::string& name, const std::string& newPublisher) {
+    for (auto& b : lib) {
+        if (b.name == name) {
+            b.publisher = newPublisher;
+            std::cout << "Publisher updated for " << name << ".\n";
+            return;
+        }
+    }
+    std::cout << name << " not found.\n";
+}
+
+// Count books by a specific publisher
+int countByPublisher(const std::vector<Book>& lib, const std::string& publisher) {
+    int count = 0;
+    for (const auto& b : lib)
+        if (b.publisher == publisher)
+            count++;
+    return count;
+}
+
+// Print full detailed library
+void printDetailedLibrary(const std::vector<Book>& lib) {
+    std::cout << "\nDetailed Library:\n";
+    for (const auto& b : lib) {
+        printBook(b);
+        printDivider();
+    }
+}
+
+// --------------------------------------------
+
+
 // ======================================================
 // MAIN
 // ======================================================
@@ -150,7 +197,17 @@ int main(void) {
     printSummary(library);
     std::cout << "Publisher of C++ Primer: "
               << getPublisher(library, "C++ Primer") << std::endl;
-    // ----------------------------
+
+    // -------- NEW FEATURE USAGE --------
+    updatePublisher(library, "test", "Updated Publisher");
+
+    std::cout << "Books by Pearson: "
+              << countByPublisher(library, "Pearson") << std::endl;
+
+    removeBook(library, "Clean Code");
+
+    printDetailedLibrary(library);
+    // ----------------------------------
 
     return 0;
 }

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstdint>
 #include <vector>
+#include <string>   // ✅ added
 
 // ======================================================
 // ENUMS 
@@ -10,20 +11,20 @@ enum class Animal : uint8_t {
     Cat,
     Dog,
     Bird,
-    Fish          // ✅ small addition
+    Fish
 };
 
 enum class Vehicle : uint8_t {
     Car,
     Bike,
     Bus,
-    Train         // ✅ small addition
+    Train
 };
 
 enum class Food : uint8_t {
     Pizza,
     Burger,
-    Pasta         // ✅ small addition
+    Pasta
 };
 
 // ======================================================
@@ -83,6 +84,36 @@ const char* enumName(Animal a) {
     }
     return "Unknown";
 }
+
+// ----------- NEW ADDITIONS -----------
+
+// Reverse lookup: string → Animal
+Animal stringToAnimal(const std::string& name) {
+    if (name == "Cat") return Animal::Cat;
+    if (name == "Dog") return Animal::Dog;
+    if (name == "Bird") return Animal::Bird;
+    if (name == "Fish") return Animal::Fish;
+    return Animal::Cat; // default
+}
+
+// Validate enum value
+bool isValidAnimal(int value) {
+    return value >= 0 && value <= 3;
+}
+
+// Get next enum (cyclic)
+Animal nextAnimal(Animal a) {
+    return static_cast<Animal>((static_cast<int>(a) + 1) % 4);
+}
+
+// Print enum name + value together
+template <typename T>
+void printEnumInfo(T e) {
+    std::cout << "Name: " << enumName(e)
+              << ", Value: " << static_cast<int>(e) << "\n";
+}
+
+// ------------------------------------
 
 // Describe all items in a container
 template <typename T>
@@ -157,6 +188,24 @@ int main(void) {
               << countItems(animals) << '\n';
 
     printEnumNumbers(animals);
+
+    // -------- NEW FEATURE USAGE --------
+
+    std::cout << "\nExtra Features:\n";
+
+    Animal fromString = stringToAnimal("Dog");
+    describe(fromString);
+
+    std::cout << "Is 2 a valid Animal? "
+              << (isValidAnimal(2) ? "Yes\n" : "No\n");
+
+    Animal next = nextAnimal(a);
+    std::cout << "Next animal after Cat: "
+              << enumName(next) << "\n";
+
+    printEnumInfo(a);
+
+    // ----------------------------------
 
     return 0;
 }

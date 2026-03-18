@@ -28,6 +28,31 @@
 
 // ---------------------------------
 
+
+// ----------- NEW ADDITIONS -----------
+
+// MIN macro
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+
+// Multi-line macro
+#define PRINT_PAIR(a, b) \
+    std::cout << "Values: " << a << ", " << b << "\n";
+
+// Logging levels
+#define LOG_LEVEL 2
+
+#if LOG_LEVEL >= 2
+    #define LOG_INFO(msg) std::cout << "[INFO] " << msg << "\n"
+#else
+    #define LOG_INFO(msg)
+#endif
+
+// Temporary macro to demonstrate undef
+#define TEMP_MACRO 100
+
+// ------------------------------------
+
+
 int main() {
 
     std::cout << "Max of 5 and 10: " << MAX(5, 10) << "\n";
@@ -41,6 +66,25 @@ int main() {
     int CONCAT(var, 1) = 42;
     std::cout << "Concatenated variable value: " << var1 << "\n";
     // ---------------------------
+
+
+    // -------- NEW FEATURE USAGE --------
+
+    std::cout << "Min of 5 and 10: " << MIN(5, 10) << "\n";
+
+    PRINT_PAIR(3, 7);
+
+    LOG_INFO("This is an info log");
+
+    std::cout << "Temp macro value: " << TEMP_MACRO << "\n";
+
+    // Undefine macro
+    #undef TEMP_MACRO
+
+    // Uncommenting next line would cause error (macro removed)
+    // std::cout << TEMP_MACRO;
+
+    // ----------------------------------
 
     return 0;
 }

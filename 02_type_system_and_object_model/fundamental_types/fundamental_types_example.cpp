@@ -40,5 +40,37 @@ int main() {
     std::cout << "double max: " << std::numeric_limits<double>::max() << "\n";
     std::cout << "double min: " << std::numeric_limits<double>::min() << "\n";
 
+
+    // -------- NEW FEATURE USAGE --------
+
+    // Size of each type
+    std::cout << "\nSizes (in bytes):\n";
+    std::cout << "char: " << sizeof(c) << "\n";
+    std::cout << "int: " << sizeof(i) << "\n";
+    std::cout << "double: " << sizeof(d) << "\n";
+    std::cout << "long long: " << sizeof(ll) << "\n";
+
+    // Unsigned types
+    unsigned int ui = 4000000000U;
+    std::cout << "unsigned int: " << ui << "\n";
+
+    // More limits
+    std::cout << "char max: " << (int)std::numeric_limits<char>::max() << "\n";
+    std::cout << "float max: " << std::numeric_limits<float>::max() << "\n";
+
+    // Type casting
+    int int_val = 10;
+    double converted = static_cast<double>(int_val);
+
+    std::cout << "Converted int to double: " << converted << "\n";
+
+    // ASCII value
+    std::cout << "ASCII value of 'A': " << static_cast<int>(c) << "\n";
+
+    // Boolean as integer
+    std::cout << "bool as int: " << static_cast<int>(b) << "\n";
+
+    // ----------------------------------
+
     return 0;
 }

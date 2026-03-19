@@ -11,6 +11,20 @@ void print_type() {
     std::cout << "Type: " << typeid(T).name() << "\n";
 }
 
+// ----------- NEW ADDITIONS -----------
+
+// Function using auto return type
+auto add(int a, int b) {
+    return a + b;
+}
+
+// Function using decltype(auto)
+decltype(auto) getRef(int& x) {
+    return (x); // returns reference
+}
+
+// ------------------------------------
+
 int main() {
     auto x = 10;           // int
     auto y = 3.14;         // double
@@ -39,6 +53,41 @@ int main() {
               << std::is_reference<decltype(c)>::value << "\n";
 
     // --------------------------------
+
+
+    // -------- NEW FEATURE USAGE --------
+
+    const int cx = 20;
+    auto d = cx;          // int (const removed)
+    auto& e = cx;         // const int&
+
+    print_type<decltype(d)>();
+    print_type<decltype(e)>();
+
+    std::cout << "d is const? "
+              << std::is_const<decltype(d)>::value << "\n";
+
+    std::cout << "e is reference? "
+              << std::is_reference<decltype(e)>::value << "\n";
+
+    // auto&& (universal reference)
+    auto&& f = a;
+    std::cout << "f is reference? "
+              << std::is_reference<decltype(f)>::value << "\n";
+
+    // decltype(auto)
+    int val = 50;
+    decltype(auto) refVal = getRef(val);
+    refVal = 100; // modifies original
+
+    std::cout << "val after refVal change: "
+              << val << "\n";
+
+    // auto return type
+    auto result = add(3, 4);
+    std::cout << "add result: " << result << "\n";
+
+    // ----------------------------------
 
     return 0;
 }

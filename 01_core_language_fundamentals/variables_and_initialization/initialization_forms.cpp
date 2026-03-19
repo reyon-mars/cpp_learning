@@ -41,5 +41,43 @@ int main() {
     print_point(p3);
     // ----------------------------
 
+
+    // -------- NEW FEATURE USAGE --------
+
+    // Default vs value initialization
+    int d;        // uninitialized (garbage value)
+    int e{};      // initialized to 0
+
+    std::cout << "e (value initialized) = " << e << "\n";
+
+    // auto initialization
+    auto f = 100;     // int
+    auto g{200};      // int (uniform)
+
+    std::cout << "f = " << f << ", g = " << g << "\n";
+
+    // const and constexpr
+    const int h = 50;
+    constexpr int i = 60;
+
+    std::cout << "h = " << h << ", i = " << i << "\n";
+
+    // Array initialization
+    int arr1[3] = {1, 2, 3};   // copy
+    int arr2[3]{4, 5, 6};      // uniform
+
+    std::cout << "arr1: ";
+    for (int val : arr1) std::cout << val << " ";
+    std::cout << "\n";
+
+    std::cout << "arr2: ";
+    for (int val : arr2) std::cout << val << " ";
+    std::cout << "\n";
+
+    // Narrowing conversion (will cause error if uncommented)
+    // int bad{3.14}; // ❌ not allowed
+
+    // ----------------------------------
+
     return 0;
 }

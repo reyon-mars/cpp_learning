@@ -42,6 +42,48 @@ void print_flags(const Flags& f) {
               << ", Readonly: " << f.readonly << "\n";
 }
 
+// ----------- NEW ADDITIONS -----------
+
+// Set RGBA values manually
+void set_color(Color& c, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+    c.rgba.r = r;
+    c.rgba.g = g;
+    c.rgba.b = b;
+    c.rgba.a = a;
+}
+
+// Print packed hex value
+void print_hex(const Color& c) {
+    std::cout << "Packed value: 0x"
+              << std::hex << c.full << std::dec << "\n";
+}
+
+// Reset all flags
+void reset_flags(Flags& f) {
+    f.enabled = false;
+    f.readonly = false;
+    f.reserved = 0;
+}
+
+// Count active flags
+int count_flags(const Flags& f) {
+    return f.enabled + f.readonly;
+}
+
+// Show raw memory bytes
+void print_bytes(const Color& c) {
+    const unsigned char* bytes =
+        reinterpret_cast<const unsigned char*>(&c);
+
+    std::cout << "Raw bytes: ";
+    for (size_t i = 0; i < sizeof(Color); ++i) {
+        std::cout << std::hex << static_cast<int>(bytes[i]) << " ";
+    }
+    std::cout << std::dec << "\n";
+}
+
+// ------------------------------------
+
 // ---------------- MAIN ----------------
 
 int main() {
@@ -63,6 +105,25 @@ int main() {
     std::cout << "After toggle:\n";
     print_flags(f);
     // --------------------------
+
+    // -------- NEW FEATURE USAGE --------
+
+    print_hex(c);
+    print_bytes(c);
+
+    set_color(c, 10, 20, 30, 255);
+    std::cout << "\nAfter setting new color:\n";
+    print_color(c);
+    print_hex(c);
+
+    std::cout << "Active flags count: "
+              << count_flags(f) << "\n";
+
+    reset_flags(f);
+    std::cout << "After reset:\n";
+    print_flags(f);
+
+    // ----------------------------------
 
     return 0;
 }

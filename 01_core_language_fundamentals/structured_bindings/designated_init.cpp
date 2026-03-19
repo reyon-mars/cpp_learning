@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <algorithm> // ✅ added
 
 struct Book {
     std::string name;
@@ -113,6 +114,49 @@ void printDivider() {
     std::cout << "-----------------------------\n";
 }
 
+// ----------- NEW ADDITIONS -----------
+
+// Sort books by ISBN
+void sortByISBN(std::vector<Book>& lib) {
+    std::sort(lib.begin(), lib.end(),
+              [](const Book& a, const Book& b) {
+                  return a.ISBN_NO < b.ISBN_NO;
+              });
+}
+
+// Update publisher by book name
+bool updatePublisher(std::vector<Book>& lib,
+                     const std::string& name,
+                     const std::string& newPublisher) {
+    for (auto& b : lib) {
+        if (b.name == name) {
+            b.publisher = newPublisher;
+            return true;
+        }
+    }
+    return false;
+}
+
+// Get book by name
+const Book* getBookByName(const std::vector<Book>& lib,
+                          const std::string& name) {
+    for (const auto& b : lib)
+        if (b.name == name)
+            return &b;
+    return nullptr;
+}
+
+// Print detailed library
+void printDetailedLibrary(const std::vector<Book>& lib) {
+    std::cout << "\nDetailed Library:\n";
+    for (const auto& b : lib) {
+        printBook(b);
+        printDivider();
+    }
+}
+
+// ------------------------------------
+
 // ======================================================
 // MAIN
 // ======================================================
@@ -173,6 +217,22 @@ int main() {
     removeBook(library, "test");
     std::cout << "\nAfter removing 'test': "
               << library.size() << " books\n";
+
+    // -------- NEW FEATURE USAGE --------
+
+    sortByISBN(library);
+    std::cout << "\nAfter sorting by ISBN:\n";
+    printLibrary(library);
+
+    updatePublisher(library, "C++ Primer", "Updated Publisher");
+
+    if (const Book* b = getBookByName(library, "C++ Primer")) {
+        std::cout << "\nAfter update:\n" << *b << "\n";
+    }
+
+    printDetailedLibrary(library);
+
+    // ----------------------------------
 
     return 0;
 }

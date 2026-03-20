@@ -21,6 +21,13 @@ private:
     
     friend class Friend;
     friend void friend_function();
+
+    // ----------- NEW ADDITION -----------
+public:
+    int getPrivate() const {
+        return priv_member;
+    }
+    // -----------------------------------
 };
 
 class Derived : public Base {
@@ -45,6 +52,33 @@ void friend_function() {
     obj.print();
 }
 
+// ----------- NEW ADDITIONS -----------
+
+// Protected inheritance
+class ProtectedDerived : protected Base {
+public:
+    void test() {
+        pub_member = 5;   // becomes protected
+        prot_member = 6;
+    }
+};
+
+// Private inheritance
+class PrivateDerived : private Base {
+public:
+    void test() {
+        pub_member = 7;   // becomes private
+        prot_member = 8;
+    }
+};
+
+// Friend function with parameter
+void friend_modify(Base& obj) {
+    obj.priv_member = 99;
+}
+
+// ------------------------------------
+
 int main() {
     Base obj;
     obj.pub_member = 5;  // OK
@@ -62,6 +96,23 @@ int main() {
     obj.print();
 
     friend_function();    // friend function access
+
+    // -------- NEW FEATURE USAGE --------
+
+    ProtectedDerived pd;
+    pd.test();
+
+    PrivateDerived pr;
+    pr.test();
+
+    friend_modify(obj);
+    std::cout << "After friend_modify: ";
+    obj.print();
+
+    std::cout << "Access via getter: "
+              << obj.getPrivate() << "\n";
+
+    // ----------------------------------
 
     return 0;
 }

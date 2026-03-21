@@ -20,6 +20,22 @@ public:
     // Ref-qualified member functions (C++11)
     void process() & { std::cout << "Lvalue reference\n"; }
     void process() && { std::cout << "Rvalue reference\n"; }
+
+    // -------- NEW ADDITIONS --------
+    void process() const & { std::cout << "Const lvalue reference\n"; }
+    void process() const && { std::cout << "Const rvalue reference\n"; }
+
+    // Method chaining
+    MyClass& add(int v) {
+        value += v;
+        return *this;
+    }
+
+    // noexcept function
+    void safePrint() const noexcept {
+        std::cout << "Safe value: " << value << "\n";
+    }
+    // --------------------------------
     
     // Virtual member function
     virtual void display() const {
@@ -37,6 +53,17 @@ public:
     }
 };
 
+// -------- NEW ADDITION --------
+class FinalDerived final : public MyClass {
+public:
+    FinalDerived(int v) : MyClass(v) {}
+
+    void display() const override {
+        std::cout << "FinalDerived display\n";
+    }
+};
+// --------------------------------
+
 int main() {
     MyClass obj(42);
     obj.setValue(100);
@@ -47,6 +74,25 @@ int main() {
     // 🔹 Call ref-qualified functions
     obj.process();                 // lvalue
     std::move(obj).process();      // rvalue
+
+    // -------- NEW FEATURE USAGE --------
+
+    const MyClass cobj(300);
+    cobj.process();                     // const lvalue
+    std::move(cobj).process();          // const rvalue
+
+    // Method chaining
+    obj.add(10).add(20);
+    std::cout << "After chaining: " << obj.getValue() << "\n";
+
+    // noexcept function
+    obj.safePrint();
+
+    // Final class usage
+    FinalDerived fd(500);
+    fd.display();
+
+    // ----------------------------------
 
     // 🔹 Virtual dispatch demonstration
     MyClass* basePtr = new Derived(200);

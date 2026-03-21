@@ -1,11 +1,13 @@
 #include <coroutine>
+#include <cstdlib>
 #include <exception>
 #include <optional>
+#include <print>
 
 template <typename T>
 class generator
 {
-    public:
+public:
 	struct promise_type
 	{
 		std::optional<T> current_value;
@@ -24,10 +26,10 @@ class generator
 		}
 		std::suspend_always yield_value(T value)
 		{
-			current_value = value;
+			current_value = std::move(value);
 			return {};
 		}
-		void return_void()
+		void return_void() noexcept
 		{
 		}
 
@@ -38,18 +40,56 @@ class generator
 	};
 
 	using handle = std::coroutine_handle<promise_type>;
+
+private:
 	handle handle_;
 
+public:
 	explicit generator(handle h) : handle_(h)
 	{
 	}
+
 	~generator()
 	{
 		if (handle_)
 			handle_.destroy();
 	}
+
 	generator(const generator&) = delete;
-	generator(const generator&&) = delete;
+	generator& operator=(const generator&) = delete;
+
+	generator(generator&& other) noexcept : handle_(other.handle_)
+	{
+		other.handle_ = nullptr;
+	}
+
+	generator& operator=(generator&& other) noexcept
+	{
+		if (&other != this)
+		{
+			if (handle_)
+				handle_.destroy();
+			handle_ = other.handle_;
+			other.handle_ = nullptr;
+		}
+		return *this;
+	}
+
+	bool resume()
+	{
+		if (!handle_ || handle_.done())
+		{
+			return false;
+		}
+
+		handle_.resume();
+		return !handle_.done();
+	}
+
+	T value()
+	{
+		return handle_.promise().current_value.value();
+	}
 };
 
 generator<int> counter()
@@ -58,4 +98,17 @@ generator<int> counter()
 	{
 		co_yield i;
 	}
+}
+
+auto main()->int
+{
+	auto gen = counter();
+
+	gen.resume();
+	std::println("The Current value is {}", gen.value() );
+
+	gen.resume();
+	std::println( "The new Current value is {}", gen.value());
+
+	return EXIT_SUCCESS;
 }

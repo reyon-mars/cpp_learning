@@ -1,5 +1,7 @@
 #include <iostream>
 #include <string>
+#include <vector>
+#include <typeinfo>
 using namespace std;
 
 class Pet {
@@ -8,7 +10,7 @@ protected:
 public:
     Pet(string name) : name(name) {}
 
-    virtual ~Pet() {}   // 🔹 added virtual destructor
+    virtual ~Pet() {}
 
     void NameMe(string name) { this->name = name; }
 
@@ -22,7 +24,7 @@ class Dog : public Pet {
 public:
     Dog(string name) : Pet(name) {}
 
-    void MakeSound(void) override {   // 🔹 added override
+    void MakeSound(void) override {
         cout << name << " says woof woof woof " << endl;
     }
 };
@@ -70,7 +72,7 @@ void PlayWithPet(Pet &pet) {
 }
 
 void PlayWithPet(Pet *pet) {
-    if (!pet) return;   // 🔹 small safety check
+    if (!pet) return;
 
     pet->MakeSound();
 }
@@ -89,6 +91,28 @@ void PlayWithPetByReference(string name, Pet &pet) {
     pet.NameMe(name);
     pet.MakeSound();
 }
+
+// ----------- NEW ADDITIONS -----------
+
+// Safer casting version (no exceptions)
+void SafePlay(Pet& pet) {
+    if (auto gs = dynamic_cast<GermanShepherd*>(&pet)) {
+        gs->Laufen();
+    }
+    else if (auto mes = dynamic_cast<MastinEspanol*>(&pet)) {
+        mes->Ejectuar();
+    }
+    else {
+        cout << "Unknown pet type\n";
+    }
+}
+
+// RTTI
+void printType(Pet& pet) {
+    cout << "Actual type: " << typeid(pet).name() << endl;
+}
+
+// ------------------------------------
 
 int main(void) {
 
@@ -122,7 +146,34 @@ int main(void) {
     PlayWithPet(gs_ptr);
     PlayWithPet(mes_ptr);
 
-    delete petPointer;   // 🔹 cleanup
+    // -------- NEW FEATURE USAGE --------
+
+    // Object slicing demo
+    cout << "\nObject slicing example:\n";
+    PlayWithPetByValue("SlicedDog", dog); // ❗ slicing happens
+
+    // Safer casting
+    cout << "\nSafePlay demo:\n";
+    SafePlay(gs);
+    SafePlay(mes);
+    SafePlay(pet);
+
+    // RTTI demo
+    cout << "\nRTTI types:\n";
+    printType(pet);
+    printType(dog);
+    printType(gs);
+
+    // Polymorphic container
+    vector<Pet*> pets = { &pet, &dog, &gs, &mes };
+    cout << "\nAll pets making sound:\n";
+    for (auto p : pets) {
+        p->MakeSound();
+    }
+
+    // ----------------------------------
+
+    delete petPointer;
 
     return 0;
 }

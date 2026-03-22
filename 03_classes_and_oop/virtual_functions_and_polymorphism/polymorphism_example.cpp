@@ -7,8 +7,8 @@
 
 class Shape {
 public:
-    Shape() { std::cout << "Shape constructed\n"; }   // 🔹 added
-    virtual ~Shape() { std::cout << "Shape destroyed\n"; } // 🔹 expanded
+    Shape() { std::cout << "Shape constructed\n"; }
+    virtual ~Shape() { std::cout << "Shape destroyed\n"; }
 
     virtual void draw() const {
         std::cout << "Drawing shape\n";
@@ -23,11 +23,11 @@ private:
 
 public:
     Circle(double r) : radius(r) {
-        std::cout << "Circle constructed\n";   // 🔹 added
+        std::cout << "Circle constructed\n";
     }
 
     ~Circle() {
-        std::cout << "Circle destroyed\n";     // 🔹 added
+        std::cout << "Circle destroyed\n";
     }
 
     void draw() const override {
@@ -45,11 +45,11 @@ private:
 
 public:
     Rectangle(double w, double h) : width(w), height(h) {
-        std::cout << "Rectangle constructed\n";   // 🔹 added
+        std::cout << "Rectangle constructed\n";
     }
 
     ~Rectangle() {
-        std::cout << "Rectangle destroyed\n";     // 🔹 added
+        std::cout << "Rectangle destroyed\n";
     }
 
     void draw() const override {
@@ -77,7 +77,26 @@ int main() {
 
     std::cout << "\n--- Base Reference Example ---\n";
     Shape& ref = *shapes[0];
-    ref.draw();   // dynamic dispatch
+    ref.draw();
+
+    std::cout << "\n--- Raw Pointer Polymorphism ---\n";   // 🔹 added
+    Shape* rawPtr = shapes[1].get();
+    rawPtr->draw();
+    std::cout << "Area: " << rawPtr->area() << "\n";
+
+    std::cout << "\n--- Dynamic Cast Check ---\n";   // 🔹 added
+    if (Circle* c = dynamic_cast<Circle*>(shapes[0].get())) {
+        std::cout << "Confirmed: shapes[0] is a Circle\n";
+    }
+
+    std::cout << "\n--- Base Pointer Array ---\n";   // 🔹 added
+    Shape* arr[2];
+    arr[0] = shapes[0].get();
+    arr[1] = shapes[1].get();
+
+    for (int i = 0; i < 2; i++) {
+        arr[i]->draw();
+    }
 
     std::cout << "\n--- End of main ---\n";
 

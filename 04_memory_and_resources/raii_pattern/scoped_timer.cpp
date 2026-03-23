@@ -2,6 +2,7 @@
 #include <chrono>
 #include <string>
 #include <thread>
+#include <utility>
 
 class scoped_timer {
     
@@ -32,16 +33,53 @@ public:
     void stop() {
         if (!stopped) {
             auto end = std::chrono::steady_clock::now();
-            auto duration =
+
+            auto duration_us =
                 std::chrono::duration_cast<std::chrono::microseconds>(
                     end - start).count();
 
+            auto duration_ms =
+                std::chrono::duration_cast<std::chrono::milliseconds>(
+                    end - start).count();
+
             std::cout << name << ": "
-                      << duration << " us\n";
+                      << duration_us << " us ("
+                      << duration_ms << " ms)\n";
 
             stopped = true;
         }
     }
+
+    // -------- NEW ADDITIONS --------
+
+    // Get elapsed time without stopping
+    long long elapsed_us() const {
+        auto now = std::chrono::steady_clock::now();
+        return std::chrono::duration_cast<std::chrono::microseconds>(
+                   now - start).count();
+    }
+
+    // Restart timer
+    void restart() {
+        start = std::chrono::steady_clock::now();
+        stopped = false;
+    }
+
+    // Static helper for quick measurement
+    template<typename Func>
+    static void measure(const std::string& label, Func&& f) {
+        auto begin = std::chrono::steady_clock::now();
+        f();
+        auto end = std::chrono::steady_clock::now();
+
+        auto duration =
+            std::chrono::duration_cast<std::chrono::microseconds>(
+                end - begin).count();
+
+        std::cout << label << ": " << duration << " us\n";
+    }
+
+    // --------------------------------
 
     ~scoped_timer() {
         stop();
@@ -60,8 +98,31 @@ int main() {
     {
         scoped_timer timer("Manual stop example");
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        timer.stop();  // stops early
+        timer.stop();
     }
+
+    // -------- NEW USAGE --------
+
+    {
+        scoped_timer timer("Elapsed check");
+        std::this_thread::sleep_for(std::chrono::milliseconds(30));
+        std::cout << "Elapsed (mid): "
+                  << timer.elapsed_us() << " us\n";
+    }
+
+    {
+        scoped_timer timer("Restart demo");
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        timer.restart();
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
+
+    // Quick measurement without object
+    scoped_timer::measure("Lambda task", [] {
+        std::this_thread::sleep_for(std::chrono::milliseconds(40));
+    });
+
+    // --------------------------------
 
     return 0;
 }

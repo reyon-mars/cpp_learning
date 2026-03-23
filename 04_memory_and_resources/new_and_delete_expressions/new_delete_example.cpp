@@ -21,7 +21,7 @@ public:
     static void* operator new(std::size_t size) {
         std::cout << "operator new called ("
                   << size << " bytes)\n";
-        return ::operator new(size);  // global allocation
+        return ::operator new(size);
     }
 
     // 🔹 Custom operator delete
@@ -29,6 +29,22 @@ public:
         std::cout << "operator delete called\n";
         ::operator delete(ptr);
     }
+
+    // -------- NEW ADDITIONS --------
+
+    // Array allocation
+    static void* operator new[](std::size_t size) {
+        std::cout << "operator new[] called ("
+                  << size << " bytes)\n";
+        return ::operator new(size);
+    }
+
+    static void operator delete[](void* ptr) noexcept {
+        std::cout << "operator delete[] called\n";
+        ::operator delete(ptr);
+    }
+
+    // --------------------------------
 };
 
 int main() {
@@ -46,6 +62,25 @@ int main() {
     std::cout << "\n--- Array of MyClass ---\n";
     MyClass* objs = new MyClass[2]{ {1}, {2} };
     delete[] objs;
+
+    // -------- NEW FEATURE USAGE --------
+
+    std::cout << "\n--- Placement New ---\n";
+    void* raw = ::operator new(sizeof(MyClass)); // raw memory
+    MyClass* p = new(raw) MyClass(99);           // placement new
+
+    p->~MyClass();  // manual destructor
+    ::operator delete(raw);
+
+    std::cout << "\n--- nothrow new ---\n";
+    MyClass* safe = new(std::nothrow) MyClass(77);
+    if (safe) {
+        delete safe;
+    } else {
+        std::cout << "Allocation failed\n";
+    }
+
+    // ----------------------------------
 
     return 0;
 }

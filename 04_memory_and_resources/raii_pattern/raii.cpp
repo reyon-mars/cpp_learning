@@ -129,6 +129,63 @@ void append_to_file(const std::string& filename,
     }
 }
 
+// -------- MORE ADDITIONS --------
+
+// Check if file is empty
+bool is_file_empty(file_guard& fg) {
+    return file_size(fg) == 0;
+}
+
+// Count characters
+std::size_t count_characters(file_guard& fg) {
+    rewind_file(fg);
+
+    std::size_t count = 0;
+    char ch;
+    while (fg.get().get(ch))
+        ++count;
+
+    rewind_file(fg);
+    return count;
+}
+
+// Search for a word
+bool contains_word(file_guard& fg, const std::string& target) {
+    rewind_file(fg);
+
+    std::string word;
+    while (fg.get() >> word) {
+        if (word == target)
+            return true;
+    }
+
+    rewind_file(fg);
+    return false;
+}
+
+// Read last line
+std::string read_last_line(file_guard& fg) {
+    rewind_file(fg);
+
+    std::string line, last;
+    while (std::getline(fg.get(), line)) {
+        last = line;
+    }
+    return last;
+}
+
+// Safe append with message
+void append_with_status(const std::string& filename,
+                        const std::string& text) {
+    std::ofstream out(filename, std::ios::app);
+    if (out.is_open()) {
+        out << text << '\n';
+        std::cout << "Append successful\n";
+    } else {
+        std::cout << "Append failed\n";
+    }
+}
+
 // ======================================================
 // MAIN
 // ======================================================
@@ -158,14 +215,25 @@ int main() {
         std::cout << "File size (bytes): "
                   << file_size(fg) << '\n';
 
+        std::cout << "Character count: "
+                  << count_characters(fg) << '\n';
+
+        std::cout << "File empty? "
+                  << (is_file_empty(fg) ? "Yes\n" : "No\n");
+
         std::cout << "First line: "
                   << read_first_line(fg) << '\n';
+
+        std::cout << "Last line: "
+                  << read_last_line(fg) << '\n';
+
+        std::cout << "Contains word 'test'? "
+                  << (contains_word(fg, "test") ? "Yes\n" : "No\n");
 
         std::cout << "Preview (30 chars):\n";
         print_preview(fg, 30);
 
-        // Append demo
-        append_to_file(filename, "Appended line.");
+        append_with_status(filename, "Appended line.");
 
         std::cout << "\nLine count after append (reopen to verify): "
                   << count_lines(fg) << '\n';

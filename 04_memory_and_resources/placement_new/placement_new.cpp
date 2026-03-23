@@ -53,7 +53,6 @@ int sum_range(int a, int b) {
 int main() {
     std::vector<int> vec = {1, 2, 3, 4, 5};
 
-    // IILE (Immediately Invoked Lambda Expression)
     int x = [vec](int a, int b) {
         return std::accumulate(vec.begin(), vec.end(), 0) * a * b;
     }(1, 1);
@@ -84,13 +83,11 @@ int main() {
 
     // ---------------- SMALL ADDITIONS ----------------
 
-    // generic lambda
     auto add = [](auto a, auto b) {
         return a + b;
     };
     std::cout << "Add 5 + 7 = " << add(5, 7) << '\n';
 
-    // lambda capturing by reference
     int counter = 0;
     auto increment = [&counter]() {
         return ++counter;
@@ -100,7 +97,6 @@ int main() {
               << increment() << " "
               << increment() << '\n';
 
-    // lambda returning another lambda
     auto make_adder = [](int base) {
         return [base](int value) {
             return base + value;
@@ -109,7 +105,6 @@ int main() {
     auto add10 = make_adder(10);
     std::cout << "10 + 5 = " << add10(5) << '\n';
 
-    // transform vector using lambda
     std::vector<int> doubled(vec.size());
     std::transform(vec.begin(), vec.end(), doubled.begin(),
                    [](int n) { return n * 2; });
@@ -119,11 +114,48 @@ int main() {
         std::cout << n << " ";
     std::cout << '\n';
 
-    // constexpr lambda
     constexpr auto square = [](int n) constexpr {
         return n * n;
     };
     std::cout << "Square of 8 = " << square(8) << '\n';
+
+    // -------- NEW FEATURE USAGE --------
+
+    // Mutable vs non-mutable
+    int val = 5;
+    auto non_mut = [val]() {
+        // val++; ❌ not allowed
+        return val;
+    };
+    auto mut = [val]() mutable {
+        val++;
+        return val;
+    };
+    std::cout << "Mutable: " << mut() << ", Non-mutable: " << non_mut() << '\n';
+
+    // Move-only capture (unique_ptr)
+    auto ptr = std::make_unique<int>(100);
+    auto move_lambda = [p = std::move(ptr)]() {
+        return *p;
+    };
+    std::cout << "Move-only capture: " << move_lambda() << '\n';
+
+    // Lambda as comparator
+    std::sort(vec.begin(), vec.end(), [](int a, int b) {
+        return a > b; // descending
+    });
+    std::cout << "Sorted descending: ";
+    for (int n : vec)
+        std::cout << n << " ";
+    std::cout << '\n';
+
+    // Recursive lambda (factorial)
+    auto factorial = [](auto self, int n) -> int {
+        return (n <= 1) ? 1 : n * self(self, n - 1);
+    };
+    std::cout << "Factorial 5 = " << factorial(factorial, 5) << '\n';
+
+    // ----------------------------------
 
     std::cout << "Program finished successfully.\n";
 

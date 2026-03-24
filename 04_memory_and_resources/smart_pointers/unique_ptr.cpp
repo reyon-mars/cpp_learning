@@ -1,6 +1,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <vector>
 
 // ----------------------------------------------------
 // ORIGINAL STRUCT (LOGIC UNCHANGED)
@@ -43,6 +44,20 @@ void take_ownership(std::unique_ptr<User> user) {
     std::cout << "Ownership taken: " << *user << '\n';
 }
 
+// -------- NEW ADDITIONS --------
+
+// Factory function
+std::unique_ptr<User> create_user(std::string name, int age) {
+    return std::make_unique<User>(User{name, age});
+}
+
+// Safe check helper
+bool is_null(const std::unique_ptr<User>& u) {
+    return !u;
+}
+
+// --------------------------------
+
 // ----------------------------------------------------
 // MAIN
 // ----------------------------------------------------
@@ -70,28 +85,58 @@ int main(void) {
     std::cout << "Adult? "
               << (is_adult(*v) ? "Yes\n" : "No\n");
 
-    // Raw pointer access (non-owning)
     User* raw = v.get();
     if (raw)
         std::cout << "Access via raw pointer: "
                   << raw->name << '\n';
 
-    // Transfer ownership to function
     take_ownership(std::move(v));
 
     if (!v)
         std::cout << "v is now nullptr after move\n";
 
-    // Reassign after move
     v = std::make_unique<User>(User{"Nova", 17});
     print_user(v);
 
-    // Release demo
     User* released = v.release();
     if (!v)
         std::cout << "v released ownership\n";
 
-    delete released;  // manual cleanup
+    delete released;
+
+    // -------- NEW FEATURE USAGE --------
+
+    // reset (safe replacement)
+    v = create_user("Alex", 30);
+    print_user(v);
+
+    v.reset(new User{"ResetUser", 40});
+    print_user(v);
+
+    // swap ownership
+    auto v2 = create_user("SwapUser", 25);
+    std::swap(v, v2);
+
+    std::cout << "After swap:\n";
+    print_user(v);
+    print_user(v2);
+
+    // vector of unique_ptr
+    std::vector<std::unique_ptr<User>> users;
+    users.push_back(create_user("A", 10));
+    users.push_back(create_user("B", 20));
+    users.push_back(create_user("C", 30));
+
+    std::cout << "Users in vector:\n";
+    for (const auto& user : users) {
+        print_user(user);
+    }
+
+    // null check helper
+    if (is_null(v2))
+        std::cout << "v2 is null\n";
+
+    // ----------------------------------
 
     return 0;
 }

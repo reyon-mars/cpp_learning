@@ -32,6 +32,27 @@ public:
     bool equals(const T& other) const {
         return data == other;
     }
+
+    // -------- SMALL ADDITIONS --------
+
+    // Print type of stored data
+    void print_type() const {
+        std::cout << "Stored type: " << typeid(T).name() << "\n";
+    }
+
+    // Check if default value
+    bool is_default() const {
+        return data == T{};
+    }
+
+    // Swap contents with another container
+    void swap(Container<T>& other) {
+        T temp = data;
+        data = other.data;
+        other.data = temp;
+    }
+
+    // --------------------------------
 };
 
 // Stream output operator
@@ -65,6 +86,25 @@ int main() {
     if (int_container.equals(42)) {
         std::cout << "int_container equals 42\n";
     }
+
+    // -------- ADDED USAGE --------
+
+    int_container.print_type();
+    string_container.print_type();
+
+    std::cout << "Is string_container default? "
+              << (string_container.is_default() ? "Yes\n" : "No\n");
+
+    Container<int> another_int(10);
+    std::cout << "Before swap: "
+              << int_container << ", " << another_int << "\n";
+
+    int_container.swap(another_int);
+
+    std::cout << "After swap: "
+              << int_container << ", " << another_int << "\n";
+
+    // ----------------------------
 
     return 0;
 }

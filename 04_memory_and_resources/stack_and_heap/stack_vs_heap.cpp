@@ -18,6 +18,35 @@ public:
     }
 };
 
+// ---------------- SMALL ADDITIONS ----------------
+
+// Fill object with values
+void fill_object(LargeObject& obj, int value) {
+    for (int& x : obj.data) {
+        x = value;
+    }
+}
+
+// Calculate sum of elements
+long long sum_object(const LargeObject& obj) {
+    long long sum = 0;
+    for (int x : obj.data) {
+        sum += x;
+    }
+    return sum;
+}
+
+// Print first few elements (preview)
+void print_preview(const LargeObject& obj, int count = 5) {
+    std::cout << "Preview: ";
+    for (int i = 0; i < count; ++i) {
+        std::cout << obj.data[i] << " ";
+    }
+    std::cout << "\n";
+}
+
+// ------------------------------------------------
+
 int main() {
 
     // ---------------------------------------
@@ -34,6 +63,12 @@ int main() {
 
         LargeObject stack_obj;
 
+        // ---- added usage ----
+        fill_object(stack_obj, 1);
+        print_preview(stack_obj);
+        std::cout << "Sum: " << sum_object(stack_obj) << "\n";
+        // ---------------------
+
         auto end = std::chrono::steady_clock::now();
         std::cout << "Stack allocation took: "
                   << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()
@@ -49,6 +84,12 @@ int main() {
         auto start = std::chrono::steady_clock::now();
 
         LargeObject* heap_obj = new LargeObject();
+
+        // ---- added usage ----
+        fill_object(*heap_obj, 2);
+        print_preview(*heap_obj);
+        std::cout << "Sum: " << sum_object(*heap_obj) << "\n";
+        // ---------------------
 
         auto end = std::chrono::steady_clock::now();
         std::cout << "Heap allocation took: "
@@ -69,6 +110,12 @@ int main() {
     {
         auto smart_ptr = std::make_unique<LargeObject>();
         std::cout << "Smart pointer managing object\n";
+
+        // ---- added usage ----
+        fill_object(*smart_ptr, 3);
+        print_preview(*smart_ptr);
+        std::cout << "Sum: " << sum_object(*smart_ptr) << "\n";
+        // ---------------------
 
         smart_ptr.reset();  // explicitly destroy early
         std::cout << "Smart pointer reset\n";

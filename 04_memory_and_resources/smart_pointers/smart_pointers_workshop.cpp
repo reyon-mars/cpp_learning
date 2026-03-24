@@ -10,24 +10,44 @@ public:
     ~Widget() { std::cout << "Widget destroyed\n"; }
 };
 
+// -------- NEW ADDITIONS --------
+
+// Circular reference demo (problem)
+struct NodeBad {
+    std::shared_ptr<NodeBad> next;
+    ~NodeBad() { std::cout << "NodeBad destroyed\n"; }
+};
+
+// Fixed using weak_ptr
+struct NodeGood {
+    std::weak_ptr<NodeGood> next;
+    ~NodeGood() { std::cout << "NodeGood destroyed\n"; }
+};
+
+// --------------------------------
+
 int main() {
 
     // unique_ptr: exclusive ownership
     {
         std::unique_ptr<Widget> ptr1 = std::make_unique<Widget>();
 
-        // std::unique_ptr<Widget> ptr2 = ptr1;  // Error: cannot copy
-        std::unique_ptr<Widget> ptr2 = std::move(ptr1);  // OK: move
+        std::unique_ptr<Widget> ptr2 = std::move(ptr1);
 
         // release demo
-        Widget* raw = ptr2.release();  // ownership released
+        Widget* raw = ptr2.release();
         std::cout << "Released ownership\n";
-        delete raw;  // manual delete required
+        delete raw;
 
         // reset demo
         ptr2 = std::make_unique<Widget>();
-        ptr2.reset();  // destroys managed object
-    }  // Automatic cleanup (if owning something)
+        ptr2.reset();
+
+        // -------- NEW USAGE --------
+        ptr2 = std::make_unique<Widget>();
+        std::cout << "Raw pointer access: " << ptr2.get() << "\n";
+        // --------------------------------
+    }
 
     std::cout << "----------------------\n";
 
@@ -36,7 +56,7 @@ int main() {
         std::shared_ptr<Widget> ptr1 = std::make_shared<Widget>();
         std::cout << "Ref count: " << ptr1.use_count() << "\n";
 
-        std::shared_ptr<Widget> ptr2 = ptr1;  // shared ownership
+        std::shared_ptr<Widget> ptr2 = ptr1;
         std::cout << "Ref count after copy: " << ptr1.use_count() << "\n";
 
         {
@@ -51,7 +71,13 @@ int main() {
         ptr2.reset();
         std::cout << "Ref count after reset: "
                   << ptr1.use_count() << "\n";
-    }  // destroyed when last shared_ptr goes out of scope
+
+        // -------- NEW USAGE --------
+        std::shared_ptr<Widget> ptr_new(new Widget());
+        std::cout << "Using new (not recommended) count: "
+                  << ptr_new.use_count() << "\n";
+        // --------------------------------
+    }
 
     std::cout << "----------------------\n";
 
@@ -66,7 +92,7 @@ int main() {
             std::cout << "Weak_ptr locked successfully\n";
         }
 
-        sp.reset();  // destroy object
+        sp.reset();
 
         if (wp.expired()) {
             std::cout << "Weak_ptr expired\n";
@@ -84,6 +110,43 @@ int main() {
                 delete w;
             }
         );
+    }
+
+    std::cout << "----------------------\n";
+
+    // -------- NEW FEATURE: Circular reference problem --------
+    {
+        auto n1 = std::make_shared<NodeBad>();
+        auto n2 = std::make_shared<NodeBad>();
+
+        n1->next = n2;
+        n2->next = n1;
+
+        std::cout << "NodeBad circular reference created\n";
+    } // ❌ memory leak (destructors NOT called)
+
+    std::cout << "----------------------\n";
+
+    // -------- FIX using weak_ptr --------
+    {
+        auto n1 = std::make_shared<NodeGood>();
+        auto n2 = std::make_shared<NodeGood>();
+
+        n1->next = n2;
+        n2->next = n1;
+
+        std::cout << "NodeGood with weak_ptr\n";
+    } // ✅ properly destroyed
+
+    std::cout << "----------------------\n";
+
+    // -------- ADVANCED: aliasing constructor --------
+    {
+        auto sp = std::make_shared<Widget>();
+        std::shared_ptr<Widget> alias(sp, sp.get());
+
+        std::cout << "Aliasing shared_ptr count: "
+                  << sp.use_count() << "\n";
     }
 
     return 0;

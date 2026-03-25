@@ -56,9 +56,37 @@ void process_v2(T value) {
     std::cout << "Process v2: " << value << "\n";
 }
 
-// ----------------------------------
+// ---------------- SMALL ADDITIONS ----------------
+
+// Fallback overload (when none of the above match)
+template<typename T>
+std::enable_if_t<!std::is_arithmetic_v<T> && !std::is_pointer_v<T>>
+process_generic(const T&) {
+    std::cout << "Processing generic type\n";
+}
+
+// Check type category helper
+template<typename T>
+void print_type_info() {
+    std::cout << "Is integral: " << std::is_integral_v<T> << "\n";
+    std::cout << "Is floating: " << std::is_floating_point_v<T> << "\n";
+    std::cout << "Is pointer: " << std::is_pointer_v<T> << "\n";
+}
+
+// Safe wrapper that tries different overloads
+template<typename T>
+void safe_process(T value) {
+    if constexpr (std::is_integral_v<T>)
+        process(value);
+    else if constexpr (std::is_floating_point_v<T>)
+        process(value);
+    else
+        process_generic(value);
+}
+
+// ------------------------------------------------
 // Main
-// ----------------------------------
+// ------------------------------------------------
 int main() {
 
     process(42);
@@ -72,6 +100,19 @@ int main() {
 
     process_v2(100);
     process_v2(2.71);
+
+    // -------- Added usage --------
+    std::cout << "\n--- Extra Tests ---\n";
+
+    safe_process(50);          // integral
+    safe_process(5.5);         // floating
+    safe_process(std::string("hello")); // generic
+
+    print_type_info<int>();
+    print_type_info<double>();
+    print_type_info<int*>();
+
+    // ----------------------------
 
     return 0;
 }

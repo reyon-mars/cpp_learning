@@ -57,7 +57,39 @@ public:
     T square(T value) const {
         return value * value;
     }
+
+    // -------- SMALL ADDITIONS --------
+
+    T cube(T value) const {
+        return value * value * value;
+    }
+
+    bool is_positive(T value) const {
+        return value > 0;
+    }
+
+    // --------------------------------
 };
+
+// -----------------------------
+// EXTRA UTILITIES (SMALL)
+// -----------------------------
+
+// Print only if Printable
+template<Printable T>
+void print_value(const T& value) {
+    std::cout << "Printable value: " << value << "\n";
+}
+
+// Sum all elements of a container
+template<Container C>
+auto sum_container(const C& cont) {
+    using T = typename C::value_type;
+    T sum{};
+    for (const auto& v : cont)
+        sum += v;
+    return sum;
+}
 
 // -----------------------------
 // Main
@@ -77,6 +109,23 @@ int main() {
 
     Calculator<int> calc;
     std::cout << "Square: " << calc.square(7) << "\n";
+
+    // -------- ADDED USAGE --------
+
+    std::cout << "Cube: " << calc.cube(3) << "\n";
+    std::cout << "Is positive? "
+              << (calc.is_positive(7) ? "Yes\n" : "No\n");
+
+    print_value(123);
+    print_value(3.14);
+
+    std::cout << "Sum of vector: "
+              << sum_container(vec) << "\n";
+
+    std::cout << "Sum of list: "
+              << sum_container(lst) << "\n";
+
+    // ----------------------------
 
     return 0;
 }

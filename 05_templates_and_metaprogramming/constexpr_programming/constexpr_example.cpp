@@ -2,6 +2,7 @@
 // Compile-time computation and evaluation
 
 #include <iostream>
+#include <type_traits>
 
 // -----------------------------------
 // Recursive constexpr
@@ -48,6 +49,21 @@ public:
     constexpr int get(int index) const {
         return data[index];
     }
+
+    // -------- SMALL ADDITIONS --------
+
+    constexpr int size() const {
+        return 10;
+    }
+
+    constexpr int sum() const {
+        int s = 0;
+        for (int i = 0; i < 10; ++i)
+            s += data[i];
+        return s;
+    }
+
+    // --------------------------------
 };
 
 // -----------------------------------
@@ -59,6 +75,23 @@ constexpr T add(T a, T b) {
         return a + b;
     else
         return a + b + static_cast<T>(0.0);
+}
+
+// -----------------------------------
+// EXTRA CONSTEXPR UTILITIES
+// -----------------------------------
+
+// Check even number at compile-time
+constexpr bool is_even(int x) {
+    return x % 2 == 0;
+}
+
+// Power function (constexpr)
+constexpr int power(int base, int exp) {
+    int result = 1;
+    for (int i = 0; i < exp; ++i)
+        result *= base;
+    return result;
 }
 
 // -----------------------------------
@@ -88,12 +121,28 @@ int main() {
     constexpr ConstexprArray arr{};
     ConstexprArray runtime_arr;
     runtime_arr.set(0, 42);
+
     std::cout << "Runtime array[0] = "
               << runtime_arr.get(0) << "\n";
+
+    std::cout << "Runtime array sum = "
+              << runtime_arr.sum() << "\n";
 
     // if constexpr demo
     std::cout << "Add int: " << add(3, 4) << "\n";
     std::cout << "Add double: " << add(1.5, 2.5) << "\n";
+
+    // -------- ADDED USAGE --------
+
+    constexpr int pow_val = power(2, 5);
+    static_assert(pow_val == 32, "Power incorrect!");
+
+    std::cout << "2^5 = " << pow_val << "\n";
+
+    std::cout << "Is 10 even? "
+              << (is_even(10) ? "Yes\n" : "No\n");
+
+    // ----------------------------
 
     return 0;
 }

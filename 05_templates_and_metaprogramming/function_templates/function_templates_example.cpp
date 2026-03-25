@@ -42,7 +42,6 @@ void print_constant() {
 
 // ----------------------------------
 // Helper struct for partial specialization
-// (Function templates cannot be partially specialized)
 // ----------------------------------
 template<typename T>
 struct Printer {
@@ -57,6 +56,33 @@ struct Printer<T*> {
         std::cout << "Pointer address: " << value << "\n";
     }
 };
+
+// -------- SMALL ADDITIONS --------
+
+// Overload for arrays
+template<typename T, size_t N>
+void print(const T (&arr)[N]) {
+    std::cout << "Array: ";
+    for (size_t i = 0; i < N; ++i)
+        std::cout << arr[i] << " ";
+    std::cout << "\n";
+}
+
+// Special handling for bool
+template<>
+void print<bool>(const bool& value) {
+    std::cout << "Boolean: " << (value ? "true" : "false") << "\n";
+}
+
+// Printer specialization for const pointers
+template<typename T>
+struct Printer<const T*> {
+    static void print_value(const T* value) {
+        std::cout << "Const pointer address: " << value << "\n";
+    }
+}
+
+// ---------------------------------
 
 // Explicit instantiation
 template void print<int>(const int&);
@@ -73,6 +99,19 @@ int main() {
     int x = 5;
     Printer<int>::print_value(x);
     Printer<int*>::print_value(&x);
+
+    // -------- ADDED USAGE --------
+
+    bool flag = true;
+    print(flag);
+
+    int arr[5] = {1, 2, 3, 4, 5};
+    print(arr);
+
+    const int* cptr = &x;
+    Printer<const int*>::print_value(cptr);
+
+    // ----------------------------
 
     return 0;
 }

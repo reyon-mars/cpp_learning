@@ -68,9 +68,34 @@ struct traits<std::vector<int>> {
     }
 };
 
-// ----------------------------------
+// ---------------- SMALL ADDITIONS ----------------
+
+// Helper function to print trait name
+template<typename T>
+void print_trait_name() {
+    std::cout << "Trait name: " << traits<T>::name << "\n";
+}
+
+// Test wrapper
+template<typename T>
+void test_traits() {
+    traits<T>::print();
+    print_trait_name<T>();
+    std::cout << "------------------\n";
+}
+
+// Additional specialization (reference types)
+template<typename T>
+struct traits<T&> {
+    static constexpr const char* name = "reference";
+    static void print() {
+        std::cout << "Specialized for reference types\n";
+    }
+};
+
+// ------------------------------------------------
 // Main
-// ----------------------------------
+// ------------------------------------------------
 int main() {
 
     traits<double>::print();
@@ -79,6 +104,18 @@ int main() {
     traits<const float>::print();
     traits<std::vector<double>>::print();
     traits<std::vector<int>>::print();
+
+    // -------- Added usage --------
+    std::cout << "\n--- Extra Tests ---\n";
+
+    test_traits<int>();
+    test_traits<double*>();
+    test_traits<const int>();
+    test_traits<std::vector<float>>();
+    test_traits<std::vector<int>>();
+    test_traits<int&>();
+
+    // ----------------------------
 
     return 0;
 }

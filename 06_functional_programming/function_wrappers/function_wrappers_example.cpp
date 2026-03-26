@@ -83,5 +83,49 @@ int main() {
         cb();
     }
 
+    // ---------------- SMALL ADDITIONS ----------------
+
+    std::cout << "\n--- Extra Tests ---\n";
+
+    // Store lambda returning different computation
+    std::function<int(int)> square = [](int x) { return x * x; };
+    std::cout << "Square(6): " << square(6) << "\n";
+
+    // Using std::function with capturing lambda
+    int base = 5;
+    std::function<int(int)> add_base = [base](int x) {
+        return x + base;
+    };
+    std::cout << "Add base (5 + 10): " << add_base(10) << "\n";
+
+    // Function wrapper reassignment
+    std::function<void()> printer = []() {
+        std::cout << "First function\n";
+    };
+    printer();
+
+    printer = []() {
+        std::cout << "Reassigned function\n";
+    };
+    printer();
+
+    // Store multiple callables with arguments
+    std::vector<std::function<int(int)>> operations;
+    operations.push_back([](int x){ return x + 1; });
+    operations.push_back([](int x){ return x * 2; });
+    operations.push_back([](int x){ return x - 3; });
+
+    std::cout << "Operations on 10:\n";
+    for (auto& op : operations) {
+        std::cout << op(10) << " ";
+    }
+    std::cout << "\n";
+
+    // Using std::invoke with member function pointer directly
+    std::cout << "Invoke member directly: "
+              << std::invoke(&Calculator::increment, calc, 25) << "\n";
+
+    // ------------------------------------------------
+
     return 0;
 }

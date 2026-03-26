@@ -43,6 +43,24 @@ std::function<int(int)> make_multiplier(int factor) {
     };
 }
 
+// 🔹 NEW: Higher-order filter function
+template<typename Pred>
+std::vector<int> filter(const std::vector<int>& values, Pred p) {
+    std::vector<int> result;
+    for (int v : values) {
+        if (p(v)) result.push_back(v);
+    }
+    return result;
+}
+
+// 🔹 NEW: Apply function to each element
+template<typename Func>
+void for_each_apply(std::vector<int>& values, Func f) {
+    for (auto& v : values) {
+        v = f(v);
+    }
+}
+
 // ----------------------------------
 // Main
 // ----------------------------------
@@ -88,6 +106,26 @@ int main() {
     for (int v : doubled)
         std::cout << v << " ";
     std::cout << "\n";
+
+    // 🔹 NEW: filter even numbers
+    auto evens = filter(values, [](int x) { return x % 2 == 0; });
+    std::cout << "Even values: ";
+    for (int v : evens)
+        std::cout << v << " ";
+    std::cout << "\n";
+
+    // 🔹 NEW: apply function to modify values
+    for_each_apply(values, [](int x) { return x * x; });
+    std::cout << "Squared values: ";
+    for (int v : values)
+        std::cout << v << " ";
+    std::cout << "\n";
+
+    // 🔹 NEW: compose operations (chaining)
+    int custom = reduce(values, [](int a, int b) {
+        return a + b * 2;
+    });
+    std::cout << "Custom reduce result: " << custom << "\n";
 
     return 0;
 }

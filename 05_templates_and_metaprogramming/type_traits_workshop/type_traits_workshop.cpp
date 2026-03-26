@@ -42,9 +42,40 @@ void analyze_type() {
     }
 }
 
-// ----------------------------------
+// ---------------- SMALL ADDITIONS ----------------
+
+// Remove const/reference helper demo
+template<typename T>
+void analyze_decay() {
+    using Decayed = std::decay_t<T>;
+    std::cout << "Decayed type info:\n";
+    std::cout << "  is_same<T, decay_t<T>>: "
+              << std::is_same_v<T, Decayed> << "\n";
+}
+
+// Pointer depth checker
+template<typename T>
+struct pointer_depth : std::integral_constant<int, 0> {};
+
+template<typename T>
+struct pointer_depth<T*> : std::integral_constant<int, 1 + pointer_depth<T>::value> {};
+
+// Print pointer depth
+template<typename T>
+void print_pointer_depth() {
+    std::cout << "Pointer depth: " << pointer_depth<T>::value << "\n";
+}
+
+// Enable_if usage example
+template<typename T>
+std::enable_if_t<std::is_integral_v<T>, void>
+only_integral(T value) {
+    std::cout << "Integral-only function: " << value << "\n";
+}
+
+// ------------------------------------------------
 // Main
-// ----------------------------------
+// ------------------------------------------------
 int main() {
 
     static_assert(std::is_same_v<int, int>);
@@ -61,6 +92,20 @@ int main() {
 
     std::cout << "\nAnalyzing std::string:\n";
     analyze_type<std::string>();
+
+    // -------- Added usage --------
+    std::cout << "\n--- Extra Tests ---\n";
+
+    analyze_decay<const int&>();
+
+    print_pointer_depth<int>();
+    print_pointer_depth<int*>();
+    print_pointer_depth<int**>();
+
+    only_integral(100);
+    // only_integral(3.14); // would fail at compile-time
+
+    // ----------------------------
 
     return 0;
 }

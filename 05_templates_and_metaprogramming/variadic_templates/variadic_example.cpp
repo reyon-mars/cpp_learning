@@ -58,9 +58,37 @@ void print_forward(Args&&... args) {
     (std::cout << ... << args) << "\n";  // Fold over <<
 }
 
-// ----------------------------------
+// ---------------- SMALL ADDITIONS ----------------
+
+// Count number of arguments
+template<typename... Args>
+constexpr std::size_t count_args(Args...) {
+    return sizeof...(Args);
+}
+
+// Check if all arguments are same type
+template<typename T, typename... Args>
+constexpr bool all_same() {
+    return (std::is_same_v<T, Args> && ...);
+}
+
+// Multiply using fold expression
+template<typename... Args>
+auto multiply(Args... args) {
+    static_assert((std::is_arithmetic_v<Args> && ...),
+                  "All arguments must be arithmetic");
+    return (args * ...);
+}
+
+// Print each argument on new line using fold
+template<typename... Args>
+void print_lines(Args&&... args) {
+    ((std::cout << args << "\n"), ...);
+}
+
+// ------------------------------------------------
 // Main
-// ----------------------------------
+// ------------------------------------------------
 int main() {
 
     print_all(1, 2.5, "hello", 3, 4);
@@ -74,6 +102,26 @@ int main() {
     std::cout << "Average: " << average(2, 4, 6, 8) << "\n";
 
     print_forward("Forwarded: ", 42, " ", 3.14);
+
+    // -------- Added usage --------
+    std::cout << "\n--- Extra Tests ---\n";
+
+    std::cout << "Count args: "
+              << count_args(1, 2, 3, 4, 5) << "\n";
+
+    std::cout << "All same (int,int,int): "
+              << all_same<int, int, int, int>() << "\n";
+
+    std::cout << "All same (int,double): "
+              << all_same<int, double>() << "\n";
+
+    std::cout << "Multiply: "
+              << multiply(2, 3, 4) << "\n";
+
+    std::cout << "\nPrint lines:\n";
+    print_lines("Line 1", 123, 4.56);
+
+    // ----------------------------
 
     return 0;
 }

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <numeric>   // 🔹 added
 
 // ----------------------------------
 // Simple Functor
@@ -63,6 +64,14 @@ public:
     }
 };
 
+// 🔹 NEW: Functor for summing values
+class Sum {
+public:
+    int operator()(int a, int b) const {
+        return a + b;
+    }
+};
+
 // ----------------------------------
 // Main
 // ----------------------------------
@@ -116,6 +125,22 @@ int main() {
     std::for_each(values.begin(),
                   values.end(),
                   [&](int) { algoCounter(); });
+
+    // 🔹 NEW: accumulate using functor
+    int total = std::accumulate(values.begin(), values.end(), 0, Sum());
+    std::cout << "\nTotal sum: " << total << "\n";
+
+    // 🔹 NEW: count elements using predicate
+    int count_gt_12 = std::count_if(values.begin(), values.end(), GreaterThan(12));
+    std::cout << "Count > 12: " << count_gt_12 << "\n";
+
+    // 🔹 NEW: apply multiplier using lambda wrapper
+    std::cout << "\n--- Applying multiplier to all ---\n";
+    std::for_each(values.begin(), values.end(),
+                  [&](int v) {
+                      std::cout << mult(v) << " ";
+                  });
+    std::cout << "\n";
 
     return 0;
 }

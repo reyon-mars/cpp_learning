@@ -14,6 +14,28 @@ int heavy_computation(int n) {
     return sum;
 }
 
+// ---------------- SMALL ADDITIONS ----------------
+
+// Delayed computation
+int delayed_task(int n) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    return heavy_computation(n);
+}
+
+// Safe async wrapper
+std::future<int> safe_async_call(int n) {
+    return std::async(std::launch::async, [n]() {
+        try {
+            return heavy_computation(n);
+        } catch (...) {
+            std::cout << "Exception in async task\n";
+            return -1;
+        }
+    });
+}
+
+// ---------------- MAIN ----------------
+
 int main() {
 
     // Using std::async
@@ -58,6 +80,28 @@ int main() {
 
     std::cout << "Lambda async result: " << future4.get() << "\n";
 
+
+    // ---------------- ADDED USAGE ----------------
+
+    // Delayed async task
+    auto future5 = std::async(std::launch::async, delayed_task, 300);
+    std::cout << "Delayed task result: " << future5.get() << "\n";
+
+    // Safe async wrapper demo
+    auto future6 = safe_async_call(400);
+    std::cout << "Safe async result: " << future6.get() << "\n";
+
+    // Multiple async tasks in loop
+    std::vector<std::future<int>> futures;
+    for (int i = 1; i <= 3; ++i) {
+        futures.push_back(std::async(std::launch::async, heavy_computation, i * 100));
+    }
+
+    std::cout << "Batch async results: ";
+    for (auto& f : futures) {
+        std::cout << f.get() << " ";
+    }
+    std::cout << "\n";
 
     return 0;
 }

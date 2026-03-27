@@ -47,6 +47,31 @@ void maybe_throws() noexcept(false) {
     throwing_function();
 }
 
+// ---------------- SMALL ADDITIONS ----------------
+
+// Safe wrapper that never throws
+void safe_call() noexcept {
+    try {
+        maybe_throws();
+    } catch (...) {
+        std::cout << "Exception handled inside safe_call\n";
+    }
+}
+
+// Helper to test noexcept at compile-time
+template<typename T>
+void check_noexcept() {
+    std::cout << "Is T move construct noexcept? "
+              << std::is_nothrow_move_constructible_v<T>
+              << "\n";
+}
+
+// Simple factory function (may or may not throw)
+Widget create_widget(int val) noexcept {
+    return Widget(val);
+}
+
+// ---------------- MAIN ----------------
 int main() {
 
     std::vector<Widget> vec;
@@ -63,6 +88,22 @@ int main() {
     // Demonstrate noexcept operator
     std::cout << "Is Widget move constructor noexcept? "
               << noexcept(Widget(std::move(w1))) << "\n";
+
+    // ---------------- ADDED USAGE ----------------
+
+    // Check noexcept trait
+    check_noexcept<Widget>();
+
+    // Using noexcept function
+    Widget w3 = create_widget(77);
+    std::cout << "Created widget value: " << w3.get() << "\n";
+
+    // Safe wrapper demo
+    safe_call();
+
+    // Test process()
+    w3.process(999);
+    std::cout << "Processed value: " << w3.get() << "\n";
 
     // Exception example
     try {

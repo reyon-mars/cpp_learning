@@ -51,6 +51,30 @@ public:
         }
         std::cout << "\n";
     }
+
+    // 🔹 NEW: safe access with exception
+    int at(std::size_t index) const {
+        if (index >= data.size()) {
+            throw std::out_of_range("Index out of range");
+        }
+        return data[index];
+    }
+
+    // 🔹 NEW: strong guarantee insert at front
+    void push_front_strong(int value) {
+        std::vector<int> temp = data;
+        try {
+            temp.insert(temp.begin(), value);
+            data = std::move(temp);
+        } catch (...) {
+            throw;
+        }
+    }
+
+    // 🔹 NEW: no-throw swap
+    void swap(SafeVector& other) noexcept {
+        data.swap(other.data);
+    }
 };
 
 int main() {
@@ -68,8 +92,33 @@ int main() {
 
     std::cout << "Vector size: " << sv.size() << "\n";
 
+    // 🔹 NEW: reserve demo
+    sv.reserve(10);
+    std::cout << "Reserved capacity for 10 elements\n";
+
+    // 🔹 NEW: push front strong guarantee
+    sv.push_front_strong(0);
+    sv.print();
+
+    // 🔹 NEW: safe access demo
+    try {
+        std::cout << "Element at index 2: " << sv.at(2) << "\n";
+        std::cout << "Access invalid index:\n";
+        std::cout << sv.at(100) << "\n";  // will throw
+    } catch (const std::exception& e) {
+        std::cout << "Caught exception: " << e.what() << "\n";
+    }
+
     std::cout << "Clearing vector (noexcept):\n";
     sv.clear();
+    sv.print();
+
+    // 🔹 NEW: swap demo
+    SafeVector other;
+    other.add_element_basic(99);
+    sv.swap(other);
+
+    std::cout << "After swap, sv contains:\n";
     sv.print();
 
     return 0;

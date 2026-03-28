@@ -7,6 +7,22 @@
 #include <execution>
 #include <numeric>
 
+// ---------------- SMALL ADDITIONS ----------------
+
+// Check if all elements satisfy condition (parallel)
+bool all_positive(const std::vector<int>& v) {
+    return std::all_of(std::execution::par, v.begin(), v.end(),
+                       [](int x) { return x > 0; });
+}
+
+// Count even numbers (parallel)
+int count_even(const std::vector<int>& v) {
+    return std::count_if(std::execution::par, v.begin(), v.end(),
+                         [](int x) { return x % 2 == 0; });
+}
+
+// ---------------- MAIN ----------------
+
 int main() {
     std::vector<int> data(1000);
     std::iota(data.begin(), data.end(), 1);
@@ -61,6 +77,36 @@ int main() {
     std::cout << "Sorted values: ";
     for (int v : unsorted) {
         std::cout << v << " ";
+    }
+    std::cout << "\n";
+
+
+    // ---------------- ADDED USAGE ----------------
+
+    // Check all positive
+    std::cout << "All elements positive? "
+              << (all_positive(data) ? "Yes" : "No") << "\n";
+
+    // Count even numbers
+    std::cout << "Even numbers count: "
+              << count_even(data) << "\n";
+
+    // Parallel min/max
+    auto minmax = std::minmax_element(std::execution::par,
+                                     data.begin(), data.end());
+
+    std::cout << "Min: " << *minmax.first
+              << ", Max: " << *minmax.second << "\n";
+
+    // Parallel copy
+    std::vector<int> copied(data.size());
+    std::copy(std::execution::par,
+              data.begin(), data.end(),
+              copied.begin());
+
+    std::cout << "First 5 copied values: ";
+    for (int i = 0; i < 5; ++i) {
+        std::cout << copied[i] << " ";
     }
     std::cout << "\n";
 

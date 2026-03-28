@@ -5,10 +5,13 @@
 #include <thread>
 #include <mutex>
 #include <vector>
+#include <chrono>
 
 std::mutex mtx;
 std::mutex mtx2;
 int shared_data = 0;
+
+// ---------------- ORIGINAL FUNCTIONS ----------------
 
 void increment_safe() {
     std::lock_guard<std::mutex> lock(mtx);
@@ -40,6 +43,36 @@ void safe_dual_lock() {
     shared_data += 20;
 }
 
+// ---------------- SMALL ADDITIONS ----------------
+
+// Timed mutex attempt
+void timed_try_increment() {
+    if (mtx.try_lock_for(std::chrono::milliseconds(10))) {
+        shared_data += 15;
+        std::cout << "timed lock succeeded\n";
+        mtx.unlock();
+    } else {
+        std::cout << "timed lock failed\n";
+    }
+}
+
+// RAII-style manual lock/unlock demo
+void manual_lock_demo() {
+    mtx.lock();
+    shared_data += 5;
+    std::cout << "manual lock used\n";
+    mtx.unlock();
+}
+
+// Thread-safe print helper
+std::mutex cout_mtx;
+void safe_print(const std::string& msg) {
+    std::lock_guard<std::mutex> lock(cout_mtx);
+    std::cout << msg << "\n";
+}
+
+// ---------------- MAIN ----------------
+
 int main() {
 
     std::vector<std::thread> threads;
@@ -57,6 +90,15 @@ int main() {
 
     // scoped_lock thread
     threads.emplace_back(safe_dual_lock);
+
+    // ---------------- ADDED THREADS ----------------
+    threads.emplace_back(timed_try_increment);
+    threads.emplace_back(manual_lock_demo);
+
+    // Safe print demo
+    threads.emplace_back([]() {
+        safe_print("Thread-safe printing example");
+    });
 
     for (auto& t : threads) {
         t.join();

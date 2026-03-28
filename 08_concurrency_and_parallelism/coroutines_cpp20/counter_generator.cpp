@@ -3,6 +3,9 @@
 #include <exception>
 #include <optional>
 #include <print>
+#include <vector>
+
+// ---------------- ORIGINAL CODE ----------------
 
 template <typename T>
 class generator
@@ -92,6 +95,8 @@ public:
 	}
 };
 
+// ---------------- ORIGINAL GENERATOR ----------------
+
 generator<int> counter()
 {
 	for (int i = 0; i < 10; i++)
@@ -99,6 +104,31 @@ generator<int> counter()
 		co_yield i;
 	}
 }
+
+// ---------------- SMALL ADDITIONS ----------------
+
+// Another generator (squares)
+generator<int> squares(int n)
+{
+	for (int i = 1; i <= n; ++i)
+	{
+		co_yield i * i;
+	}
+}
+
+// Collect generator values into vector
+template<typename T>
+std::vector<T> collect(generator<T>& gen)
+{
+	std::vector<T> result;
+	while (gen.resume())
+	{
+		result.push_back(gen.value());
+	}
+	return result;
+}
+
+// ---------------- MAIN ----------------
 
 auto main()->int
 {
@@ -109,6 +139,33 @@ auto main()->int
 
 	gen.resume();
 	std::println( "The new Current value is {}", gen.value());
+
+
+	// ---------------- ADDED USAGE ----------------
+
+	std::println("\nIterating remaining values:");
+	while (gen.resume())
+	{
+		std::println("Next: {}", gen.value());
+	}
+
+	// Squares generator demo
+	auto sq = squares(5);
+	std::println("\nSquares:");
+	while (sq.resume())
+	{
+		std::println("Square: {}", sq.value());
+	}
+
+	// Collect demo
+	auto gen2 = counter();
+	auto values = collect(gen2);
+
+	std::println("\nCollected values:");
+	for (auto v : values)
+	{
+		std::println("{}", v);
+	}
 
 	return EXIT_SUCCESS;
 }

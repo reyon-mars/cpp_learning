@@ -80,7 +80,28 @@ SimpleCoroutine suspended_example()
 	co_return 100;
 }
 
-// Main
+// ---------------- SMALL ADDITIONS ----------------
+
+// Multiple suspension example
+SimpleCoroutine multi_suspend()
+{
+	std::cout << "Step 1\n";
+	co_await std::suspend_always{};
+
+	std::cout << "Step 2\n";
+	co_await std::suspend_always{};
+
+	std::cout << "Step 3\n";
+	co_return 300;
+}
+
+// Coroutine demonstrating immediate execution
+SimpleCoroutine quick_task()
+{
+	co_return 7 * 6;
+}
+
+// ---------------- MAIN ----------------
 int main()
 {
 
@@ -96,6 +117,27 @@ int main()
 	coro2.resume();
 
 	std::cout << "Returned value: " << coro2.get() << "\n";
+
+
+	// ---------------- ADDED USAGE ----------------
+
+	std::cout << "\nMultiple suspension demo\n";
+	auto coro3 = multi_suspend();
+
+	std::cout << "Resume 1\n";
+	coro3.resume();
+
+	std::cout << "Resume 2\n";
+	coro3.resume();
+
+	std::cout << "Resume 3\n";
+	coro3.resume();
+
+	std::cout << "Final value: " << coro3.get() << "\n";
+
+	// Quick coroutine
+	auto coro4 = quick_task();
+	std::cout << "Quick task result: " << coro4.get() << "\n";
 
 	return 0;
 }

@@ -7,10 +7,32 @@
 #include <chrono>
 #include <stdexcept>
 
+// ---------------- ORIGINAL FUNCTION ----------------
+
 int calculate_sum(int a, int b) {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     return a + b;
 }
+
+// ---------------- SMALL ADDITIONS ----------------
+
+// Function that may throw
+int risky_division(int a, int b) {
+    if (b == 0)
+        throw std::runtime_error("Division by zero");
+    return a / b;
+}
+
+// Helper to run async task with promise
+void async_task(std::promise<int> p, int a, int b) {
+    try {
+        p.set_value(calculate_sum(a, b));
+    } catch (...) {
+        p.set_exception(std::current_exception());
+    }
+}
+
+// ---------------- MAIN ----------------
 
 int main() {
 
@@ -59,6 +81,38 @@ int main() {
     producer.join();
     consumer1.join();
     consumer2.join();
+
+
+    // ---------------- ADDED USAGE ----------------
+
+    // Using helper async_task
+    std::promise<int> promise3;
+    std::future<int> future3 = promise3.get_future();
+    std::thread t2(async_task, std::move(promise3), 5, 15);
+
+    std::cout << "Async task result: " << future3.get() << "\n";
+    t2.join();
+
+    // Exception propagation demo
+    std::promise<int> promise4;
+    std::future<int> future4 = promise4.get_future();
+
+    std::thread t3([&promise4]() {
+        try {
+            promise4.set_value(risky_division(10, 0));
+        } catch (...) {
+            promise4.set_exception(std::current_exception());
+        }
+    });
+
+    try {
+        std::cout << "Risky result: " << future4.get() << "\n";
+    } catch (const std::exception& e) {
+        std::cout << "Caught exception from thread: "
+                  << e.what() << "\n";
+    }
+
+    t3.join();
 
     return 0;
 }

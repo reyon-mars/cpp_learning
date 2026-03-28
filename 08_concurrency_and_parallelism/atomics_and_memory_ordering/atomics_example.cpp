@@ -40,6 +40,31 @@ void protected_increment() {
     unlock();
 }
 
+// ---------------- SMALL ADDITIONS ----------------
+
+// Demonstrate sequential consistency
+void seq_cst_increment() {
+    counter.fetch_add(1, std::memory_order_seq_cst);
+}
+
+// Demonstrate acquire-release pair
+std::atomic<int> shared_data(0);
+
+void producer() {
+    shared_data.store(42, std::memory_order_release);
+    ready.store(true, std::memory_order_release);
+}
+
+void consumer() {
+    while (!ready.load(std::memory_order_acquire)) {
+        std::this_thread::yield();
+    }
+    std::cout << "Consumer sees value: "
+              << shared_data.load(std::memory_order_acquire) << "\n";
+}
+
+// ---------------- MAIN ----------------
+
 int main() {
 
     std::thread t1(worker);
@@ -84,6 +109,23 @@ int main() {
 
     std::cout << "Counter after spinlock increments: "
               << counter.load() << "\n";
+
+
+    // ---------------- ADDED USAGE ----------------
+
+    // Sequential consistency demo
+    seq_cst_increment();
+    std::cout << "Counter after seq_cst increment: "
+              << counter.load() << "\n";
+
+    // Producer-consumer demo
+    ready.store(false);  // reset flag
+
+    std::thread prod(producer);
+    std::thread cons(consumer);
+
+    prod.join();
+    cons.join();
 
     return 0;
 }

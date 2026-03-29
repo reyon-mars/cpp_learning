@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <numeric>
 
 int main() {
     std::vector<int> vec = {1, 2, 3, 4, 5, 3, 2, 1};
@@ -44,6 +45,38 @@ int main() {
     // none_of
     bool noneNegative = std::none_of(vec.begin(), vec.end(), [](int x) { return x < 0; });
     std::cout << "No negative numbers: " << (noneNegative ? "Yes" : "No") << "\n";
-    
+
+    // ---------------- SMALL ADDITIONS ----------------
+
+    // count_if
+    int even_count = std::count_if(vec.begin(), vec.end(),
+                                  [](int x) { return x % 2 == 0; });
+    std::cout << "Even numbers count: " << even_count << "\n";
+
+    // find_if_not
+    auto not_positive = std::find_if_not(vec.begin(), vec.end(),
+                                        [](int x) { return x > 0; });
+    if (not_positive == vec.end()) {
+        std::cout << "All elements are positive (find_if_not check)\n";
+    }
+
+    // equal (compare with another vector)
+    std::vector<int> vec2 = vec;
+    bool is_equal = std::equal(vec.begin(), vec.end(), vec2.begin());
+    std::cout << "vec and vec2 are equal: " << (is_equal ? "Yes" : "No") << "\n";
+
+    // mismatch
+    vec2[0] = 99;
+    auto mismatch_pair = std::mismatch(vec.begin(), vec.end(), vec2.begin());
+    if (mismatch_pair.first != vec.end()) {
+        std::cout << "Mismatch at value: "
+                  << *mismatch_pair.first << " vs "
+                  << *mismatch_pair.second << "\n";
+    }
+
+    // accumulate (sum)
+    int total = std::accumulate(vec.begin(), vec.end(), 0);
+    std::cout << "Sum of elements: " << total << "\n";
+
     return 0;
 }

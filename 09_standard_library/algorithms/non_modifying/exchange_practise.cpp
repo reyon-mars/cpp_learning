@@ -25,6 +25,23 @@ public:
     void print() const {
         std::cout << "Counter value: " << value << std::endl;
     }
+
+    // NEW: decrement helper
+    int decrement(int amount) {
+        return std::exchange(value, value - amount);
+    }
+
+    // NEW: add multiple values
+    void add_multiple(int times, int amount) {
+        for (int i = 0; i < times; ++i) {
+            value += amount;
+        }
+    }
+
+    // NEW: check if positive
+    bool is_positive() const {
+        return value > 0;
+    }
     // -----------------------------
 };
 
@@ -54,7 +71,20 @@ int main(void) {
 
     countr.reset();
     countr.print();
-    // -------------------------------
+
+    // ---------------- NEW SMALL TESTS ----------------
+
+    countr.increment(20);
+    countr.decrement(5);
+    countr.print();
+
+    countr.add_multiple(3, 2); // adds 2 three times
+    countr.print();
+
+    std::cout << "Is positive? "
+              << (countr.is_positive() ? "Yes" : "No") << std::endl;
+
+    // -----------------------------------------------
 
     return 0;
 }

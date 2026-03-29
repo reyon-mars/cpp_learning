@@ -44,6 +44,39 @@ int main() {
     std::cout << "\n";
 
     // ------------------------
+    // EXTRA SMALL ADDITIONS
+    // ------------------------
+
+    // find in map
+    auto it = age_map.find("Bob");
+    if (it != age_map.end()) {
+        std::cout << "Found Bob, age = " << it->second << "\n";
+    }
+
+    // check existence in set
+    if (unique_values.count(5)) {
+        std::cout << "5 exists in set\n";
+    }
+
+    // equal_range in multimap
+    auto range = scores.equal_range("Alice");
+    std::cout << "Scores for Alice: ";
+    for (auto itr = range.first; itr != range.second; ++itr) {
+        std::cout << itr->second << " ";
+    }
+    std::cout << "\n";
+
+    // erase example
+    unique_values.erase(2);
+    std::cout << "After erasing 2: ";
+    for (int v : unique_values) {
+        std::cout << v << " ";
+    }
+    std::cout << "\n";
+
+    // size checks
+    std::cout << "Map size: " << age_map.size() << "\n";
+    std::cout << "Set size: " << unique_values.size() << "\n";
 
     return 0;
 }

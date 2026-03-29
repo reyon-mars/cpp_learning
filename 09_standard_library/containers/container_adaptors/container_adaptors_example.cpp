@@ -65,6 +65,33 @@ int main() {
     std::cout << "\n";
 
     // -----------------------------------
+    // EXTRA SMALL ADDITIONS
+    // -----------------------------------
+
+    // stack top without popping
+    s.push(100);
+    std::cout << "Top element of stack: " << s.top() << "\n";
+
+    // queue front and back
+    q.push(40);
+    q.push(50);
+    std::cout << "Queue front: " << q.front() << "\n";
+    std::cout << "Queue back: " << q.back() << "\n";
+
+    // priority_queue size check
+    pq.push(15);
+    pq.push(1);
+    std::cout << "Priority queue size: " << pq.size() << "\n";
+
+    // swap two queues
+    std::queue<int> q2;
+    q2.push(99);
+    q.swap(q2);
+    std::cout << "After swap, q front: " << q.front() << "\n";
+
+    // emplace example (construct in-place)
+    s.emplace(200);
+    std::cout << "After emplace, stack top: " << s.top() << "\n";
 
     return 0;
 }

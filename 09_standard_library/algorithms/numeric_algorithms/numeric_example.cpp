@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <numeric>
+#include <algorithm>
 
 int main() {
     std::vector<int> vec = {1, 2, 3, 4, 5};
@@ -40,6 +41,54 @@ int main() {
         std::cout << v << " ";
     }
     std::cout << "\n";
-    
+
+    // ---------------- SMALL ADDITIONS ----------------
+
+    // accumulate with subtraction
+    int subtract_all = std::accumulate(vec.begin(), vec.end(), 0,
+                                       [](int a, int b) { return a - b; });
+    std::cout << "Subtraction result: " << subtract_all << "\n";
+
+    // inner_product with custom operations
+    int custom_inner = std::inner_product(
+        vec.begin(), vec.end(), vec2.begin(), 0,
+        std::plus<>(),
+        [](int a, int b) { return a * b + 1; }
+    );
+    std::cout << "Custom inner product: " << custom_inner << "\n";
+
+    // partial_sum with multiplication
+    std::vector<int> partial_product(vec.size());
+    std::partial_sum(vec.begin(), vec.end(), partial_product.begin(),
+                     [](int a, int b) { return a * b; });
+
+    std::cout << "Partial products: ";
+    for (int v : partial_product) {
+        std::cout << v << " ";
+    }
+    std::cout << "\n";
+
+    // adjacent_difference with multiplication
+    std::vector<int> diff_product(vec.size());
+    std::adjacent_difference(vec.begin(), vec.end(), diff_product.begin(),
+                             [](int a, int b) { return a * b; });
+
+    std::cout << "Adjacent products: ";
+    for (int v : diff_product) {
+        std::cout << v << " ";
+    }
+    std::cout << "\n";
+
+    // prefix max using partial_sum
+    std::vector<int> prefix_max(vec.size());
+    std::partial_sum(vec.begin(), vec.end(), prefix_max.begin(),
+                     [](int a, int b) { return std::max(a, b); });
+
+    std::cout << "Prefix max: ";
+    for (int v : prefix_max) {
+        std::cout << v << " ";
+    }
+    std::cout << "\n";
+
     return 0;
 }

@@ -95,5 +95,38 @@ int main(void) {
     std::cout << "Sum of demo list: " << sum_list(demo) << "\n";
     std::cout << "Max value in demo list: " << max_list(demo) << "\n";
 
+    // --------------------------------------
+    // EXTRA SMALL ADDITIONS
+    // --------------------------------------
+
+    // reverse list
+    demo.reverse();
+    std::cout << "Reversed demo list: ";
+    print_list(demo);
+
+    // sort list
+    demo.sort();
+    std::cout << "Sorted demo list: ";
+    print_list(demo);
+
+    // remove specific value
+    demo.remove(4);
+    std::cout << "After removing 4: ";
+    print_list(demo);
+
+    // unique (remove duplicates)
+    demo.push_back(6);
+    demo.push_back(6);
+    demo.unique();
+    std::cout << "After unique(): ";
+    print_list(demo);
+
+    // merge two lists
+    std::list<int> another = {1, 3, 5};
+    another.sort();
+    demo.merge(another);
+    std::cout << "After merge: ";
+    print_list(demo);
+
     return 0;
 }

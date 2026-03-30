@@ -13,6 +13,10 @@ int sum_list(const std::list<int>& lst);
 int max_list_safe(const std::list<int>& lst);
 void print_divider();
 
+// ---- additional tiny helpers ----
+int min_list_safe(const std::list<int>& lst);
+double average_list(const std::list<int>& lst);
+
 // ---------------- ORIGINAL CODE (UNCHANGED) ----------------
 
 int main(void)
@@ -41,6 +45,10 @@ int main(void)
     // ---- very tiny extra usage ----
     std::cout << "Sum: " << sum_list(v) << std::endl;
     std::cout << "Max: " << max_list_safe(v) << std::endl;
+
+    // ---- additional tiny usage ----
+    std::cout << "Min: " << min_list_safe(v) << std::endl;
+    std::cout << "Average: " << average_list(v) << std::endl;
 
     print_divider();
     // -------------------------------
@@ -73,6 +81,22 @@ int max_list_safe(const std::list<int>& lst)
 {
     if (lst.empty()) return 0;
     return *std::max_element(lst.begin(), lst.end());
+}
+
+// ---- NEW SMALL HELPERS ----
+
+// Safe min finder
+int min_list_safe(const std::list<int>& lst)
+{
+    if (lst.empty()) return 0;
+    return *std::min_element(lst.begin(), lst.end());
+}
+
+// Average calculation
+double average_list(const std::list<int>& lst)
+{
+    if (lst.empty()) return 0.0;
+    return static_cast<double>(sum_list(lst)) / lst.size();
 }
 
 // Tiny divider

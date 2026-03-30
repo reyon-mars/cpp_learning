@@ -49,6 +49,32 @@ int main(void) {
     else
         std::cout << "List is empty\n";
 
+    // ---- additional small additions ----
+
+    // Check if all elements are even (should be true)
+    bool all_even = true;
+    for (int v : f_lst) {
+        if (v % 2 != 0) {
+            all_even = false;
+            break;
+        }
+    }
+    std::cout << "All elements even? "
+              << (all_even ? "Yes" : "No") << "\n";
+
+    // Find first element greater than 4
+    for (int v : f_lst) {
+        if (v > 4) {
+            std::cout << "First element > 4: " << v << "\n";
+            break;
+        }
+    }
+
+    // Print size info message
+    std::cout << "List is "
+              << (count == 0 ? "empty" : "not empty")
+              << "\n";
+
     // ==================================================
 
     return 0;

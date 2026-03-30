@@ -171,5 +171,41 @@ int main() {
     std::cout << "\nAfter clearing list 3, is empty? "
               << (is_empty(fl3) ? "Yes\n" : "No\n");
 
+    // --------------------------------------
+    // EXTRA SMALL ADDITIONS
+    // --------------------------------------
+
+    // push_front example
+    fl1.push_front(100);
+    std::cout << "After push_front (fl1): ";
+    print_list(fl1);
+
+    // pop_front example
+    fl1.pop_front();
+    std::cout << "After pop_front (fl1): ";
+    print_list(fl1);
+
+    // reverse list
+    fl1.reverse();
+    std::cout << "Reversed fl1: ";
+    print_list(fl1);
+
+    // sort list
+    fl1.sort();
+    std::cout << "Sorted fl1: ";
+    print_list(fl1);
+
+    // remove specific value
+    fl1.remove(4);
+    std::cout << "After removing 4: ";
+    print_list(fl1);
+
+    // unique (remove consecutive duplicates)
+    fl1.push_front(2);
+    fl1.push_front(2);
+    fl1.unique();
+    std::cout << "After unique(): ";
+    print_list(fl1);
+
     return 0;
 }

@@ -143,6 +143,37 @@ int main() {
 
     print_divider();
 
+    // --------------------------------------
+    // EXTRA SMALL ADDITIONS
+    // --------------------------------------
+
+    // push_front example
+    lst.push_front("first");
+    cout << "After push_front: ";
+    print_list(lst);
+
+    // pop_front example
+    lst.pop_front();
+    cout << "After pop_front: ";
+    print_list(lst);
+
+    // remove a value
+    lst.remove("cherry");
+    cout << "After removing 'cherry': ";
+    print_list(lst);
+
+    // reverse list
+    lst.reverse();
+    cout << "Reversed list: ";
+    print_list(lst);
+
+    // sort list
+    lst.sort();
+    cout << "Sorted list: ";
+    print_list(lst);
+
+    // --------------------------------------
+
     // Clear list
     lst.clear();
     cout << "After clear, size: " << list_size(lst) << "\n";

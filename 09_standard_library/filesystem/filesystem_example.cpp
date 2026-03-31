@@ -39,6 +39,26 @@ int main() {
         }
     }
 
+    // ---- VERY SMALL EXTRA ADDITIONS ----
+
+    // absolute path
+    std::cout << "Absolute path: " << fs::absolute(file_path) << "\n";
+
+    // file stem (name without extension)
+    std::cout << "Stem: " << file_path.stem() << "\n";
+
+    // check empty path
+    std::cout << "Is path empty? "
+              << (file_path.empty() ? "Yes" : "No") << "\n";
+
+    // temp directory path
+    std::cout << "Temp directory: " << fs::temp_directory_path() << "\n";
+
+    // compare paths
+    fs::path another = "/tmp/test.txt";
+    std::cout << "Paths equal? "
+              << (file_path == another ? "Yes" : "No") << "\n";
+
     // -----------------------------------
 
     return 0;

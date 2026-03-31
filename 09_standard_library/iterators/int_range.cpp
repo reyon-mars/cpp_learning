@@ -99,6 +99,26 @@ void print_reverse(const int_range& r) {
     std::cout << "\n";
 }
 
+// ---- ADDITIONAL TINY HELPERS ----
+
+// check if range is empty
+bool is_empty(const int_range& r) {
+    return r.begin() == r.end();
+}
+
+// get first element
+int first_element(const int_range& r) {
+    return *r.begin();
+}
+
+// get last element
+int last_element(const int_range& r) {
+    int last = 0;
+    for (int v : r)
+        last = v;
+    return last;
+}
+
 // ---------------- MAIN ----------------
 
 int main(void) {
@@ -121,6 +141,13 @@ int main(void) {
 
     std::cout << "Reversed view: ";
     print_reverse(r);
+
+    // ---- tiny extra usage ----
+    std::cout << "Is empty? "
+              << (is_empty(r) ? "Yes" : "No") << "\n";
+
+    std::cout << "First element: " << first_element(r) << "\n";
+    std::cout << "Last element: " << last_element(r) << "\n";
 
     return 0;
 }

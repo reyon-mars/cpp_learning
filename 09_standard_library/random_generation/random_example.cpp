@@ -5,6 +5,7 @@
 #include <random>
 #include <vector>
 #include <algorithm>
+#include <numeric> // tiny addition
 
 int main() {
     // Random engine
@@ -55,6 +56,27 @@ int main() {
         std::cout << n << " ";
     }
     std::cout << "\n";
+
+    // ---- VERY SMALL EXTRA ADDITIONS ----
+
+    // Find min and max in random vector
+    auto [min_it, max_it] = std::minmax_element(numbers.begin(), numbers.end());
+    std::cout << "Min: " << *min_it << ", Max: " << *max_it << "\n";
+
+    // Sum of elements
+    int sum = std::accumulate(numbers.begin(), numbers.end(), 0);
+    std::cout << "Sum of vector: " << sum << "\n";
+
+    // Generate one random boolean sequence
+    std::cout << "Random bools: ";
+    for (int i = 0; i < 5; ++i) {
+        std::cout << coin(rng) << " ";
+    }
+    std::cout << "\n";
+
+    // Reseed example (deterministic behavior)
+    rng.seed(42);
+    std::cout << "After reseed (42): " << dist_int(rng) << "\n";
 
     // -----------------------------------
 

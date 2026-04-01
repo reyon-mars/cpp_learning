@@ -3,6 +3,7 @@
 #include <iostream>
 #include <chrono>
 #include <ctime>
+#include <numeric>   // added
 #include "scoped_timer.hpp"
 
 // ======================================================
@@ -148,6 +149,26 @@ int main(void)
     // tiny derived metric
     std::cout << "Average logs per test: "
               << (call_count / 3) << '\n';
+
+    // ===== EXTRA SMALL ADDITIONS (NEW) =====
+
+    // Measure small sample block
+    {
+        scoped_timer t("Mini sample block");
+        log_msg("Test", "Sample log");
+    }
+
+    // Simple stats example
+    std::vector<int> samples = {10, 20, 30};
+    int total = std::accumulate(samples.begin(), samples.end(), 0);
+    std::cout << "Sample average: "
+              << (total / samples.size()) << '\n';
+
+    // Check if logging is enabled
+    std::cout << "Logging enabled? "
+              << (ENABLE_LOGGING ? "Yes" : "No") << '\n';
+
+    // ======================================
 
     return 0;
 }

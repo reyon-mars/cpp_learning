@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cctype>
 #include <sstream>
+#include <numeric>   // added
 
 // ======================================================
 // ORIGINAL CODE (UNCHANGED LOGIC)
@@ -140,5 +141,29 @@ int main() {
     print_divider();
 
     std::cout << "--- End of program ---\n";
+
+    // ===== EXTRA SMALL ADDITIONS (NEW) =====
+
+    // Count vowels
+    int vowels = std::count_if(text.begin(), text.end(), [](char c) {
+        char l = std::tolower(static_cast<unsigned char>(c));
+        return l=='a'||l=='e'||l=='i'||l=='o'||l=='u';
+    });
+    std::cout << "Vowel count: " << vowels << '\n';
+
+    // ASCII sum of string
+    int ascii_sum = std::accumulate(text.begin(), text.end(), 0,
+        [](int sum, char c){ return sum + static_cast<int>(c); });
+    std::cout << "ASCII sum: " << ascii_sum << '\n';
+
+    // Check if all characters are alphabetic or space
+    bool clean = std::all_of(text.begin(), text.end(), [](char c){
+        return std::isalpha(static_cast<unsigned char>(c)) || std::isspace(static_cast<unsigned char>(c));
+    });
+    std::cout << "Only letters/spaces? "
+              << (clean ? "Yes" : "No") << '\n';
+
+    // ======================================
+
     return 0;
 }

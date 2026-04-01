@@ -48,5 +48,35 @@ int main() {
 
     // -----------------------------------
 
+    // ===== VERY SMALL NEW ADDITIONS =====
+
+    // Measure nanoseconds
+    auto nano_elapsed =
+        std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
+    std::cout << "Elapsed in nanoseconds: "
+              << nano_elapsed.count() << " ns\n";
+
+    // Compare two durations
+    if (elapsed > 50ms)
+        std::cout << "Elapsed time is greater than 50ms\n";
+
+    // Add durations
+    auto total_time = elapsed + std::chrono::milliseconds(50);
+    std::cout << "Elapsed + 50ms: "
+              << total_time.count() << " ms\n";
+
+    // Simple loop timing
+    auto loop_start = std::chrono::high_resolution_clock::now();
+    for (volatile int i = 0; i < 1000000; ++i);
+    auto loop_end = std::chrono::high_resolution_clock::now();
+
+    auto loop_time =
+        std::chrono::duration_cast<std::chrono::microseconds>(loop_end - loop_start);
+
+    std::cout << "Loop execution time: "
+              << loop_time.count() << " us\n";
+
+    // ===================================
+
     return 0;
 }

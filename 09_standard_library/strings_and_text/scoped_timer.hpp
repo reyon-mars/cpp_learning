@@ -3,6 +3,7 @@
 #include <string>
 #include <thread>
 #include <ctime>
+#include <numeric>   // added
 
 // ======================================================
 // ORIGINAL CODE (UNCHANGED LOGIC)
@@ -120,6 +121,27 @@ int main() {
 
     print_status("Program ending");
     std::cout << "--- Program Finished ---\n";
+
+    // ===== EXTRA SMALL ADDITIONS (NEW) =====
+
+    // Measure quick inline block
+    {
+        scoped_timer t("quick inline block");
+        busy_work(50'000);
+    }
+
+    // Average time simulation (manual)
+    std::vector<long long> sample_times = {100, 200, 150, 175};
+    long long total_time = std::accumulate(sample_times.begin(), sample_times.end(), 0LL);
+    std::cout << "Average sample time: "
+              << (total_time / sample_times.size()) << " us\n";
+
+    // Check duration type
+    auto now = std::chrono::steady_clock::now();
+    std::cout << "Clock is steady? "
+              << (std::chrono::steady_clock::is_steady ? "Yes" : "No") << "\n";
+
+    // ======================================
 
     return 0;
 }

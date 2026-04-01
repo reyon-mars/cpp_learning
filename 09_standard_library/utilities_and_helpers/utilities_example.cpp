@@ -64,5 +64,31 @@ int main() {
 
     // -----------------------------------
 
+    // ===== VERY SMALL NEW ADDITIONS =====
+
+    // structured binding (pair)
+    auto [num, text] = p;
+    std::cout << "Structured binding: " << num << ", " << text << "\n";
+
+    // tie unpacking (tuple)
+    int i; std::string s; double d;
+    std::tie(i, s, d) = t;
+    std::cout << "Unpacked tuple: " << i << ", " << s << ", " << d << "\n";
+
+    // optional with value_or
+    std::optional<int> empty_opt;
+    std::cout << "Optional value_or: "
+              << empty_opt.value_or(999) << "\n";
+
+    // variant index
+    std::cout << "Variant index: " << v.index() << "\n";
+
+    // safe any access
+    if (a.has_value()) {
+        std::cout << "Any has value\n";
+    }
+
+    // ===================================
+
     return 0;
 }

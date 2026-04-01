@@ -3,6 +3,7 @@
 #include <string>
 #include <algorithm>
 #include <cctype>
+#include <numeric>   // added
 
 // ==================================================
 // ORIGINAL CODE (LOGIC UNCHANGED)
@@ -72,6 +73,29 @@ int main(void) {
     std::cout << std::endl;
 
     // ===================================
+
+    // ===== EXTRA SMALL ADDITIONS (NEW) =====
+
+    // Sort characters (copy, original unchanged)
+    std::vector<char> sorted_v = v;
+    std::sort(sorted_v.begin(), sorted_v.end());
+    std::cout << "Sorted copy: ";
+    for (char c : sorted_v)
+        std::cout << c;
+    std::cout << std::endl;
+
+    // Count total ASCII sum
+    int ascii_sum = std::accumulate(v.begin(), v.end(), 0,
+        [](int sum, char c) { return sum + static_cast<int>(c); });
+    std::cout << "ASCII sum: " << ascii_sum << std::endl;
+
+    // Check if all characters are printable
+    bool all_printable = std::all_of(v.begin(), v.end(),
+        [](char c) { return std::isprint(static_cast<unsigned char>(c)); });
+    std::cout << "All printable? "
+              << (all_printable ? "Yes" : "No") << std::endl;
+
+    // ======================================
 
     return 0;
 }

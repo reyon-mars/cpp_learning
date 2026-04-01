@@ -4,6 +4,8 @@
 #include <iostream>
 #include <vector>
 #include <ranges>
+#include <numeric>   // added
+#include <algorithm> // added
 
 int main() {
     std::vector<int> vec = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
@@ -53,6 +55,37 @@ int main() {
     std::cout << "\n";
 
     // -----------------------------------
+
+    // ===== SMALL ADDITIONS ONLY =====
+
+    // Count elements using ranges
+    auto count_all = std::ranges::distance(vec);
+    std::cout << "Total elements: " << count_all << "\n";
+
+    // Sum using accumulate
+    int sum = std::accumulate(vec.begin(), vec.end(), 0);
+    std::cout << "Sum of elements: " << sum << "\n";
+
+    // Check if all elements are positive
+    bool all_positive = std::ranges::all_of(vec, [](int x){ return x > 0; });
+    std::cout << "All positive? " << (all_positive ? "Yes" : "No") << "\n";
+
+    // Find first element > 5
+    auto it = std::ranges::find_if(vec, [](int x){ return x > 5; });
+    if (it != vec.end())
+        std::cout << "First element > 5: " << *it << "\n";
+
+    // Chained view (filter + transform)
+    auto even_squared = vec
+        | std::views::filter([](int x){ return x % 2 == 0; })
+        | std::views::transform([](int x){ return x * x; });
+
+    std::cout << "Even squared: ";
+    for (int v : even_squared)
+        std::cout << v << " ";
+    std::cout << "\n";
+
+    // =================================
 
     return 0;
 }

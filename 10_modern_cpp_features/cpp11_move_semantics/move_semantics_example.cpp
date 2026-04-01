@@ -47,6 +47,26 @@ public:
                   << ", data pointer: " << data << "\n";
     }
 
+    // ===== VERY SMALL NEW ADDITIONS =====
+
+    // access element safely
+    int& operator[](size_t index) {
+        return data[index];
+    }
+
+    // const version
+    const int& operator[](size_t index) const {
+        return data[index];
+    }
+
+    // fill with values
+    void fill(int value) {
+        for (size_t i = 0; i < size; ++i)
+            data[i] = value;
+    }
+
+    // ===================================
+
     ~Vector() { delete[] data; }
 };
 
@@ -64,6 +84,17 @@ int main() {
 
     v3.print_state();
     // ----------------------------
+
+    // ===== VERY SMALL NEW ADDITIONS =====
+
+    // fill and access demo
+    v3.fill(5);
+    std::cout << "First element of v3: " << v3[0] << "\n";
+
+    // check sizes after moves
+    std::cout << "v2 size after move: " << v2.get_size() << "\n";
+
+    // ===================================
 
     return 0;
 }

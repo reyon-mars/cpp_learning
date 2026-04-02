@@ -36,6 +36,24 @@ public:
     }
 
     // --------------------------------
+
+    // ===== VERY SMALL NEW ADDITIONS =====
+
+    // map-like transformation
+    template<typename F>
+    auto map(F func) const -> Result<decltype(func(value)), E> {
+        if (is_success)
+            return Result<decltype(func(value)), E>(func(value));
+        return Result<decltype(func(value)), E>(error);
+    }
+
+    // check and print state
+    void print_state() const {
+        std::cout << (is_success ? "[OK] " : "[ERR] ");
+        print();
+    }
+
+    // ===================================
 };
 
 int main() {
@@ -64,6 +82,26 @@ int main() {
     }
 
     // --------------------------------
+
+    // ===== VERY SMALL NEW ADDITIONS =====
+
+    // using map transformation
+    auto doubled = success.map([](int x) { return x * 2; });
+    std::cout << "Mapped (doubled) value: "
+              << doubled.get_value() << "\n";
+
+    // map on failure (should keep error)
+    auto failed_map = failure.map([](int x) { return x * 2; });
+    if (failed_map.failure()) {
+        std::cout << "Map preserved error: "
+                  << failed_map.get_error() << "\n";
+    }
+
+    // print state helper
+    success.print_state();
+    failure.print_state();
+
+    // ===================================
 
     return 0;
 }

@@ -34,6 +34,16 @@ public:
     void attach(std::shared_ptr<Observer> obs) {
         observers.push_back(obs);
     }
+
+    // ---- small addition ----
+    void detach_all() {
+        observers.clear();
+    }
+
+    std::size_t observer_count() const {
+        return observers.size();
+    }
+    // ------------------------
     
     void notify(const std::string& msg) {
         for (auto& obs : observers) {
@@ -75,6 +85,12 @@ public:
             return strategy->execute(a, b);
         return 0;
     }
+
+    // ---- small addition ----
+    bool has_strategy() const {
+        return strategy != nullptr;
+    }
+    // ------------------------
 };
 
 // ---------------- Command ----------------
@@ -96,6 +112,23 @@ public:
         std::cout << "Command executed: " << message << "\n";
     }
 };
+
+// ---- small addition ----
+class CommandInvoker {
+private:
+    std::vector<std::shared_ptr<Command>> history;
+
+public:
+    void run(const std::shared_ptr<Command>& cmd) {
+        cmd->execute();
+        history.push_back(cmd);
+    }
+
+    void print_history() const {
+        std::cout << "Commands executed: " << history.size() << "\n";
+    }
+};
+// ------------------------
 
 // ---------------- State ----------------
 
@@ -132,7 +165,19 @@ public:
         if (state)
             state->handle();
     }
+
+    // ---- small addition ----
+    bool has_state() const {
+        return state != nullptr;
+    }
+    // ------------------------
 };
+
+// ---------------- Helper (tiny addition) ----------------
+
+void print_divider() {
+    std::cout << "------------------------\n";
+}
 
 // ---------------- Main ----------------
 
@@ -144,7 +189,9 @@ int main() {
     subject.attach(std::make_shared<ConcreteObserver>("Observer2"));
     subject.notify("Event occurred");
 
-    std::cout << "\n";
+    // small extra usage
+    std::cout << "Observer count: " << subject.observer_count() << "\n";
+    print_divider();
 
     // Strategy demo
     Calculator calc;
@@ -154,14 +201,20 @@ int main() {
     calc.set_strategy(std::make_shared<MultiplyStrategy>());
     std::cout << "Multiply result: " << calc.compute(3, 4) << "\n";
 
-    std::cout << "\n";
+    std::cout << "Has strategy? "
+              << (calc.has_strategy() ? "Yes" : "No") << "\n";
+
+    print_divider();
 
     // Command demo
+    CommandInvoker invoker;
     std::shared_ptr<Command> cmd =
         std::make_shared<PrintCommand>("Hello from command pattern");
-    cmd->execute();
 
-    std::cout << "\n";
+    invoker.run(cmd);
+    invoker.print_history();
+
+    print_divider();
 
     // State demo
     Context context;
@@ -170,6 +223,16 @@ int main() {
 
     context.set_state(std::make_shared<WorkingState>());
     context.request();
+
+    std::cout << "Has state? "
+              << (context.has_state() ? "Yes" : "No") << "\n";
+
+    print_divider();
+
+    // extra: detach observers
+    subject.detach_all();
+    std::cout << "Observers after clear: "
+              << subject.observer_count() << "\n";
 
     return 0;
 }

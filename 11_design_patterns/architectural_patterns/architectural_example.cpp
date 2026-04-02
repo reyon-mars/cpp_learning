@@ -46,7 +46,25 @@ public:
         }
         return false;
     }
-    // ------------------------
+
+    // ---- VERY SMALL EXTRA ADDITIONS ----
+
+    std::size_t count() const {
+        return users.size();
+    }
+
+    bool exists(int id) const {
+        for (const auto& user : users)
+            if (user.id == id)
+                return true;
+        return false;
+    }
+
+    void clear() {
+        users.clear();
+    }
+
+    // ------------------------------------
 };
 
 // View
@@ -67,7 +85,18 @@ public:
     void show_message(const std::string& msg) {
         std::cout << msg << "\n";
     }
-    // ------------------------
+
+    // ---- VERY SMALL EXTRA ADDITIONS ----
+
+    void show_count(std::size_t count) {
+        std::cout << "Total users: " << count << "\n";
+    }
+
+    void print_divider() {
+        std::cout << "----------------------\n";
+    }
+
+    // ------------------------------------
 };
 
 // Controller
@@ -98,7 +127,29 @@ public:
         else
             view.show_message("User not found");
     }
-    // -------------------------
+
+    // ---- VERY SMALL EXTRA ADDITIONS ----
+
+    void show_user_count() {
+        view.show_count(repository.count());
+    }
+
+    void check_user(int id) {
+        view.show_message(
+            repository.exists(id) ? "User exists" : "User does not exist"
+        );
+    }
+
+    void clear_users() {
+        repository.clear();
+        view.show_message("All users cleared");
+    }
+
+    void divider() {
+        view.print_divider();
+    }
+
+    // ------------------------------------
 };
 
 int main() {
@@ -113,6 +164,17 @@ int main() {
     controller.list_users();
     controller.remove_user(2);
     controller.list_users();
+
+    // ---- VERY SMALL EXTRA USAGE ----
+    controller.divider();
+
+    controller.show_user_count();
+    controller.check_user(1);
+    controller.check_user(2);
+
+    controller.clear_users();
+    controller.show_user_count();
+    // --------------------------------
 
     return 0;
 }

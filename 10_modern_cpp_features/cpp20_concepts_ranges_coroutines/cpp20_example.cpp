@@ -27,6 +27,14 @@ T add(T a, T b) {
 }
 // ------------------------------------
 
+// ===== VERY SMALL NEW CONCEPT =====
+template<typename T>
+concept Container = requires(T a) {
+    a.begin();
+    a.end();
+};
+// ==================================
+
 int main() {
     print(42);
     print("hello");
@@ -68,6 +76,29 @@ int main() {
     std::cout << "\n";
 
     // -------------------------------------
+
+    // ===== VERY SMALL NEW ADDITIONS =====
+
+    // Drop first 2 elements
+    auto after_two = vec | std::views::drop(2);
+    std::cout << "After two: ";
+    for (int v : after_two)
+        std::cout << v << " ";
+    std::cout << "\n";
+
+    // Reverse view
+    auto reversed = vec | std::views::reverse;
+    std::cout << "Reversed: ";
+    for (int v : reversed)
+        std::cout << v << " ";
+    std::cout << "\n";
+
+    // Use Container concept (simple check)
+    if constexpr (Container<std::vector<int>>) {
+        std::cout << "Vector satisfies Container concept\n";
+    }
+
+    // ===================================
 
     return 0;
 }

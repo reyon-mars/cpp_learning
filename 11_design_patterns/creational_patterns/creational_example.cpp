@@ -4,6 +4,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <mutex>   // ✅ ADDED for thread safety
 
 // ---------------- Singleton ----------------
 
@@ -14,6 +15,16 @@ private:
     
 public:
     static Database* get_instance() {
+        if (!instance) {
+            instance = new Database();
+        }
+        return instance;
+    }
+
+    // ✅ ADDED: Thread-safe access (extra, original unchanged)
+    static Database* get_thread_safe_instance() {
+        static std::mutex mtx;
+        std::lock_guard<std::mutex> lock(mtx);
         if (!instance) {
             instance = new Database();
         }
@@ -45,11 +56,18 @@ public:
     void speak() override { std::cout << "Meow!\n"; }
 };
 
+// ✅ ADDED: New Animal
+class Cow : public Animal {
+public:
+    void speak() override { std::cout << "Moo!\n"; }
+};
+
 class AnimalFactory {
 public:
     static std::unique_ptr<Animal> create(const std::string& type) {
         if (type == "dog") return std::make_unique<Dog>();
         if (type == "cat") return std::make_unique<Cat>();
+        if (type == "cow") return std::make_unique<Cow>(); // ✅ ADDED
         return nullptr;
     }
 };
@@ -90,6 +108,14 @@ public:
         return *this;
     }
 
+    // ✅ ADDED: Preset configuration
+    ComputerBuilder& gaming_pc() {
+        computer.cpu = "Ryzen 9";
+        computer.ram = "32GB";
+        computer.storage = "2TB NVMe";
+        return *this;
+    }
+
     Computer build() {
         return computer;
     }
@@ -102,14 +128,19 @@ int main() {
     // Singleton usage
     Database::get_instance()->query("SELECT * FROM users");
 
+    // ✅ ADDED: Thread-safe singleton usage
+    Database::get_thread_safe_instance()->query("SELECT * FROM products");
+
     std::cout << "\n";
 
     // Factory usage
     auto dog = AnimalFactory::create("dog");
     auto cat = AnimalFactory::create("cat");
+    auto cow = AnimalFactory::create("cow"); // ✅ ADDED
 
     if (dog) dog->speak();
     if (cat) cat->speak();
+    if (cow) cow->speak(); // ✅ ADDED
 
     std::cout << "\n";
 
@@ -121,6 +152,15 @@ int main() {
                     .build();
 
     pc.show();
+
+    std::cout << "\n";
+
+    // ✅ ADDED: Using preset builder
+    Computer gaming = ComputerBuilder()
+                        .gaming_pc()
+                        .build();
+
+    gaming.show();
 
     return 0;
 }

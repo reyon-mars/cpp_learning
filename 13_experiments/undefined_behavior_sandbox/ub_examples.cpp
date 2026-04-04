@@ -4,6 +4,10 @@
 #include <iostream>
 #include <climits>
 
+// ✅ ADDED
+#include <vector>
+#include <optional>
+
 int main() {
 
     // Example 1: Buffer overflow
@@ -44,6 +48,40 @@ int main() {
 
     std::cout << "Pointer after delete (dangling): " << ptr << "\n";
     std::cout << "Accessing it would be undefined behavior\n";
+
+    // ✅ ADDED: Best practice (null after delete)
+    ptr = nullptr;
+    std::cout << "Pointer reset to nullptr (safe practice)\n";
+
+    // ----------------------------------------------------
+    // ✅ ADDED: Uninitialized variable awareness (safe note)
+    std::cout << "\nUninitialized variables can cause UB if used.\n";
+    int x; 
+    std::cout << "Uninitialized variable declared (not used to avoid UB)\n";
+
+    // ----------------------------------------------------
+    // ✅ ADDED: Safe array access
+    std::cout << "\nSafe array access using vector::at():\n";
+    std::vector<int> v = {1, 2, 3};
+
+    try {
+        std::cout << "Access v.at(5): ";
+        std::cout << v.at(5) << "\n"; // throws exception instead of UB
+    } catch (const std::out_of_range& e) {
+        std::cout << "Caught exception: out_of_range (safe handling)\n";
+    }
+
+    // ----------------------------------------------------
+    // ✅ ADDED: Using std::optional to avoid invalid states
+    std::cout << "\nUsing std::optional:\n";
+    std::optional<int> safe_value;
+
+    if (!safe_value.has_value()) {
+        std::cout << "Value not initialized, avoiding UB\n";
+    }
+
+    safe_value = 10;
+    std::cout << "Safe value: " << safe_value.value() << "\n";
 
     return 0;
 }

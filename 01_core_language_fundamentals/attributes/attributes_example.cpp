@@ -31,6 +31,36 @@ void debug_log([[maybe_unused]] int level) {
     std::cout << "Helper function\n";
 }
 
+// ✅ ADDED: nodiscard with message (C++20)
+[[nodiscard("You must use the return value")]]
+int compute_value() {
+    return 99;
+}
+
+// ✅ ADDED: nodiscard method inside class
+class Calculator {
+public:
+    [[nodiscard]] int add(int a, int b) const {
+        return a + b;
+    }
+};
+
+// ✅ ADDED: deprecated class
+[[deprecated("Use NewSystem instead")]]
+class OldSystem {
+public:
+    void run() {
+        std::cout << "Running old system\n";
+    }
+};
+
+class NewSystem {
+public:
+    void run() {
+        std::cout << "Running new system\n";
+    }
+};
+
 int main() {
 
     // nodiscard used correctly
@@ -52,6 +82,32 @@ int main() {
 
     // maybe_unused variable
     [[maybe_unused]] int temp = 10;
+
+    // ----------------------------------------------------
+    // ✅ ADDED: nodiscard with message
+    [[maybe_unused]] int val = compute_value();
+
+    // ----------------------------------------------------
+    // ✅ ADDED: class method nodiscard
+    Calculator calc;
+    [[maybe_unused]] int sum = calc.add(5, 3);
+
+    std::cout << "Sum: " << sum << "\n";
+
+    // ----------------------------------------------------
+    // ✅ ADDED: deprecated class usage
+    // OldSystem oldSys;  // ⚠️ will show warning if uncommented
+    // oldSys.run();
+
+    NewSystem newSys;
+    newSys.run();
+
+    // ----------------------------------------------------
+    // ✅ ADDED: structured binding with maybe_unused
+    std::pair<int, int> p = {1, 2};
+    auto [x, [[maybe_unused]] y] = p;
+
+    std::cout << "Structured binding x: " << x << "\n";
 
     return 0;
 }

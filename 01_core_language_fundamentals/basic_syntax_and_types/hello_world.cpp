@@ -101,6 +101,34 @@ constexpr int absolute(int x) {
     return x < 0 ? -x : x;
 }
 
+// ---------------- MORE ADDITIONS ----------------
+
+// ✅ ADDED: Template function (generic max)
+template<typename T>
+T maxValue(T a, T b) {
+    return (a > b) ? a : b;
+}
+
+// ✅ ADDED: Compile-time factorial
+constexpr int factorial(int n) {
+    return (n <= 1) ? 1 : n * factorial(n - 1);
+}
+
+// ✅ ADDED: Convert string to uppercase
+inline std::string toUpper(std::string str) {
+    for (char& c : str) {
+        if (c >= 'a' && c <= 'z') {
+            c = c - 32;
+        }
+    }
+    return str;
+}
+
+// ✅ ADDED: Simple input validation
+inline bool isValidNumber(int x) {
+    return x >= 0 && x <= 100;
+}
+
 } // namespace utils
 
 // --------------------------------------------------
@@ -161,6 +189,21 @@ int main(void) {
               << std::endl;
 
     std::cout << "Absolute of -7 = " << absolute(-7) << std::endl;
+
+    // --------------------------------------------------
+    // ✅ ADDED USAGE
+
+    std::cout << "Max of 10 and 20 = " << maxValue(10, 20) << std::endl;
+
+    std::cout << "Factorial of 5 = " << factorial(5) << std::endl;
+
+    std::cout << "Uppercase: " << toUpper("hello world") << std::endl;
+
+    int testValue = 50;
+    std::cout << "Is " << testValue << " valid? "
+              << (isValidNumber(testValue) ? "Yes" : "No") << std::endl;
+
+    // --------------------------------------------------
 
     std::cout << "Program finished successfully." << std::endl;
     sayGoodbye();

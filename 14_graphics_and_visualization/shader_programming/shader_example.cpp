@@ -3,6 +3,9 @@
 
 #include <iostream>
 
+// ✅ ADDED
+#include <string>
+
 // Example GLSL shaders as strings
 void show_example_shaders() {
 
@@ -37,6 +40,65 @@ void show_example_shaders() {
     std::cout << fragment_shader << "\n";
 }
 
+// ✅ ADDED: Uniform example
+void uniform_shader_example() {
+    const char* shader = R"(
+
+    #version 330 core
+    out vec4 FragColor;
+    uniform float time;
+
+    void main()
+    {
+        float green = (sin(time) + 1.0) / 2.0;
+        FragColor = vec4(0.0, green, 0.0, 1.0);
+    }
+
+    )";
+
+    std::cout << "\n[Uniform Shader Example]\n";
+    std::cout << shader << "\n";
+}
+
+// ✅ ADDED: Simple lighting shader
+void lighting_shader_example() {
+    const char* shader = R"(
+
+    #version 330 core
+    out vec4 FragColor;
+
+    void main()
+    {
+        float intensity = 0.8;
+        FragColor = vec4(intensity, intensity, intensity, 1.0);
+    }
+
+    )";
+
+    std::cout << "\n[Basic Lighting Shader]\n";
+    std::cout << shader << "\n";
+}
+
+// ✅ ADDED: Shader explanations
+void explain_shader(int choice) {
+    switch (choice) {
+        case 1:
+            std::cout << "\nVertex Shader: Processes vertex positions\n";
+            break;
+        case 2:
+            std::cout << "\nFragment Shader: Determines pixel color\n";
+            break;
+        case 3:
+            std::cout << "\nGeometry Shader: Modifies primitives\n";
+            break;
+        case 4:
+            std::cout << "\nCompute Shader: General GPU computation\n";
+            break;
+        default:
+            std::cout << "Invalid choice\n";
+    }
+}
+
 int main() {
 
     std::cout << "Shader programming area\n";
@@ -48,6 +110,20 @@ int main() {
     std::cout << "4. Compute Shader\n";
 
     show_example_shaders();
+
+    // ✅ ADDED
+    std::cout << "\nSelect shader type to learn more (1-4): ";
+    int choice;
+    std::cin >> choice;
+
+    explain_shader(choice);
+
+    // ✅ ADDED: Show advanced examples
+    uniform_shader_example();
+    lighting_shader_example();
+
+    // ✅ ADDED: Summary
+    std::cout << "\nTip: Shaders run on GPU and control rendering pipeline stages.\n";
 
     return 0;
 }

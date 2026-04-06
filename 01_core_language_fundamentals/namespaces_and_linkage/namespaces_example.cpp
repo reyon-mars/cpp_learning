@@ -1,91 +1,52 @@
-#include <iostream>
-
 namespace my_lib {
 
-    class MyClass {
-    public:
-        void print() const {
-            std::cout << "MyClass\n";
-        }
+    // ----------- MORE ADDITIONS -----------
 
-        // ---- small addition ----
-        const char* name() const {
-            return "MyClass";
-        }
-        // ------------------------
-
-        // ----------- NEW ADDITIONS -----------
-        
-        // Constructor
-        MyClass() : value(0) {
-            std::cout << "MyClass constructed\n";
-        }
-
-        // Setter
-        void setValue(int v) {
-            value = v;
-        }
-
-        // Getter
-        int getValue() const {
-            return value;
-        }
-
-        // Static utility function
-        static void staticInfo() {
-            std::cout << "Static function inside MyClass\n";
-        }
-
-        // ------------------------------------
-
-    private:
-        int value;  // internal state
-    };
-
-    // ---- small helper function ----
-    void print_info(const MyClass& obj) {
-        std::cout << "Object name: " << obj.name() << "\n";
-    }
-    // -------------------------------
-
-    // ----------- NEW ADDITIONS -----------
-
-    // Another helper function
-    void print_value(const MyClass& obj) {
-        std::cout << "Stored value: " << obj.getValue() << "\n";
+    // Constructor overloading
+    MyClass(int v) : value(v) {
+        std::cout << "MyClass constructed with value\n";
     }
 
-    // Factory function
-    MyClass create_object(int v) {
-        MyClass temp;
-        temp.setValue(v);
-        return temp;
+    // Comparison operator
+    bool operator==(const MyClass& other) const {
+        return value == other.value;
     }
 
     // ------------------------------------
 
 } // namespace my_lib
 
-int main() {
 
-    // ---------- ORIGINAL CODE ----------
-    my_lib::MyClass obj;
-    obj.print();
-    // -----------------------------------
+// ----------- GLOBAL ADDITIONS -----------
 
-    // ---- small added usage ----
-    my_lib::print_info(obj);
-    // ---------------------------
-
-    // -------- NEW FEATURE USAGE --------
-    obj.setValue(42);
-    my_lib::print_value(obj);
-
-    my_lib::MyClass obj2 = my_lib::create_object(100);
-    my_lib::print_value(obj2);
-
-    my_lib::MyClass::staticInfo();
-    // ----------------------------------
-
-    return 0;
+// Operator overloading for printing
+std::ostream& operator<<(std::ostream& os, const my_lib::MyClass& obj) {
+    os << "MyClass(value=" << obj.getValue() << ")";
+    return os;
 }
+
+// Function to demonstrate copying
+void showCopy(const my_lib::MyClass& obj) {
+    my_lib::MyClass copy = obj; // copy constructor
+    std::cout << "Copied object: " << copy << "\n";
+}
+
+// ---------------------------------------
+
+
+// ================= ADD IN MAIN =================
+
+// (Add near the end before return)
+
+std::cout << "\nAdvanced Features:\n";
+
+// ✅ ADDED: constructor overloading
+my_lib::MyClass obj3(77);
+std::cout << obj3 << "\n";
+
+// ✅ ADDED: comparison
+std::cout << "obj == obj2 ? "
+          << (obj == obj2 ? "Yes\n" : "No\n");
+
+// ✅ ADDED: copy demonstration
+showCopy(obj3);

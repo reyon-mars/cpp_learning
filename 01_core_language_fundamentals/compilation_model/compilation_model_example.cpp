@@ -11,6 +11,15 @@
 // Conditional compilation
 #define DEBUG_MODE
 
+// ✅ ADDED: Header guard simulation
+#ifndef CONFIG_H
+#define CONFIG_H
+#define MAX_USERS 100
+#endif
+
+// ✅ ADDED: Macro function
+#define SQUARE_MACRO(x) ((x) * (x))
+
 // Function prototype (parsing stage example)
 void debugMessage();
 
@@ -30,6 +39,11 @@ inline int square(int x) {
     return x * x;
 }
 
+// ✅ ADDED: constexpr alternative (better than macro)
+constexpr int square_constexpr(int x) {
+    return x * x;
+}
+
 // Function definition (after prototype)
 void debugMessage() {
 #ifdef DEBUG_MODE
@@ -39,6 +53,11 @@ void debugMessage() {
 
 // Simulating extern usage
 extern int build_number;
+
+// ✅ ADDED: extern function simulation
+void externalFunction() {
+    std::cout << "Simulated external function call\n";
+}
 
 // ------------------------------------
 
@@ -56,6 +75,21 @@ int main() {
     std::cout << "Internal counter: " << internal_counter << "\n";
 
     std::cout << "Square of 5: " << square(5) << "\n";
+
+    // ✅ ADDED: Macro vs constexpr
+    std::cout << "Square (macro): " << SQUARE_MACRO(5) << "\n";
+    std::cout << "Square (constexpr): " << square_constexpr(5) << "\n";
+
+    // ✅ ADDED: Config usage
+    std::cout << "Max users (macro): " << MAX_USERS << "\n";
+
+    // ✅ ADDED: external function simulation
+    externalFunction();
+
+    // ✅ ADDED: undef example
+    #undef DEBUG_MODE
+    // debugMessage(); // would not print now if called again
+
     // ------------------------------------
 
     return 0;

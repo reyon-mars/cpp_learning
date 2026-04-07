@@ -1,52 +1,47 @@
-// Translation Units Exercise
-// Demonstrates compilation model and separate translation units
+// ----------- MORE ADVANCED ADDITIONS -----------
 
-#include <iostream>
+// Simulating external variable from another translation unit
+extern int external_counter;
 
-// Forward declaration
-void function_from_another_unit();
+// Define it here (normally in another .cpp)
+int external_counter = 5;
 
-// ---------------- SMALL ADDITION ----------------
-// (Normally this would live in another .cpp file)
-void function_from_another_unit() {
-    std::cout << "Function from another translation unit\n";
-}
-// ------------------------------------------------
-
-
-// ----------- NEW ADDITIONS -----------
-
-// Simulating another function from different unit
-void another_external_function() {
-    std::cout << "Another external function\n";
+// Anonymous namespace (modern internal linkage)
+namespace {
+    void hidden_function() {
+        std::cout << "Hidden function (anonymous namespace)\n";
+    }
 }
 
-// Static function (internal linkage)
-static void internal_helper() {
-    std::cout << "Internal helper (only visible in this file)\n";
+// Inline function (safe across multiple translation units)
+inline void inline_helper() {
+    std::cout << "Inline helper function\n";
 }
 
-// Simulated extern variable
-int shared_value = 100;
-extern int shared_value;
-
-// Function that uses external-like features
-void use_external_features() {
-    std::cout << "Shared value: " << shared_value << "\n";
-    another_external_function();
+// Function modifying external variable
+void modify_external() {
+    external_counter += 10;
+    std::cout << "Modified external_counter: "
+              << external_counter << "\n";
 }
 
-// ------------------------------------
+// ----------------------------------------------
 
 
-int main() {
-    std::cout << "Translation unit example\n";
-    function_from_another_unit();
+// ================= ADD IN MAIN =================
 
-    // -------- NEW FEATURE USAGE --------
-    internal_helper();
-    use_external_features();
-    // ----------------------------------
+// (Add near the end before return)
 
-    return 0;
-}
+std::cout << "\nAdvanced Translation Unit Concepts:\n";
+
+// ✅ Anonymous namespace
+hidden_function();
+
+// ✅ Inline function
+inline_helper();
+
+// ✅ External variable usage
+std::cout << "external_counter: "
+          << external_counter << "\n";
+
+modify_external();

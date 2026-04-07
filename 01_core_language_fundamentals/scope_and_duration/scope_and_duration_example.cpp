@@ -1,75 +1,52 @@
-// Scope and Duration Exercise
-// Automatic, static, dynamic storage duration
+// ----------- MORE ADVANCED ADDITIONS -----------
 
-#include <iostream>
+#include <memory> // for smart pointers
 
-int global_var = 0;  // Static storage duration (global)
+// Internal linkage example
+static int internal_global = 999;
 
-// helper to show static local behavior
-void static_counter() {
-    static int count = 0;   // Static storage duration
-    ++count;
-    std::cout << "static_counter value: " << count << '\n';
+// RAII example (automatic memory management)
+void smart_pointer_example() {
+    std::unique_ptr<int> ptr = std::make_unique<int>(200);
+    std::cout << "smart_pointer value: " << *ptr << '\n';
+} // automatically freed here
+
+// Lifetime demonstration
+void lifetime_demo() {
+    std::cout << "Entering lifetime_demo\n";
+    int temp = 123;
+    std::cout << "temp exists: " << temp << '\n';
+    std::cout << "Exiting lifetime_demo (temp destroyed)\n";
 }
 
-// ----------- NEW ADDITIONS -----------
-
-// Function showing automatic variable lifecycle
-void automatic_example() {
-    int temp = 5; // created every call
-    std::cout << "automatic_example temp: " << temp << '\n';
-}
-
-// Function showing dynamic allocation inside function
-void dynamic_example() {
-    int* ptr = new int(100);
-    std::cout << "dynamic_example value: " << *ptr << '\n';
+// Dangling pointer prevention example
+void safe_delete(int*& ptr) {
     delete ptr;
+    ptr = nullptr;
 }
 
-// Static variable behaving like global but scoped to function
-void static_demo() {
-    static int value = 50;
-    value += 10;
-    std::cout << "static_demo value: " << value << '\n';
-}
+// ----------------------------------------------
 
-// ------------------------------------
 
-int main() {
-    int local_var = 10;          // Automatic storage duration
-    static int static_var = 20;  // Static storage duration
-    int* heap_var = new int(30); // Dynamic storage duration
+// ================= ADD IN MAIN =================
 
-    // ---- small added usage ----
-    std::cout << "global_var: " << global_var << '\n';
-    std::cout << "local_var: " << local_var << '\n';
-    std::cout << "static_var: " << static_var << '\n';
-    std::cout << "heap_var: " << *heap_var << '\n';
+// (Add near the end before return)
 
-    static_counter();
-    static_counter();  // shows persistence of static local variable
-    // --------------------------
+std::cout << "\nAdvanced Storage Concepts:\n";
 
-    // -------- NEW FEATURE USAGE --------
+// ✅ ADDED: internal linkage
+std::cout << "internal_global: " << internal_global << '\n';
 
-    automatic_example();
-    automatic_example(); // recreated each call
+// ✅ ADDED: smart pointer demo
+smart_pointer_example();
 
-    dynamic_example();
+// ✅ ADDED: lifetime demo
+lifetime_demo();
 
-    static_demo();
-    static_demo(); // persists like global
+// ✅ ADDED: safe delete
+int* temp_ptr = new int(500);
+safe_delete(temp_ptr);
 
-    // Safety check
-    if (heap_var != nullptr) {
-        std::cout << "Heap pointer is valid\n";
-    }
-
-    // ----------------------------------
-
-    delete heap_var;   // free dynamic memory
-    heap_var = nullptr;
-
-    return 0;
+if (temp_ptr == nullptr) {
+    std::cout << "Pointer safely deleted and set to nullptr\n";
 }

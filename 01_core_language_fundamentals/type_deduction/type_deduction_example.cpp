@@ -1,93 +1,59 @@
-// Type Deduction Exercise
-// auto, decltype, and deduction rules
+// ----------- MORE ADVANCED ADDITIONS -----------
 
-#include <iostream>
-#include <type_traits>
-#include <typeinfo>
+// Trailing return type
+template<typename T, typename U>
+auto multiply(T a, U b) -> decltype(a * b) {
+    return a * b;
+}
 
-// helper to print type name
+// Perfect forwarding example
 template<typename T>
-void print_type() {
-    std::cout << "Type: " << typeid(T).name() << "\n";
+void forward_test(T&& param) {
+    if constexpr (std::is_lvalue_reference<T>::value) {
+        std::cout << "Lvalue passed\n";
+    } else {
+        std::cout << "Rvalue passed\n";
+    }
 }
 
-// ----------- NEW ADDITIONS -----------
-
-// Function using auto return type
-auto add(int a, int b) {
-    return a + b;
+// decltype(auto) pitfall example
+decltype(auto) returnValue() {
+    int x = 10;
+    return x;  // returns by value (not reference!)
 }
 
-// Function using decltype(auto)
-decltype(auto) getRef(int& x) {
-    return (x); // returns reference
-}
-
-// ------------------------------------
-
-int main() {
-    auto x = 10;           // int
-    auto y = 3.14;         // double
-
-    int arr[] = {1, 2, 3};
-    auto z = arr;          // int*
-
-    int a = 5;
-    decltype(a) b = 10;    // int
-
-    // -------- SMALL ADDITIONS --------
-
-    print_type<decltype(x)>();
-    print_type<decltype(y)>();
-    print_type<decltype(z)>();
-    print_type<decltype(b)>();
-
-    std::cout << std::boolalpha;
-    std::cout << "x is int? "
-              << std::is_same<decltype(x), int>::value << "\n";
-    std::cout << "y is double? "
-              << std::is_same<decltype(y), double>::value << "\n";
-
-    decltype((a)) c = a;   // int& (reference)
-    std::cout << "decltype((a)) is reference? "
-              << std::is_reference<decltype(c)>::value << "\n";
-
-    // --------------------------------
+// ----------------------------------------------
 
 
-    // -------- NEW FEATURE USAGE --------
+// ================= ADD IN MAIN =================
 
-    const int cx = 20;
-    auto d = cx;          // int (const removed)
-    auto& e = cx;         // const int&
+// (Add near the end before return)
 
-    print_type<decltype(d)>();
-    print_type<decltype(e)>();
+std::cout << "\nAdvanced Deduction Concepts:\n";
 
-    std::cout << "d is const? "
-              << std::is_const<decltype(d)>::value << "\n";
+// ✅ initializer list behavior
+auto list = {1, 2, 3}; // std::initializer_list<int>
+print_type<decltype(list)>();
 
-    std::cout << "e is reference? "
-              << std::is_reference<decltype(e)>::value << "\n";
+// ✅ top-level vs low-level const
+const int ci = 10;
+auto copy = ci;      // int
+const auto copy2 = ci; // const int
 
-    // auto&& (universal reference)
-    auto&& f = a;
-    std::cout << "f is reference? "
-              << std::is_reference<decltype(f)>::value << "\n";
+std::cout << "copy is const? "
+          << std::is_const<decltype(copy)>::value << "\n";
 
-    // decltype(auto)
-    int val = 50;
-    decltype(auto) refVal = getRef(val);
-    refVal = 100; // modifies original
+std::cout << "copy2 is const? "
+          << std::is_const<decltype(copy2)>::value << "\n";
 
-    std::cout << "val after refVal change: "
-              << val << "\n";
+// ✅ trailing return type
+auto mul = multiply(2, 3.5);
+std::cout << "multiply result: " << mul << "\n";
 
-    // auto return type
-    auto result = add(3, 4);
-    std::cout << "add result: " << result << "\n";
+// ✅ perfect forwarding test
+forward_test(a);   // lvalue
+forward_test(10);  // rvalue
 
-    // ----------------------------------
-
-    return 0;
-}
+// ✅ decltype(auto) pitfall
+auto val2 = returnValue();
+std::cout << "returnValue(): " << val2 << "\n";

@@ -1,93 +1,44 @@
-// Memory Layout and ABI Exercise
-// Exploring object layout and padding
+// ----------- MORE ADVANCED ADDITIONS -----------
 
-#include <iostream>
-#include <cstddef>   // for offsetof
-#include <type_traits>
-
-// ---------------- ORIGINAL STRUCTS ----------------
-
-struct Packed {
-    char c1;
-    int i;
-    char c2;
+// Struct with manual alignment
+struct alignas(16) Aligned16 {
+    int x;
+    double y;
 };
 
-#pragma pack(push, 1)
-struct TightlyPacked {
-    char c1;
-    int i;
-    char c2;
-};
-#pragma pack(pop)
-
-// ----------- NEW ADDITIONS -----------
-
-// Better ordered struct (less padding)
-struct Optimized {
-    int i;
-    char c1;
-    char c2;
-};
-
-// Print raw bytes of any object
+// Calculate padding manually
 template <typename T>
-void print_bytes(const T& obj) {
-    const unsigned char* ptr =
-        reinterpret_cast<const unsigned char*>(&obj);
-
-    std::cout << "Bytes: ";
-    for (size_t i = 0; i < sizeof(T); ++i) {
-        std::cout << std::hex << (int)ptr[i] << " ";
-    }
-    std::cout << std::dec << "\n";
+void show_padding() {
+    std::cout << "Total size: " << sizeof(T)
+              << ", alignment: " << alignof(T) << "\n";
 }
 
-// Print member addresses
-void print_addresses(const Packed& p) {
-    std::cout << "Addresses (Packed):\n";
-    std::cout << "&c1: " << (void*)&p.c1 << "\n";
-    std::cout << "&i : " << (void*)&p.i  << "\n";
-    std::cout << "&c2: " << (void*)&p.c2 << "\n";
-}
-
-// ------------------------------------
+// ----------------------------------------------
 
 
-int main() {
-    std::cout << "Packed size: " << sizeof(Packed) << "\n";
-    std::cout << "Packed alignment: " << alignof(Packed) << "\n";
-    std::cout << "Offsets in Packed:\n";
-    std::cout << "  c1: " << offsetof(Packed, c1) << "\n";
-    std::cout << "  i : " << offsetof(Packed, i) << "\n";
-    std::cout << "  c2: " << offsetof(Packed, c2) << "\n";
+// ================= ADD IN MAIN =================
 
-    std::cout << "\nTightlyPacked size: " << sizeof(TightlyPacked) << "\n";
-    std::cout << "TightlyPacked alignment: " << alignof(TightlyPacked) << "\n";
-    std::cout << "Offsets in TightlyPacked:\n";
-    std::cout << "  c1: " << offsetof(TightlyPacked, c1) << "\n";
-    std::cout << "  i : " << offsetof(TightlyPacked, i) << "\n";
-    std::cout << "  c2: " << offsetof(TightlyPacked, c2) << "\n";
+// (Add near the end before return)
 
-    // -------- NEW FEATURE USAGE --------
+std::cout << "\nAdvanced Layout Concepts:\n";
 
-    std::cout << "\nOptimized struct size: " << sizeof(Optimized) << "\n";
+// ✅ Padding insight
+std::cout << "Padding in Packed: "
+          << sizeof(Packed) - (sizeof(char) + sizeof(int) + sizeof(char))
+          << "\n";
 
-    // Type trait check
-    std::cout << "Packed is standard layout? "
-              << std::is_standard_layout<Packed>::value << "\n";
+// ✅ Optimized struct check
+std::cout << "Optimized alignment: "
+          << alignof(Optimized) << "\n";
 
-    // Create object and inspect memory
-    Packed p{'A', 12345, 'Z'};
+// ✅ Trivial copy check
+std::cout << "Packed is trivially copyable? "
+          << std::is_trivially_copyable<Packed>::value << "\n";
 
-    print_addresses(p);
-    print_bytes(p);
+// ✅ Custom alignment
+Aligned16 a16{1, 2.5};
+std::cout << "Aligned16 size: " << sizeof(Aligned16)
+          << ", alignment: " << alignof(Aligned16) << "\n";
 
-    std::cout << "\nTightlyPacked bytes:\n";
-    TightlyPacked tp{'A', 12345, 'Z'};
-    print_bytes(tp);
-
-    // ----------------------------------
-
-    return 0;
-}
+// ✅ Generic padding display
+show_padding<Optimized>();

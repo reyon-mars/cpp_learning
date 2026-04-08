@@ -1,6 +1,3 @@
-// Type Qualifiers Exercise
-// const, volatile, and const-volatile combinations
-
 #include <iostream>
 
 // ----------- NEW ADDITIONS -----------
@@ -30,58 +27,89 @@ void modify_const(const int* ptr) {
     *modifiable = 999; // ⚠️ dangerous if original was truly const
 }
 
+// ----------- EXTRA ADDITIONS -----------
+
+// constexpr example
+constexpr int square(int x) {
+    return x * x;
+}
+
+// Volatile pointer demo
+void volatile_demo() {
+    volatile int val = 10;
+    volatile int* ptr = &val;
+
+    std::cout << "Volatile value via pointer: " << *ptr << "\n";
+}
+
+// Function overloading based on constness
+void show(int& x) {
+    std::cout << "Non-const reference: " << x << "\n";
+}
+
+void show(const int& x) {
+    std::cout << "Const reference: " << x << "\n";
+}
+
+// Return const reference
+const int& getConstRef(const int& x) {
+    return x;
+}
+
 // ------------------------------------
 
 int main() {
     int x = 10;
     
-    // const objects
     const int a = 5;
-    // a = 10;  // Error
-    
-    // const pointer (pointer itself is const)
+
     int* const ptr1 = &x;  
-    *ptr1 = 15;            // ✅ allowed (value can change)
-    // ptr1 = &a;          // ❌ Error
-    
-    // pointer to const (value is const)
+    *ptr1 = 15;
+
     const int* ptr2 = &x;  
-    // *ptr2 = 20;         // ❌ Error
-    ptr2 = &a;             // ✅ allowed (pointer can change)
-    
-    // const pointer to const
+    ptr2 = &a;
+
     const int* const ptr3 = &x;
     
-    // volatile variable
     volatile int v = 100;
-    v = 200;               // allowed, but compiler won’t optimize accesses
+    v = 200;
     
-    // const-volatile
     const volatile int cv = 300;
-    // cv = 400;            // ❌ Error (const)
     
-    // reading values
     std::cout << "x: " << x << "\n";
     std::cout << "a: " << a << "\n";
     std::cout << "v: " << v << "\n";
     std::cout << "cv: " << cv << "\n";
 
-
     // -------- NEW FEATURE USAGE --------
 
-    // const reference
     print_value(x);
 
-    // const class usage
     Demo d(50);
     std::cout << "Demo data: " << d.getData() << "\n";
     std::cout << "Access count: " << d.access_count << "\n";
 
-    // const_cast demonstration
     int normal = 123;
     const int* p = &normal;
     modify_const(p);
     std::cout << "After const_cast modify: " << normal << "\n";
+
+    // -------- EXTRA FEATURE USAGE --------
+
+    std::cout << "\n--- constexpr demo ---\n";
+    constexpr int val = square(5);
+    std::cout << "Square (compile-time): " << val << "\n";
+
+    std::cout << "\n--- volatile pointer demo ---\n";
+    volatile_demo();
+
+    std::cout << "\n--- const overload demo ---\n";
+    show(x);   // non-const
+    show(a);   // const
+
+    std::cout << "\n--- const reference return ---\n";
+    const int& ref = getConstRef(x);
+    std::cout << "Const ref value: " << ref << "\n";
 
     // ----------------------------------
 

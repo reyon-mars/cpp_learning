@@ -1,76 +1,48 @@
-// Fundamental Types Exercise
-// Integral, floating-point, and other fundamental types
+// ----------- MORE ADVANCED ADDITIONS -----------
 
-#include <iostream>
-#include <limits>
+#include <cfloat> // for float constants
 
-int main() {
-    // Integral types
-    char c = 'A';
-    short s = 100;
-    int i = 1000;
-    long l = 100000;
-    long long ll = 1000000000000LL;
-
-    // Floating-point types
-    float f = 3.14f;
-    double d = 3.141592653589793;
-    long double ld = 3.141592653589793L;
-
-    // Boolean
-    bool b = true;
-
-    // ---- Added output for clarity ----
-    std::cout << "char: " << c << "\n";
-    std::cout << "short: " << s << "\n";
-    std::cout << "int: " << i << "\n";
-    std::cout << "long: " << l << "\n";
-    std::cout << "long long: " << ll << "\n";
-
-    std::cout << "float: " << f << "\n";
-    std::cout << "double: " << d << "\n";
-    std::cout << "long double: " << ld << "\n";
-
-    std::cout << "bool: " << std::boolalpha << b << "\n";
-    // ----------------------------------
-
-    // Display limits
-    std::cout << "int max: " << std::numeric_limits<int>::max() << "\n";
-    std::cout << "int min: " << std::numeric_limits<int>::min() << "\n";
-    std::cout << "double max: " << std::numeric_limits<double>::max() << "\n";
-    std::cout << "double min: " << std::numeric_limits<double>::min() << "\n";
+// ----------------------------------------------
 
 
-    // -------- NEW FEATURE USAGE --------
+// ================= ADD IN MAIN =================
 
-    // Size of each type
-    std::cout << "\nSizes (in bytes):\n";
-    std::cout << "char: " << sizeof(c) << "\n";
-    std::cout << "int: " << sizeof(i) << "\n";
-    std::cout << "double: " << sizeof(d) << "\n";
-    std::cout << "long long: " << sizeof(ll) << "\n";
+// (Add near the end before return)
 
-    // Unsigned types
-    unsigned int ui = 4000000000U;
-    std::cout << "unsigned int: " << ui << "\n";
+std::cout << "\nAdvanced Fundamental Concepts:\n";
 
-    // More limits
-    std::cout << "char max: " << (int)std::numeric_limits<char>::max() << "\n";
-    std::cout << "float max: " << std::numeric_limits<float>::max() << "\n";
+// ✅ Signed vs unsigned behavior
+int neg = -1;
+unsigned int u_neg = neg;
+std::cout << "Signed -1 as unsigned: " << u_neg << "\n";
 
-    // Type casting
-    int int_val = 10;
-    double converted = static_cast<double>(int_val);
+// ✅ Floating point precision issue
+double x = 0.1 + 0.2;
+std::cout << "0.1 + 0.2 = " << x << "\n";
 
-    std::cout << "Converted int to double: " << converted << "\n";
+// ✅ numeric_limits extra properties
+std::cout << "int is signed? "
+          << std::numeric_limits<int>::is_signed << "\n";
 
-    // ASCII value
-    std::cout << "ASCII value of 'A': " << static_cast<int>(c) << "\n";
+std::cout << "float epsilon: "
+          << std::numeric_limits<float>::epsilon() << "\n";
 
-    // Boolean as integer
-    std::cout << "bool as int: " << static_cast<int>(b) << "\n";
+// ✅ Pointer basics
+int value = 42;
+int* ptr = &value;
 
-    // ----------------------------------
+std::cout << "Pointer value: " << ptr << "\n";
+std::cout << "Dereferenced: " << *ptr << "\n";
 
-    return 0;
+// nullptr usage
+int* null_ptr = nullptr;
+if (null_ptr == nullptr) {
+    std::cout << "Pointer is null\n";
 }
+
+// ✅ Literal suffixes
+auto big_num = 10000000000LL;
+auto precise = 3.14L;
+
+std::cout << "big_num (long long): " << big_num << "\n";
+std::cout << "precise (long double): " << precise << "\n";

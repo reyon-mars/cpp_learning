@@ -1,6 +1,3 @@
-// Rvalue References and Value Categories Exercise
-// lvalue, rvalue, xvalue semantics
-
 #include <iostream>
 #include <utility>
 
@@ -18,17 +15,15 @@ public:
 
     Widget(Widget&& other) noexcept : data(other.data) {
         std::cout << "Move constructor\n";
-        other.data = 0; // small safety addition
+        other.data = 0;
     }
 
-    // ✅ added copy assignment
     Widget& operator=(const Widget& other) {
         std::cout << "Copy assignment\n";
         data = other.data;
         return *this;
     }
 
-    // ✅ added move assignment
     Widget& operator=(Widget&& other) noexcept {
         std::cout << "Move assignment\n";
         data = other.data;
@@ -37,7 +32,6 @@ public:
     }
 };
 
-// ✅ small helper to show rvalue reference
 void consume(Widget&& w) {
     std::cout << "Consuming Widget with data: " << w.data << "\n";
 }
@@ -59,36 +53,81 @@ Widget createWidget(int val) {
     return Widget(val);
 }
 
-// Perfect forwarding example
+// Perfect forwarding
 template<typename T>
 void forwardToDetect(T&& arg) {
     detect(std::forward<T>(arg));
 }
 
+// ----------- EXTRA ADDITIONS -----------
+
+// Print address (helps visualize moves)
+void print_address(const Widget& w, const std::string& name) {
+    std::cout << name << " address: " << &w << "\n";
+}
+
+// Demonstrate std::move vs std::forward
+template<typename T>
+void test_forwarding(T&& arg) {
+    std::cout << "Using std::move → ";
+    detect(std::move(arg));  // always rvalue
+
+    std::cout << "Using std::forward → ";
+    detect(std::forward<T>(arg)); // preserves category
+}
+
+// Temporary lifetime demo
+void temporary_demo() {
+    std::cout << "\nTemporary demo:\n";
+    Widget temp = createWidget(99);
+    std::cout << "Temp data: " << temp.data << "\n";
+}
+
+// Chain move operations
+Widget chain_move(Widget w) {
+    std::cout << "Inside chain_move\n";
+    return w; // may trigger move or RVO
+}
+
 // ------------------------------------
 
 int main() {
-    Widget w1(10);              // lvalue
-    Widget w2 = w1;             // Copy constructor
-    Widget w3 = std::move(w1);  // Move constructor
+    Widget w1(10);
+    Widget w2 = w1;
+    Widget w3 = std::move(w1);
 
     Widget w4(20);
-    w4 = w2;                    // Copy assignment
-    w4 = std::move(w3);         // Move assignment
+    w4 = w2;
+    w4 = std::move(w3);
 
-    consume(std::move(w4));     // rvalue reference usage
+    consume(std::move(w4));
 
     // -------- NEW FEATURE USAGE --------
 
     Widget w5(50);
 
-    detect(w5);                 // lvalue
-    detect(std::move(w5));      // rvalue
+    detect(w5);
+    detect(std::move(w5));
+    detect(createWidget(60));
 
-    detect(createWidget(60));   // temporary → rvalue
+    forwardToDetect(w2);
+    forwardToDetect(createWidget(70));
 
-    forwardToDetect(w2);        // preserves lvalue
-    forwardToDetect(createWidget(70)); // preserves rvalue
+    // -------- EXTRA FEATURE USAGE --------
+
+    std::cout << "\n--- Address Tracking ---\n";
+    print_address(w2, "w2");
+    print_address(w5, "w5");
+
+    std::cout << "\n--- Forwarding Test ---\n";
+    test_forwarding(w2);                 // lvalue
+    test_forwarding(createWidget(80));  // rvalue
+
+    temporary_demo();
+
+    std::cout << "\n--- Chain Move ---\n";
+    Widget w6 = chain_move(createWidget(200));
+    std::cout << "w6 data: " << w6.data << "\n";
 
     // ----------------------------------
 

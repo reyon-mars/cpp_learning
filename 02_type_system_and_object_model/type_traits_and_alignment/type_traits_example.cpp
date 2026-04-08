@@ -1,6 +1,3 @@
-// Type Traits and Alignment Exercise
-// std::is_integral, std::is_pointer, alignof, alignas
-
 #include <iostream>
 #include <type_traits>
 
@@ -14,7 +11,6 @@ void print_traits() {
 
 // ----------- NEW ADDITIONS -----------
 
-// Extended trait printer
 template<typename T>
 void print_more_traits() {
     std::cout << "Is const: " << std::is_const<T>::value << "\n";
@@ -23,7 +19,6 @@ void print_more_traits() {
               << std::is_same<T, int>::value << "\n";
 }
 
-// Compile-time behavior
 template<typename T>
 void analyze_type() {
     if constexpr (std::is_integral<T>::value) {
@@ -33,11 +28,53 @@ void analyze_type() {
     }
 }
 
-// Custom aligned struct
 struct alignas(32) AlignedStruct {
     int x;
     double y;
 };
+
+// ----------- EXTRA ADDITIONS -----------
+
+// Type transformations
+template<typename T>
+void transform_type() {
+    using no_const = typename std::remove_const<T>::type;
+    using no_ref   = typename std::remove_reference<T>::type;
+
+    std::cout << "Removed const? "
+              << std::is_const<no_const>::value << "\n";
+
+    std::cout << "Removed reference? "
+              << std::is_reference<no_ref>::value << "\n";
+}
+
+// Advanced traits
+template<typename T>
+void advanced_traits() {
+    std::cout << "Trivially copyable: "
+              << std::is_trivially_copyable<T>::value << "\n";
+
+    std::cout << "Standard layout: "
+              << std::is_standard_layout<T>::value << "\n";
+}
+
+// Padding demo struct
+struct PaddingDemo {
+    char a;
+    int b;
+    char c;
+};
+
+// aligned_storage example
+void aligned_storage_demo() {
+    using Storage = std::aligned_storage<sizeof(int), alignof(int)>::type;
+
+    Storage storage;
+    int* ptr = reinterpret_cast<int*>(&storage);
+    *ptr = 42;
+
+    std::cout << "Aligned storage value: " << *ptr << "\n";
+}
 
 // ------------------------------------
 
@@ -47,7 +84,6 @@ int main() {
     
     alignas(64) char buffer[256];
     std::cout << "Buffer alignment: " << alignof(decltype(buffer)) << "\n";
-
 
     // -------- NEW FEATURE USAGE --------
 
@@ -67,6 +103,28 @@ int main() {
 
     std::cout << "alignment_of<int>: "
               << std::alignment_of<int>::value << "\n";
+
+    // -------- EXTRA FEATURE USAGE --------
+
+    std::cout << "\n--- Type Transformations ---\n";
+    transform_type<const int&>();
+
+    std::cout << "\n--- Advanced Traits ---\n";
+    advanced_traits<int>();
+    advanced_traits<AlignedStruct>();
+
+    std::cout << "\n--- Padding Demo ---\n";
+    std::cout << "Size of PaddingDemo: "
+              << sizeof(PaddingDemo) << "\n";
+
+    std::cout << "Alignment of PaddingDemo: "
+              << alignof(PaddingDemo) << "\n";
+
+    std::cout << "\n--- Aligned Storage Demo ---\n";
+    aligned_storage_demo();
+
+    // Compile-time check
+    static_assert(sizeof(int) >= 4, "Unexpected int size!");
 
     // ----------------------------------
 

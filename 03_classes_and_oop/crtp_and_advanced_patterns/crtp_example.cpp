@@ -17,6 +17,14 @@ public:
         std::cout << "Common CRTP behavior\n";
     }
 
+    // ----------- NEW ADDITION -----------
+    void callDerivedTwice() {
+        std::cout << "[Base] Calling implementation twice:\n";
+        static_cast<Derived*>(this)->implementation();
+        static_cast<Derived*>(this)->implementation();
+    }
+    // -----------------------------------
+
 private:
     void pre() {
         std::cout << "[Base] Before implementation\n";
@@ -35,6 +43,12 @@ public:
     void implementation() {
         std::cout << "Derived implementation\n";
     }
+
+    // ----------- NEW ADDITION -----------
+    void extraFeature() {
+        std::cout << "Derived extra feature\n";
+    }
+    // -----------------------------------
 };
 
 // ======================================================
@@ -45,7 +59,24 @@ public:
     void implementation() {
         std::cout << "AnotherDerived implementation\n";
     }
+
+    // ----------- NEW ADDITION -----------
+    void extraFeature() {
+        std::cout << "AnotherDerived extra feature\n";
+    }
+    // -----------------------------------
 };
+
+// ----------- NEW ADDITION -----------
+
+// Generic function using CRTP base
+template<typename T>
+void runCRTP(Base<T>& obj) {
+    std::cout << "[Generic] Running CRTP interface\n";
+    obj.interface();
+}
+
+// ------------------------------------
 
 // ======================================================
 // MAIN
@@ -56,12 +87,21 @@ int main() {
 
     d.interface();
     d.common();
+    d.callDerivedTwice();     // new usage
+    d.extraFeature();         // new usage
 
     std::cout << "------------------\n";
 
     ad.interface();
     ad.common();
+    ad.callDerivedTwice();    // new usage
+    ad.extraFeature();        // new usage
+
+    std::cout << "------------------\n";
+
+    // Generic CRTP usage
+    runCRTP(d);
+    runCRTP(ad);
 
     return 0;
 }
-

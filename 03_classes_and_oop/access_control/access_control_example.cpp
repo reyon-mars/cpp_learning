@@ -77,6 +77,19 @@ void friend_modify(Base& obj) {
     obj.priv_member = 99;
 }
 
+// ----------- EXTRA SMALL ADDITIONS -----------
+
+// Utility to show object state clearly
+void show_state(const Base& obj, const std::string& label) {
+    std::cout << "[" << label << "] ";
+    obj.print();
+}
+
+// Function demonstrating pass-by-reference vs value
+void modify_public(Base& obj) {
+    obj.pub_member += 5;
+}
+
 // ------------------------------------
 
 int main() {
@@ -111,6 +124,13 @@ int main() {
 
     std::cout << "Access via getter: "
               << obj.getPrivate() << "\n";
+
+    // -------- EXTRA USAGE --------
+
+    show_state(obj, "Current State");
+
+    modify_public(obj);
+    show_state(obj, "After modify_public");
 
     // ----------------------------------
 

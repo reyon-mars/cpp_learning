@@ -4,6 +4,7 @@
 #include <iostream>
 #include <memory>
 #include <vector>
+#include <typeinfo>   // ✅ added
 
 class Shape {
 public:
@@ -15,6 +16,12 @@ public:
     }
 
     virtual double area() const = 0;
+
+    // ----------- NEW ADDITION -----------
+    virtual const char* name() const {
+        return "Shape";
+    }
+    // -----------------------------------
 };
 
 class Circle : public Shape {
@@ -37,6 +44,12 @@ public:
     double area() const override {
         return 3.14159 * radius * radius;
     }
+
+    // ----------- NEW ADDITION -----------
+    const char* name() const override {
+        return "Circle";
+    }
+    // -----------------------------------
 };
 
 class Rectangle : public Shape {
@@ -59,7 +72,30 @@ public:
     double area() const override {
         return width * height;
     }
+
+    // ----------- NEW ADDITION -----------
+    const char* name() const override {
+        return "Rectangle";
+    }
+    // -----------------------------------
 };
+
+// ----------- NEW ADDITIONS -----------
+
+// Compute total area
+double totalArea(const std::vector<std::unique_ptr<Shape>>& shapes) {
+    double sum = 0;
+    for (const auto& s : shapes)
+        sum += s->area();
+    return sum;
+}
+
+// Print runtime type info
+void printType(const Shape* s) {
+    std::cout << "RTTI type: " << typeid(*s).name() << "\n";
+}
+
+// ------------------------------------
 
 int main() {
 
@@ -79,17 +115,17 @@ int main() {
     Shape& ref = *shapes[0];
     ref.draw();
 
-    std::cout << "\n--- Raw Pointer Polymorphism ---\n";   // 🔹 added
+    std::cout << "\n--- Raw Pointer Polymorphism ---\n";
     Shape* rawPtr = shapes[1].get();
     rawPtr->draw();
     std::cout << "Area: " << rawPtr->area() << "\n";
 
-    std::cout << "\n--- Dynamic Cast Check ---\n";   // 🔹 added
+    std::cout << "\n--- Dynamic Cast Check ---\n";
     if (Circle* c = dynamic_cast<Circle*>(shapes[0].get())) {
         std::cout << "Confirmed: shapes[0] is a Circle\n";
     }
 
-    std::cout << "\n--- Base Pointer Array ---\n";   // 🔹 added
+    std::cout << "\n--- Base Pointer Array ---\n";
     Shape* arr[2];
     arr[0] = shapes[0].get();
     arr[1] = shapes[1].get();
@@ -97,6 +133,23 @@ int main() {
     for (int i = 0; i < 2; i++) {
         arr[i]->draw();
     }
+
+    // -------- NEW FEATURE USAGE --------
+
+    std::cout << "\n--- Shape Names ---\n";
+    for (const auto& s : shapes) {
+        std::cout << s->name() << "\n";
+    }
+
+    std::cout << "\n--- Total Area ---\n";
+    std::cout << totalArea(shapes) << "\n";
+
+    std::cout << "\n--- RTTI Demo ---\n";
+    for (const auto& s : shapes) {
+        printType(s.get());
+    }
+
+    // ----------------------------------
 
     std::cout << "\n--- End of main ---\n";
 

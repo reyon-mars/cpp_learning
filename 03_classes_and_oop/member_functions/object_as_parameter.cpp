@@ -17,6 +17,12 @@ public:
     virtual void MakeSound(void) {
         cout << name << " says Objects " << endl;
     }
+
+    // ----------- NEW ADDITION -----------
+    virtual const char* getType() const {
+        return "Pet";
+    }
+    // -----------------------------------
 };
 
 // Declaring a child class of the Pet Superclass called Dog
@@ -27,6 +33,12 @@ public:
     void MakeSound(void) override {
         cout << name << " says woof woof woof " << endl;
     }
+
+    // ----------- NEW ADDITION -----------
+    const char* getType() const override {
+        return "Dog";
+    }
+    // -----------------------------------
 };
 
 class GermanShepherd : public Dog {
@@ -40,6 +52,12 @@ public:
     void Laufen(void) {
         cout << name << " the german shepherd is running " << endl;
     }
+
+    // ----------- NEW ADDITION -----------
+    const char* getType() const override {
+        return "GermanShepherd";
+    }
+    // -----------------------------------
 };
 
 class MastinEspanol : public Dog {
@@ -53,6 +71,12 @@ public:
     void Ejectuar(void) {
         cout << name << " the Mastin Espanol is running " << endl;
     }
+
+    // ----------- NEW ADDITION -----------
+    const char* getType() const override {
+        return "MastinEspanol";
+    }
+    // -----------------------------------
 };
 
 void PlayWithPet(Pet &pet) {
@@ -112,6 +136,21 @@ void printType(Pet& pet) {
     cout << "Actual type: " << typeid(pet).name() << endl;
 }
 
+// Print type using virtual function
+void printTypeVirtual(const Pet& pet) {
+    cout << "Virtual type: " << pet.getType() << endl;
+}
+
+// Count how many dogs in container
+int countDogs(const vector<Pet*>& pets) {
+    int count = 0;
+    for (auto p : pets) {
+        if (dynamic_cast<Dog*>(p))
+            count++;
+    }
+    return count;
+}
+
 // ------------------------------------
 
 int main(void) {
@@ -150,7 +189,7 @@ int main(void) {
 
     // Object slicing demo
     cout << "\nObject slicing example:\n";
-    PlayWithPetByValue("SlicedDog", dog); // ❗ slicing happens
+    PlayWithPetByValue("SlicedDog", dog);
 
     // Safer casting
     cout << "\nSafePlay demo:\n";
@@ -164,12 +203,21 @@ int main(void) {
     printType(dog);
     printType(gs);
 
+    // Virtual type info
+    cout << "\nVirtual type info:\n";
+    printTypeVirtual(gs);
+    printTypeVirtual(mes);
+
     // Polymorphic container
     vector<Pet*> pets = { &pet, &dog, &gs, &mes };
     cout << "\nAll pets making sound:\n";
     for (auto p : pets) {
         p->MakeSound();
     }
+
+    // Count dogs
+    cout << "Number of dogs: "
+         << countDogs(pets) << endl;
 
     // ----------------------------------
 

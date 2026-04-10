@@ -49,6 +49,12 @@ class Sub : public Super {
     void print(void) {
       cout << " Storage = " << accessible_storage << endl;
     }
+
+    // -------- EXTRA ADDITION --------
+    void increment() {
+        accessible_storage++;
+    }
+    // --------------------------------
 };
 
 // Sub Class inheriting from multiple classes
@@ -80,6 +86,20 @@ class SubMulti : public Super, public Base {
         Super::info();
         Base::info();
     }
+    // --------------------------------
+
+    // -------- EXTRA ADDITIONS --------
+
+    void incrementBoth() {
+        Super::accessible_storage++;
+        Base::storage++;
+    }
+
+    void printAddresses() {
+        cout << "Address Super part: " << static_cast<Super*>(this) << endl;
+        cout << "Address Base part : " << static_cast<Base*>(this) << endl;
+    }
+
     // --------------------------------
 };
 
@@ -118,6 +138,14 @@ int main(void) {
 
   // Virtual function demo
   obj2.showInfo();
+
+  // -------- EXTRA USAGE --------
+
+  obj2.incrementBoth();
+  cout << "After incrementBoth:\n";
+  obj2.print();
+
+  obj2.printAddresses();
 
   // ----------------------------------
 

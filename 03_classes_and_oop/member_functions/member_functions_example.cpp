@@ -35,6 +35,16 @@ public:
     void safePrint() const noexcept {
         std::cout << "Safe value: " << value << "\n";
     }
+
+    // -------- EXTRA ADDITIONS --------
+    MyClass& multiply(int v) {
+        value *= v;
+        return *this;
+    }
+
+    bool isPositive() const {
+        return value > 0;
+    }
     // --------------------------------
     
     // Virtual member function
@@ -64,6 +74,12 @@ public:
 };
 // --------------------------------
 
+// -------- EXTRA ADDITION --------
+void showObject(const MyClass& obj) {
+    std::cout << "[Helper] Value = " << obj.getValue() << "\n";
+}
+// --------------------------------
+
 int main() {
     MyClass obj(42);
     obj.setValue(100);
@@ -82,15 +98,20 @@ int main() {
     std::move(cobj).process();          // const rvalue
 
     // Method chaining
-    obj.add(10).add(20);
+    obj.add(10).add(20).multiply(2);
     std::cout << "After chaining: " << obj.getValue() << "\n";
 
     // noexcept function
     obj.safePrint();
 
+    std::cout << "Is positive? "
+              << (obj.isPositive() ? "Yes\n" : "No\n");
+
     // Final class usage
     FinalDerived fd(500);
     fd.display();
+
+    showObject(obj);
 
     // ----------------------------------
 

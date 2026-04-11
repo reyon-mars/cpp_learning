@@ -65,6 +65,22 @@ Object create_with_move() {
     return std::move(temp);  // forces move
 }
 
+// 🔹 Return temporary directly (extra RVO example)
+Object create_temp_direct() {
+    return Object(777);
+}
+
+// 🔹 Function returning static object (no RVO)
+Object& get_static_object() {
+    static Object obj(888);
+    return obj;
+}
+
+// 🔹 Chain return (nested call)
+Object chain_create() {
+    return create_object();  // still eligible for elision
+}
+
 // ------------------------------------
 
 int main() {
@@ -91,6 +107,18 @@ int main() {
 
     std::cout << "\n--- Temporary Object ---\n";
     take_by_value(Object(999)); // may use move
+
+    // 🔹 Additional usage
+
+    std::cout << "\n--- Direct Temporary Return ---\n";
+    Object obj5 = create_temp_direct();
+
+    std::cout << "\n--- Static Object Reference ---\n";
+    Object& refObj = get_static_object();
+    std::cout << "Static object data: " << refObj.data << "\n";
+
+    std::cout << "\n--- Chained Creation ---\n";
+    Object obj6 = chain_create();
 
     // ----------------------------------
 

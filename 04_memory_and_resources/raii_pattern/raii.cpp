@@ -186,6 +186,38 @@ void append_with_status(const std::string& filename,
     }
 }
 
+// -------- EXTRA SMALL ADDITIONS --------
+
+// Count occurrences of a specific word
+int count_occurrences(file_guard& fg, const std::string& target) {
+    rewind_file(fg);
+
+    int count = 0;
+    std::string word;
+    while (fg.get() >> word) {
+        if (word == target)
+            ++count;
+    }
+
+    rewind_file(fg);
+    return count;
+}
+
+// Convert file content to uppercase
+std::string to_uppercase(file_guard& fg) {
+    rewind_file(fg);
+
+    std::string content, line;
+    while (std::getline(fg.get(), line)) {
+        for (char& c : line)
+            c = std::toupper(c);
+        content += line + '\n';
+    }
+
+    rewind_file(fg);
+    return content;
+}
+
 // ======================================================
 // MAIN
 // ======================================================
@@ -229,6 +261,12 @@ int main() {
 
         std::cout << "Contains word 'test'? "
                   << (contains_word(fg, "test") ? "Yes\n" : "No\n");
+
+        std::cout << "Occurrences of 'test': "
+                  << count_occurrences(fg, "test") << '\n';
+
+        std::cout << "\nUppercase preview:\n";
+        std::cout << to_uppercase(fg) << '\n';
 
         std::cout << "Preview (30 chars):\n";
         print_preview(fg, 30);

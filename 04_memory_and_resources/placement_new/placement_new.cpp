@@ -4,6 +4,7 @@
 #include <utility>
 #include <memory>
 #include <algorithm>
+#include <functional> // 🔹 added
 
 // ---------------- ORIGINAL FUNCTION ----------------
 auto sum_vector(std::vector<int> vec) {
@@ -48,6 +49,34 @@ int sum_range(int a, int b) {
         s += i;
     return s;
 }
+
+// ----------- NEW ADDITIONS -----------
+
+// Higher-order function (takes lambda)
+void apply_and_print(int x, const std::function<int(int)>& func) {
+    std::cout << "Applied result: " << func(x) << '\n';
+}
+
+// Lambda returning lambda (nested)
+auto nested_lambda() {
+    return [](int a) {
+        return [a](int b) {
+            return a + b;
+        };
+    };
+}
+
+// Generic lambda with capture
+auto make_power(int exp) {
+    return [exp](auto base) {
+        int result = 1;
+        for (int i = 0; i < exp; ++i)
+            result *= base;
+        return result;
+    };
+}
+
+// ------------------------------------
 
 // ---------------- MAIN ----------------
 int main() {
@@ -124,7 +153,6 @@ int main() {
     // Mutable vs non-mutable
     int val = 5;
     auto non_mut = [val]() {
-        // val++; ❌ not allowed
         return val;
     };
     auto mut = [val]() mutable {
@@ -154,6 +182,17 @@ int main() {
         return (n <= 1) ? 1 : n * self(self, n - 1);
     };
     std::cout << "Factorial 5 = " << factorial(factorial, 5) << '\n';
+
+    // 🔹 Higher-order function usage
+    apply_and_print(5, times3);
+
+    // 🔹 Nested lambda usage
+    auto nl = nested_lambda();
+    std::cout << "Nested lambda (5 + 3): " << nl(5)(3) << '\n';
+
+    // 🔹 Power lambda
+    auto power2 = make_power(2);
+    std::cout << "4^2 = " << power2(4) << '\n';
 
     // ----------------------------------
 

@@ -2,7 +2,7 @@
 // Dynamic memory management with new/delete
 
 #include <iostream>
-#include <new>   // for std::size_t
+#include <new>   // for std::size_t, std::nothrow
 
 class MyClass {
 private:
@@ -44,6 +44,17 @@ public:
         ::operator delete(ptr);
     }
 
+    // 🔹 Sized delete (C++14+)
+    static void operator delete(void* ptr, std::size_t size) noexcept {
+        std::cout << "sized delete called (" << size << " bytes)\n";
+        ::operator delete(ptr);
+    }
+
+    // 🔹 Placement delete (called if constructor throws)
+    static void operator delete(void* ptr, void* place) noexcept {
+        std::cout << "placement delete called\n";
+    }
+
     // --------------------------------
 };
 
@@ -79,6 +90,23 @@ int main() {
     } else {
         std::cout << "Allocation failed\n";
     }
+
+    // 🔹 Manual array placement new
+    std::cout << "\n--- Manual Array Placement ---\n";
+    void* rawArr = ::operator new(sizeof(MyClass) * 2);
+    MyClass* arrPtr = static_cast<MyClass*>(rawArr);
+
+    new(&arrPtr[0]) MyClass(10);
+    new(&arrPtr[1]) MyClass(20);
+
+    arrPtr[0].~MyClass();
+    arrPtr[1].~MyClass();
+    ::operator delete(rawArr);
+
+    // 🔹 Null pointer delete safety
+    std::cout << "\n--- Deleting nullptr ---\n";
+    MyClass* nullObj = nullptr;
+    delete nullObj;  // safe
 
     // ----------------------------------
 

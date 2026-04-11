@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <utility>
+#include <type_traits> // 🔹 added for type traits
 
 class Widget {
 public:
@@ -72,6 +73,19 @@ void check(Widget&&) {
     std::cout << "check: rvalue\n";
 }
 
+// 🔹 Forwarding wrapper (perfect forwarding chain)
+template<typename T>
+void wrapper(T&& arg) {
+    std::cout << "Inside wrapper -> ";
+    process(std::forward<T>(arg));
+}
+
+// 🔹 Move helper (forces move)
+Widget make_moved_widget(Widget w) {
+    std::cout << "Inside make_moved_widget\n";
+    return std::move(w);
+}
+
 // ------------------------------------
 
 int main() {
@@ -105,6 +119,15 @@ int main() {
     check(std::move(w));      // rvalue
     const Widget cw(500);
     check(cw);                // const lvalue
+
+    // 🔹 Wrapper forwarding demo
+    std::cout << "\n--- Wrapper forwarding ---\n";
+    wrapper(w);
+    wrapper(Widget(600));
+
+    // 🔹 Move-return demo
+    std::cout << "\n--- Move return demo ---\n";
+    Widget w3 = make_moved_widget(Widget(700));
 
     // ----------------------------------
 

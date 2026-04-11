@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 #include <new>
+#include <cstddef>   // ✅ added
 
 template<typename T>
 class SimpleAllocator {
@@ -33,21 +34,18 @@ public:
 
     // -------- NEW ADDITIONS --------
 
-    // Construct object in allocated memory
     template<typename U, typename... Args>
     void construct(U* p, Args&&... args) {
         std::cout << "[Allocator] Constructing object\n";
         ::new ((void*)p) U(std::forward<Args>(args)...);
     }
 
-    // Destroy object
     template<typename U>
     void destroy(U* p) {
         std::cout << "[Allocator] Destroying object\n";
         p->~U();
     }
 
-    // Allocator equality (required by STL)
     bool operator==(const SimpleAllocator&) const { return true; }
     bool operator!=(const SimpleAllocator&) const { return false; }
 
@@ -75,8 +73,38 @@ public:
         std::cout << "[Pool] Reset\n";
         index = 0;
     }
+
+    // ----------- NEW ADDITIONS -----------
+
+    std::size_t capacity() const {
+        return pool.size();
+    }
+
+    std::size_t used() const {
+        return index;
+    }
+
+    bool isFull() const {
+        return index >= pool.size();
+    }
+
+    // ------------------------------------
 };
 // -----------------------------------
+
+
+// ----------- NEW ADDITION -----------
+// Custom object to test allocator
+struct Test {
+    int x;
+    Test(int v) : x(v) {
+        std::cout << "Test constructed: " << x << "\n";
+    }
+    ~Test() {
+        std::cout << "Test destroyed: " << x << "\n";
+    }
+};
+// ------------------------------------
 
 int main() {
 
@@ -89,7 +117,7 @@ int main() {
     vec.push_back(3);
 
     std::cout << "\n--- Reserving More Capacity ---\n";
-    vec.reserve(10);   // forces reallocation
+    vec.reserve(10);
 
     // -------- NEW FEATURE USAGE --------
 
@@ -108,7 +136,27 @@ int main() {
     std::cout << "Pool values: "
               << *a << " " << *b << " " << *c << "\n";
 
+    std::cout << "Pool used: " << pool.used()
+              << "/" << pool.capacity() << "\n";
+
+    std::cout << "Pool full? "
+              << (pool.isFull() ? "Yes\n" : "No\n");
+
     pool.reset();
+
+    // -------- Allocator with custom type --------
+
+    std::cout << "\n--- Custom Allocator with Objects ---\n";
+
+    SimpleAllocator<Test> alloc;
+
+    Test* t = alloc.allocate(1);
+    alloc.construct(t, 42);
+
+    std::cout << "Value inside Test: " << t->x << "\n";
+
+    alloc.destroy(t);
+    alloc.deallocate(t, 1);
 
     // ----------------------------------
 

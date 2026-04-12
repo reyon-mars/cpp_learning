@@ -79,6 +79,31 @@ public:
         std::cout << label << ": " << duration << " us\n";
     }
 
+    // -------- EXTRA SMALL ADDITIONS --------
+
+    // Get elapsed in milliseconds
+    long long elapsed_ms() const {
+        auto now = std::chrono::steady_clock::now();
+        return std::chrono::duration_cast<std::chrono::milliseconds>(
+                   now - start).count();
+    }
+
+    // Check if timer already stopped
+    bool is_stopped() const {
+        return stopped;
+    }
+
+    // Measure and return duration (instead of printing)
+    template<typename Func>
+    static long long measure_return(Func&& f) {
+        auto begin = std::chrono::steady_clock::now();
+        f();
+        auto end = std::chrono::steady_clock::now();
+
+        return std::chrono::duration_cast<std::chrono::microseconds>(
+                   end - begin).count();
+    }
+
     // --------------------------------
 
     ~scoped_timer() {
@@ -121,6 +146,19 @@ int main() {
     scoped_timer::measure("Lambda task", [] {
         std::this_thread::sleep_for(std::chrono::milliseconds(40));
     });
+
+    // -------- EXTRA USAGE --------
+
+    {
+        scoped_timer timer("Check stopped flag");
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::cout << "Is stopped? " << timer.is_stopped() << "\n";
+    }
+
+    auto duration = scoped_timer::measure_return([] {
+        std::this_thread::sleep_for(std::chrono::milliseconds(25));
+    });
+    std::cout << "Measured (returned): " << duration << " us\n";
 
     // --------------------------------
 

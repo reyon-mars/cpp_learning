@@ -60,6 +60,20 @@ public:
                    now - start).count();
     }
 
+    // -------- EXTRA SMALL ADDITIONS --------
+
+    // Get elapsed time in milliseconds
+    long long elapsed_ms() const {
+        auto now = std::chrono::steady_clock::now();
+        return std::chrono::duration_cast<std::chrono::milliseconds>(
+                   now - start).count();
+    }
+
+    // Check if already stopped
+    bool is_stopped() const {
+        return stopped;
+    }
+
     // --------------------------------
 
     ~scoped_timer() {
@@ -79,6 +93,20 @@ void measure(const std::string& label, Func&& f) {
                      end - start).count()
               << " us\n";
 }
+
+// -------- EXTRA HELPER --------
+
+// Returns measured time instead of printing
+template<typename Func>
+long long measure_return(Func&& f) {
+    auto start = std::chrono::steady_clock::now();
+    f();
+    auto end = std::chrono::steady_clock::now();
+
+    return std::chrono::duration_cast<std::chrono::microseconds>(
+               end - start).count();
+}
+
 // --------------------------------
 
 
@@ -108,6 +136,19 @@ int main() {
     measure("Quick measure", [] {
         for (volatile int i = 0; i < 300000; ++i);
     });
+
+    // -------- EXTRA USAGE --------
+
+    {
+        scoped_timer timer("Check state");
+        for (volatile int i = 0; i < 100000; ++i);
+        std::cout << "Stopped? " << timer.is_stopped() << "\n";
+    }
+
+    auto t = measure_return([] {
+        for (volatile int i = 0; i < 150000; ++i);
+    });
+    std::cout << "Returned time: " << t << " us\n";
 
     // --------------------------------
 

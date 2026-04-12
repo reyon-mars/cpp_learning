@@ -2,6 +2,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 // ----------------------------------------------------
 // ORIGINAL STRUCT (LOGIC UNCHANGED)
@@ -54,6 +55,31 @@ std::unique_ptr<User> create_user(std::string name, int age) {
 // Safe check helper
 bool is_null(const std::unique_ptr<User>& u) {
     return !u;
+}
+
+// 🔹 Find oldest user
+User* find_oldest(const std::vector<std::unique_ptr<User>>& users) {
+    if (users.empty()) return nullptr;
+
+    return std::max_element(users.begin(), users.end(),
+        [](const auto& a, const auto& b) {
+            return a->age < b->age;
+        })->get();
+}
+
+// 🔹 Count adults
+int count_adults(const std::vector<std::unique_ptr<User>>& users) {
+    return std::count_if(users.begin(), users.end(),
+        [](const auto& u) {
+            return u && u->age >= 18;
+        });
+}
+
+// 🔹 Print all users
+void print_all(const std::vector<std::unique_ptr<User>>& users) {
+    for (const auto& u : users) {
+        print_user(u);
+    }
 }
 
 // --------------------------------
@@ -135,6 +161,33 @@ int main(void) {
     // null check helper
     if (is_null(v2))
         std::cout << "v2 is null\n";
+
+    // -------- EXTRA NEW USAGE --------
+
+    std::cout << "\n--- Advanced Utilities ---\n";
+
+    // Print all users
+    print_all(users);
+
+    // Count adults
+    std::cout << "Adult count: "
+              << count_adults(users) << "\n";
+
+    // Find oldest user
+    if (auto oldest = find_oldest(users)) {
+        std::cout << "Oldest user: "
+                  << oldest->name << " (" << oldest->age << ")\n";
+    }
+
+    // const unique_ptr usage
+    const std::unique_ptr<User>& cref = users[0];
+    std::cout << "Const access: " << *cref << "\n";
+
+    // Lambda with unique_ptr
+    std::for_each(users.begin(), users.end(),
+        [](const auto& u) {
+            if (u) std::cout << "Lambda user: " << *u << "\n";
+        });
 
     // ----------------------------------
 

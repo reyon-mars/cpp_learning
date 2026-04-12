@@ -1,6 +1,3 @@
-// Smart Pointers Workshop
-// unique_ptr, shared_ptr, weak_ptr
-
 #include <iostream>
 #include <memory>
 
@@ -46,6 +43,11 @@ int main() {
         // -------- NEW USAGE --------
         ptr2 = std::make_unique<Widget>();
         std::cout << "Raw pointer access: " << ptr2.get() << "\n";
+
+        // EXTRA: swap demo
+        std::unique_ptr<Widget> ptr3 = std::make_unique<Widget>();
+        ptr2.swap(ptr3);
+        std::cout << "Swapped unique_ptrs\n";
         // --------------------------------
     }
 
@@ -76,6 +78,9 @@ int main() {
         std::shared_ptr<Widget> ptr_new(new Widget());
         std::cout << "Using new (not recommended) count: "
                   << ptr_new.use_count() << "\n";
+
+        // EXTRA: unique() check
+        std::cout << "Is unique? " << ptr1.unique() << "\n";
         // --------------------------------
     }
 
@@ -97,6 +102,10 @@ int main() {
         if (wp.expired()) {
             std::cout << "Weak_ptr expired\n";
         }
+
+        // EXTRA: use_count via weak_ptr
+        std::cout << "Weak_ptr use_count: "
+                  << wp.use_count() << "\n";
     }
 
     std::cout << "----------------------\n";
@@ -148,6 +157,25 @@ int main() {
         std::cout << "Aliasing shared_ptr count: "
                   << sp.use_count() << "\n";
     }
+
+    // -------- EXTRA SMALL ADDITIONS --------
+
+    // make_unique vs new comparison
+    {
+        auto p1 = std::make_unique<Widget>();
+        auto p2 = std::unique_ptr<Widget>(new Widget());
+
+        std::cout << "Both created (prefer make_unique)\n";
+    }
+
+    // shared_ptr reset with new object
+    {
+        auto sp = std::make_shared<Widget>();
+        sp.reset(new Widget());
+        std::cout << "shared_ptr reset with new object\n";
+    }
+
+    // --------------------------------------
 
     return 0;
 }

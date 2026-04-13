@@ -1,9 +1,8 @@
-// SOLID Principles Exercise
-// Single Responsibility, Open/Closed, Liskov, Interface Segregation, Dependency Inversion
-
 #include <iostream>
 #include <memory>
-#include <ctime>   // ✅ ADDED
+#include <ctime>
+#include <vector>   // ✅ ADDED
+#include <string>
 
 // ---------------- Single Responsibility ----------------
 
@@ -43,6 +42,17 @@ public:
     void log(const std::string& msg) override {
         std::time_t now = std::time(nullptr);
         std::cout << "[Time: " << now << "] " << msg << "\n";
+    }
+};
+
+// ✅ ADDED: Composed logger (demonstrates SRP + OCP)
+class FileLoggerWithWriter : public Logger {
+private:
+    FileWriter writer;
+
+public:
+    void log(const std::string& msg) override {
+        writer.write(msg);
     }
 };
 
@@ -121,7 +131,7 @@ public:
     Circle(int r) : radius(r) {}
 
     int area() const override {
-        return 3.14 * radius * radius;
+        return static_cast<int>(3.14 * radius * radius);
     }
 };
 
@@ -144,6 +154,20 @@ public:
     }
 };
 
+// ---------------- Helper Functions (ADDED) ----------------
+
+// Test multiple shapes (LSP demonstration)
+void print_shapes(const std::vector<std::unique_ptr<Shape>>& shapes) {
+    for (const auto& s : shapes) {
+        std::cout << "Area: " << s->area() << "\n";
+    }
+}
+
+// Logger test utility (DIP demonstration)
+void test_logger(std::shared_ptr<Logger> logger) {
+    logger->log("Testing logger...");
+}
+
 // ---------------- Main ----------------
 
 int main() {
@@ -162,9 +186,16 @@ int main() {
 
     std::cout << "\n";
 
-    // ✅ ADDED: Timestamp logger
+    // Timestamp logger
     auto time_logger = std::make_shared<TimestampLogger>();
     app2.set_logger(time_logger);
+    app2.run();
+
+    std::cout << "\n";
+
+    // ✅ ADDED: FileWriter-based logger
+    auto writer_logger = std::make_shared<FileLoggerWithWriter>();
+    app2.set_logger(writer_logger);
     app2.run();
 
     std::cout << "\n";
@@ -174,7 +205,6 @@ int main() {
     printer.print("Report.pdf");
     printer.scan();
 
-    // ✅ ADDED: Simple printer usage
     SimplePrinter simple;
     simple.print("Notes.txt");
 
@@ -183,11 +213,28 @@ int main() {
     // Liskov Substitution
     std::unique_ptr<Shape> shape1 = std::make_unique<Rectangle>(4, 5);
     std::unique_ptr<Shape> shape2 = std::make_unique<Square>(4);
-    std::unique_ptr<Shape> shape3 = std::make_unique<Circle>(3); // ✅ ADDED
+    std::unique_ptr<Shape> shape3 = std::make_unique<Circle>(3);
 
     std::cout << "Rectangle area: " << shape1->area() << "\n";
     std::cout << "Square area: " << shape2->area() << "\n";
-    std::cout << "Circle area: " << shape3->area() << "\n"; // ✅ ADDED
+    std::cout << "Circle area: " << shape3->area() << "\n";
+
+    std::cout << "\n--- Shape Collection Test ---\n";
+
+    // ✅ ADDED: polymorphic collection
+    std::vector<std::unique_ptr<Shape>> shapes;
+    shapes.push_back(std::make_unique<Rectangle>(2, 3));
+    shapes.push_back(std::make_unique<Square>(5));
+    shapes.push_back(std::make_unique<Circle>(2));
+
+    print_shapes(shapes);
+
+    std::cout << "\n--- Logger Test Utility ---\n";
+
+    // ✅ ADDED: logger testing
+    test_logger(console_logger);
+    test_logger(file_logger);
+    test_logger(time_logger);
 
     return 0;
 }

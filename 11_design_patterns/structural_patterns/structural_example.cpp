@@ -1,8 +1,7 @@
-// Structural Patterns Exercise
-// Adapter, Bridge, Decorator, Proxy
-
 #include <iostream>
 #include <memory>
+#include <vector>   // ✅ ADDED
+#include <string>
 
 // ---------------- Adapter ----------------
 
@@ -95,7 +94,7 @@ public:
     }
 };
 
-// ---------------- Bridge (Small Addition) ----------------
+// ---------------- Bridge ----------------
 
 class Renderer {
 public:
@@ -141,7 +140,7 @@ public:
     }
 };
 
-// ---------------- Proxy (Small Addition) ----------------
+// ---------------- Proxy ----------------
 
 class Image {
 public:
@@ -203,42 +202,54 @@ public:
     }
 };
 
+// ---------------- Helper Functions (ADDED) ----------------
+
+// Run multiple adapters uniformly
+void run_adapters(const std::vector<std::shared_ptr<NewInterface>>& adapters) {
+    for (const auto& a : adapters) {
+        a->new_method();
+    }
+}
+
+// Test decorator chain
+void test_component(std::shared_ptr<Component> comp) {
+    comp->operation();
+}
+
 // ---------------- Main ----------------
 
 int main() {
 
     // Adapter
     auto old = std::make_shared<OldInterface>();
-    Adapter adapter(old);
-    adapter.new_method();
-
-    // ✅ ADDED: New adapter usage
     auto legacy = std::make_shared<LegacyPrinter>();
-    PrinterAdapter padapter(legacy);
-    padapter.new_method();
+
+    std::vector<std::shared_ptr<NewInterface>> adapters;
+    adapters.push_back(std::make_shared<Adapter>(old));
+    adapters.push_back(std::make_shared<PrinterAdapter>(legacy));
+
+    run_adapters(adapters);   // ✅ ADDED unified execution
 
     std::cout << "\n";
 
     // Decorator
     auto component = std::make_shared<ConcreteComponent>();
     auto decorated = std::make_shared<ConcreteDecorator>(component);
-    decorated->operation();
-
-    // ✅ ADDED: Stacked decorators
     auto logged = std::make_shared<LoggingDecorator>(decorated);
-    logged->operation();
+
+    test_component(logged);   // ✅ ADDED wrapper test
 
     std::cout << "\n";
 
     // Bridge
-    auto renderer = std::make_shared<VectorRenderer>();
-    Circle circle(renderer, 5.0f);
-    circle.draw();
+    auto vector_renderer = std::make_shared<VectorRenderer>();
+    auto raster_renderer = std::make_shared<RasterRenderer>();
 
-    // ✅ ADDED: Switch implementation
-    auto raster = std::make_shared<RasterRenderer>();
-    Circle circle2(raster, 3.0f);
-    circle2.draw();
+    Circle c1(vector_renderer, 5.0f);
+    Circle c2(raster_renderer, 3.0f);
+
+    c1.draw();
+    c2.draw();
 
     std::cout << "\n";
 
@@ -249,11 +260,11 @@ int main() {
 
     std::cout << "\n";
 
-    // ✅ ADDED: Secure proxy usage
+    // Secure proxy usage
     SecureImageProxy secure_img("secret.png", false);
-    secure_img.display();
-
     SecureImageProxy secure_img2("secret.png", true);
+
+    secure_img.display();
     secure_img2.display();
 
     return 0;

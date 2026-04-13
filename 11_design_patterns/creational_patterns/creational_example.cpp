@@ -1,10 +1,9 @@
-// Creational Patterns Exercise
-// Singleton, Factory, Builder
-
 #include <iostream>
 #include <memory>
 #include <string>
-#include <mutex>   // ✅ ADDED for thread safety
+#include <mutex>
+#include <thread>   // ✅ ADDED
+#include <vector>   // ✅ ADDED
 
 // ---------------- Singleton ----------------
 
@@ -21,7 +20,7 @@ public:
         return instance;
     }
 
-    // ✅ ADDED: Thread-safe access (extra, original unchanged)
+    // ✅ ADDED: Thread-safe access
     static Database* get_thread_safe_instance() {
         static std::mutex mtx;
         std::lock_guard<std::mutex> lock(mtx);
@@ -67,12 +66,12 @@ public:
     static std::unique_ptr<Animal> create(const std::string& type) {
         if (type == "dog") return std::make_unique<Dog>();
         if (type == "cat") return std::make_unique<Cat>();
-        if (type == "cow") return std::make_unique<Cow>(); // ✅ ADDED
+        if (type == "cow") return std::make_unique<Cow>();
         return nullptr;
     }
 };
 
-// ---------------- Builder (Small Addition) ----------------
+// ---------------- Builder ----------------
 
 class Computer {
 public:
@@ -116,10 +115,42 @@ public:
         return *this;
     }
 
+    // ✅ ADDED: simple validation
+    bool is_valid() const {
+        return !computer.cpu.empty() &&
+               !computer.ram.empty() &&
+               !computer.storage.empty();
+    }
+
     Computer build() {
+        if (!is_valid()) {
+            std::cout << "Warning: Incomplete build\n";
+        }
         return computer;
     }
 };
+
+// ---------------- Helper Functions (ADDED) ----------------
+
+// Thread function for singleton demo
+void thread_task(int id) {
+    Database* db = Database::get_thread_safe_instance();
+    db->query("Thread " + std::to_string(id) + " query");
+}
+
+// Factory bulk test
+void test_factory() {
+    std::vector<std::string> types = {"dog", "cat", "cow", "unknown"};
+
+    for (const auto& t : types) {
+        auto animal = AnimalFactory::create(t);
+        if (animal) {
+            animal->speak();
+        } else {
+            std::cout << "Unknown animal type: " << t << "\n";
+        }
+    }
+}
 
 // ---------------- Main ----------------
 
@@ -128,19 +159,33 @@ int main() {
     // Singleton usage
     Database::get_instance()->query("SELECT * FROM users");
 
-    // ✅ ADDED: Thread-safe singleton usage
+    // Thread-safe singleton usage
     Database::get_thread_safe_instance()->query("SELECT * FROM products");
+
+    std::cout << "\n--- Singleton Threads ---\n";
+
+    // ✅ ADDED: multi-thread test
+    std::thread t1(thread_task, 1);
+    std::thread t2(thread_task, 2);
+    std::thread t3(thread_task, 3);
+
+    t1.join();
+    t2.join();
+    t3.join();
 
     std::cout << "\n";
 
     // Factory usage
     auto dog = AnimalFactory::create("dog");
     auto cat = AnimalFactory::create("cat");
-    auto cow = AnimalFactory::create("cow"); // ✅ ADDED
+    auto cow = AnimalFactory::create("cow");
 
     if (dog) dog->speak();
     if (cat) cat->speak();
-    if (cow) cow->speak(); // ✅ ADDED
+    if (cow) cow->speak();
+
+    std::cout << "\n--- Factory Bulk Test ---\n";
+    test_factory();   // ✅ ADDED
 
     std::cout << "\n";
 
@@ -155,12 +200,21 @@ int main() {
 
     std::cout << "\n";
 
-    // ✅ ADDED: Using preset builder
+    // Using preset builder
     Computer gaming = ComputerBuilder()
                         .gaming_pc()
                         .build();
 
     gaming.show();
+
+    std::cout << "\n--- Invalid Build Demo ---\n";
+
+    // ✅ ADDED: validation demo
+    Computer incomplete = ComputerBuilder()
+                            .set_cpu("Only CPU")
+                            .build();
+
+    incomplete.show();
 
     return 0;
 }

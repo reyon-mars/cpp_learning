@@ -8,6 +8,20 @@
 #include <vector>
 #include <optional>
 
+// -------- NEW ADDITIONS --------
+#include <array>
+
+// Safe division helper
+void safe_division(int a, int b) {
+    if (b == 0) {
+        std::cout << "Division by zero avoided (would be UB)\n";
+        return;
+    }
+    std::cout << "Division result: " << a / b << "\n";
+}
+
+// --------------------------------
+
 int main() {
 
     // Example 1: Buffer overflow
@@ -82,6 +96,49 @@ int main() {
 
     safe_value = 10;
     std::cout << "Safe value: " << safe_value.value() << "\n";
+
+    // ----------------------------------------------------
+    // ✅ NEW: std::array vs raw array
+    std::cout << "\nstd::array vs raw array:\n";
+    std::array<int, 3> arr = {1, 2, 3};
+
+    try {
+        std::cout << "arr.at(5): ";
+        std::cout << arr.at(5) << "\n";
+    } catch (...) {
+        std::cout << "Out-of-bounds prevented using std::array\n";
+    }
+
+    // ----------------------------------------------------
+    // ✅ NEW: Division by zero safety
+    std::cout << "\nDivision safety:\n";
+    safe_division(10, 2);
+    safe_division(10, 0);
+
+    // ----------------------------------------------------
+    // ✅ NEW: Iterator invalidation awareness
+    std::cout << "\nIterator invalidation awareness:\n";
+    std::vector<int> v2 = {1, 2, 3};
+    auto it = v2.begin();
+
+    v2.push_back(4); // may invalidate iterator
+    std::cout << "After push_back, iterator may be invalid\n";
+
+    // ----------------------------------------------------
+    // ✅ NEW: Signed vs unsigned mismatch
+    std::cout << "\nSigned vs unsigned example:\n";
+    int neg = -1;
+    unsigned int u = 1;
+
+    if (neg < u) {
+        std::cout << "Unexpected comparison result due to type conversion\n";
+    }
+
+    // ----------------------------------------------------
+    // ✅ NEW: Alignment awareness
+    std::cout << "\nAlignment info:\n";
+    std::cout << "Alignment of int: " << alignof(int) << "\n";
+    std::cout << "Alignment of double: " << alignof(double) << "\n";
 
     return 0;
 }

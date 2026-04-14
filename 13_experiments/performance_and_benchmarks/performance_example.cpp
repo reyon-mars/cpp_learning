@@ -8,9 +8,38 @@
 // ✅ ADDED
 #include <numeric>   // for std::accumulate
 
+// -------- NEW ADDITIONS --------
+
+// Prevent optimization
+volatile int sink = 0;
+
+// Run benchmark multiple times
+template<typename Func>
+long long benchmark(Func f, int runs = 5) {
+    long long total = 0;
+    for (int i = 0; i < runs; ++i) {
+        auto start = std::chrono::high_resolution_clock::now();
+        sink = f();
+        auto end = std::chrono::high_resolution_clock::now();
+
+        total += std::chrono::duration_cast<std::chrono::microseconds>(
+                     end - start).count();
+    }
+    return total / runs;
+}
+
+// Warm-up function
+void warmup() {
+    for (volatile int i = 0; i < 1000000; ++i);
+}
+
+// --------------------------------
+
 int main() {
 
     const int N = 10000;
+
+    warmup(); // ✅ ADDED
 
     // Example: Vector access patterns
     std::vector<int> vec;
@@ -23,103 +52,88 @@ int main() {
     std::cout << "Vector size: " << vec.size() << "\n";
 
     // -------- Range-based loop benchmark --------
-    auto start1 = std::chrono::high_resolution_clock::now();
-
-    int sum1 = 0;
-    for (int v : vec) {
-        sum1 += v;
-    }
-
-    auto end1 = std::chrono::high_resolution_clock::now();
-    auto duration1 =
-        std::chrono::duration_cast<std::chrono::microseconds>(end1 - start1);
+    auto duration1 = benchmark([&]() {
+        int sum = 0;
+        for (int v : vec) sum += v;
+        return sum;
+    });
 
     // -------- Index loop benchmark --------
-    auto start2 = std::chrono::high_resolution_clock::now();
-
-    int sum2 = 0;
-    for (size_t i = 0; i < vec.size(); ++i) {
-        sum2 += vec[i];
-    }
-
-    auto end2 = std::chrono::high_resolution_clock::now();
-    auto duration2 =
-        std::chrono::duration_cast<std::chrono::microseconds>(end2 - start2);
+    auto duration2 = benchmark([&]() {
+        int sum = 0;
+        for (size_t i = 0; i < vec.size(); ++i) sum += vec[i];
+        return sum;
+    });
 
     // ✅ ADDED: Iterator loop benchmark
-    auto start3 = std::chrono::high_resolution_clock::now();
-
-    int sum3 = 0;
-    for (auto it = vec.begin(); it != vec.end(); ++it) {
-        sum3 += *it;
-    }
-
-    auto end3 = std::chrono::high_resolution_clock::now();
-    auto duration3 =
-        std::chrono::duration_cast<std::chrono::microseconds>(end3 - start3);
+    auto duration3 = benchmark([&]() {
+        int sum = 0;
+        for (auto it = vec.begin(); it != vec.end(); ++it) sum += *it;
+        return sum;
+    });
 
     // ✅ ADDED: STL accumulate benchmark
-    auto start4 = std::chrono::high_resolution_clock::now();
-
-    int sum4 = std::accumulate(vec.begin(), vec.end(), 0);
-
-    auto end4 = std::chrono::high_resolution_clock::now();
-    auto duration4 =
-        std::chrono::duration_cast<std::chrono::microseconds>(end4 - start4);
+    auto duration4 = benchmark([&]() {
+        return std::accumulate(vec.begin(), vec.end(), 0);
+    });
 
     // -------- Results --------
-    std::cout << "Sum (range loop): " << sum1 << "\n";
-    std::cout << "Time (range loop): "
-              << duration1.count() << " microseconds\n";
-
-    std::cout << "Sum (index loop): " << sum2 << "\n";
-    std::cout << "Time (index loop): "
-              << duration2.count() << " microseconds\n";
-
-    // ✅ ADDED
-    std::cout << "Sum (iterator loop): " << sum3 << "\n";
-    std::cout << "Time (iterator loop): "
-              << duration3.count() << " microseconds\n";
-
-    std::cout << "Sum (accumulate): " << sum4 << "\n";
-    std::cout << "Time (accumulate): "
-              << duration4.count() << " microseconds\n";
+    std::cout << "Time (range loop): " << duration1 << " microseconds\n";
+    std::cout << "Time (index loop): " << duration2 << " microseconds\n";
+    std::cout << "Time (iterator loop): " << duration3 << " microseconds\n";
+    std::cout << "Time (accumulate): " << duration4 << " microseconds\n";
 
     // ----------------------------------------------------
     // ✅ ADDED: Cache locality experiment (2D array)
     const int SIZE = 300;
     std::vector<std::vector<int>> matrix(SIZE, std::vector<int>(SIZE, 1));
 
-    // Row-wise (cache-friendly)
-    auto start5 = std::chrono::high_resolution_clock::now();
-
-    int sum_row = 0;
-    for (int i = 0; i < SIZE; ++i)
-        for (int j = 0; j < SIZE; ++j)
-            sum_row += matrix[i][j];
-
-    auto end5 = std::chrono::high_resolution_clock::now();
-    auto duration5 =
-        std::chrono::duration_cast<std::chrono::microseconds>(end5 - start5);
-
-    // Column-wise (cache-unfriendly)
-    auto start6 = std::chrono::high_resolution_clock::now();
-
-    int sum_col = 0;
-    for (int j = 0; j < SIZE; ++j)
+    auto duration5 = benchmark([&]() {
+        int sum = 0;
         for (int i = 0; i < SIZE; ++i)
-            sum_col += matrix[i][j];
+            for (int j = 0; j < SIZE; ++j)
+                sum += matrix[i][j];
+        return sum;
+    });
 
-    auto end6 = std::chrono::high_resolution_clock::now();
-    auto duration6 =
-        std::chrono::duration_cast<std::chrono::microseconds>(end6 - start6);
+    auto duration6 = benchmark([&]() {
+        int sum = 0;
+        for (int j = 0; j < SIZE; ++j)
+            for (int i = 0; i < SIZE; ++i)
+                sum += matrix[i][j];
+        return sum;
+    });
 
-    std::cout << "\nCache Locality Test:\n";
-    std::cout << "Row-wise sum: " << sum_row 
-              << " Time: " << duration5.count() << " microseconds\n";
+    std::cout << "\nCache Locality Test (2D vector):\n";
+    std::cout << "Row-wise Time: " << duration5 << " microseconds\n";
+    std::cout << "Column-wise Time: " << duration6 << " microseconds\n";
 
-    std::cout << "Column-wise sum: " << sum_col 
-              << " Time: " << duration6.count() << " microseconds\n";
+    // ----------------------------------------------------
+    // ✅ NEW: Contiguous memory vs non-contiguous
+
+    std::vector<int> flat(SIZE * SIZE, 1);
+
+    auto duration7 = benchmark([&]() {
+        int sum = 0;
+        for (int i = 0; i < SIZE; ++i)
+            for (int j = 0; j < SIZE; ++j)
+                sum += flat[i * SIZE + j];   // row-major
+        return sum;
+    });
+
+    auto duration8 = benchmark([&]() {
+        int sum = 0;
+        for (int j = 0; j < SIZE; ++j)
+            for (int i = 0; i < SIZE; ++i)
+                sum += flat[i * SIZE + j];   // column-like
+        return sum;
+    });
+
+    std::cout << "\nCache Locality Test (1D contiguous array):\n";
+    std::cout << "Row-wise Time: " << duration7 << " microseconds\n";
+    std::cout << "Column-wise Time: " << duration8 << " microseconds\n";
+
+    // ----------------------------------------------------
 
     return 0;
 }

@@ -7,6 +7,34 @@
 // ✅ ADDED
 #include <deque>
 
+// -------- NEW ADDITIONS --------
+
+// Show growth factor
+void print_growth(size_t old_cap, size_t new_cap) {
+    if (old_cap > 0) {
+        double factor = (double)new_cap / old_cap;
+        std::cout << "  [growth factor: " << factor << "]";
+    }
+}
+
+// Compare reserve vs no reserve
+void compare_reserve_behavior() {
+    std::vector<int> a, b;
+
+    for (int i = 0; i < 100; ++i)
+        a.push_back(i);
+
+    b.reserve(100);
+    for (int i = 0; i < 100; ++i)
+        b.push_back(i);
+
+    std::cout << "\nReserve vs No Reserve:\n";
+    std::cout << "Without reserve capacity: " << a.capacity() << "\n";
+    std::cout << "With reserve capacity: " << b.capacity() << "\n";
+}
+
+// --------------------------------
+
 int main() {
     std::vector<int> vec;
 
@@ -39,6 +67,10 @@ int main() {
             std::cout << "  [capacity grew from " 
                       << prev_capacity << " to " 
                       << vec.capacity() << "]";
+            
+            // ✅ NEW: growth factor
+            print_growth(prev_capacity, vec.capacity());
+
             prev_capacity = vec.capacity();
         }
 
@@ -66,6 +98,7 @@ int main() {
     v2.push_back(4); // may invalidate iterator
 
     std::cout << "After push_back, iterator may be invalidated!\n";
+    std::cout << "(Do NOT dereference 'it' after reallocation)\n";
 
     // ----------------------------------------------------
     // ✅ ADDED: Compare with deque
@@ -87,6 +120,31 @@ int main() {
 
     double efficiency = (double)vec.size() / vec.capacity() * 100.0;
     std::cout << "Usage efficiency: " << efficiency << "%\n";
+
+    // ----------------------------------------------------
+    // ✅ NEW: Contiguous memory proof
+    std::cout << "\nContiguous Memory Check:\n";
+    for (size_t i = 0; i < vec.size() - 1; ++i) {
+        std::cout << &vec[i] << " -> " << &vec[i + 1] << "\n";
+    }
+
+    std::cout << "Addresses are sequential → vector is contiguous\n";
+
+    // ----------------------------------------------------
+    // ✅ NEW: push_back vs emplace_back
+    std::cout << "\nPush vs Emplace Demo:\n";
+    std::vector<std::pair<int,int>> pairs;
+
+    pairs.push_back({1,2});      // temporary object
+    pairs.emplace_back(3,4);     // constructed in-place
+
+    std::cout << "pairs size: " << pairs.size() << "\n";
+
+    // ----------------------------------------------------
+    // ✅ NEW: Reserve comparison
+    compare_reserve_behavior();
+
+    // ----------------------------------------------------
 
     return 0;
 }

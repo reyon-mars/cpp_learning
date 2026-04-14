@@ -60,6 +60,35 @@ void dump_bytes(const void* ptr, size_t size) {
     std::cout << std::dec << "\n";
 }
 
+// -------- NEW SMALL ADDITIONS --------
+
+// Compare struct sizes
+void compare_sizes() {
+    std::cout << "\n--- Size Comparison ---\n";
+    std::cout << "Unaligned vs Aligned difference: "
+              << (sizeof(Unaligned) - sizeof(Aligned)) << " bytes\n";
+}
+
+// Check alignment boundaries
+template<typename T>
+void check_alignment(const std::string& name) {
+    std::cout << name << " alignment boundary: "
+              << alignof(T) << " bytes\n";
+}
+
+// Initialize and dump meaningful data
+void fill_and_dump() {
+    Unaligned obj{};
+    obj.c = 'A';
+    obj.i = 123456;
+    obj.d = 'Z';
+
+    std::cout << "\nFilled object memory dump:\n";
+    dump_bytes(&obj, sizeof(obj));
+}
+
+// -------------------------------------
+
 int main() {
 
     std::cout << "Size of Unaligned: " << sizeof(Unaligned) << "\n";
@@ -99,6 +128,19 @@ int main() {
     // ✅ ADDED: Raw memory view
     std::cout << "\nRaw memory dump (Unaligned):\n";
     dump_bytes(&obj, sizeof(obj));
+
+    // -------- NEW FEATURE USAGE --------
+
+    compare_sizes();
+
+    std::cout << "\nAlignment checks:\n";
+    check_alignment<Unaligned>("Unaligned");
+    check_alignment<Aligned>("Aligned");
+    check_alignment<Packed>("Packed");
+
+    fill_and_dump();
+
+    // ----------------------------------
 
     return 0;
 }

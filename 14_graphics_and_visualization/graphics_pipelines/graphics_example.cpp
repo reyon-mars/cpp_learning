@@ -43,6 +43,33 @@ void lighting_demo() {
     std::cout << "-> Phong / Blinn-Phong models\n";
 }
 
+// ---------------- NEW SMALL ADDITIONS ----------------
+
+// input validation
+int get_valid_choice() {
+    int choice;
+    while (true) {
+        std::cin >> choice;
+        if (std::cin.fail() || choice < 1 || choice > 4) {
+            std::cin.clear();
+            std::cin.ignore(1000, '\n');
+            std::cout << "Invalid input. Enter a number (1-4): ";
+        } else {
+            return choice;
+        }
+    }
+}
+
+// repeat option
+bool ask_repeat() {
+    char ans;
+    std::cout << "\nRun another demo? (y/n): ";
+    std::cin >> ans;
+    return (ans == 'y' || ans == 'Y');
+}
+
+// -----------------------------------------
+
 // ✅ ADDED: Menu system
 void run_demo(int choice) {
     switch (choice) {
@@ -66,12 +93,20 @@ int main() {
 
     show_topics();
 
-    // ✅ ADDED: User interaction
-    std::cout << "\nSelect an experiment (1-4): ";
-    int choice;
-    std::cin >> choice;
+    // ✅ UPDATED: looped interaction (non-breaking addition)
+    do {
+        std::cout << "\nSelect an experiment (1-4): ";
+        int choice = get_valid_choice();
 
-    run_demo(choice);
+        run_demo(choice);
+
+    } while (ask_repeat());
+
+    // ✅ ADDED: future roadmap
+    std::cout << "\nUpcoming upgrades:\n";
+    std::cout << "- GLFW window creation\n";
+    std::cout << "- GLEW/GLAD setup\n";
+    std::cout << "- Real triangle rendering with shaders\n";
 
     // ✅ ADDED: Future hint
     std::cout << "\n(Next step: integrate real OpenGL libraries like GLFW + GLEW)\n";

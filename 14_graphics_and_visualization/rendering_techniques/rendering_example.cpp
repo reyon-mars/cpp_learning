@@ -57,6 +57,40 @@ void pipeline_breakdown() {
     std::cout << "4. Fragment Processing: Apply color & lighting\n";
 }
 
+// ---------------- NEW SMALL ADDITIONS ----------------
+
+// input validation
+int get_valid_choice() {
+    int choice;
+    while (true) {
+        std::cin >> choice;
+        if (std::cin.fail() || choice < 1 || choice > 5) {
+            std::cin.clear();
+            std::cin.ignore(1000, '\n');
+            std::cout << "Invalid input. Enter (1-5): ";
+        } else {
+            return choice;
+        }
+    }
+}
+
+// repeat option
+bool ask_repeat() {
+    char ans;
+    std::cout << "\nExplore another technique? (y/n): ";
+    std::cin >> ans;
+    return (ans == 'y' || ans == 'Y');
+}
+
+// comparison helper
+void compare_modes() {
+    std::cout << "\nQuick Comparison:\n";
+    std::cout << "- Rasterization: Very fast, less realistic\n";
+    std::cout << "- Ray Tracing: Slower, highly realistic\n";
+}
+
+// -----------------------------------------------------
+
 // ✅ ADDED: Menu system
 void run_demo(int choice) {
     switch (choice) {
@@ -81,12 +115,17 @@ int main() {
     // ✅ ADDED
     pipeline_breakdown();
 
-    // ✅ ADDED: User interaction
-    std::cout << "\nSelect a technique to explore (1-5): ";
-    int choice;
-    std::cin >> choice;
+    // ✅ UPDATED: loop interaction
+    do {
+        std::cout << "\nSelect a technique to explore (1-5): ";
+        int choice = get_valid_choice();
 
-    run_demo(choice);
+        run_demo(choice);
+
+    } while (ask_repeat());
+
+    // ✅ ADDED
+    compare_modes();
 
     // ✅ ADDED: Summary tip
     std::cout << "\nTip: Rasterization is fast, Ray Tracing is realistic.\n";

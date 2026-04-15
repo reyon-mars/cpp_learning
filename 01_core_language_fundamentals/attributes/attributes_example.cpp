@@ -3,6 +3,9 @@
 
 #include <iostream>
 
+// ✅ ADDED
+#include <utility>   // for structured binding pair
+
 [[nodiscard]] int calculate() {
     return 42;
 }
@@ -61,10 +64,18 @@ public:
     }
 };
 
+// ✅ ADDED: helper to demonstrate nodiscard usage properly
+void use_result(int value) {
+    std::cout << "Using result: " << value << "\n";
+}
+
 int main() {
 
     // nodiscard used correctly
     [[maybe_unused]] auto result = calculate();
+
+    // ✅ ADDED: Proper usage example
+    use_result(calculate());
 
     // Uncomment to trigger nodiscard warning:
     // calculate();  // ⚠️ compiler may warn: return value ignored
@@ -86,6 +97,7 @@ int main() {
     // ----------------------------------------------------
     // ✅ ADDED: nodiscard with message
     [[maybe_unused]] int val = compute_value();
+    std::cout << "Computed value: " << val << "\n";
 
     // ----------------------------------------------------
     // ✅ ADDED: class method nodiscard
@@ -108,6 +120,10 @@ int main() {
     auto [x, [[maybe_unused]] y] = p;
 
     std::cout << "Structured binding x: " << x << "\n";
+
+    // ----------------------------------------------------
+    // ✅ ADDED: Explicit ignore pattern
+    (void)calculate(); // intentional ignore (no warning in some compilers)
 
     return 0;
 }

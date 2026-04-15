@@ -99,6 +99,42 @@ void explain_shader(int choice) {
     }
 }
 
+// ---------------- NEW SMALL ADDITIONS ----------------
+
+// input validation
+int get_valid_choice() {
+    int choice;
+    while (true) {
+        std::cin >> choice;
+        if (std::cin.fail() || choice < 1 || choice > 4) {
+            std::cin.clear();
+            std::cin.ignore(1000, '\n');
+            std::cout << "Invalid input. Enter (1-4): ";
+        } else {
+            return choice;
+        }
+    }
+}
+
+// repeat option
+bool ask_repeat() {
+    char ans;
+    std::cout << "\nExplore another shader? (y/n): ";
+    std::cin >> ans;
+    return (ans == 'y' || ans == 'Y');
+}
+
+// pipeline stages overview
+void pipeline_overview() {
+    std::cout << "\nGPU Pipeline Stages:\n";
+    std::cout << "- Vertex Shader\n";
+    std::cout << "- Geometry Shader (optional)\n";
+    std::cout << "- Rasterization\n";
+    std::cout << "- Fragment Shader\n";
+}
+
+// -----------------------------------------------------
+
 int main() {
 
     std::cout << "Shader programming area\n";
@@ -112,11 +148,16 @@ int main() {
     show_example_shaders();
 
     // ✅ ADDED
-    std::cout << "\nSelect shader type to learn more (1-4): ";
-    int choice;
-    std::cin >> choice;
+    pipeline_overview();
 
-    explain_shader(choice);
+    // ✅ UPDATED: loop interaction
+    do {
+        std::cout << "\nSelect shader type to learn more (1-4): ";
+        int choice = get_valid_choice();
+
+        explain_shader(choice);
+
+    } while (ask_repeat());
 
     // ✅ ADDED: Show advanced examples
     uniform_shader_example();

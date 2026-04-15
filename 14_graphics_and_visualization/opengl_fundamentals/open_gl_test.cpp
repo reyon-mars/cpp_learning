@@ -1,6 +1,29 @@
 #include <GL/glut.h>   // simpler header for GLUT
 #include <iostream>
 
+// ---------------- NEW SMALL ADDITIONS ----------------
+
+// handle window resize
+void reshape(int width, int height) {
+    glViewport(0, 0, width, height);
+}
+
+// keyboard input (ESC to exit)
+void keyboard(unsigned char key, int x, int y) {
+    if (key == 27) { // ESC key
+        std::cout << "Exiting...\n";
+        exit(0);
+    }
+}
+
+// simple animation (refresh loop)
+void timer(int) {
+    glutPostRedisplay();              // request redraw
+    glutTimerFunc(16, timer, 0);      // ~60 FPS
+}
+
+// ----------------------------------------------------
+
 void display() {
 
     glClear(GL_COLOR_BUFFER_BIT);
@@ -34,6 +57,11 @@ int main(int argc, char** argv) {
     glClearColor(0.0, 0.0, 0.0, 1.0);
 
     glutDisplayFunc(display);
+
+    // ✅ ADDED
+    glutReshapeFunc(reshape);
+    glutKeyboardFunc(keyboard);
+    glutTimerFunc(0, timer, 0);
 
     glutMainLoop();
 

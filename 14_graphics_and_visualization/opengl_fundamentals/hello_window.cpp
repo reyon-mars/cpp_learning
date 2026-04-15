@@ -8,6 +8,45 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
+// ---------------- NEW SMALL ADDITIONS ----------------
+
+// process input (ESC to close)
+void process_input(GLFWwindow* window)
+{
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
+}
+
+// check shader compilation errors
+void check_shader_errors(unsigned int shader, std::string type)
+{
+    int success;
+    char infoLog[512];
+
+    if (type != "PROGRAM")
+    {
+        glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+        if (!success)
+        {
+            glGetShaderInfoLog(shader, 512, NULL, infoLog);
+            std::cout << "ERROR::SHADER_COMPILATION (" << type << ")\n"
+                      << infoLog << "\n";
+        }
+    }
+    else
+    {
+        glGetProgramiv(shader, GL_LINK_STATUS, &success);
+        if (!success)
+        {
+            glGetProgramInfoLog(shader, 512, NULL, infoLog);
+            std::cout << "ERROR::PROGRAM_LINKING\n"
+                      << infoLog << "\n";
+        }
+    }
+}
+
+// -----------------------------------------------------
+
 // ✅ ADDED: Shader sources
 const char* vertexShaderSource = R"(
 #version 330 core
@@ -85,15 +124,18 @@ int main(){
     unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
     glCompileShader(vertexShader);
+    check_shader_errors(vertexShader, "VERTEX");
 
     unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
     glCompileShader(fragmentShader);
+    check_shader_errors(fragmentShader, "FRAGMENT");
 
     unsigned int shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
+    check_shader_errors(shaderProgram, "PROGRAM");
 
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
@@ -101,6 +143,9 @@ int main(){
     // Render loop
     while (!glfwWindowShouldClose(window))
     {
+        // ✅ ADDED: Input handling
+        process_input(window);
+
         // ✅ ADDED: Clear color
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -113,6 +158,12 @@ int main(){
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+
+    // ---------------- CLEANUP (NEW ADDITION) ----------------
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteProgram(shaderProgram);
+    // -------------------------------------------------------
 
     glfwTerminate();
     return 0;

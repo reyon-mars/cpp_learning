@@ -59,7 +59,22 @@ void externalFunction() {
     std::cout << "Simulated external function call\n";
 }
 
-// ------------------------------------
+// ---------------- EXTRA SMALL ADDITIONS ----------------
+
+// Macro pitfall example
+#define DOUBLE_MACRO(x) x + x
+
+// constexpr safe version
+constexpr int double_safe(int x) {
+    return x + x;
+}
+
+// Static function (internal linkage demo)
+static void internalHelper() {
+    std::cout << "Internal helper function\n";
+}
+
+// ------------------------------------------------------
 
 int main() {
     std::cout << "Compiled successfully\n";
@@ -86,11 +101,29 @@ int main() {
     // ✅ ADDED: external function simulation
     externalFunction();
 
+    // ---------------- EXTRA USAGE ----------------
+
+    // Macro pitfall demo
+    std::cout << "DOUBLE_MACRO(5*2): "
+              << DOUBLE_MACRO(5 * 2)   // expands wrongly → 5*2 + 5*2
+              << "\n";
+
+    std::cout << "double_safe(5*2): "
+              << double_safe(5 * 2)
+              << "\n";
+
+    // Internal helper call
+    internalHelper();
+
+    // Compile-time constant usage
+    constexpr int val = square_constexpr(6);
+    std::cout << "Compile-time evaluated value: " << val << "\n";
+
+    // --------------------------------------------
+
     // ✅ ADDED: undef example
     #undef DEBUG_MODE
     // debugMessage(); // would not print now if called again
-
-    // ------------------------------------
 
     return 0;
 }

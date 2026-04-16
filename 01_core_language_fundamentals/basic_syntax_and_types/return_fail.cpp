@@ -1,6 +1,9 @@
 #include <iostream>
 #include <cstdlib>
 
+// ✅ ADDED
+#include <string>
+
 // ✅ ADDED: Custom status codes
 enum StatusCode {
     SUCCESS = 0,
@@ -31,6 +34,39 @@ void printError(int code) {
     }
 }
 
+// ---------------- SMALL ADDITIONS ----------------
+
+// Convert error code to string (useful for logs)
+std::string errorToString(int code) {
+    switch (code) {
+        case SUCCESS: return "SUCCESS";
+        case FILE_ERROR: return "FILE_ERROR";
+        case NETWORK_ERROR: return "NETWORK_ERROR";
+        default: return "UNKNOWN_ERROR";
+    }
+}
+
+// Check if error is recoverable
+bool isRecoverable(int code) {
+    return code == NETWORK_ERROR; // example: network can be retried
+}
+
+// Retry mechanism (simple demo)
+int retryTask(int attempts) {
+    int result;
+    for (int i = 1; i <= attempts; ++i) {
+        std::cout << "Attempt " << i << "...\n";
+        result = performTask();
+
+        if (result == SUCCESS) {
+            return SUCCESS;
+        }
+    }
+    return result;
+}
+
+// ------------------------------------------------
+
 int main(void) {
 
     int status = -1;
@@ -44,6 +80,21 @@ int main(void) {
 
         // ✅ ADDED: Detailed error message
         printError(status);
+
+        // ✅ ADDED: String-based log
+        std::cout << "Error type: " << errorToString(status) << "\n";
+
+        // ✅ ADDED: Retry logic if recoverable
+        if (isRecoverable(status)) {
+            std::cout << "Retrying operation...\n";
+            status = retryTask(3);
+
+            if (status == SUCCESS) {
+                std::cout << "Recovered successfully after retry.\n";
+            } else {
+                std::cout << "Retry failed.\n";
+            }
+        }
 
     } else {
         std::cout << "Program exited successfully." << std::endl;

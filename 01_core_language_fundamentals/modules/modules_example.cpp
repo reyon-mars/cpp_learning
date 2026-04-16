@@ -69,6 +69,15 @@ namespace math_module_sim {
             return a + b;
         }
     };
+
+    // ✅ ADDED: division with safety
+    int divide(int a, int b) {
+        if (b == 0) {
+            std::cout << "Error: Division by zero\n";
+            return 0;
+        }
+        return a / b;
+    }
 }
 
 // Function showing module-like usage
@@ -92,6 +101,10 @@ void useMathModule() {
     math_module_sim::Calculator calc;
     std::cout << "Calculator add: "
               << calc.add(10, 20) << "\n";
+
+    // ✅ ADDED: division usage
+    std::cout << "Divide: "
+              << math_module_sim::divide(10, 2) << "\n";
 }
 
 // ------------------------------------
@@ -113,6 +126,9 @@ int main() {
     // ✅ ADDED: explanation output
     std::cout << "\nNote:\n";
     std::cout << "Modules improve compile time and avoid header issues like multiple inclusion.\n";
+
+    // ✅ ADDED: extra clarification
+    std::cout << "They also provide better encapsulation compared to traditional headers.\n";
 
     return 0;
 }

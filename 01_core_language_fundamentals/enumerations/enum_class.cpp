@@ -1,3 +1,47 @@
+#include <iostream>
+#include <vector>
+
+// ---------------- ORIGINAL ENUMS ----------------
+
+enum class Animal {
+    Cat,
+    Dog,
+    Bird,
+    Fish
+};
+
+enum class Vehicle {
+    Car,
+    Bike,
+    Bus,
+    Train
+};
+
+enum class Food {
+    Pizza,
+    Burger,
+    Pasta
+};
+
+// ---------------- EXISTING HELPERS ----------------
+
+// Validate Animal from int
+bool isValidAnimal(int value) {
+    return value >= static_cast<int>(Animal::Cat) &&
+           value <= static_cast<int>(Animal::Fish);
+}
+
+// to_string for Animal
+const char* enumName(Animal a) {
+    switch (a) {
+        case Animal::Cat: return "Cat";
+        case Animal::Dog: return "Dog";
+        case Animal::Bird: return "Bird";
+        case Animal::Fish: return "Fish";
+    }
+    return "Unknown";
+}
+
 // ----------- MORE ADVANCED ADDITIONS -----------
 
 // to_string for Vehicle
@@ -39,31 +83,52 @@ bool areSame(T a, T b) {
     return a == b;
 }
 
+// ✅ EXTRA SMALL ADDITION: enum → int helper
+template <typename T>
+int toInt(T e) {
+    return static_cast<int>(e);
+}
+
 // ------------------------------------------------
 
 
-// ================= ADD IN MAIN =================
+// ================= MAIN =================
 
-// (Add near the end before return)
+int main() {
 
-std::cout << "\nAdvanced Enum Features:\n";
+    Animal a = Animal::Dog;
+    Vehicle v = Vehicle::Car;
+    Food f = Food::Pizza;
 
-// ✅ ADDED: to_string for other enums
-std::cout << "Vehicle name: " << enumName(v) << "\n";
-std::cout << "Food name: " << enumName(f) << "\n";
+    std::cout << "Basic Enum Usage:\n";
+    std::cout << "Animal: " << enumName(a) << "\n";
 
-// ✅ ADDED: safe int → enum
-Animal converted;
-if (intToAnimal(1, converted)) {
-    std::cout << "Converted from int 1 → " << enumName(converted) << "\n";
+    // ================= ADD IN MAIN =================
+
+    std::cout << "\nAdvanced Enum Features:\n";
+
+    // ✅ ADDED: to_string for other enums
+    std::cout << "Vehicle name: " << enumName(v) << "\n";
+    std::cout << "Food name: " << enumName(f) << "\n";
+
+    // ✅ ADDED: safe int → enum
+    Animal converted;
+    if (intToAnimal(1, converted)) {
+        std::cout << "Converted from int 1 → " << enumName(converted) << "\n";
+    }
+
+    // ✅ ADDED: iterate all animals
+    std::cout << "Iterating all animals:\n";
+    for (auto animal : getAllAnimals()) {
+        std::cout << enumName(animal) << "\n";
+    }
+
+    // ✅ ADDED: comparison helper
+    std::cout << "Are Cat and Dog same? "
+              << (areSame(Animal::Cat, Animal::Dog) ? "Yes\n" : "No\n");
+
+    // ✅ EXTRA: enum to int demo
+    std::cout << "Animal (Dog) as int: " << toInt(a) << "\n";
+
+    return 0;
 }
-
-// ✅ ADDED: iterate all animals
-std::cout << "Iterating all animals:\n";
-for (auto animal : getAllAnimals()) {
-    std::cout << enumName(animal) << "\n";
-}
-
-// ✅ ADDED: comparison helper
-std::cout << "Are Cat and Dog same? "
-          << (areSame(Animal::Cat, Animal::Dog) ? "Yes\n" : "No\n");

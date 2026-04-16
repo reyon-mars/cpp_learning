@@ -129,6 +129,23 @@ inline bool isValidNumber(int x) {
     return x >= 0 && x <= 100;
 }
 
+// ---------------- EXTRA SMALL ADDITIONS ----------------
+
+// Clamp value between range
+inline int clamp(int value, int min, int max) {
+    return (value < min) ? min : (value > max) ? max : value;
+}
+
+// Check if string is empty
+inline bool isEmpty(const std::string& str) {
+    return str.empty();
+}
+
+// Simple average
+inline double average(int a, int b) {
+    return (a + b) / 2.0;
+}
+
 } // namespace utils
 
 // --------------------------------------------------
@@ -202,6 +219,16 @@ int main(void) {
     int testValue = 50;
     std::cout << "Is " << testValue << " valid? "
               << (isValidNumber(testValue) ? "Yes" : "No") << std::endl;
+
+    // ✅ EXTRA USAGE
+    std::cout << "Clamped value of 150 (0-100): "
+              << clamp(150, 0, 100) << std::endl;
+
+    std::cout << "Average of 10 and 20: "
+              << average(10, 20) << std::endl;
+
+    std::cout << "Is string empty? "
+              << (isEmpty("") ? "Yes" : "No") << std::endl;
 
     // --------------------------------------------------
 

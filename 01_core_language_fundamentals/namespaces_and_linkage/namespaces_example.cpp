@@ -1,4 +1,16 @@
+#include <iostream>
+
 namespace my_lib {
+
+class MyClass {
+private:
+    int value;
+
+public:
+    // Original constructor
+    MyClass() : value(0) {
+        std::cout << "MyClass default constructed\n";
+    }
 
     // ----------- MORE ADDITIONS -----------
 
@@ -7,12 +19,18 @@ namespace my_lib {
         std::cout << "MyClass constructed with value\n";
     }
 
+    // Getter (needed for operator<<)
+    int getValue() const {
+        return value;
+    }
+
     // Comparison operator
     bool operator==(const MyClass& other) const {
         return value == other.value;
     }
 
     // ------------------------------------
+};
 
 } // namespace my_lib
 
@@ -34,19 +52,32 @@ void showCopy(const my_lib::MyClass& obj) {
 // ---------------------------------------
 
 
-// ================= ADD IN MAIN =================
+// ================= MAIN =================
 
-// (Add near the end before return)
+int main() {
 
-std::cout << "\nAdvanced Features:\n";
+    my_lib::MyClass obj;      // default
+    my_lib::MyClass obj2(50); // existing object for comparison
 
-// ✅ ADDED: constructor overloading
-my_lib::MyClass obj3(77);
-std::cout << obj3 << "\n";
+    std::cout << obj << "\n";
+    std::cout << obj2 << "\n";
 
-// ✅ ADDED: comparison
-std::cout << "obj == obj2 ? "
-          << (obj == obj2 ? "Yes\n" : "No\n");
+    // ================= ADDITIONS =================
 
-// ✅ ADDED: copy demonstration
-showCopy(obj3);
+    std::cout << "\nAdvanced Features:\n";
+
+    // ✅ ADDED: constructor overloading
+    my_lib::MyClass obj3(77);
+    std::cout << obj3 << "\n";
+
+    // ✅ ADDED: comparison
+    std::cout << "obj == obj2 ? "
+              << (obj == obj2 ? "Yes\n" : "No\n");
+
+    // ✅ ADDED: copy demonstration
+    showCopy(obj3);
+
+    // =================================================
+
+    return 0;
+}

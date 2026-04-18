@@ -1,6 +1,38 @@
 // ----------- MORE ADVANCED ADDITIONS -----------
 
+#include <iostream>   // ✅ ADDED
 #include <bitset>
+#include <cstdint>    // ✅ ADDED
+
+// ✅ ADDED: Color union for reinterpretation
+union Color {
+    uint32_t full;
+    struct {
+        unsigned char r, g, b, a;
+    } channels;
+};
+
+// ✅ ADDED: Print color channels
+void print_color(const Color& c) {
+    std::cout << "R: " << (int)c.channels.r << " "
+              << "G: " << (int)c.channels.g << " "
+              << "B: " << (int)c.channels.b << " "
+              << "A: " << (int)c.channels.a << "\n";
+}
+
+// ✅ ADDED: Print hex value
+void print_hex(const Color& c) {
+    std::cout << "Hex: 0x" << std::hex << c.full << std::dec << "\n";
+}
+
+// ✅ ADDED: Bitfield struct
+struct Flags {
+    unsigned char a : 1;
+    unsigned char b : 1;
+    unsigned char c : 1;
+    unsigned char d : 1;
+    unsigned char e : 4; // remaining bits
+};
 
 // Detect endianness
 void check_endianness() {
@@ -40,21 +72,32 @@ void print_flag_bits(const Flags& f) {
 
 // ----------------------------------------------
 
+int main() {
 
-// ================= ADD IN MAIN =================
+    std::cout << "\nAdvanced Memory Concepts:\n";
 
-// (Add near the end before return)
+    // ✅ Endianness
+    check_endianness();
 
-std::cout << "\nAdvanced Memory Concepts:\n";
+    // ✅ ADDED: create color for testing
+    Color c;
+    c.full = 0xAABBCCDD;
 
-// ✅ Endianness
-check_endianness();
+    // ✅ Bit visualization
+    print_bits(c.full);
 
-// ✅ Bit visualization
-print_bits(c.full);
+    // ✅ Union reinterpretation
+    reinterpret_demo();
 
-// ✅ Union reinterpretation
-reinterpret_demo();
+    // ✅ ADDED: create flags
+    Flags f{};
+    f.a = 1;
+    f.b = 0;
+    f.c = 1;
+    f.d = 1;
 
-// ✅ Bitfield raw view
-print_flag_bits(f);
+    // ✅ Bitfield raw view
+    print_flag_bits(f);
+
+    return 0;
+}

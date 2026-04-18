@@ -1,5 +1,19 @@
 // ----------- MORE ADVANCED ADDITIONS -----------
 
+#include <iostream>        // ✅ ADDED
+#include <initializer_list> // ✅ ADDED
+
+// ✅ ADDED: Point struct
+struct Point {
+    int x;
+    int y;
+};
+
+// ✅ ADDED: Print function
+void print_point(const Point& p) {
+    std::cout << "(" << p.x << ", " << p.y << ")\n";
+}
+
 // Class to demonstrate explicit constructor
 class ExplicitDemo {
 public:
@@ -17,30 +31,30 @@ void show_init_difference() {
 
 // ----------------------------------------------
 
+int main() {
 
-// ================= ADD IN MAIN =================
+    std::cout << "\nAdvanced Initialization Concepts:\n";
 
-// (Add near the end before return)
+    // ✅ Most vexing parse (function declaration instead of object)
+    // Point tricky(); // ⚠️ this declares a function, not an object!
 
-std::cout << "\nAdvanced Initialization Concepts:\n";
+    // ✅ Zero initialization for objects
+    Point p4{}; // (0,0)
+    std::cout << "p4 (zero-initialized) = ";
+    print_point(p4);
 
-// ✅ Most vexing parse (function declaration instead of object)
-// Point tricky(); // ⚠️ this declares a function, not an object!
+    // ✅ Explicit constructor demo
+    ExplicitDemo ex1(10);   // OK
+    // ExplicitDemo ex2 = 10; // ❌ not allowed due to explicit
 
-// ✅ Zero initialization for objects
-Point p4{}; // (0,0)
-std::cout << "p4 (zero-initialized) = ";
-print_point(p4);
+    std::cout << "ExplicitDemo value: " << ex1.value << "\n";
 
-// ✅ Explicit constructor demo
-ExplicitDemo ex1(10);   // OK
-// ExplicitDemo ex2 = 10; // ❌ not allowed due to explicit
+    // ✅ auto with initializer list
+    auto list = {1, 2, 3}; // std::initializer_list<int>
+    std::cout << "Initializer list size: " << list.size() << "\n";
 
-std::cout << "ExplicitDemo value: " << ex1.value << "\n";
+    // ✅ difference demonstration
+    show_init_difference();
 
-// ✅ auto with initializer list
-auto list = {1, 2, 3}; // std::initializer_list<int>
-std::cout << "Initializer list size: " << list.size() << "\n";
-
-// ✅ difference demonstration
-show_init_difference();
+    return 0;
+}

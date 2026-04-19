@@ -69,6 +69,38 @@ void shift_left(int* arr, int n) {
     arr[n - 1] = first;
 }
 
+// ----------- EXTRA ADDED FUNCTIONS -----------
+
+// Sort array (bubble sort)
+void sort_array(int* arr, int n) {
+    for(int i = 0; i < n; i++) {
+        for(int j = i + 1; j < n; j++) {
+            if(arr[i] > arr[j]) {
+                int temp = arr[i];
+                arr[i] = arr[j];
+                arr[j] = temp;
+            }
+        }
+    }
+}
+
+// Check duplicates
+bool has_duplicates(int* arr, int n) {
+    for(int i = 0; i < n; i++)
+        for(int j = i + 1; j < n; j++)
+            if(arr[i] == arr[j])
+                return true;
+    return false;
+}
+
+// Reverse copy without modifying original
+int* reverse_copy(int* arr, int n) {
+    int* newArr = new int[n];
+    for(int i = 0; i < n; i++)
+        newArr[i] = arr[n - i - 1];
+    return newArr;
+}
+
 // ------------------------------------
 
 
@@ -183,6 +215,21 @@ int main(){
     shift_left(arr, n);
     std::cout << "After left shift: ";
     print_array(arr, n);
+
+    // -------- EXTRA FEATURES --------
+
+    std::cout << "\nSorted array: ";
+    sort_array(arr, n);
+    print_array(arr, n);
+
+    std::cout << "Has duplicates? "
+              << (has_duplicates(arr, n) ? "Yes\n" : "No\n");
+
+    int* revCopy = reverse_copy(arr, n);
+    std::cout << "Reverse copy (new array): ";
+    print_array(revCopy, n);
+
+    delete []revCopy;
 
     // ----------------------------------
 

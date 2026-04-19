@@ -76,6 +76,44 @@ void aligned_storage_demo() {
     std::cout << "Aligned storage value: " << *ptr << "\n";
 }
 
+// ----------- MORE ADVANCED ADDITIONS -----------
+
+// Type decay demo
+template<typename T>
+void decay_demo() {
+    using Decayed = typename std::decay<T>::type;
+
+    std::cout << "Original is reference? "
+              << std::is_reference<T>::value << "\n";
+
+    std::cout << "After decay is reference? "
+              << std::is_reference<Decayed>::value << "\n";
+}
+
+// Enable_if example (only for integral types)
+template<typename T>
+typename std::enable_if<std::is_integral<T>::value>::type
+only_integral(T val) {
+    std::cout << "Integral value: " << val << "\n";
+}
+
+// Detect if type is class
+template<typename T>
+void check_class() {
+    std::cout << "Is class type: "
+              << std::is_class<T>::value << "\n";
+}
+
+// Reference category checker
+template<typename T>
+void reference_category(T&&) {
+    if constexpr (std::is_lvalue_reference<T>::value) {
+        std::cout << "Lvalue reference detected\n";
+    } else {
+        std::cout << "Rvalue reference detected\n";
+    }
+}
+
 // ------------------------------------
 
 int main() {
@@ -122,6 +160,24 @@ int main() {
 
     std::cout << "\n--- Aligned Storage Demo ---\n";
     aligned_storage_demo();
+
+    // -------- MORE ADVANCED USAGE --------
+
+    std::cout << "\n--- Decay Demo ---\n";
+    decay_demo<const int&>();
+
+    std::cout << "\n--- enable_if Demo ---\n";
+    only_integral(10);
+    // only_integral(3.14); // ❌ won't compile
+
+    std::cout << "\n--- Class Detection ---\n";
+    check_class<int>();
+    check_class<AlignedStruct>();
+
+    std::cout << "\n--- Reference Category ---\n";
+    int x = 5;
+    reference_category(x);       // lvalue
+    reference_category(10);      // rvalue
 
     // Compile-time check
     static_assert(sizeof(int) >= 4, "Unexpected int size!");

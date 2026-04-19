@@ -1,5 +1,6 @@
 #include <iostream>
 #include <utility>
+#include <string>
 
 class Widget {
 public:
@@ -30,7 +31,14 @@ public:
         other.data = 0;
         return *this;
     }
+
+    // ----------- EXTRA ADDED -----------
+    ~Widget() {
+        std::cout << "Destructor (data=" << data << ")\n";
+    }
 };
+
+// ------------------------------------
 
 void consume(Widget&& w) {
     std::cout << "Consuming Widget with data: " << w.data << "\n";
@@ -89,6 +97,21 @@ Widget chain_move(Widget w) {
     return w; // may trigger move or RVO
 }
 
+// ----------- MORE EXTRA ADDITIONS -----------
+
+// Self-assignment safety test
+void self_assignment_demo() {
+    std::cout << "\nSelf-assignment demo:\n";
+    Widget w(123);
+    w = w; // copy self-assignment
+}
+
+// Emplace-like behavior simulation
+template<typename... Args>
+Widget make_widget(Args&&... args) {
+    return Widget(std::forward<Args>(args)...);
+}
+
 // ------------------------------------
 
 int main() {
@@ -128,6 +151,14 @@ int main() {
     std::cout << "\n--- Chain Move ---\n";
     Widget w6 = chain_move(createWidget(200));
     std::cout << "w6 data: " << w6.data << "\n";
+
+    // -------- MORE EXTRA USAGE --------
+
+    self_assignment_demo();
+
+    std::cout << "\n--- Emplace-style Construction ---\n";
+    Widget w7 = make_widget(300);
+    std::cout << "w7 data: " << w7.data << "\n";
 
     // ----------------------------------
 

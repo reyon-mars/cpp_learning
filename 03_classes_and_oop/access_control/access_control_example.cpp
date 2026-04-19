@@ -22,93 +22,124 @@ private:
     friend class Friend;
     friend void friend_function();
 
-    // ----------- NEW ADDITION -----------
 public:
     int getPrivate() const {
         return priv_member;
     }
-    // -----------------------------------
+
+    // ----------- EXTRA ADDITION -----------
+    void setPrivate(int val) {
+        priv_member = val;
+    }
+    // -------------------------------------
 };
 
 class Derived : public Base {
 public:
     void access() {
-        pub_member = 1;      // OK
-        prot_member = 2;     // OK
-        // priv_member = 3;  // Error
+        pub_member = 1;      
+        prot_member = 2;     
     }
 };
 
 class Friend {
 public:
     void access(Base& obj) {
-        obj.priv_member = 10;  // OK - friend class
+        obj.priv_member = 10;
     }
 };
 
 void friend_function() {
     Base obj;
-    obj.priv_member = 20;  // OK - friend function
+    obj.priv_member = 20;
     obj.print();
 }
 
 // ----------- NEW ADDITIONS -----------
 
-// Protected inheritance
 class ProtectedDerived : protected Base {
 public:
     void test() {
-        pub_member = 5;   // becomes protected
+        pub_member = 5;
         prot_member = 6;
     }
 };
 
-// Private inheritance
 class PrivateDerived : private Base {
 public:
     void test() {
-        pub_member = 7;   // becomes private
+        pub_member = 7;
         prot_member = 8;
     }
 };
 
-// Friend function with parameter
 void friend_modify(Base& obj) {
     obj.priv_member = 99;
 }
 
 // ----------- EXTRA SMALL ADDITIONS -----------
 
-// Utility to show object state clearly
 void show_state(const Base& obj, const std::string& label) {
     std::cout << "[" << label << "] ";
     obj.print();
 }
 
-// Function demonstrating pass-by-reference vs value
 void modify_public(Base& obj) {
     obj.pub_member += 5;
+}
+
+// ----------- MORE ADVANCED ADDITIONS -----------
+
+// Static member demo
+class Counter {
+public:
+    static int count;
+
+    Counter() {
+        count++;
+    }
+};
+
+int Counter::count = 0;
+
+// Virtual function demo
+class Shape {
+public:
+    virtual void draw() {
+        std::cout << "Drawing Shape\n";
+    }
+};
+
+class Circle : public Shape {
+public:
+    void draw() override {
+        std::cout << "Drawing Circle\n";
+    }
+};
+
+// Object slicing demo
+void slicing_demo(Base obj) {
+    std::cout << "Slicing demo (Base copy): ";
+    obj.print();
 }
 
 // ------------------------------------
 
 int main() {
     Base obj;
-    obj.pub_member = 5;  // OK
-    // obj.prot_member = 1;  // Error
-    // obj.priv_member = 2;  // Error
+    obj.pub_member = 5;
 
     obj.print();
 
     Derived d;
-    d.access();           // modifies public & protected
+    d.access();
     d.print();
 
     Friend f;
-    f.access(obj);        // modifies private member
+    f.access(obj);
     obj.print();
 
-    friend_function();    // friend function access
+    friend_function();
 
     // -------- NEW FEATURE USAGE --------
 
@@ -131,6 +162,24 @@ int main() {
 
     modify_public(obj);
     show_state(obj, "After modify_public");
+
+    // -------- MORE ADVANCED USAGE --------
+
+    std::cout << "\n--- Static Member Demo ---\n";
+    Counter c1, c2, c3;
+    std::cout << "Objects created: " << Counter::count << "\n";
+
+    std::cout << "\n--- Polymorphism Demo ---\n";
+    Shape* s = new Circle();
+    s->draw();   // runtime polymorphism
+    delete s;
+
+    std::cout << "\n--- Object Slicing Demo ---\n";
+    slicing_demo(d);  // Derived → Base copy
+
+    std::cout << "\n--- Setter Demo ---\n";
+    obj.setPrivate(123);
+    obj.print();
 
     // ----------------------------------
 

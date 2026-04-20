@@ -1,29 +1,40 @@
-// Static Members Exercise
-// Class variables and member functions
-
 #include <iostream>
-#include <vector>   // ✅ added
+#include <vector>
+#include <memory>   // ✅ ADDED
 
 class Counter {
 private:
-    int instance_count = 0;   // still per-object (unused but kept)
+    int instance_count = 0;   
     static int total_created;
     static int currently_alive;
 
+    // ✅ ADDED: unique ID for each object
+    int id;
+    static int next_id;
+
 public:
-    Counter() {
+    Counter() : id(next_id++) {
         total_created++;
         currently_alive++;
+        std::cout << "Constructed ID: " << id << "\n";
     }
 
-    Counter(const Counter&) {
+    Counter(const Counter&) : id(next_id++) {
         total_created++;
         currently_alive++;
-        std::cout << "Counter copied\n";
+        std::cout << "Counter copied (new ID: " << id << ")\n";
+    }
+
+    // ✅ ADDED: move constructor
+    Counter(Counter&& other) noexcept : id(next_id++) {
+        total_created++;
+        currently_alive++;
+        std::cout << "Counter moved (new ID: " << id << ")\n";
     }
 
     ~Counter() {
         currently_alive--;
+        std::cout << "Destroyed ID: " << id << "\n";
     }
 
     static int getTotalCreated() {
@@ -41,26 +52,45 @@ public:
                   << currently_alive << "\n";
     }
 
-    // ----------- NEW ADDITIONS -----------
-
-    // Static reset function
     static void resetStats() {
         total_created = 0;
         currently_alive = 0;
+        next_id = 0;
         std::cout << "Stats reset\n";
     }
 
-    // Instance method showing object address
     void printAddress() const {
-        std::cout << "Object address: " << this << "\n";
+        std::cout << "Object address: " << this
+                  << " (ID: " << id << ")\n";
     }
 
-    // ------------------------------------
+    // ✅ ADDED: show ID
+    int getId() const { return id; }
+
+    // ✅ ADDED: static helper
+    static int getNextId() {
+        return next_id;
+    }
 };
 
-// Define and initialize static members
+// Static definitions
 int Counter::total_created = 0;
 int Counter::currently_alive = 0;
+int Counter::next_id = 0;
+
+
+// ✅ ADDED: RAII scope tracker
+class ScopeTracker {
+public:
+    ScopeTracker() {
+        std::cout << "[Entering scope]\n";
+    }
+    ~ScopeTracker() {
+        std::cout << "[Exiting scope]\n";
+        Counter::printStats();
+    }
+};
+
 
 int main() {
 
@@ -75,6 +105,7 @@ int main() {
               << c1.getTotalCreated() << "\n";
 
     {
+        ScopeTracker tracker; // ✅ ADDED
         Counter c4;
         std::cout << "\nInside block:\n";
         Counter::printStats();
@@ -98,12 +129,19 @@ int main() {
     // -------- NEW FEATURE USAGE --------
 
     std::cout << "\n---- Vector of Counters ----\n";
-    std::vector<Counter> vec(3);  // creates 3 more objects
+    std::vector<Counter> vec(3);
     Counter::printStats();
 
     std::cout << "\nAddresses of objects:\n";
     c1.printAddress();
     c2.printAddress();
+
+    std::cout << "\n---- Smart Pointer Demo ----\n";
+    std::unique_ptr<Counter> smart = std::make_unique<Counter>(); // ✅ ADDED
+    Counter::printStats();
+
+    std::cout << "\nNext ID will be: "
+              << Counter::getNextId() << "\n";
 
     std::cout << "\n---- Reset stats (demo) ----\n";
     Counter::resetStats();

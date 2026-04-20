@@ -4,21 +4,25 @@ using namespace std;
 // Definition of a Super Class or Base Class
 class Super {
   private:
-    int storage; // private attribute
+    int storage;
   protected:
-    int accessible_storage; // protected attribute copy of storage
+    int accessible_storage;
   public:
     Super() { storage = 0; accessible_storage = 0; }
     Super(int val) { storage = accessible_storage = val; }
 
     void set(int val) { storage = accessible_storage = val; }
-    int get() { return storage; }
+    int get() const { return storage; } // ✅ const added
 
     void reset() { storage = accessible_storage = 0; }
 
-    // -------- NEW ADDITION --------
     virtual void info() {
         cout << "Super class\n";
+    }
+
+    // -------- EXTRA ADDITION --------
+    virtual ~Super() {
+        cout << "Super destructor\n";
     }
     // --------------------------------
 };
@@ -32,51 +36,55 @@ class Base {
     Base(int val) { storage = val; }
 
     void set(int val) { storage = val; }
-    int get() { return storage; }
+    int get() const { return storage; } // ✅ const added
 
     void reset() { storage = 0; }
 
-    // -------- NEW ADDITION --------
     virtual void info() {
         cout << "Base class\n";
+    }
+
+    // -------- EXTRA ADDITION --------
+    virtual ~Base() {
+        cout << "Base destructor\n";
     }
     // --------------------------------
 };
 
-// Sub Class inheriting from the Super class (single inheritance)
+// Sub Class inheriting from the Super class
 class Sub : public Super {
   public:
     void print(void) {
       cout << " Storage = " << accessible_storage << endl;
     }
 
-    // -------- EXTRA ADDITION --------
     void increment() {
         accessible_storage++;
+    }
+
+    // -------- NEW ADDITION --------
+    void info() override {
+        cout << "Sub class (derived from Super)\n";
     }
     // --------------------------------
 };
 
-// Sub Class inheriting from multiple classes
+// Multiple inheritance
 class SubMulti : public Super, public Base {
   public:
 
-    // -------- NEW ADDITION (constructor chaining) --------
     SubMulti(int a, int b) : Super(a), Base(b) {}
     SubMulti() {}
-    // ----------------------------------------------------
 
     void print(void) {
       cout << " Storage Super = " << Super::accessible_storage << endl;
       cout << " Storage Base  = " << Base::storage << endl;
     }
 
-    // 🔹 extra combined operation
     int totalStorage() {
       return Super::accessible_storage + Base::storage;
     }
 
-    // -------- NEW ADDITION --------
     void setBoth(int a, int b) {
         Super::set(a);
         Base::set(b);
@@ -86,9 +94,6 @@ class SubMulti : public Super, public Base {
         Super::info();
         Base::info();
     }
-    // --------------------------------
-
-    // -------- EXTRA ADDITIONS --------
 
     void incrementBoth() {
         Super::accessible_storage++;
@@ -100,8 +105,32 @@ class SubMulti : public Super, public Base {
         cout << "Address Base part : " << static_cast<Base*>(this) << endl;
     }
 
+    // -------- EXTRA ADDITION --------
+    void info() {
+        cout << "SubMulti class (multiple inheritance)\n";
+    }
     // --------------------------------
 };
+
+// -------- EXTRA GLOBAL ADDITIONS --------
+
+// Polymorphism demo
+void polymorphism_demo(Super* ptr) {
+    cout << "Polymorphism call: ";
+    ptr->info();  // virtual dispatch
+}
+
+// Type identification (RTTI)
+void type_check(Super* ptr) {
+    cout << "Type check: ";
+    if (dynamic_cast<Sub*>(ptr)) {
+        cout << "Pointer is of type Sub\n";
+    } else {
+        cout << "Pointer is NOT Sub\n";
+    }
+}
+
+// ---------------------------------------
 
 int main(void) {
 
@@ -123,7 +152,7 @@ int main(void) {
   cout << "\nAfter reset:\n";
   object.print();
 
-  // -------- NEW FEATURE USAGE --------
+  // -------- ORIGINAL USAGE --------
 
   SubMulti obj2(10, 20);
   obj2.print();
@@ -132,11 +161,9 @@ int main(void) {
   cout << "After setBoth:\n";
   obj2.print();
 
-  // Ambiguity resolution
   cout << "Super get: " << obj2.Super::get() << endl;
   cout << "Base get: " << obj2.Base::get() << endl;
 
-  // Virtual function demo
   obj2.showInfo();
 
   // -------- EXTRA USAGE --------
@@ -146,6 +173,18 @@ int main(void) {
   obj2.print();
 
   obj2.printAddresses();
+
+  // -------- NEW ADVANCED DEMOS --------
+
+  cout << "\n--- Polymorphism Demo ---\n";
+  Sub s;
+  polymorphism_demo(&s);
+
+  cout << "\n--- Type Check Demo ---\n";
+  type_check(&s);
+
+  cout << "\n--- Direct info() call ---\n";
+  obj2.info();
 
   // ----------------------------------
 

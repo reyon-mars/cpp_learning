@@ -2,6 +2,7 @@
 // Diamond problem, virtual inheritance
 
 #include <iostream>
+#include <typeinfo>
 
 class A {
 public:
@@ -9,9 +10,7 @@ public:
     virtual ~A() { std::cout << "A destroyed\n"; }
     virtual void method() { std::cout << "A::method\n"; }
 
-    // -------- EXTRA ADDITION --------
     void identify() { std::cout << "I am A\n"; }
-    // --------------------------------
 };
 
 class B : virtual public A {
@@ -20,9 +19,7 @@ public:
     ~B() { std::cout << "B destroyed\n"; }
     void method() override { std::cout << "B::method\n"; }
 
-    // -------- EXTRA ADDITION --------
     void identifyB() { std::cout << "I am B\n"; }
-    // --------------------------------
 };
 
 class C : virtual public A {
@@ -31,17 +28,18 @@ public:
     ~C() { std::cout << "C destroyed\n"; }
     void method() override { std::cout << "C::method\n"; }
 
-    // -------- EXTRA ADDITION --------
     void identifyC() { std::cout << "I am C\n"; }
-    // --------------------------------
 };
 
 class D : public B, public C {
 public:
-    D() { std::cout << "D constructed\n"; }
+    // ✅ Explicit virtual base initialization
+    D() : A() { std::cout << "D constructed\n"; }
+
     ~D() { std::cout << "D destroyed\n"; }
 
-    void method() override { std::cout << "D::method\n"; }
+    // ✅ final override
+    void method() override final { std::cout << "D::method\n"; }
 
     void callBaseVersions() {
         B::method();
@@ -49,11 +47,10 @@ public:
         A::method();
     }
 
-    // -------- EXTRA ADDITIONS --------
     void identifyAll() {
-        identify();   // from A
-        identifyB();  // from B
-        identifyC();  // from C
+        identify();
+        identifyB();
+        identifyC();
         std::cout << "I am D\n";
     }
 
@@ -63,6 +60,20 @@ public:
         std::cout << "Address as C: " << static_cast<C*>(this) << "\n";
         std::cout << "Address as A: " << static_cast<A*>(this) << "\n";
     }
+
+    // -------- EXTRA ADDITIONS --------
+
+    void printSizes() {
+        std::cout << "Size of A: " << sizeof(A) << "\n";
+        std::cout << "Size of B: " << sizeof(B) << "\n";
+        std::cout << "Size of C: " << sizeof(C) << "\n";
+        std::cout << "Size of D: " << sizeof(D) << "\n";
+    }
+
+    void runtimeTypeInfo(A* ptr) {
+        std::cout << "RTTI type: " << typeid(*ptr).name() << "\n";
+    }
+
     // --------------------------------
 };
 
@@ -104,6 +115,20 @@ int main() {
 
     std::cout << "---- Object layout ----\n";
     obj.printObjectLayout();
+
+    // -------- NEW ADVANCED USAGE --------
+
+    std::cout << "---- Size Analysis ----\n";
+    obj.printSizes();
+
+    std::cout << "---- RTTI Demo ----\n";
+    obj.runtimeTypeInfo(&obj);
+
+    std::cout << "---- dynamic_cast Demo ----\n";
+    A* basePtr = &obj;
+    if (D* derivedPtr = dynamic_cast<D*>(basePtr)) {
+        std::cout << "Successfully cast A* to D*\n";
+    }
 
     // ----------------------------------
 

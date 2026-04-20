@@ -1,10 +1,7 @@
-// Virtual Functions and Polymorphism Exercise
-// Dynamic dispatch, virtual functions, vtables
-
 #include <iostream>
 #include <memory>
 #include <vector>
-#include <typeinfo>   // ✅ added
+#include <typeinfo>
 
 class Shape {
 public:
@@ -17,11 +14,12 @@ public:
 
     virtual double area() const = 0;
 
-    // ----------- NEW ADDITION -----------
     virtual const char* name() const {
         return "Shape";
     }
-    // -----------------------------------
+
+    // ✅ ADDED: clone pattern
+    virtual std::unique_ptr<Shape> clone() const = 0;
 };
 
 class Circle : public Shape {
@@ -33,7 +31,7 @@ public:
         std::cout << "Circle constructed\n";
     }
 
-    ~Circle() {
+    ~Circle() override {
         std::cout << "Circle destroyed\n";
     }
 
@@ -45,11 +43,14 @@ public:
         return 3.14159 * radius * radius;
     }
 
-    // ----------- NEW ADDITION -----------
     const char* name() const override {
         return "Circle";
     }
-    // -----------------------------------
+
+    // ✅ ADDED clone
+    std::unique_ptr<Shape> clone() const override {
+        return std::make_unique<Circle>(*this);
+    }
 };
 
 class Rectangle : public Shape {
@@ -61,7 +62,7 @@ public:
         std::cout << "Rectangle constructed\n";
     }
 
-    ~Rectangle() {
+    ~Rectangle() override {
         std::cout << "Rectangle destroyed\n";
     }
 
@@ -73,16 +74,48 @@ public:
         return width * height;
     }
 
-    // ----------- NEW ADDITION -----------
     const char* name() const override {
         return "Rectangle";
     }
-    // -----------------------------------
+
+    std::unique_ptr<Shape> clone() const override {
+        return std::make_unique<Rectangle>(*this);
+    }
 };
 
-// ----------- NEW ADDITIONS -----------
+// ✅ ADDED: new derived class
+class Triangle final : public Shape {
+private:
+    double base, height;
 
-// Compute total area
+public:
+    Triangle(double b, double h) : base(b), height(h) {
+        std::cout << "Triangle constructed\n";
+    }
+
+    ~Triangle() override {
+        std::cout << "Triangle destroyed\n";
+    }
+
+    void draw() const override final { // final prevents further override
+        std::cout << "Drawing triangle\n";
+    }
+
+    double area() const override {
+        return 0.5 * base * height;
+    }
+
+    const char* name() const override {
+        return "Triangle";
+    }
+
+    std::unique_ptr<Shape> clone() const override {
+        return std::make_unique<Triangle>(*this);
+    }
+};
+
+// ----------- EXISTING ADDITIONS -----------
+
 double totalArea(const std::vector<std::unique_ptr<Shape>>& shapes) {
     double sum = 0;
     for (const auto& s : shapes)
@@ -90,9 +123,24 @@ double totalArea(const std::vector<std::unique_ptr<Shape>>& shapes) {
     return sum;
 }
 
-// Print runtime type info
 void printType(const Shape* s) {
     std::cout << "RTTI type: " << typeid(*s).name() << "\n";
+}
+
+// ----------- NEW ADDITIONS -----------
+
+// ✅ Smart factory
+std::unique_ptr<Shape> createShape(int type) {
+    if (type == 1) return std::make_unique<Circle>(3.0);
+    if (type == 2) return std::make_unique<Rectangle>(2.0, 5.0);
+    return std::make_unique<Triangle>(4.0, 6.0);
+}
+
+// ✅ Virtual dispatch helper
+void processShape(const Shape& s) {
+    std::cout << "[Processing] " << s.name() << "\n";
+    s.draw();
+    std::cout << "Area: " << s.area() << "\n";
 }
 
 // ------------------------------------
@@ -103,6 +151,7 @@ int main() {
 
     shapes.push_back(std::make_unique<Circle>(5.0));
     shapes.push_back(std::make_unique<Rectangle>(4.0, 6.0));
+    shapes.push_back(std::make_unique<Triangle>(3.0, 8.0)); // ✅ ADDED
 
     std::cout << "\n--- Polymorphic Calls ---\n";
 
@@ -126,11 +175,12 @@ int main() {
     }
 
     std::cout << "\n--- Base Pointer Array ---\n";
-    Shape* arr[2];
+    Shape* arr[3];
     arr[0] = shapes[0].get();
     arr[1] = shapes[1].get();
+    arr[2] = shapes[2].get();
 
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 3; i++) {
         arr[i]->draw();
     }
 
@@ -148,6 +198,20 @@ int main() {
     for (const auto& s : shapes) {
         printType(s.get());
     }
+
+    // ✅ ADDED: clone demo
+    std::cout << "\n--- Clone Demo ---\n";
+    auto cloned = shapes[0]->clone();
+    cloned->draw();
+
+    // ✅ ADDED: smart factory
+    std::cout << "\n--- Factory Demo ---\n";
+    auto newShape = createShape(2);
+    newShape->draw();
+
+    // ✅ ADDED: process helper
+    std::cout << "\n--- Process Shape ---\n";
+    processShape(*shapes[2]);
 
     // ----------------------------------
 

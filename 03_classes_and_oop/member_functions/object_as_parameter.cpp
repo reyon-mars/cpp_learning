@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <typeinfo>
+#include <memory> // ✅ ADDED for smart pointers
 using namespace std;
 
 class Pet {
@@ -10,7 +11,9 @@ protected:
 public:
     Pet(string name) : name(name) {}
 
-    virtual ~Pet() {}
+    virtual ~Pet() {
+        cout << "Destroying Pet: " << name << endl; // ✅ ADDED
+    }
 
     void NameMe(string name) { this->name = name; }
 
@@ -21,6 +24,11 @@ public:
     // ----------- NEW ADDITION -----------
     virtual const char* getType() const {
         return "Pet";
+    }
+
+    // ✅ ADDED: Clone pattern (polymorphic copy)
+    virtual Pet* clone() const {
+        return new Pet(*this);
     }
     // -----------------------------------
 };
@@ -34,11 +42,14 @@ public:
         cout << name << " says woof woof woof " << endl;
     }
 
-    // ----------- NEW ADDITION -----------
     const char* getType() const override {
         return "Dog";
     }
-    // -----------------------------------
+
+    // ✅ ADDED clone
+    Pet* clone() const override {
+        return new Dog(*this);
+    }
 };
 
 class GermanShepherd : public Dog {
@@ -53,11 +64,14 @@ public:
         cout << name << " the german shepherd is running " << endl;
     }
 
-    // ----------- NEW ADDITION -----------
     const char* getType() const override {
         return "GermanShepherd";
     }
-    // -----------------------------------
+
+    // ✅ ADDED clone
+    Pet* clone() const override {
+        return new GermanShepherd(*this);
+    }
 };
 
 class MastinEspanol : public Dog {
@@ -72,11 +86,14 @@ public:
         cout << name << " the Mastin Espanol is running " << endl;
     }
 
-    // ----------- NEW ADDITION -----------
     const char* getType() const override {
         return "MastinEspanol";
     }
-    // -----------------------------------
+
+    // ✅ ADDED clone
+    Pet* clone() const override {
+        return new MastinEspanol(*this);
+    }
 };
 
 void PlayWithPet(Pet &pet) {
@@ -97,7 +114,6 @@ void PlayWithPet(Pet &pet) {
 
 void PlayWithPet(Pet *pet) {
     if (!pet) return;
-
     pet->MakeSound();
 }
 
@@ -118,7 +134,6 @@ void PlayWithPetByReference(string name, Pet &pet) {
 
 // ----------- NEW ADDITIONS -----------
 
-// Safer casting version (no exceptions)
 void SafePlay(Pet& pet) {
     if (auto gs = dynamic_cast<GermanShepherd*>(&pet)) {
         gs->Laufen();
@@ -131,17 +146,14 @@ void SafePlay(Pet& pet) {
     }
 }
 
-// RTTI
 void printType(Pet& pet) {
     cout << "Actual type: " << typeid(pet).name() << endl;
 }
 
-// Print type using virtual function
 void printTypeVirtual(const Pet& pet) {
     cout << "Virtual type: " << pet.getType() << endl;
 }
 
-// Count how many dogs in container
 int countDogs(const vector<Pet*>& pets) {
     int count = 0;
     for (auto p : pets) {
@@ -149,6 +161,20 @@ int countDogs(const vector<Pet*>& pets) {
             count++;
     }
     return count;
+}
+
+// ✅ ADDED: smart pointer demo
+void smartPointerDemo() {
+    cout << "\nSmart Pointer Demo:\n";
+    unique_ptr<Pet> pet = make_unique<GermanShepherd>("SmartDog");
+    pet->MakeSound();
+}
+
+// ✅ ADDED: clone demo
+void cloneDemo(const Pet& pet) {
+    cout << "\nClone Demo:\n";
+    unique_ptr<Pet> copy(pet.clone());
+    copy->MakeSound();
 }
 
 // ------------------------------------
@@ -187,37 +213,37 @@ int main(void) {
 
     // -------- NEW FEATURE USAGE --------
 
-    // Object slicing demo
     cout << "\nObject slicing example:\n";
     PlayWithPetByValue("SlicedDog", dog);
 
-    // Safer casting
     cout << "\nSafePlay demo:\n";
     SafePlay(gs);
     SafePlay(mes);
     SafePlay(pet);
 
-    // RTTI demo
     cout << "\nRTTI types:\n";
     printType(pet);
     printType(dog);
     printType(gs);
 
-    // Virtual type info
     cout << "\nVirtual type info:\n";
     printTypeVirtual(gs);
     printTypeVirtual(mes);
 
-    // Polymorphic container
     vector<Pet*> pets = { &pet, &dog, &gs, &mes };
+
     cout << "\nAll pets making sound:\n";
-    for (auto p : pets) {
+    for (const auto* p : pets) { // ✅ safer loop
         p->MakeSound();
     }
 
-    // Count dogs
     cout << "Number of dogs: "
          << countDogs(pets) << endl;
+
+    // -------- EXTRA NEW USAGE --------
+
+    smartPointerDemo();
+    cloneDemo(gs);
 
     // ----------------------------------
 

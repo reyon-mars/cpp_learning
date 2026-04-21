@@ -1,8 +1,6 @@
-// Copy Elision and RVO Exercise
-// Return value optimization and copy elision
-
 #include <iostream>
 #include <utility>
+#include <vector>   // ✅ ADDED
 
 class Object {
 public:
@@ -18,6 +16,20 @@ public:
 
     Object(Object&& other) noexcept : data(other.data) {
         std::cout << "Move constructor\n";
+    }
+
+    // ✅ ADDED: copy assignment
+    Object& operator=(const Object& other) {
+        std::cout << "Copy assignment\n";
+        data = other.data;
+        return *this;
+    }
+
+    // ✅ ADDED: move assignment
+    Object& operator=(Object&& other) noexcept {
+        std::cout << "Move assignment\n";
+        data = other.data;
+        return *this;
     }
 
     ~Object() {
@@ -49,12 +61,10 @@ Object create_conditional(bool flag) {
 
 // ----------- NEW ADDITIONS -----------
 
-// Pass by value (copy/move happens)
 void take_by_value(Object obj) {
     std::cout << "Inside take_by_value\n";
 }
 
-// Pass by reference (no copy)
 void take_by_reference(const Object& obj) {
     std::cout << "Inside take_by_reference\n";
 }
@@ -62,26 +72,52 @@ void take_by_reference(const Object& obj) {
 // ❌ disables RVO using std::move
 Object create_with_move() {
     Object temp(500);
-    return std::move(temp);  // forces move
+    return std::move(temp);
 }
 
-// 🔹 Return temporary directly (extra RVO example)
 Object create_temp_direct() {
     return Object(777);
 }
 
-// 🔹 Function returning static object (no RVO)
 Object& get_static_object() {
     static Object obj(888);
     return obj;
 }
 
-// 🔹 Chain return (nested call)
 Object chain_create() {
-    return create_object();  // still eligible for elision
+    return create_object();
 }
 
-// ------------------------------------
+// ----------- EXTRA ADDITIONS -----------
+
+// ❌ returning const disables move
+const Object create_const_object() {
+    return Object(321);
+}
+
+// Force copy vs move
+void force_copy(Object obj) {
+    std::cout << "Force copy/move into parameter\n";
+}
+
+// Vector behavior demo
+void vector_demo() {
+    std::cout << "\n--- Vector Demo ---\n";
+
+    std::vector<Object> v;
+
+    std::cout << "Push back temporary:\n";
+    v.push_back(Object(10)); // move
+
+    std::cout << "Push back lvalue:\n";
+    Object temp(20);
+    v.push_back(temp); // copy
+
+    std::cout << "Emplace back:\n";
+    v.emplace_back(30); // direct construct
+}
+
+// --------------------------------------
 
 int main() {
 
@@ -97,18 +133,16 @@ int main() {
     // -------- NEW FEATURE USAGE --------
 
     std::cout << "\n--- Pass by Value ---\n";
-    take_by_value(obj1);   // copy
+    take_by_value(obj1);
 
     std::cout << "\n--- Pass by Reference ---\n";
-    take_by_reference(obj1); // no copy
+    take_by_reference(obj1);
 
     std::cout << "\n--- Forced Move (no RVO) ---\n";
     Object obj4 = create_with_move();
 
     std::cout << "\n--- Temporary Object ---\n";
-    take_by_value(Object(999)); // may use move
-
-    // 🔹 Additional usage
+    take_by_value(Object(999));
 
     std::cout << "\n--- Direct Temporary Return ---\n";
     Object obj5 = create_temp_direct();
@@ -119,6 +153,20 @@ int main() {
 
     std::cout << "\n--- Chained Creation ---\n";
     Object obj6 = chain_create();
+
+    // -------- EXTRA USAGE --------
+
+    std::cout << "\n--- Const Return (may block move) ---\n";
+    Object obj7 = create_const_object();
+
+    std::cout << "\n--- Force Copy vs Move ---\n";
+    force_copy(obj7);
+
+    std::cout << "\n--- Assignment Tests ---\n";
+    obj2 = obj1;               // copy assignment
+    obj2 = std::move(obj3);   // move assignment
+
+    vector_demo();
 
     // ----------------------------------
 

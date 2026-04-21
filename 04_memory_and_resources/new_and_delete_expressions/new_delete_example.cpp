@@ -9,6 +9,11 @@ private:
     int value;
 
 public:
+    // 🔹 Added default constructor (needed for array allocation)
+    MyClass() : value(0) {
+        std::cout << "Default Constructor\n";
+    }
+
     MyClass(int v) : value(v) {
         std::cout << "Constructor: " << v << "\n";
     }

@@ -150,7 +150,6 @@ int main() {
 
     // -------- NEW FEATURE USAGE --------
 
-    // Mutable vs non-mutable
     int val = 5;
     auto non_mut = [val]() {
         return val;
@@ -161,38 +160,54 @@ int main() {
     };
     std::cout << "Mutable: " << mut() << ", Non-mutable: " << non_mut() << '\n';
 
-    // Move-only capture (unique_ptr)
     auto ptr = std::make_unique<int>(100);
     auto move_lambda = [p = std::move(ptr)]() {
         return *p;
     };
     std::cout << "Move-only capture: " << move_lambda() << '\n';
 
-    // Lambda as comparator
     std::sort(vec.begin(), vec.end(), [](int a, int b) {
-        return a > b; // descending
+        return a > b;
     });
     std::cout << "Sorted descending: ";
     for (int n : vec)
         std::cout << n << " ";
     std::cout << '\n';
 
-    // Recursive lambda (factorial)
     auto factorial = [](auto self, int n) -> int {
         return (n <= 1) ? 1 : n * self(self, n - 1);
     };
     std::cout << "Factorial 5 = " << factorial(factorial, 5) << '\n';
 
-    // 🔹 Higher-order function usage
     apply_and_print(5, times3);
 
-    // 🔹 Nested lambda usage
     auto nl = nested_lambda();
     std::cout << "Nested lambda (5 + 3): " << nl(5)(3) << '\n';
 
-    // 🔹 Power lambda
     auto power2 = make_power(2);
     std::cout << "4^2 = " << power2(4) << '\n';
+
+    // ----------- EXTRA SMALL ADDITIONS (NEW) -----------
+
+    // Filter even numbers using lambda
+    std::cout << "Even numbers: ";
+    for (int n : vec) {
+        if ([](int x) { return x % 2 == 0; }(n))
+            std::cout << n << " ";
+    }
+    std::cout << '\n';
+
+    // Lambda capturing by reference and modifying vector
+    auto add_to_all = [&vec](int val) {
+        for (auto& n : vec)
+            n += val;
+    };
+    add_to_all(5);
+
+    std::cout << "After adding 5 to all: ";
+    for (int n : vec)
+        std::cout << n << " ";
+    std::cout << '\n';
 
     // ----------------------------------
 

@@ -1,11 +1,10 @@
-// Allocators and Memory Pools Exercise
-// Custom allocation strategies
-
 #include <iostream>
 #include <memory>
 #include <vector>
 #include <new>
-#include <cstddef>   // ✅ added
+#include <cstddef>
+
+// ----------- UPDATED ALLOCATOR -----------
 
 template<typename T>
 class SimpleAllocator {
@@ -16,6 +15,12 @@ public:
 
     template<typename U>
     SimpleAllocator(const SimpleAllocator<U>&) noexcept {}
+
+    // ✅ ADDED: rebind
+    template<typename U>
+    struct rebind {
+        using other = SimpleAllocator<U>;
+    };
 
     T* allocate(std::size_t n) {
         std::cout << "[Allocator] Allocating "
@@ -32,7 +37,7 @@ public:
         ::operator delete(p);
     }
 
-    // -------- NEW ADDITIONS --------
+    // -------- EXISTING ADDITIONS --------
 
     template<typename U, typename... Args>
     void construct(U* p, Args&&... args) {
@@ -46,10 +51,13 @@ public:
         p->~U();
     }
 
+    // ✅ ADDED: max_size
+    std::size_t max_size() const noexcept {
+        return std::size_t(-1) / sizeof(T);
+    }
+
     bool operator==(const SimpleAllocator&) const { return true; }
     bool operator!=(const SimpleAllocator&) const { return false; }
-
-    // --------------------------------
 };
 
 // -------- SIMPLE MEMORY POOL --------
@@ -74,27 +82,12 @@ public:
         index = 0;
     }
 
-    // ----------- NEW ADDITIONS -----------
-
-    std::size_t capacity() const {
-        return pool.size();
-    }
-
-    std::size_t used() const {
-        return index;
-    }
-
-    bool isFull() const {
-        return index >= pool.size();
-    }
-
-    // ------------------------------------
+    std::size_t capacity() const { return pool.size(); }
+    std::size_t used() const { return index; }
+    bool isFull() const { return index >= pool.size(); }
 };
-// -----------------------------------
-
 
 // ----------- NEW ADDITION -----------
-// Custom object to test allocator
 struct Test {
     int x;
     Test(int v) : x(v) {
@@ -104,6 +97,43 @@ struct Test {
         std::cout << "Test destroyed: " << x << "\n";
     }
 };
+
+// ✅ ADDED: Generic Object Pool
+template<typename T>
+class ObjectPool {
+private:
+    std::vector<std::aligned_storage_t<sizeof(T), alignof(T)>> buffer;
+    std::size_t index = 0;
+
+public:
+    ObjectPool(std::size_t size) : buffer(size) {}
+
+    template<typename... Args>
+    T* create(Args&&... args) {
+        if (index >= buffer.size()) {
+            throw std::bad_alloc();
+        }
+
+        void* place = &buffer[index++];
+        std::cout << "[ObjectPool] Creating object at slot "
+                  << index - 1 << "\n";
+
+        return new (place) T(std::forward<Args>(args)...);
+    }
+
+    void reset() {
+        std::cout << "[ObjectPool] Reset (no destructors called!)\n";
+        index = 0;
+    }
+};
+
+// ✅ ADDED: RAII guard
+class ScopeGuard {
+public:
+    ScopeGuard() { std::cout << "[ScopeGuard] Enter\n"; }
+    ~ScopeGuard() { std::cout << "[ScopeGuard] Exit\n"; }
+};
+
 // ------------------------------------
 
 int main() {
@@ -151,12 +181,30 @@ int main() {
     SimpleAllocator<Test> alloc;
 
     Test* t = alloc.allocate(1);
-    alloc.construct(t, 42);
+
+    // ✅ modern usage
+    std::allocator_traits<SimpleAllocator<Test>>::construct(alloc, t, 42);
 
     std::cout << "Value inside Test: " << t->x << "\n";
 
-    alloc.destroy(t);
+    std::allocator_traits<SimpleAllocator<Test>>::destroy(alloc, t);
     alloc.deallocate(t, 1);
+
+    // -------- NEW: Object Pool --------
+
+    std::cout << "\n--- Object Pool Demo ---\n";
+
+    ScopeGuard guard;
+
+    ObjectPool<Test> objPool(2);
+
+    Test* p1 = objPool.create(100);
+    Test* p2 = objPool.create(200);
+
+    std::cout << "Pool objects: "
+              << p1->x << ", " << p2->x << "\n";
+
+    objPool.reset();
 
     // ----------------------------------
 

@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <utility>   // ✅ ADDED
+#include <cassert>   // ✅ ADDED
 
 // ----------------------------------------------------
 // ORIGINAL STRUCT (LOGIC UNCHANGED)
@@ -102,6 +104,8 @@ int main(void) {
     }
 
     // ---------- SMALL ADDITIONS ----------
+    assert(v);  // ✅ ADDED safety check
+
     birthday(*v);
     print_user(v);
 

@@ -3,6 +3,8 @@
 #include <chrono>
 #include <vector>
 #include <algorithm>
+#include <utility>   // ✅ ADDED
+#include <cassert>   // ✅ ADDED
 
 class LargeObject {
 public:
@@ -105,6 +107,7 @@ int main() {
         auto start = std::chrono::steady_clock::now();
 
         LargeObject stack_obj;
+        assert(&stack_obj != nullptr);  // ✅ ADDED safety check
 
         fill_object(stack_obj, 1);
         print_preview(stack_obj);
@@ -125,6 +128,7 @@ int main() {
         auto start = std::chrono::steady_clock::now();
 
         LargeObject* heap_obj = new LargeObject();
+        assert(heap_obj != nullptr);  // ✅ ADDED
 
         fill_object(*heap_obj, 2);
         print_preview(*heap_obj);
@@ -148,6 +152,8 @@ int main() {
     // ---------------------------------------
     {
         auto smart_ptr = std::make_unique<LargeObject>();
+        assert(smart_ptr);  // ✅ ADDED
+
         std::cout << "Smart pointer managing object\n";
 
         fill_object(*smart_ptr, 3);

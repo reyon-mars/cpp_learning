@@ -3,6 +3,7 @@
 #include <string>
 #include <thread>
 #include <utility>
+#include <functional>   // ✅ ADDED (for callable utilities safety)
 
 class scoped_timer {
     

@@ -3,6 +3,7 @@
 #include <string>
 #include <stdexcept>
 #include <sstream>
+#include <cctype>   // ✅ ADDED (needed for std::toupper)
 
 // ======================================================
 // ORIGINAL CLASS (UNCHANGED LOGIC)

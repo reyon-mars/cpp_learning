@@ -1,5 +1,7 @@
 #include <iostream>
 #include <memory>
+#include <utility>   // ✅ ADDED
+#include <cassert>   // ✅ ADDED (optional safety/debug)
 
 class Widget {
 public:
@@ -48,6 +50,9 @@ int main() {
         std::unique_ptr<Widget> ptr3 = std::make_unique<Widget>();
         ptr2.swap(ptr3);
         std::cout << "Swapped unique_ptrs\n";
+
+        // EXTRA SAFE CHECK (no logic change)
+        assert(ptr2 != nullptr || ptr3 != nullptr);
         // --------------------------------
     }
 

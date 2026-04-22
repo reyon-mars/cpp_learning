@@ -1,6 +1,8 @@
 #include <iostream>
 #include <chrono>
 #include <string>
+#include <utility>     // ✅ ADDED (for std::move)
+#include <functional>  // ✅ ADDED (for callable templates)
 
 class scoped_timer {
     

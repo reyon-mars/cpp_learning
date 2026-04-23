@@ -3,21 +3,19 @@
 
 #include <iostream>
 
-// ---------- SMALL ADDITIONS ----------
-
 // Preprocessor macro
 #define APP_VERSION "1.0"
 
 // Conditional compilation
 #define DEBUG_MODE
 
-// ✅ ADDED: Header guard simulation
+// Header guard simulation
 #ifndef CONFIG_H
 #define CONFIG_H
 #define MAX_USERS 100
 #endif
 
-// ✅ ADDED: Macro function
+// Macro function
 #define SQUARE_MACRO(x) ((x) * (x))
 
 // Function prototype (parsing stage example)
@@ -39,7 +37,7 @@ inline int square(int x) {
     return x * x;
 }
 
-// ✅ ADDED: constexpr alternative (better than macro)
+// constexpr alternative (better than macro)
 constexpr int square_constexpr(int x) {
     return x * x;
 }
@@ -54,15 +52,11 @@ void debugMessage() {
 // Simulating extern usage
 extern int build_number;
 
-// ✅ ADDED: extern function simulation
+// extern function simulation
 void externalFunction() {
     std::cout << "Simulated external function call\n";
 }
 
-// ------------------------------------
-
-
-// ----------- MORE ADVANCED ADDITIONS -----------
 
 // Safer alternative to macro (inline function)
 inline int max_safe(int a, int b) {
@@ -94,7 +88,6 @@ int main() {
     printVersion();
     std::cout << "Build number: " << build_number << "\n";
 
-    // -------- NEW ADDITIONS USAGE --------
     debugMessage();
 
     internal_counter++;
@@ -112,26 +105,18 @@ int main() {
     // External function simulation
     externalFunction();
 
-    // ------------------------------------
 
-    // ================= ADDITIONS =================
 
     std::cout << "\nAdvanced Macro Features:\n";
 
-    // ✅ ADDED: safe vs macro
     std::cout << "max_safe(5,10): " << max_safe(5,10) << "\n";
 
-    // ✅ ADDED: debug with file/line
     DEBUG_LOG("Testing debug log");
 
-    // ✅ ADDED: mode status
     std::cout << "Mode: " << MODE_STATUS << "\n";
 
-    // ✅ ADDED: macro pitfall demo
     std::cout << "BAD_SQUARE(2+3): " << BAD_SQUARE(2+3) << "\n";
     std::cout << "Correct SQUARE(2+3): " << SQUARE_MACRO(2+3) << "\n";
-
-    // ============================================
 
     // undef example
     #undef DEBUG_MODE

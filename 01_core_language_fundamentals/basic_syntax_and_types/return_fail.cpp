@@ -1,23 +1,21 @@
 #include <iostream>
 #include <cstdlib>
-
-// ✅ ADDED
 #include <string>
 
-// ✅ ADDED: Custom status codes
+// Custom status codes
 enum StatusCode {
     SUCCESS = 0,
     FILE_ERROR = 1,
     NETWORK_ERROR = 2
 };
 
-// ✅ ADDED: Simulated operation
+// Simulated operation
 int performTask() {
     // simulate a failure (change value to test)
     return FILE_ERROR;
 }
 
-// ✅ ADDED: Error message helper
+// Error message helper
 void printError(int code) {
     switch (code) {
         case SUCCESS:
@@ -34,7 +32,6 @@ void printError(int code) {
     }
 }
 
-// ---------------- SMALL ADDITIONS ----------------
 
 // Convert error code to string (useful for logs)
 std::string errorToString(int code) {
@@ -71,20 +68,16 @@ int main(void) {
 
     int status = -1;
 
-    // ✅ ADDED: Use simulated task
     status = performTask();
 
     if (status != EXIT_SUCCESS) {
         std::cout << "Program exited with error code: "
                   << status << std::endl;
 
-        // ✅ ADDED: Detailed error message
         printError(status);
 
-        // ✅ ADDED: String-based log
         std::cout << "Error type: " << errorToString(status) << "\n";
 
-        // ✅ ADDED: Retry logic if recoverable
         if (isRecoverable(status)) {
             std::cout << "Retrying operation...\n";
             status = retryTask(3);

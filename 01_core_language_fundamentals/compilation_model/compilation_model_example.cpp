@@ -11,13 +11,13 @@
 // Conditional compilation
 #define DEBUG_MODE
 
-// ✅ ADDED: Header guard simulation
+// Header guard simulation
 #ifndef CONFIG_H
 #define CONFIG_H
 #define MAX_USERS 100
 #endif
 
-// ✅ ADDED: Macro function
+// Macro function
 #define SQUARE_MACRO(x) ((x) * (x))
 
 // Function prototype (parsing stage example)
@@ -39,7 +39,7 @@ inline int square(int x) {
     return x * x;
 }
 
-// ✅ ADDED: constexpr alternative (better than macro)
+// constexpr alternative (better than macro)
 constexpr int square_constexpr(int x) {
     return x * x;
 }
@@ -54,12 +54,11 @@ void debugMessage() {
 // Simulating extern usage
 extern int build_number;
 
-// ✅ ADDED: extern function simulation
+// extern function simulation
 void externalFunction() {
     std::cout << "Simulated external function call\n";
 }
 
-// ---------------- EXTRA SMALL ADDITIONS ----------------
 
 // Macro pitfall example
 #define DOUBLE_MACRO(x) x + x
@@ -79,11 +78,9 @@ static void internalHelper() {
 int main() {
     std::cout << "Compiled successfully\n";
 
-    // Added usage
     printVersion();
     std::cout << "Build number: " << build_number << "\n";
 
-    // -------- NEW ADDITIONS USAGE --------
     debugMessage();
 
     internal_counter++;
@@ -91,17 +88,13 @@ int main() {
 
     std::cout << "Square of 5: " << square(5) << "\n";
 
-    // ✅ ADDED: Macro vs constexpr
     std::cout << "Square (macro): " << SQUARE_MACRO(5) << "\n";
     std::cout << "Square (constexpr): " << square_constexpr(5) << "\n";
 
-    // ✅ ADDED: Config usage
     std::cout << "Max users (macro): " << MAX_USERS << "\n";
 
-    // ✅ ADDED: external function simulation
     externalFunction();
 
-    // ---------------- EXTRA USAGE ----------------
 
     // Macro pitfall demo
     std::cout << "DOUBLE_MACRO(5*2): "
@@ -112,7 +105,6 @@ int main() {
               << double_safe(5 * 2)
               << "\n";
 
-    // Internal helper call
     internalHelper();
 
     // Compile-time constant usage
@@ -121,7 +113,7 @@ int main() {
 
     // --------------------------------------------
 
-    // ✅ ADDED: undef example
+    // undef example
     #undef DEBUG_MODE
     // debugMessage(); // would not print now if called again
 

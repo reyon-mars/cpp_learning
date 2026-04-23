@@ -101,20 +101,18 @@ constexpr int absolute(int x) {
     return x < 0 ? -x : x;
 }
 
-// ---------------- MORE ADDITIONS ----------------
-
-// ✅ ADDED: Template function (generic max)
+// Template function (generic max)
 template<typename T>
 T maxValue(T a, T b) {
     return (a > b) ? a : b;
 }
 
-// ✅ ADDED: Compile-time factorial
+// Compile-time factorial
 constexpr int factorial(int n) {
     return (n <= 1) ? 1 : n * factorial(n - 1);
 }
 
-// ✅ ADDED: Convert string to uppercase
+// Convert string to uppercase
 inline std::string toUpper(std::string str) {
     for (char& c : str) {
         if (c >= 'a' && c <= 'z') {
@@ -124,12 +122,11 @@ inline std::string toUpper(std::string str) {
     return str;
 }
 
-// ✅ ADDED: Simple input validation
+// Simple input validation
 inline bool isValidNumber(int x) {
     return x >= 0 && x <= 100;
 }
 
-// ---------------- EXTRA SMALL ADDITIONS ----------------
 
 // Clamp value between range
 inline int clamp(int value, int min, int max) {
@@ -208,7 +205,7 @@ int main(void) {
     std::cout << "Absolute of -7 = " << absolute(-7) << std::endl;
 
     // --------------------------------------------------
-    // ✅ ADDED USAGE
+
 
     std::cout << "Max of 10 and 20 = " << maxValue(10, 20) << std::endl;
 
@@ -220,7 +217,6 @@ int main(void) {
     std::cout << "Is " << testValue << " valid? "
               << (isValidNumber(testValue) ? "Yes" : "No") << std::endl;
 
-    // ✅ EXTRA USAGE
     std::cout << "Clamped value of 150 (0-100): "
               << clamp(150, 0, 100) << std::endl;
 

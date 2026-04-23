@@ -2,8 +2,6 @@
 // [[nodiscard]], [[deprecated]], [[maybe_unused]]
 
 #include <iostream>
-
-// ✅ ADDED
 #include <utility>   // for structured binding pair
 
 [[nodiscard]] int calculate() {
@@ -34,13 +32,13 @@ void debug_log([[maybe_unused]] int level) {
     std::cout << "Helper function\n";
 }
 
-// ✅ ADDED: nodiscard with message (C++20)
+// nodiscard with message (C++20)
 [[nodiscard("You must use the return value")]]
 int compute_value() {
     return 99;
 }
 
-// ✅ ADDED: nodiscard method inside class
+// nodiscard method inside class
 class Calculator {
 public:
     [[nodiscard]] int add(int a, int b) const {
@@ -48,7 +46,7 @@ public:
     }
 };
 
-// ✅ ADDED: deprecated class
+// deprecated class
 [[deprecated("Use NewSystem instead")]]
 class OldSystem {
 public:

@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <algorithm> // ✅ ADDED for std::swap
+#include <algorithm> /
 
 struct Book {
     std::string name;
@@ -35,7 +35,6 @@ std::vector<Book> createSampleLibrary() {
 // ------------------------------------------------------
 
 
-// ----------- NEWLY ADDED FUNCTIONS (MORE) -----------
 
 // Find and return a book (pointer version for safety)
 const Book* getBookByName(const std::vector<Book>& lib, const std::string& name) {
@@ -83,7 +82,6 @@ int main() {
 
     // ================= ADD IN MAIN =================
 
-    // ✅ ADDED: Get full book safely
     const Book* found = getBookByName(library, "C++ Primer");
     if (found) {
         std::cout << "\nFound book details:\n";
@@ -92,12 +90,10 @@ int main() {
         std::cout << "Book not found.\n";
     }
 
-    // ✅ ADDED: Sort books
     std::cout << "\nSorting books by name...\n";
     sortBooksByName(library);
     printLibrary(library);
 
-    // ✅ ADDED: Latest book by ISBN
     Book latest = getLatestBook(library);
     std::cout << "\nLatest book (highest ISBN):\n";
     printBook(latest);

@@ -1,8 +1,7 @@
-// Compilation Model Exercise
-// Understanding preprocessing, parsing, compilation, and linking
-
 #include <iostream>
 #include <memory>
+#include <utility>   // ✅ ADDED
+#include <cassert>   // ✅ ADDED
 
 // ---------- SMALL ADDITIONS ----------
 
@@ -69,6 +68,7 @@ inline int max_safe(int a, int b) {
 
 void smart_pointer_example() {
     std::unique_ptr<int> ptr = std::make_unique<int>(200);
+    assert(ptr);  // ✅ ADDED
     std::cout << "smart_pointer value: " << *ptr << '\n';
 }
 
@@ -157,6 +157,8 @@ int main() {
     lifetime_demo();
 
     int* temp_ptr = new int(500);
+    assert(temp_ptr != nullptr);  // ✅ ADDED
+
     safe_delete(temp_ptr);
 
     if (temp_ptr == nullptr) {

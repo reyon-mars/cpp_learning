@@ -2,6 +2,8 @@
 #include <string>
 #include <vector>
 #include <algorithm> // ✅ ADDED
+#include <numeric>   // ✅ ADDED
+#include <cassert>   // ✅ ADDED
 
 struct Book {
     std::string name;
@@ -88,6 +90,8 @@ void removeBookModern(std::vector<Book>& lib,
 
 // Binary search (requires sorted vector by ISBN)
 const Book* binarySearchISBN(const std::vector<Book>& lib, int isbn) {
+    assert(!lib.empty());  // ✅ ADDED safety check
+
     int left = 0;
     int right = static_cast<int>(lib.size()) - 1;
 

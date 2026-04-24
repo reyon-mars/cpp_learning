@@ -1,6 +1,8 @@
 #include <iostream>
 #include <type_traits>   // ✅ ADDED
 #include <typeinfo>      // ✅ ADDED
+#include <utility>       // ✅ ADDED
+#include <cassert>       // ✅ ADDED
 
 // ----------- MORE ADVANCED ADDITIONS -----------
 
@@ -61,6 +63,9 @@ int main() {
 
     // ✅ trailing return type
     auto mul = multiply_generic(2, 3.5);
+    static_assert(std::is_same<decltype(mul), double>::value,
+                  "multiply_generic should return double");  // ✅ ADDED
+
     std::cout << "multiply result: " << mul << "\n";
 
     // ✅ ADDED: define variable for forwarding test
@@ -76,6 +81,8 @@ int main() {
 
     // ✅ ADDED: reference behavior demo
     auto ref = returnReference();
+    assert(ref == 50);  // ✅ ADDED check
+
     ref = 100; // modifies static variable
 
     std::cout << "Modified reference value: " << returnReference() << "\n";

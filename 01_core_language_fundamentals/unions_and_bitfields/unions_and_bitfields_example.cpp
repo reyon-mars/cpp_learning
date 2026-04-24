@@ -1,8 +1,8 @@
-// ----------- MORE ADVANCED ADDITIONS -----------
-
 #include <iostream>   // ✅ ADDED
 #include <bitset>
 #include <cstdint>    // ✅ ADDED
+#include <iomanip>    // ✅ ADDED
+#include <cassert>    // ✅ ADDED
 
 // ✅ ADDED: Color union for reinterpretation
 union Color {
@@ -22,7 +22,10 @@ void print_color(const Color& c) {
 
 // ✅ ADDED: Print hex value
 void print_hex(const Color& c) {
-    std::cout << "Hex: 0x" << std::hex << c.full << std::dec << "\n";
+    std::cout << "Hex: 0x"
+              << std::hex << std::setw(8) << std::setfill('0')
+              << c.full
+              << std::dec << "\n";
 }
 
 // ✅ ADDED: Bitfield struct
@@ -82,6 +85,8 @@ int main() {
     // ✅ ADDED: create color for testing
     Color c;
     c.full = 0xAABBCCDD;
+
+    assert(sizeof(Color) == sizeof(uint32_t));  // ✅ ADDED sanity check
 
     // ✅ Bit visualization
     print_bits(c.full);

@@ -1,11 +1,10 @@
-// Concepts and Constraints Exercise (C++20)
-// Compile-time constraints on template parameters
-
 #include <iostream>
 #include <concepts>
 #include <vector>
 #include <list>
 #include <type_traits>
+#include <cassert>   // ✅ ADDED
+#include <utility>   // ✅ ADDED
 
 // -----------------------------
 // Numeric Concept
@@ -124,6 +123,13 @@ int main() {
 
     std::cout << "Sum of list: "
               << sum_container(lst) << "\n";
+
+    // ✅ ADDED: compile-time validation
+    static_assert(Numeric<int>);
+    static_assert(Numeric<double>);
+
+    // ✅ ADDED: runtime validation
+    assert(sum_container(vec) == 6);
 
     // ----------------------------
 

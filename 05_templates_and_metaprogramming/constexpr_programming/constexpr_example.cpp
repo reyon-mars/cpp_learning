@@ -1,8 +1,7 @@
-// Constexpr Programming Exercise
-// Compile-time computation and evaluation
-
 #include <iostream>
 #include <type_traits>
+#include <cassert>   // ✅ ADDED
+#include <utility>   // ✅ ADDED
 
 // -----------------------------------
 // Recursive constexpr
@@ -107,6 +106,8 @@ int main() {
 
     static_assert(fact5 == 120, "Factorial incorrect!");
     static_assert(fact6_iter == 720, "Iterative factorial incorrect!");
+    static_assert(is_even(10), "Even check failed");     // ✅ ADDED
+    static_assert(power(3, 3) == 27, "Power failed");    // ✅ ADDED
 
     std::cout << "5! = " << fact5 << "\n";
     std::cout << "fib(10) = " << fib10 << "\n";
@@ -127,6 +128,8 @@ int main() {
 
     std::cout << "Runtime array sum = "
               << runtime_arr.sum() << "\n";
+
+    assert(runtime_arr.get(0) == 42);  // ✅ ADDED
 
     // if constexpr demo
     std::cout << "Add int: " << add(3, 4) << "\n";

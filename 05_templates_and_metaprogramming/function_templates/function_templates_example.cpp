@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <type_traits>
+#include <typeinfo>   // ✅ ADDED
 
 // ----------------------------------
 // Generic template
@@ -82,6 +83,29 @@ struct Printer<const T*> {
     }
 }
 
+// -------- NEW SMALL ADDITIONS --------
+
+// Floating-point specialization
+template<>
+void print<double>(const double& value) {
+    std::cout << "Double (specialized): " << value << "\n";
+}
+
+// Print type information
+template<typename T>
+void print_type(const T&) {
+    std::cout << "Type: " << typeid(T).name() << "\n";
+}
+
+// Detect reference type
+template<typename T>
+void check_reference(T&& value) {
+    if constexpr (std::is_lvalue_reference_v<T>)
+        std::cout << "Lvalue reference detected\n";
+    else
+        std::cout << "Rvalue reference detected\n";
+}
+
 // ---------------------------------
 
 // Explicit instantiation
@@ -110,6 +134,13 @@ int main() {
 
     const int* cptr = &x;
     Printer<const int*>::print_value(cptr);
+
+    // -------- NEW USAGE --------
+
+    print_type(x);
+
+    check_reference(x);     // lvalue
+    check_reference(10);    // rvalue
 
     // ----------------------------
 

@@ -1,8 +1,7 @@
-// Class Templates Exercise
-// Generic classes and member templates
-
 #include <iostream>
 #include <typeinfo>
+#include <utility>   // ✅ ADDED
+#include <cassert>   // ✅ ADDED
 
 template<typename T>
 class Container {
@@ -47,9 +46,8 @@ public:
 
     // Swap contents with another container
     void swap(Container<T>& other) {
-        T temp = data;
-        data = other.data;
-        other.data = temp;
+        using std::swap;   // ✅ ADDED (best practice)
+        swap(data, other.data);
     }
 
     // --------------------------------
@@ -103,6 +101,9 @@ int main() {
 
     std::cout << "After swap: "
               << int_container << ", " << another_int << "\n";
+
+    // ✅ ADDED: small validation
+    assert(int_container.equals(10));
 
     // ----------------------------
 

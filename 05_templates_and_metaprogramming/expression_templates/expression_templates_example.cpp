@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <vector>
+#include <cassert>   // ✅ ADDED
 
 // ----------------------------------
 // Base Expression Template
@@ -44,17 +45,24 @@ public:
 
     // -------- SMALL ADDITIONS --------
 
-    // Fill vector with value
     void fill(double value) {
         for (auto& x : data)
             x = value;
     }
 
-    // Print vector
     void print() const {
         for (double x : data)
             std::cout << x << " ";
         std::cout << "\n";
+    }
+
+    // ✅ ADDED: dot product
+    double dot(const Vector& other) const {
+        assert(size() == other.size());
+        double result = 0;
+        for (size_t i = 0; i < size(); ++i)
+            result += data[i] * other.data[i];
+        return result;
     }
 
     // --------------------------------
@@ -135,7 +143,6 @@ public:
     }
 };
 
-// operator-
 template<typename L, typename R>
 SubExpr<L, R> operator-(const VectorExpr<L>& l,
                         const VectorExpr<R>& r) {
@@ -143,6 +150,30 @@ SubExpr<L, R> operator-(const VectorExpr<L>& l,
         static_cast<const L&>(l),
         static_cast<const R&>(r)
     );
+}
+
+// ✅ ADDED: scalar addition expression
+template<typename E>
+class ScalarAddExpr : public VectorExpr<ScalarAddExpr<E>> {
+private:
+    double scalar;
+    const E& expr;
+
+public:
+    ScalarAddExpr(double s, const E& e) : scalar(s), expr(e) {}
+
+    double operator[](size_t i) const {
+        return expr[i] + scalar;
+    }
+
+    size_t size() const {
+        return expr.size();
+    }
+};
+
+template<typename E>
+ScalarAddExpr<E> operator+(const VectorExpr<E>& expr, double scalar) {
+    return ScalarAddExpr<E>(scalar, static_cast<const E&>(expr));
 }
 
 // ------------------------------------------------
@@ -156,10 +187,8 @@ int main() {
     for (size_t i = 0; i < 5; ++i)
         v[i] = i + 1;  // 1 2 3 4 5
 
-    // Lazy expression (no allocation yet)
     auto expr = 2.0 * v + v;
 
-    // Evaluation happens here
     Vector result = expr;
 
     result.print();
@@ -169,18 +198,28 @@ int main() {
     Vector v2(5);
     v2.fill(1.0);
 
-    auto expr2 = v - v2;   // subtraction expression
+    auto expr2 = v - v2;
     Vector result2 = expr2;
 
     std::cout << "After subtraction:\n";
     result2.print();
 
-    // More complex lazy expression
     auto expr3 = 3.0 * v + v - v2;
     Vector result3 = expr3;
 
     std::cout << "Complex expression:\n";
     result3.print();
+
+    // ✅ NEW: scalar addition
+    auto expr4 = v + 5.0;
+    Vector result4 = expr4;
+
+    std::cout << "After scalar addition:\n";
+    result4.print();
+
+    // ✅ NEW: dot product
+    std::cout << "Dot product (v · v2): "
+              << v.dot(v2) << "\n";
 
     // ----------------------------
 

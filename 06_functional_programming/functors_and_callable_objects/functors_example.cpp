@@ -4,7 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
-#include <numeric>   // 🔹 added
+#include <numeric>
 
 // ----------------------------------
 // Simple Functor
@@ -72,6 +72,32 @@ public:
     }
 };
 
+// -------- EXTRA SMALL ADDITIONS --------
+
+// Functor for subtraction
+class Subtract {
+public:
+    int operator()(int a, int b) const {
+        return a - b;
+    }
+};
+
+// Functor to check even numbers
+class IsEven {
+public:
+    bool operator()(int x) const {
+        return x % 2 == 0;
+    }
+};
+
+// Functor for printing elements
+class Printer {
+public:
+    void operator()(int x) const {
+        std::cout << x << " ";
+    }
+};
+
 // ----------------------------------
 // Main
 // ----------------------------------
@@ -107,7 +133,7 @@ int main() {
     std::cout << "\n--- Sorting with functor ---\n";
 
     std::sort(values.begin(), values.end(),
-              [](int a, int b) { return a > b; }); // lambda comparator
+              [](int a, int b) { return a > b; });
 
     for (int v : values)
         std::cout << v << " ";
@@ -141,6 +167,25 @@ int main() {
                       std::cout << mult(v) << " ";
                   });
     std::cout << "\n";
+
+    // -------- EXTRA NEW USAGE --------
+
+    std::cout << "\n--- Extra Functors ---\n";
+
+    // Subtract using accumulate
+    int diff = std::accumulate(values.begin(), values.end(), 0, Subtract());
+    std::cout << "Accumulated subtraction: " << diff << "\n";
+
+    // Count even numbers
+    int even_count = std::count_if(values.begin(), values.end(), IsEven());
+    std::cout << "Even count: " << even_count << "\n";
+
+    // Print using functor
+    std::cout << "Print using Printer functor: ";
+    std::for_each(values.begin(), values.end(), Printer());
+    std::cout << "\n";
+
+    // --------------------------------
 
     return 0;
 }

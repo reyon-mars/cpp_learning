@@ -61,9 +61,51 @@ void for_each_apply(std::vector<int>& values, Func f) {
     }
 }
 
-// ----------------------------------
+// ======================================================
+// 🔥 NEW ADDITIONS (ADVANCED BUT SMALL)
+// ======================================================
+
+// 🔹 map (functional transform)
+template<typename Func>
+std::vector<int> map(const std::vector<int>& values, Func f) {
+    std::vector<int> result(values.size());
+    std::transform(values.begin(), values.end(), result.begin(), f);
+    return result;
+}
+
+// 🔹 compose two functions: f(g(x))
+template<typename F, typename G>
+auto compose(F f, G g) {
+    return [=](auto x) {
+        return f(g(x));
+    };
+}
+
+// 🔹 pipeline-style chaining
+template<typename T, typename Func>
+auto pipe(T value, Func f) {
+    return f(value);
+}
+
+// 🔹 combine predicates (AND)
+template<typename P1, typename P2>
+auto and_predicate(P1 p1, P2 p2) {
+    return [=](int x) {
+        return p1(x) && p2(x);
+    };
+}
+
+// 🔹 safe reduce (handles empty vector)
+template<typename BinOp>
+int safe_reduce(const std::vector<int>& values, BinOp op, int init = 0) {
+    if (values.empty()) return init;
+    return reduce(values, op);
+}
+
+// ======================================================
 // Main
-// ----------------------------------
+// ======================================================
+
 int main() {
 
     std::vector<int> values = {1, 2, 3, 4, 5};
@@ -74,13 +116,11 @@ int main() {
     std::cout << "Sum: " << sum << "\n";
     std::cout << "Product: " << product << "\n";
 
-    // Using lambda
     int max_val = reduce(values,
         [](int a, int b) { return std::max(a, b); });
 
     std::cout << "Max: " << max_val << "\n";
 
-    // Generic reduce
     double avg = reduce_generic<double>(
         {1.0, 2.0, 3.0},
         [](double a, double b) { return a + b; }
@@ -88,14 +128,12 @@ int main() {
 
     std::cout << "Average: " << avg << "\n";
 
-    // std::accumulate comparison
     int std_sum = std::accumulate(
         values.begin(), values.end(), 0);
 
     std::cout << "std::accumulate sum: "
               << std_sum << "\n";
 
-    // Transform (higher-order)
     std::vector<int> doubled(values.size());
     std::transform(values.begin(),
                    values.end(),
@@ -107,25 +145,63 @@ int main() {
         std::cout << v << " ";
     std::cout << "\n";
 
-    // 🔹 NEW: filter even numbers
     auto evens = filter(values, [](int x) { return x % 2 == 0; });
     std::cout << "Even values: ";
     for (int v : evens)
         std::cout << v << " ";
     std::cout << "\n";
 
-    // 🔹 NEW: apply function to modify values
     for_each_apply(values, [](int x) { return x * x; });
     std::cout << "Squared values: ";
     for (int v : values)
         std::cout << v << " ";
     std::cout << "\n";
 
-    // 🔹 NEW: compose operations (chaining)
     int custom = reduce(values, [](int a, int b) {
         return a + b * 2;
     });
     std::cout << "Custom reduce result: " << custom << "\n";
+
+    // ======================================================
+    // 🔥 NEW USAGE
+    // ======================================================
+
+    std::cout << "\n--- Advanced Functional Patterns ---\n";
+
+    // map
+    auto tripled = map(values, [](int x) { return x * 3; });
+    std::cout << "Tripled: ";
+    for (int v : tripled) std::cout << v << " ";
+    std::cout << "\n";
+
+    // compose
+    auto square = [](int x) { return x * x; };
+    auto double_then_square = compose(square, make_multiplier(2));
+
+    std::cout << "compose(double->square)(5): "
+              << double_then_square(5) << "\n";
+
+    // pipeline
+    int piped = pipe(5, make_multiplier(3));
+    std::cout << "Pipe result: " << piped << "\n";
+
+    // combined predicate
+    auto even_and_gt10 = and_predicate(
+        [](int x){ return x % 2 == 0; },
+        [](int x){ return x > 10; }
+    );
+
+    auto filtered = filter(values, even_and_gt10);
+    std::cout << "Even and >10: ";
+    for (int v : filtered) std::cout << v << " ";
+    std::cout << "\n";
+
+    // safe reduce
+    std::vector<int> empty;
+    std::cout << "Safe reduce (empty): "
+              << safe_reduce(empty, add, 0) << "\n";
+
+    // ======================================================
 
     return 0;
 }

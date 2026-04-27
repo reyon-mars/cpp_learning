@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <vector>
+#include <type_traits> // 🔹 ADDED
 
 // ----------------------------------
 // Primary template
@@ -34,6 +35,15 @@ struct traits<T*> {
     static constexpr const char* name = "pointer";
     static void print() { 
         std::cout << "Specialized for pointers\n"; 
+    }
+};
+
+// 🔹 NEW: const pointer specialization
+template<typename T>
+struct traits<const T*> {
+    static constexpr const char* name = "const pointer";
+    static void print() {
+        std::cout << "Specialized for const pointers\n";
     }
 };
 
@@ -70,13 +80,11 @@ struct traits<std::vector<int>> {
 
 // ---------------- SMALL ADDITIONS ----------------
 
-// Helper function to print trait name
 template<typename T>
 void print_trait_name() {
     std::cout << "Trait name: " << traits<T>::name << "\n";
 }
 
-// Test wrapper
 template<typename T>
 void test_traits() {
     traits<T>::print();
@@ -84,7 +92,6 @@ void test_traits() {
     std::cout << "------------------\n";
 }
 
-// Additional specialization (reference types)
 template<typename T>
 struct traits<T&> {
     static constexpr const char* name = "reference";
@@ -93,9 +100,62 @@ struct traits<T&> {
     }
 };
 
-// ------------------------------------------------
+// ======================================================
+// 🔥 NEW ADDITIONS
+// ======================================================
+
+// 🔹 Array specialization
+template<typename T, std::size_t N>
+struct traits<T[N]> {
+    static constexpr const char* name = "array";
+    static void print() {
+        std::cout << "Specialized for array types\n";
+    }
+};
+
+// 🔹 Function type specialization
+template<typename R, typename... Args>
+struct traits<R(Args...)> {
+    static constexpr const char* name = "function";
+    static void print() {
+        std::cout << "Specialized for function types\n";
+    }
+};
+
+// 🔹 Detection idiom: has value_type
+template<typename, typename = std::void_t<>>
+struct has_value_type : std::false_type {};
+
+template<typename T>
+struct has_value_type<T, std::void_t<typename T::value_type>>
+    : std::true_type {};
+
+// 🔹 Conditional printer using detection
+template<typename T>
+void print_value_type_info() {
+    if constexpr (has_value_type<T>::value) {
+        std::cout << "Has value_type\n";
+    } else {
+        std::cout << "No value_type\n";
+    }
+}
+
+// 🔹 Compile-time category checker
+template<typename T>
+void category_check() {
+    if constexpr (std::is_pointer_v<T>)
+        std::cout << "Category: Pointer\n";
+    else if constexpr (std::is_reference_v<T>)
+        std::cout << "Category: Reference\n";
+    else if constexpr (std::is_array_v<T>)
+        std::cout << "Category: Array\n";
+    else
+        std::cout << "Category: Other\n";
+}
+
+// ======================================================
 // Main
-// ------------------------------------------------
+// ======================================================
 int main() {
 
     traits<double>::print();
@@ -105,7 +165,6 @@ int main() {
     traits<std::vector<double>>::print();
     traits<std::vector<int>>::print();
 
-    // -------- Added usage --------
     std::cout << "\n--- Extra Tests ---\n";
 
     test_traits<int>();
@@ -115,7 +174,25 @@ int main() {
     test_traits<std::vector<int>>();
     test_traits<int&>();
 
-    // ----------------------------
+    // ======================================================
+    // 🔥 NEW USAGE
+    // ======================================================
+
+    std::cout << "\n--- Advanced Specialization Tests ---\n";
+
+    int arr[5];
+    test_traits<decltype(arr)>();
+
+    test_traits<void(int)>(); // function type
+
+    print_value_type_info<std::vector<int>>();
+    print_value_type_info<int>();
+
+    category_check<int*>();
+    category_check<int&>();
+    category_check<decltype(arr)>();
+
+    // ======================================================
 
     return 0;
 }

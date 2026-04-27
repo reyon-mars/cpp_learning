@@ -22,6 +22,31 @@ public:
     bool is_ok() const { return error == ErrorCode::OK; }
     int get_value() const { return value; }
     ErrorCode get_error() const { return error; }
+
+    // -------- NEW ADDITIONS --------
+
+    bool has_error() const { return !is_ok(); }
+
+    // map: apply function if OK
+    template<typename Func>
+    Result map(Func f) const {
+        if (is_ok()) return Result(f(value));
+        return Result(error);
+    }
+
+    // and_then: chain operations returning Result
+    template<typename Func>
+    Result and_then(Func f) const {
+        if (is_ok()) return f(value);
+        return Result(error);
+    }
+
+    // unwrap with default
+    int unwrap_or(int default_val) const {
+        return is_ok() ? value : default_val;
+    }
+
+    // --------------------------------
 };
 
 // Helper: convert error to string
@@ -103,6 +128,38 @@ int main() {
         auto next = safe_add(chained.get_value(), 5);
         print_result(next);
     }
+
+    // -------- NEW ADVANCED USAGE --------
+
+    std::cout << "\n--- Functional Style Handling ---\n";
+
+    // map example
+    auto mapped = divide(10, 2).map([](int x) { return x * 2; });
+    print_result(mapped);
+
+    // and_then chaining
+    auto chained2 = divide(20, 2)
+        .and_then([](int v) { return safe_add(v, 10); })
+        .and_then([](int v) { return safe_multiply(v, 2); });
+
+    print_result(chained2);
+
+    // error propagation
+    auto fail_chain = divide(10, 0)
+        .and_then([](int v) { return safe_add(v, 5); });
+
+    print_result(fail_chain);
+
+    // unwrap_or demo
+    int safe_val = divide(10, 0).unwrap_or(-1);
+    std::cout << "Fallback value: " << safe_val << "\n";
+
+    // has_error demo
+    if (fail_chain.has_error()) {
+        std::cout << "Detected error in chain\n";
+    }
+
+    // -----------------------------------
 
     return 0;
 }

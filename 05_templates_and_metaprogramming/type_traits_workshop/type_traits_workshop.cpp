@@ -51,6 +51,10 @@ void analyze_decay() {
     std::cout << "Decayed type info:\n";
     std::cout << "  is_same<T, decay_t<T>>: "
               << std::is_same_v<T, Decayed> << "\n";
+
+    // 🔹 NEW: show size after decay
+    std::cout << "  size of decayed type: "
+              << sizeof(Decayed) << "\n";
 }
 
 // Pointer depth checker
@@ -71,6 +75,39 @@ template<typename T>
 std::enable_if_t<std::is_integral_v<T>, void>
 only_integral(T value) {
     std::cout << "Integral-only function: " << value << "\n";
+}
+
+// ----------- NEW ADDITIONS -----------
+
+// Extra trait checks
+template<typename T>
+void extra_traits() {
+    std::cout << "Extra traits:\n";
+    std::cout << "  is_array: " << std::is_array_v<T> << "\n";
+    std::cout << "  is_enum: " << std::is_enum_v<T> << "\n";
+
+    // Better const detection (remove reference)
+    std::cout << "  is_const (no ref): "
+              << std::is_const_v<std::remove_reference_t<T>> << "\n";
+}
+
+// Pointer base type info
+template<typename T>
+void pointer_details() {
+    if constexpr (std::is_pointer_v<T>) {
+        std::cout << "Pointer base size: "
+                  << sizeof(std::remove_pointer_t<T>) << "\n";
+    }
+}
+
+// Reference category detection
+template<typename T>
+void reference_info() {
+    std::cout << "Reference info:\n";
+    std::cout << "  is_lvalue_reference: "
+              << std::is_lvalue_reference_v<T> << "\n";
+    std::cout << "  is_rvalue_reference: "
+              << std::is_rvalue_reference_v<T> << "\n";
 }
 
 // ------------------------------------------------
@@ -104,6 +141,21 @@ int main() {
 
     only_integral(100);
     // only_integral(3.14); // would fail at compile-time
+
+    // -------- NEW USAGE --------
+
+    std::cout << "\n--- More Trait Analysis ---\n";
+
+    extra_traits<int>();
+    extra_traits<const int&>();
+    extra_traits<int[5]>();
+
+    pointer_details<int*>();
+    pointer_details<double*>();    
+
+    reference_info<int>();
+    reference_info<int&>();
+    reference_info<int&&>();
 
     // ----------------------------
 

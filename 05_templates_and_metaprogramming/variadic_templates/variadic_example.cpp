@@ -86,6 +86,44 @@ void print_lines(Args&&... args) {
     ((std::cout << args << "\n"), ...);
 }
 
+// ----------- NEW ADDITIONS -----------
+
+// Minimum value using fold
+template<typename... Args>
+auto min_value(Args... args) {
+    return (std::min)({args...});
+}
+
+// Maximum value using fold
+template<typename... Args>
+auto max_value(Args... args) {
+    return (std::max)({args...});
+}
+
+// Logical AND fold
+template<typename... Args>
+bool logical_and(Args... args) {
+    return (args && ...);
+}
+
+// Logical OR fold
+template<typename... Args>
+bool logical_or(Args... args) {
+    return (args || ...);
+}
+
+// Apply a function to all arguments
+template<typename Func, typename... Args>
+void invoke_all(Func f, Args&&... args) {
+    (f(std::forward<Args>(args)), ...);
+}
+
+// Conditional sum (only values passing predicate)
+template<typename Pred, typename... Args>
+auto sum_if(Pred p, Args... args) {
+    return ( (p(args) ? args : 0) + ... );
+}
+
 // ------------------------------------------------
 // Main
 // ------------------------------------------------
@@ -120,6 +158,29 @@ int main() {
 
     std::cout << "\nPrint lines:\n";
     print_lines("Line 1", 123, 4.56);
+
+    // -------- NEW USAGE --------
+
+    std::cout << "\n--- More Variadic Features ---\n";
+
+    std::cout << "Min: " << min_value(5, 2, 8, 1) << "\n";
+    std::cout << "Max: " << max_value(5, 2, 8, 1) << "\n";
+
+    std::cout << "Logical AND: "
+              << logical_and(true, true, false) << "\n";
+
+    std::cout << "Logical OR: "
+              << logical_or(false, false, true) << "\n";
+
+    std::cout << "\nInvoke all:\n";
+    invoke_all([](auto x) {
+        std::cout << "Value: " << x << "\n";
+    }, 1, 2, 3);
+
+    std::cout << "Sum if even: "
+              << sum_if([](int x){ return x % 2 == 0; },
+                        1, 2, 3, 4, 5, 6)
+              << "\n";
 
     // ----------------------------
 

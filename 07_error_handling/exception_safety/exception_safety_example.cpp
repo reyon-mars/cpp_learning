@@ -75,6 +75,40 @@ public:
     void swap(SafeVector& other) noexcept {
         data.swap(other.data);
     }
+
+    // ---------------- EXTRA ADDITIONS ----------------
+
+    // 🔹 NEW: pop_back with basic guarantee
+    void pop_back_basic() {
+        if (!data.empty()) {
+            data.pop_back();
+        }
+    }
+
+    // 🔹 NEW: strong guarantee replace element
+    void replace_strong(std::size_t index, int value) {
+        if (index >= data.size()) {
+            throw std::out_of_range("Index out of range");
+        }
+
+        std::vector<int> temp = data;
+        temp[index] = value;
+        data = std::move(temp);
+    }
+
+    // 🔹 NEW: safe getter (no exception, returns optional-like behavior)
+    bool try_get(std::size_t index, int& out) const noexcept {
+        if (index >= data.size()) return false;
+        out = data[index];
+        return true;
+    }
+
+    // 🔹 NEW: check empty (noexcept)
+    bool empty() const noexcept {
+        return data.empty();
+    }
+
+    // ------------------------------------------------
 };
 
 int main() {
@@ -120,6 +154,39 @@ int main() {
 
     std::cout << "After swap, sv contains:\n";
     sv.print();
+
+    // ---------------- EXTRA USAGE ----------------
+
+    std::cout << "\n--- Extra Tests ---\n";
+
+    sv.add_element_basic(10);
+    sv.add_element_basic(20);
+    sv.add_element_basic(30);
+    sv.print();
+
+    // pop_back
+    sv.pop_back_basic();
+    std::cout << "After pop_back:\n";
+    sv.print();
+
+    // strong replace
+    sv.replace_strong(0, 999);
+    std::cout << "After replace:\n";
+    sv.print();
+
+    // try_get
+    int value;
+    if (sv.try_get(1, value)) {
+        std::cout << "try_get success: " << value << "\n";
+    } else {
+        std::cout << "try_get failed\n";
+    }
+
+    // empty check
+    std::cout << "Is empty? "
+              << (sv.empty() ? "Yes" : "No") << "\n";
+
+    // --------------------------------------------
 
     return 0;
 }

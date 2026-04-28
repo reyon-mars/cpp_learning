@@ -5,6 +5,7 @@
 #include <future>
 #include <thread>
 #include <chrono>
+#include <vector>   // ✅ ADDED
 
 int heavy_computation(int n) {
     int sum = 0;
@@ -33,6 +34,50 @@ std::future<int> safe_async_call(int n) {
         }
     });
 }
+
+// ---------------- EXTRA ADDITIONS ----------------
+
+// Promise example
+std::future<int> promise_example(int n) {
+    std::promise<int> prom;
+    std::future<int> fut = prom.get_future();
+
+    std::thread([n, p = std::move(prom)]() mutable {
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        p.set_value(heavy_computation(n));
+    }).detach();
+
+    return fut;
+}
+
+// Shared future example
+void shared_future_demo() {
+    std::promise<int> prom;
+    std::shared_future<int> sf = prom.get_future().share();
+
+    std::thread([p = std::move(prom)]() mutable {
+        p.set_value(123);
+    }).detach();
+
+    std::cout << "Shared future value 1: " << sf.get() << "\n";
+    std::cout << "Shared future value 2: " << sf.get() << "\n";
+}
+
+// Timed wait example
+void timed_wait_demo() {
+    auto fut = std::async(std::launch::async, []() {
+        std::this_thread::sleep_for(std::chrono::milliseconds(150));
+        return 77;
+    });
+
+    if (fut.wait_for(std::chrono::milliseconds(50)) == std::future_status::timeout) {
+        std::cout << "Still waiting...\n";
+    }
+
+    std::cout << "Timed wait result: " << fut.get() << "\n";
+}
+
+// ------------------------------------------------
 
 // ---------------- MAIN ----------------
 
@@ -102,6 +147,22 @@ int main() {
         std::cout << f.get() << " ";
     }
     std::cout << "\n";
+
+    // ---------------- EXTRA USAGE ----------------
+
+    std::cout << "\n--- Extra Tests ---\n";
+
+    // Promise demo
+    auto fut_prom = promise_example(150);
+    std::cout << "Promise result: " << fut_prom.get() << "\n";
+
+    // Shared future demo
+    shared_future_demo();
+
+    // Timed wait demo
+    timed_wait_demo();
+
+    // ------------------------------------------------
 
     return 0;
 }

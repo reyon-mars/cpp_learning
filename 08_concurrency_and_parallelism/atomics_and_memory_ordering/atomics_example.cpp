@@ -63,6 +63,57 @@ void consumer() {
               << shared_data.load(std::memory_order_acquire) << "\n";
 }
 
+// ---------------- EXTRA ADDITIONS ----------------
+
+// Relaxed load/store demo
+void relaxed_demo() {
+    std::atomic<int> x(0);
+
+    std::thread t1([&]() {
+        x.store(10, std::memory_order_relaxed);
+    });
+
+    std::thread t2([&]() {
+        std::cout << "Relaxed read (may be 0 or 10): "
+                  << x.load(std::memory_order_relaxed) << "\n";
+    });
+
+    t1.join();
+    t2.join();
+}
+
+// compare_exchange_weak loop example
+void cas_loop_demo() {
+    int expected = counter.load();
+    while (!counter.compare_exchange_weak(expected, expected + 1)) {
+        // retry until success
+    }
+    std::cout << "CAS loop increment done\n";
+}
+
+// Memory fence example
+void fence_demo() {
+    std::atomic<int> a(0), b(0);
+
+    std::thread t1([&]() {
+        a.store(1, std::memory_order_relaxed);
+        std::atomic_thread_fence(std::memory_order_release);
+        b.store(1, std::memory_order_relaxed);
+    });
+
+    std::thread t2([&]() {
+        while (b.load(std::memory_order_relaxed) == 0);
+        std::atomic_thread_fence(std::memory_order_acquire);
+        std::cout << "Fence ensures a = "
+                  << a.load(std::memory_order_relaxed) << "\n";
+    });
+
+    t1.join();
+    t2.join();
+}
+
+// ------------------------------------------------
+
 // ---------------- MAIN ----------------
 
 int main() {
@@ -126,6 +177,23 @@ int main() {
 
     prod.join();
     cons.join();
+
+    // ---------------- EXTRA USAGE ----------------
+
+    std::cout << "\n--- Extra Tests ---\n";
+
+    // Relaxed ordering demo
+    relaxed_demo();
+
+    // CAS loop demo
+    cas_loop_demo();
+    std::cout << "Counter after CAS loop: "
+              << counter.load() << "\n";
+
+    // Memory fence demo
+    fence_demo();
+
+    // ------------------------------------------------
 
     return 0;
 }

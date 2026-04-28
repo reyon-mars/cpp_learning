@@ -101,6 +101,23 @@ SimpleCoroutine quick_task()
 	co_return 7 * 6;
 }
 
+// 🔹 NEW: Coroutine that resumes automatically
+SimpleCoroutine auto_resume_task()
+{
+	std::cout << "Auto task start\n";
+	co_return 555;
+}
+
+// 🔹 NEW: Helper to safely resume multiple times
+void safe_resume(SimpleCoroutine& coro)
+{
+	if (!coro.handle.done()) {
+		coro.resume();
+	} else {
+		std::cout << "Coroutine already finished\n";
+	}
+}
+
 // ---------------- MAIN ----------------
 int main()
 {
@@ -138,6 +155,15 @@ int main()
 	// Quick coroutine
 	auto coro4 = quick_task();
 	std::cout << "Quick task result: " << coro4.get() << "\n";
+
+	// 🔹 NEW: auto resume task
+	auto coro5 = auto_resume_task();
+	std::cout << "Auto task result: " << coro5.get() << "\n";
+
+	// 🔹 NEW: safe resume demo
+	std::cout << "\nSafe resume demo\n";
+	safe_resume(coro3);  // already finished
+	safe_resume(coro2);  // already finished
 
 	return 0;
 }

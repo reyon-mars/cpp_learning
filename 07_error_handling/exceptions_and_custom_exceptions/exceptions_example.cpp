@@ -76,6 +76,42 @@ void wrapper_divide(int a, int b) {
     }
 }
 
+// ---------------- EXTRA ADDITIONS ----------------
+
+// 🔹 NEW: safe divide returning optional-like behavior
+bool try_divide(int a, int b, int& result) noexcept {
+    if (b == 0) return false;
+    result = a / b;
+    return true;
+}
+
+// 🔹 NEW: nested exception demo
+void nested_example() {
+    try {
+        throw MathError("Inner math failure");
+    } catch (...) {
+        std::throw_with_nested(MyException("Outer exception with nested cause"));
+    }
+}
+
+// 🔹 NEW: function to print nested exceptions
+void print_nested(const std::exception& e, int level = 0) {
+    std::cout << std::string(level * 2, ' ')
+              << "Exception: " << e.what() << "\n";
+    try {
+        std::rethrow_if_nested(e);
+    } catch (const std::exception& nested) {
+        print_nested(nested, level + 1);
+    } catch (...) {}
+}
+
+// 🔹 NEW: noexcept demonstration
+void no_throw_function() noexcept {
+    std::cout << "This function guarantees no exceptions\n";
+}
+
+// ------------------------------------------------
+
 int main() {
 
     // Example 1: standard exception
@@ -130,6 +166,35 @@ int main() {
     } catch (const MyException& e) {
         std::cout << "Caught base MyException: " << e.what() << "\n";
     }
+
+    // ---------------- EXTRA USAGE ----------------
+
+    std::cout << "\n--- Extra Tests ---\n";
+
+    // try_divide usage
+    int result;
+    if (try_divide(10, 2, result)) {
+        std::cout << "try_divide success: " << result << "\n";
+    } else {
+        std::cout << "try_divide failed\n";
+    }
+
+    if (!try_divide(10, 0, result)) {
+        std::cout << "try_divide handled division by zero safely\n";
+    }
+
+    // nested exception demo
+    try {
+        nested_example();
+    } catch (const std::exception& e) {
+        std::cout << "Nested exception trace:\n";
+        print_nested(e);
+    }
+
+    // noexcept demo
+    no_throw_function();
+
+    // ------------------------------------------------
 
     return 0;
 }

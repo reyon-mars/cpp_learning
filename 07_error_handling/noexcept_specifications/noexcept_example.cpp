@@ -71,6 +71,41 @@ Widget create_widget(int val) noexcept {
     return Widget(val);
 }
 
+// ---------------- EXTRA ADDITIONS ----------------
+
+// Check if a function is noexcept
+template<typename Func>
+void test_noexcept(Func f) {
+    std::cout << "Is callable noexcept? "
+              << noexcept(f()) << "\n";
+}
+
+// Conditional noexcept example
+template<typename T>
+void conditional_noexcept(T value) noexcept(std::is_arithmetic_v<T>) {
+    std::cout << "Conditional noexcept executed with: "
+              << value << "\n";
+}
+
+// Wrapper that propagates noexcept
+template<typename Func>
+auto forward_call(Func f) noexcept(noexcept(f())) {
+    return f();
+}
+
+// Demonstrate move_if_noexcept behavior
+void move_if_noexcept_demo() {
+    std::vector<Widget> v;
+    v.reserve(1);
+
+    Widget w(10);
+    v.push_back(std::move_if_noexcept(w));
+
+    std::cout << "move_if_noexcept used\n";
+}
+
+// ------------------------------------------------
+
 // ---------------- MAIN ----------------
 int main() {
 
@@ -111,6 +146,28 @@ int main() {
     } catch (const std::exception& e) {
         std::cout << "Caught exception: " << e.what() << "\n";
     }
+
+    // ---------------- EXTRA USAGE ----------------
+
+    std::cout << "\n--- Extra Tests ---\n";
+
+    // Test callable noexcept
+    test_noexcept([]() noexcept { return 1; });
+    test_noexcept([]() { return 2; });
+
+    // Conditional noexcept demo
+    conditional_noexcept(10);     // noexcept
+    conditional_noexcept(3.14);   // noexcept
+    conditional_noexcept("test"); // may throw
+
+    // Forward call preserving noexcept
+    auto result = forward_call([]() noexcept { return 123; });
+    std::cout << "Forward call result: " << result << "\n";
+
+    // move_if_noexcept demo
+    move_if_noexcept_demo();
+
+    // ------------------------------------------------
 
     return 0;
 }

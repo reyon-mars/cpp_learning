@@ -116,6 +116,19 @@ generator<int> squares(int n)
 	}
 }
 
+// 🔹 NEW: Fibonacci generator
+generator<int> fibonacci(int n)
+{
+	int a = 0, b = 1;
+	for (int i = 0; i < n; ++i)
+	{
+		co_yield a;
+		int next = a + b;
+		a = b;
+		b = next;
+	}
+}
+
 // Collect generator values into vector
 template<typename T>
 std::vector<T> collect(generator<T>& gen)
@@ -126,6 +139,18 @@ std::vector<T> collect(generator<T>& gen)
 		result.push_back(gen.value());
 	}
 	return result;
+}
+
+// 🔹 NEW: Sum values from generator
+template<typename T>
+T sum_generator(generator<T>& gen)
+{
+	T sum{};
+	while (gen.resume())
+	{
+		sum += gen.value();
+	}
+	return sum;
 }
 
 // ---------------- MAIN ----------------
@@ -166,6 +191,19 @@ auto main()->int
 	{
 		std::println("{}", v);
 	}
+
+	// 🔹 NEW: Fibonacci demo
+	auto fib = fibonacci(8);
+	std::println("\nFibonacci:");
+	while (fib.resume())
+	{
+		std::println("Fib: {}", fib.value());
+	}
+
+	// 🔹 NEW: Sum generator demo
+	auto gen3 = counter();
+	auto total = sum_generator(gen3);
+	std::println("\nSum of counter values: {}", total);
 
 	return EXIT_SUCCESS;
 }

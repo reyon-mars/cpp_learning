@@ -78,5 +78,36 @@ int main() {
     int total = std::accumulate(vec.begin(), vec.end(), 0);
     std::cout << "Sum of elements: " << total << "\n";
 
+    // 🔹 NEW: find_end (last occurrence of subsequence)
+    auto last_pos = std::find_end(vec.begin(), vec.end(), pattern.begin(), pattern.end());
+    if (last_pos != vec.end()) {
+        std::cout << "Last occurrence of {3,2} at index: "
+                  << std::distance(vec.begin(), last_pos) << "\n";
+    }
+
+    // 🔹 NEW: adjacent_find (find consecutive duplicates)
+    auto adj = std::adjacent_find(vec.begin(), vec.end());
+    if (adj != vec.end()) {
+        std::cout << "First adjacent duplicate: " << *adj << "\n";
+    } else {
+        std::cout << "No adjacent duplicates found\n";
+    }
+
+    // 🔹 NEW: search_n (find N consecutive values)
+    auto repeated = std::search_n(vec.begin(), vec.end(), 2, 3);
+    if (repeated != vec.end()) {
+        std::cout << "Two consecutive 3s found at index: "
+                  << std::distance(vec.begin(), repeated) << "\n";
+    } else {
+        std::cout << "No consecutive 3s found\n";
+    }
+
+    // 🔹 NEW: min and max elements
+    auto min_it = std::min_element(vec.begin(), vec.end());
+    auto max_it = std::max_element(vec.begin(), vec.end());
+
+    std::cout << "Min element: " << *min_it << "\n";
+    std::cout << "Max element: " << *max_it << "\n";
+
     return 0;
 }

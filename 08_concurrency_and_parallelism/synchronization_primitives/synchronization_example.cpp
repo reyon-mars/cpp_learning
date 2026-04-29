@@ -9,6 +9,7 @@
 
 std::mutex mtx;
 std::mutex mtx2;
+std::timed_mutex timed_mtx;   // 🔹 NEW
 int shared_data = 0;
 
 // ---------------- ORIGINAL FUNCTIONS ----------------
@@ -45,12 +46,12 @@ void safe_dual_lock() {
 
 // ---------------- SMALL ADDITIONS ----------------
 
-// Timed mutex attempt
+// Timed mutex attempt (fixed using timed_mutex)
 void timed_try_increment() {
-    if (mtx.try_lock_for(std::chrono::milliseconds(10))) {
+    if (timed_mtx.try_lock_for(std::chrono::milliseconds(10))) {
         shared_data += 15;
         std::cout << "timed lock succeeded\n";
-        mtx.unlock();
+        timed_mtx.unlock();
     } else {
         std::cout << "timed lock failed\n";
     }
@@ -69,6 +70,25 @@ std::mutex cout_mtx;
 void safe_print(const std::string& msg) {
     std::lock_guard<std::mutex> lock(cout_mtx);
     std::cout << msg << "\n";
+}
+
+// 🔹 NEW: unique_lock with try_lock_for
+void unique_lock_timed() {
+    std::unique_lock<std::timed_mutex> lock(timed_mtx, std::defer_lock);
+    if (lock.try_lock_for(std::chrono::milliseconds(5))) {
+        shared_data += 25;
+        std::cout << "unique_lock timed success\n";
+    } else {
+        std::cout << "unique_lock timed failed\n";
+    }
+}
+
+// 🔹 NEW: scoped thread-safe increment loop
+void batch_increment(int times) {
+    for (int i = 0; i < times; ++i) {
+        std::lock_guard<std::mutex> lock(mtx);
+        shared_data++;
+    }
 }
 
 // ---------------- MAIN ----------------
@@ -99,6 +119,10 @@ int main() {
     threads.emplace_back([]() {
         safe_print("Thread-safe printing example");
     });
+
+    // 🔹 NEW threads
+    threads.emplace_back(unique_lock_timed);
+    threads.emplace_back(batch_increment, 50);
 
     for (auto& t : threads) {
         t.join();

@@ -42,6 +42,21 @@ public:
     bool is_positive() const {
         return value > 0;
     }
+
+    // 🔹 NEW: set value directly
+    void set(int v) {
+        value = v;
+    }
+
+    // 🔹 NEW: multiply value
+    void multiply(int factor) {
+        value *= factor;
+    }
+
+    // 🔹 NEW: simple add wrapper
+    void add(int amount) {
+        value += amount;
+    }
     // -----------------------------
 };
 
@@ -83,6 +98,17 @@ int main(void) {
 
     std::cout << "Is positive? "
               << (countr.is_positive() ? "Yes" : "No") << std::endl;
+
+    // 🔹 NEW TESTS
+
+    countr.set(10);
+    countr.print();
+
+    countr.multiply(3);
+    countr.print();
+
+    countr.add(7);
+    countr.print();
 
     // -----------------------------------------------
 

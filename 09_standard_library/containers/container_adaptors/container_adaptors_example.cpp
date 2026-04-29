@@ -93,5 +93,32 @@ int main() {
     s.emplace(200);
     std::cout << "After emplace, stack top: " << s.top() << "\n";
 
+    // ---------------- NEW SMALL ADDITIONS ----------------
+
+    // stack pop + check
+    if (!s.empty()) {
+        s.pop();
+        std::cout << "After pop, new top: " << s.top() << "\n";
+    }
+
+    // queue size after operations
+    std::cout << "Queue size: " << q.size() << "\n";
+
+    // priority_queue top without popping
+    if (!pq.empty()) {
+        std::cout << "Top of priority queue: " << pq.top() << "\n";
+    }
+
+    // emplace in queue
+    q.emplace(77);
+    std::cout << "After emplace, queue back: " << q.back() << "\n";
+
+    // clear queue manually
+    while (!q.empty()) q.pop();
+    std::cout << "Queue cleared, is empty? "
+              << (q.empty() ? "Yes" : "No") << "\n";
+
+    // ----------------------------------------------------
+
     return 0;
 }

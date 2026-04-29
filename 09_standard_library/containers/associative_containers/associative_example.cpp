@@ -78,5 +78,41 @@ int main() {
     std::cout << "Map size: " << age_map.size() << "\n";
     std::cout << "Set size: " << unique_values.size() << "\n";
 
+    // ---------------- NEW SMALL ADDITIONS ----------------
+
+    // insert with hint (map)
+    age_map.insert(age_map.begin(), {"Charlie", 28});
+    std::cout << "Inserted Charlie\n";
+
+    // emplace (more efficient insertion)
+    age_map.emplace("David", 40);
+
+    // iterate map (structured bindings)
+    std::cout << "All map entries:\n";
+    for (const auto& [name, age] : age_map) {
+        std::cout << name << ": " << age << "\n";
+    }
+
+    // set lower_bound / upper_bound
+    auto lb = unique_values.lower_bound(5);
+    auto ub = unique_values.upper_bound(5);
+
+    std::cout << "Lower bound of 5: "
+              << (lb != unique_values.end() ? std::to_string(*lb) : "end") << "\n";
+
+    std::cout << "Upper bound of 5: "
+              << (ub != unique_values.end() ? std::to_string(*ub) : "end") << "\n";
+
+    // multiset count
+    std::cout << "Count of 5 in multiset: "
+              << numbers.count(5) << "\n";
+
+    // clear container demo
+    numbers.clear();
+    std::cout << "Multiset cleared, size: "
+              << numbers.size() << "\n";
+
+    // ----------------------------------------------------
+
     return 0;
 }

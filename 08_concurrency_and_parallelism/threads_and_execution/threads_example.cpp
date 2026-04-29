@@ -72,6 +72,38 @@ void safe_print(const std::string& msg) {
     std::cout << msg << "\n";
 }
 
+// 🔹 NEW: retry mechanism using try_lock
+void retry_increment() {
+    int attempts = 3;
+    while (attempts--) {
+        if (mtx.try_lock()) {
+            shared_data += 7;
+            std::cout << "retry_increment succeeded\n";
+            mtx.unlock();
+            return;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(2));
+    }
+    std::cout << "retry_increment failed after retries\n";
+}
+
+// 🔹 NEW: unique_lock with defer_lock
+void deferred_lock_example() {
+    std::unique_lock<std::mutex> lock(mtx, std::defer_lock);
+    if (lock.try_lock()) {
+        shared_data += 12;
+        std::cout << "deferred lock acquired\n";
+    }
+}
+
+// 🔹 NEW: batch safe increment
+void batch_increment(int times) {
+    for (int i = 0; i < times; ++i) {
+        std::lock_guard<std::mutex> lock(mtx);
+        shared_data++;
+    }
+}
+
 // ---------------- MAIN ----------------
 
 int main() {
@@ -99,6 +131,11 @@ int main() {
     threads.emplace_back([]() {
         safe_print("Thread-safe print demo");
     });
+
+    // 🔹 NEW threads
+    threads.emplace_back(retry_increment);
+    threads.emplace_back(deferred_lock_example);
+    threads.emplace_back(batch_increment, 50);
 
     for (auto& t : threads) {
         t.join();

@@ -90,5 +90,44 @@ int main() {
     }
     std::cout << "\n";
 
+    // 🔹 NEW: std::reduce (C++17)
+    int reduce_sum = std::reduce(vec.begin(), vec.end(), 0);
+    std::cout << "Reduce sum: " << reduce_sum << "\n";
+
+    // 🔹 NEW: inclusive_scan (like partial_sum)
+    std::vector<int> inclusive(vec.size());
+    std::inclusive_scan(vec.begin(), vec.end(), inclusive.begin());
+
+    std::cout << "Inclusive scan: ";
+    for (int v : inclusive) {
+        std::cout << v << " ";
+    }
+    std::cout << "\n";
+
+    // 🔹 NEW: exclusive_scan
+    std::vector<int> exclusive(vec.size());
+    std::exclusive_scan(vec.begin(), vec.end(), exclusive.begin(), 0);
+
+    std::cout << "Exclusive scan: ";
+    for (int v : exclusive) {
+        std::cout << v << " ";
+    }
+    std::cout << "\n";
+
+    // 🔹 NEW: running average
+    std::vector<double> running_avg(vec.size());
+    std::partial_sum(vec.begin(), vec.end(), running_avg.begin(),
+                     [](double a, double b) { return a + b; });
+
+    for (size_t i = 0; i < running_avg.size(); ++i) {
+        running_avg[i] /= (i + 1);
+    }
+
+    std::cout << "Running average: ";
+    for (double v : running_avg) {
+        std::cout << v << " ";
+    }
+    std::cout << "\n";
+
     return 0;
 }

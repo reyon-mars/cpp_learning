@@ -32,6 +32,25 @@ void async_task(std::promise<int> p, int a, int b) {
     }
 }
 
+// 🔹 NEW: multiply task
+void async_multiply(std::promise<int> p, int a, int b) {
+    try {
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        p.set_value(a * b);
+    } catch (...) {
+        p.set_exception(std::current_exception());
+    }
+}
+
+// 🔹 NEW: future status checker
+void check_status(std::future<int>& fut) {
+    if (fut.wait_for(std::chrono::milliseconds(10)) == std::future_status::timeout) {
+        std::cout << "Future still running...\n";
+    } else {
+        std::cout << "Future ready!\n";
+    }
+}
+
 // ---------------- MAIN ----------------
 
 int main() {
@@ -113,6 +132,32 @@ int main() {
     }
 
     t3.join();
+
+    // 🔹 NEW: async multiply demo
+    std::promise<int> promise5;
+    std::future<int> future5 = promise5.get_future();
+    std::thread t4(async_multiply, std::move(promise5), 6, 7);
+
+    check_status(future5);
+    std::cout << "Multiply result: " << future5.get() << "\n";
+    t4.join();
+
+    // 🔹 NEW: chaining futures (manual)
+    std::promise<int> promise6;
+    std::future<int> future6 = promise6.get_future();
+
+    std::thread t5([&promise6]() {
+        try {
+            int val = calculate_sum(2, 3);
+            val *= 10; // chained logic
+            promise6.set_value(val);
+        } catch (...) {
+            promise6.set_exception(std::current_exception());
+        }
+    });
+
+    std::cout << "Chained result: " << future6.get() << "\n";
+    t5.join();
 
     return 0;
 }

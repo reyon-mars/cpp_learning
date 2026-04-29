@@ -49,8 +49,47 @@ int main() {
     std::cout << "Partition point index: "
               << std::distance(data.begin(), point) << "\n";
 
-    // -----------------------------------
+    // ---------------- NEW SMALL ADDITIONS ----------------
+
+    // binary_search (requires sorted data)
+    std::sort(data.begin(), data.end());
+    bool found = std::binary_search(data.begin(), data.end(), 5);
+    std::cout << "Binary search for 5: "
+              << (found ? "Found" : "Not Found") << "\n";
+
+    // lower_bound & upper_bound
+    auto lb = std::lower_bound(data.begin(), data.end(), 5);
+    auto ub = std::upper_bound(data.begin(), data.end(), 5);
+
+    std::cout << "Lower bound index of 5: "
+              << std::distance(data.begin(), lb) << "\n";
+
+    std::cout << "Upper bound index of 5: "
+              << std::distance(data.begin(), ub) << "\n";
+
+    // equal_range
+    auto range = std::equal_range(data.begin(), data.end(), 5);
+    std::cout << "Equal range for 5: ["
+              << std::distance(data.begin(), range.first) << ", "
+              << std::distance(data.begin(), range.second) << ")\n";
+
+    // partial_sort (top 3 smallest elements sorted)
+    data = {5, 2, 8, 1, 9, 3};
+    std::partial_sort(data.begin(), data.begin() + 3, data.end());
+
+    std::cout << "Partial sort (first 3 smallest): ";
+    for (int v : data) std::cout << v << " ";
+    std::cout << "\n";
+
+    // is_partitioned check
+    data = {1, 2, 3, 6, 7, 8};
+    bool is_part = std::is_partitioned(data.begin(), data.end(),
+                                       [](int x) { return x < 5; });
+
+    std::cout << "Is partitioned (<5)? "
+              << (is_part ? "Yes" : "No") << "\n";
+
+    // ----------------------------------------------------
 
     return 0;
 }
-

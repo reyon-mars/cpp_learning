@@ -21,6 +21,29 @@ int count_even(const std::vector<int>& v) {
                          [](int x) { return x % 2 == 0; });
 }
 
+// 🔹 NEW: parallel find
+int find_value(const std::vector<int>& v, int target) {
+    auto it = std::find(std::execution::par, v.begin(), v.end(), target);
+    return (it != v.end()) ? *it : -1;
+}
+
+// 🔹 NEW: parallel prefix sum (inclusive scan)
+std::vector<int> prefix_sum(const std::vector<int>& v) {
+    std::vector<int> result(v.size());
+    std::inclusive_scan(std::execution::par,
+                        v.begin(), v.end(),
+                        result.begin());
+    return result;
+}
+
+// 🔹 NEW: parallel replace
+void replace_even(std::vector<int>& v) {
+    std::replace_if(std::execution::par,
+                    v.begin(), v.end(),
+                    [](int x) { return x % 2 == 0; },
+                    0);
+}
+
 // ---------------- MAIN ----------------
 
 int main() {
@@ -107,6 +130,26 @@ int main() {
     std::cout << "First 5 copied values: ";
     for (int i = 0; i < 5; ++i) {
         std::cout << copied[i] << " ";
+    }
+    std::cout << "\n";
+
+    // 🔹 NEW: find value
+    int found = find_value(data, 500);
+    std::cout << "Find 500: " << found << "\n";
+
+    // 🔹 NEW: prefix sum demo
+    auto pref = prefix_sum(data);
+    std::cout << "First 5 prefix sums: ";
+    for (int i = 0; i < 5; ++i) {
+        std::cout << pref[i] << " ";
+    }
+    std::cout << "\n";
+
+    // 🔹 NEW: replace even numbers
+    replace_even(data);
+    std::cout << "After replacing evens (first 5): ";
+    for (int i = 0; i < 5; ++i) {
+        std::cout << data[i] << " ";
     }
     std::cout << "\n";
 

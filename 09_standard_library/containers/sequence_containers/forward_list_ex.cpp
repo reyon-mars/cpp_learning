@@ -75,7 +75,54 @@ int main(void) {
               << (count == 0 ? "empty" : "not empty")
               << "\n";
 
-    // ==================================================
+    // ---------------- EXTRA SMALL ADDITIONS ----------------
+
+    // Find minimum and maximum
+    int min_val = 0, max_val = 0;
+    if (!f_lst.empty()) {
+        auto it = f_lst.begin();
+        min_val = max_val = *it;
+        for (; it != f_lst.end(); ++it) {
+            if (*it < min_val) min_val = *it;
+            if (*it > max_val) max_val = *it;
+        }
+        std::cout << "Min: " << min_val << "\n";
+        std::cout << "Max: " << max_val << "\n";
+    }
+
+    // Average
+    double avg = (count == 0) ? 0.0 : static_cast<double>(sum) / count;
+    std::cout << "Average: " << avg << "\n";
+
+    // Check if value exists
+    int target = 6;
+    bool found = false;
+    for (int v : f_lst) {
+        if (v == target) {
+            found = true;
+            break;
+        }
+    }
+    std::cout << "Contains 6? "
+              << (found ? "Yes" : "No") << "\n";
+
+    // Reverse list
+    f_lst.reverse();
+    std::cout << "Reversed list: ";
+    for (int v : f_lst) {
+        std::cout << v << " ";
+    }
+    std::cout << "\n";
+
+    // Sort list (safe even if already sorted)
+    f_lst.sort();
+    std::cout << "Sorted list: ";
+    for (int v : f_lst) {
+        std::cout << v << " ";
+    }
+    std::cout << "\n";
+
+    // ------------------------------------------------------
 
     return 0;
 }

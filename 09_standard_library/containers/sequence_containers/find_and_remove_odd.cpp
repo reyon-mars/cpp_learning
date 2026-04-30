@@ -98,6 +98,30 @@ double average_elements(const std::forward_list<int>& lst) {
     return static_cast<double>(sum_elements(lst)) / count;
 }
 
+// Find minimum element safely
+int min_element_safe(const std::forward_list<int>& lst) {
+    if (is_empty(lst)) return 0;
+
+    auto it = lst.begin();
+    int minVal = *it;
+    ++it;
+
+    for (; it != lst.end(); ++it)
+        if (*it < minVal)
+            minVal = *it;
+
+    return minVal;
+}
+
+// Count odd numbers (after removal check)
+int count_odds(const std::forward_list<int>& lst) {
+    int count = 0;
+    for (int v : lst)
+        if (v % 2 != 0)
+            ++count;
+    return count;
+}
+
 // Print divider
 void print_divider() {
     std::cout << "-----------------------------\n";
@@ -124,6 +148,7 @@ int main() {
         std::cout << "First element: " << fl1.front() << "\n";
         std::cout << "Last element: " << last_element(fl1) << "\n";
         std::cout << "Max element: " << max_element_safe(fl1) << "\n";
+        std::cout << "Min element: " << min_element_safe(fl1) << "\n";
         std::cout << "Contains 6? "
                   << (contains(fl1, 6) ? "Yes\n" : "No\n");
         std::cout << "All even? "
@@ -154,6 +179,7 @@ int main() {
     std::cout << "Count: " << count_elements(fl3) << "\n";
     std::cout << "Sum: " << sum_elements(fl3) << "\n";
     std::cout << "Average: " << average_elements(fl3) << "\n";
+    std::cout << "Odd count: " << count_odds(fl3) << "\n";
     print_divider();
 
     std::forward_list<int> fl4;

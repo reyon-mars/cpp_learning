@@ -128,5 +128,28 @@ int main(void) {
     std::cout << "After merge: ";
     print_list(demo);
 
+    // ---------------- NEW SMALL ADDITIONS ----------------
+
+    // splice example (move elements from one list to another)
+    std::list<int> extra = {100, 200};
+    demo.splice(demo.begin(), extra);
+    std::cout << "After splice at beginning: ";
+    print_list(demo);
+
+    // remove_if (remove odd numbers)
+    demo.remove_if([](int x) { return x % 2 != 0; });
+    std::cout << "After remove_if (remove odd): ";
+    print_list(demo);
+
+    // check if list is empty after operations
+    std::cout << "Is demo empty? "
+              << (demo.empty() ? "Yes" : "No") << "\n";
+
+    // clear list
+    demo.clear();
+    std::cout << "After clear, size: " << demo.size() << "\n";
+
+    // ----------------------------------------------------
+
     return 0;
 }

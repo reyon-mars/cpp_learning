@@ -172,7 +172,33 @@ int main() {
     cout << "Sorted list: ";
     print_list(lst);
 
-    // --------------------------------------
+    // ---------------- NEW SMALL ADDITIONS ----------------
+
+    // remove_if (remove strings with length < 6)
+    lst.remove_if([](const std::string& s) {
+        return s.length() < 6;
+    });
+    cout << "After remove_if (len < 6): ";
+    print_list(lst);
+
+    // unique (remove consecutive duplicates)
+    lst.push_front("apple");
+    lst.push_front("apple");
+    lst.unique();
+    cout << "After unique(): ";
+    print_list(lst);
+
+    // splice_after (move elements from another list)
+    std::forward_list<string> extra = {"x", "y"};
+    lst.splice_after(lst.before_begin(), extra);
+    cout << "After splice_after at beginning: ";
+    print_list(lst);
+
+    // check empty again
+    cout << "Is list empty now? "
+         << (lst.empty() ? "Yes\n" : "No\n");
+
+    // ----------------------------------------------------
 
     // Clear list
     lst.clear();

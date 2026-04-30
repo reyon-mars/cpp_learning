@@ -17,6 +17,10 @@ void print_divider();
 int min_list_safe(const std::list<int>& lst);
 double average_list(const std::list<int>& lst);
 
+// ---- extra tiny helpers ----
+bool contains_value(const std::list<int>& lst, int value);
+int count_value(const std::list<int>& lst, int value);
+
 // ---------------- ORIGINAL CODE (UNCHANGED) ----------------
 
 int main(void)
@@ -50,7 +54,39 @@ int main(void)
     std::cout << "Min: " << min_list_safe(v) << std::endl;
     std::cout << "Average: " << average_list(v) << std::endl;
 
+    // ---- extra tiny usage ----
+    std::cout << "Contains 42? "
+              << (contains_value(v, 42) ? "Yes" : "No") << std::endl;
+
+    std::cout << "Count of 42: "
+              << count_value(v, 42) << std::endl;
+
     print_divider();
+
+    // ---- extra small operations ----
+
+    // reverse list
+    v.reverse();
+    std::cout << "Reversed list: ";
+    print_list(v);
+
+    // sort list
+    v.sort();
+    std::cout << "Sorted list: ";
+    print_list(v);
+
+    // remove value
+    v.remove(42);
+    std::cout << "After removing 42: ";
+    print_list(v);
+
+    // unique (remove consecutive duplicates)
+    v.push_back(1);
+    v.push_back(1);
+    v.unique();
+    std::cout << "After unique(): ";
+    print_list(v);
+
     // -------------------------------
 
     return 0;
@@ -97,6 +133,25 @@ double average_list(const std::list<int>& lst)
 {
     if (lst.empty()) return 0.0;
     return static_cast<double>(sum_list(lst)) / lst.size();
+}
+
+// Check if value exists
+bool contains_value(const std::list<int>& lst, int value)
+{
+    for (int v : lst)
+        if (v == value)
+            return true;
+    return false;
+}
+
+// Count occurrences of a value
+int count_value(const std::list<int>& lst, int value)
+{
+    int count = 0;
+    for (int v : lst)
+        if (v == value)
+            ++count;
+    return count;
 }
 
 // Tiny divider

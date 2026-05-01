@@ -119,6 +119,43 @@ int last_element(const int_range& r) {
     return last;
 }
 
+// -----------------------------------
+// EXTRA SMALL ADDITIONS (NEW)
+// -----------------------------------
+
+// count even numbers
+int count_even(const int_range& r) {
+    int count = 0;
+    for (int v : r)
+        if (v % 2 == 0)
+            ++count;
+    return count;
+}
+
+// count odd numbers
+int count_odd(const int_range& r) {
+    int count = 0;
+    for (int v : r)
+        if (v % 2 != 0)
+            ++count;
+    return count;
+}
+
+// check if all values are positive
+bool all_positive(const int_range& r) {
+    for (int v : r)
+        if (v <= 0)
+            return false;
+    return true;
+}
+
+// print squared values
+void print_squares(const int_range& r) {
+    for (int v : r)
+        std::cout << v * v << " ";
+    std::cout << "\n";
+}
+
 // ---------------- MAIN ----------------
 
 int main(void) {
@@ -148,6 +185,19 @@ int main(void) {
 
     std::cout << "First element: " << first_element(r) << "\n";
     std::cout << "Last element: " << last_element(r) << "\n";
+
+    // -----------------------------------
+    // EXTRA USAGE (NEW)
+    // -----------------------------------
+
+    std::cout << "Even count: " << count_even(r) << "\n";
+    std::cout << "Odd count: " << count_odd(r) << "\n";
+
+    std::cout << "All positive? "
+              << (all_positive(r) ? "Yes" : "No") << "\n";
+
+    std::cout << "Squared values: ";
+    print_squares(r);
 
     return 0;
 }

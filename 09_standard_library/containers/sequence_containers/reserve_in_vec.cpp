@@ -13,6 +13,10 @@ int max_vector(const std::vector<int>& v);
 int min_vector(const std::vector<int>& v);
 double average_vector(const std::vector<int>& v);
 
+// ---- extra tiny helpers ----
+int count_even(const std::vector<int>& v);
+int count_odd(const std::vector<int>& v);
+
 // ======================================================
 // ORIGINAL CODE (UNCHANGED LOGIC)
 // ======================================================
@@ -82,6 +86,20 @@ double average_vector(const std::vector<int>& v) {
     return static_cast<double>(sum_vector(v)) / v.size();
 }
 
+// ---- EXTRA SMALL HELPERS ----
+
+// Count even numbers
+int count_even(const std::vector<int>& v) {
+    return std::count_if(v.begin(), v.end(),
+                         [](int x) { return x % 2 == 0; });
+}
+
+// Count odd numbers
+int count_odd(const std::vector<int>& v) {
+    return std::count_if(v.begin(), v.end(),
+                         [](int x) { return x % 2 != 0; });
+}
+
 // ======================================================
 // EXTRA DEMO (VERY SMALL)
 // ======================================================
@@ -101,4 +119,18 @@ void run_extra_vector_demo() {
     std::cout << "Max = " << max_vector(extra) << '\n';
     std::cout << "Min = " << min_vector(extra) << '\n';
     std::cout << "Average = " << average_vector(extra) << '\n';
+
+    // ---- extra tiny usage ----
+    std::cout << "Even count = " << count_even(extra) << '\n';
+    std::cout << "Odd count = " << count_odd(extra) << '\n';
+
+    // Reverse demo
+    std::reverse(extra.begin(), extra.end());
+    std::cout << "Reversed: ";
+    print_vector(extra);
+
+    // Sort demo
+    std::sort(extra.begin(), extra.end());
+    std::cout << "Sorted: ";
+    print_vector(extra);
 }

@@ -38,6 +38,36 @@ int main() {
               << sum_ratio::num << "/" << sum_ratio::den << "\n";
     // --------------------------------
 
+    // --------------------------------
+    // EXTRA SMALL ADDITIONS (NEW)
+    // --------------------------------
+
+    // Complex conjugate
+    std::cout << "Conjugate of z1: " << std::conj(z1) << "\n";
+
+    // Real and imaginary parts
+    std::cout << "Real part of z1: " << z1.real() << "\n";
+    std::cout << "Imaginary part of z1: " << z1.imag() << "\n";
+
+    // Power of complex number
+    std::cout << "z1 squared: " << std::pow(z1, 2) << "\n";
+
+    // Additional GCD/LCM example
+    int x = 21, y = 6;
+    std::cout << "GCD(21, 6): " << std::gcd(x, y) << "\n";
+    std::cout << "LCM(21, 6): " << std::lcm(x, y) << "\n";
+
+    // ratio multiplication
+    using mul_ratio = std::ratio_multiply<half, quarter>;
+    std::cout << "Half * Quarter = "
+              << mul_ratio::num << "/" << mul_ratio::den << "\n";
+
+    // ratio simplification example
+    using simplified = std::ratio<2, 4>;
+    std::cout << "Simplified ratio of 2/4 = "
+              << simplified::num << "/" << simplified::den << "\n";
+
+    // --------------------------------
+
     return 0;
 }
-

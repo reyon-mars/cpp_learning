@@ -60,6 +60,31 @@ int main() {
               << (file_path == another ? "Yes" : "No") << "\n";
 
     // -----------------------------------
+    // EXTRA SMALL ADDITIONS (NO CHANGE TO ORIGINAL LOGIC)
+    // -----------------------------------
+
+    // Check if path is absolute or relative
+    std::cout << "Is absolute? "
+              << (file_path.is_absolute() ? "Yes" : "No") << "\n";
+
+    // Replace filename (no actual file change, just path object)
+    fs::path modified = file_path;
+    modified.replace_filename("new_test.txt");
+    std::cout << "Modified filename path: " << modified << "\n";
+
+    // Replace extension
+    modified.replace_extension(".log");
+    std::cout << "After changing extension: " << modified << "\n";
+
+    // Check if two paths are equivalent (only if both exist)
+    if (fs::exists(file_path) && fs::exists(another)) {
+        std::cout << "Equivalent paths? "
+                  << (fs::equivalent(file_path, another) ? "Yes" : "No") << "\n";
+    }
+
+    // File status check
+    std::cout << "Exists (again check): "
+              << (fs::exists(file_path) ? "Yes" : "No") << "\n";
 
     return 0;
 }

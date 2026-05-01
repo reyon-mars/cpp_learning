@@ -58,6 +58,36 @@ int main() {
               << unique_nums.size() << "\n";
 
     // ------------------------
+    // EXTRA SMALL ADDITIONS
+    // ------------------------
+
+    // Use iterator (avoid double lookup)
+    auto it = counts.find("apple");
+    if (it != counts.end()) {
+        std::cout << "Iterator access -> apple: "
+                  << it->second << "\n";
+    }
+
+    // Bucket information
+    std::cout << "Bucket count: "
+              << counts.bucket_count() << "\n";
+
+    // Load factor
+    std::cout << "Load factor: "
+              << counts.load_factor() << "\n";
+
+    // Insert without overwrite
+    counts.insert({"orange", 1});
+    std::cout << "After inserting orange:\n";
+    for (const auto& [key, val] : counts) {
+        std::cout << key << ": " << val << "\n";
+    }
+
+    // Clear set demo
+    std::unordered_set<int> temp_set = unique_nums;
+    temp_set.clear();
+    std::cout << "Temp set cleared, size: "
+              << temp_set.size() << "\n";
 
     return 0;
 }

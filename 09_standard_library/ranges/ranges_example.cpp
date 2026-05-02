@@ -85,6 +85,29 @@ int main() {
         std::cout << v << " ";
     std::cout << "\n";
 
+    // ---- EXTRA SMALL ADDITIONS ----
+
+    // Find max and min
+    auto [min_it, max_it] = std::minmax_element(vec.begin(), vec.end());
+    std::cout << "Min: " << *min_it << ", Max: " << *max_it << "\n";
+
+    // Check if sorted
+    bool sorted = std::ranges::is_sorted(vec);
+    std::cout << "Is sorted? " << (sorted ? "Yes" : "No") << "\n";
+
+    // Copy filtered results into a vector
+    std::vector<int> even_vec;
+    std::ranges::copy(evens, std::back_inserter(even_vec));
+
+    std::cout << "Copied evens: ";
+    for (int v : even_vec)
+        std::cout << v << " ";
+    std::cout << "\n";
+
+    // Count even numbers
+    auto even_count = std::ranges::count_if(vec, [](int x){ return x % 2 == 0; });
+    std::cout << "Even count: " << even_count << "\n";
+
     // =================================
 
     return 0;

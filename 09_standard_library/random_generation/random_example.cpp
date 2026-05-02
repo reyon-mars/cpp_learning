@@ -79,6 +79,32 @@ int main() {
     std::cout << "After reseed (42): " << dist_int(rng) << "\n";
 
     // -----------------------------------
+    // EXTRA SMALL ADDITIONS (NEW)
+    // -----------------------------------
+
+    // Generate numbers using generate()
+    std::vector<int> generated(5);
+    std::generate(generated.begin(), generated.end(),
+                  [&]() { return dist_int(rng); });
+
+    std::cout << "Generated vector: ";
+    for (int n : generated) std::cout << n << " ";
+    std::cout << "\n";
+
+    // Discrete distribution
+    std::discrete_distribution<int> discrete({1, 2, 3});
+    std::cout << "Discrete distribution sample: "
+              << discrete(rng) << "\n";
+
+    // Uniform real in different range
+    std::uniform_real_distribution<double> dist_real2(10.0, 20.0);
+    std::cout << "Random [10,20]: " << dist_real2(rng) << "\n";
+
+    // Check average of generated vector
+    double avg = generated.empty() ? 0.0 :
+        static_cast<double>(std::accumulate(generated.begin(), generated.end(), 0)) / generated.size();
+
+    std::cout << "Average of generated vector: " << avg << "\n";
 
     return 0;
 }

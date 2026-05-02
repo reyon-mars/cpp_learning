@@ -4,6 +4,7 @@
 #include <thread>
 #include <ctime>
 #include <numeric>   // added
+#include <vector>    // tiny addition
 
 // ======================================================
 // ORIGINAL CODE (UNCHANGED LOGIC)
@@ -140,6 +141,35 @@ int main() {
     auto now = std::chrono::steady_clock::now();
     std::cout << "Clock is steady? "
               << (std::chrono::steady_clock::is_steady ? "Yes" : "No") << "\n";
+
+    // ===== FINAL TINY ADDITIONS =====
+
+    // Run multiple timed blocks in loop
+    for (int i = 1; i <= 3; ++i) {
+        scoped_timer t("loop workload " + std::to_string(i));
+        busy_work(30'000 * i);
+    }
+
+    // Compare two workloads
+    {
+        scoped_timer t("comparison workload A");
+        busy_work(60'000);
+    }
+    {
+        scoped_timer t("comparison workload B");
+        busy_work(120'000);
+    }
+
+    // Simple throughput estimate
+    int ops = 100000;
+    auto start = std::chrono::steady_clock::now();
+    busy_work(ops);
+    auto end = std::chrono::steady_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+
+    std::cout << "Throughput: "
+              << ops / (duration ? duration : 1)
+              << " ops/us\n";
 
     // ======================================
 

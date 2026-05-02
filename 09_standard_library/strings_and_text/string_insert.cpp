@@ -163,6 +163,26 @@ int main() {
     std::cout << "Only letters/spaces? "
               << (clean ? "Yes" : "No") << '\n';
 
+    // ---- NEW SMALL ADDITIONS ----
+
+    // Count digits in string
+    int digits = std::count_if(text.begin(), text.end(), [](char c){
+        return std::isdigit(static_cast<unsigned char>(c));
+    });
+    std::cout << "Digit count: " << digits << '\n';
+
+    // Replace spaces with underscore (copy, original unchanged)
+    std::string modified = text;
+    std::replace(modified.begin(), modified.end(), ' ', '_');
+    std::cout << "Spaces replaced: " << modified << '\n';
+
+    // Find first uppercase character
+    auto it = std::find_if(text.begin(), text.end(), [](char c){
+        return std::isupper(static_cast<unsigned char>(c));
+    });
+    if (it != text.end())
+        std::cout << "First uppercase: " << *it << '\n';
+
     // ======================================
 
     return 0;

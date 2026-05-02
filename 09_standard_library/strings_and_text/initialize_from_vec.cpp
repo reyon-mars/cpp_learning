@@ -97,5 +97,26 @@ int main(void) {
 
     // ======================================
 
+    // ===== FINAL TINY ADDITIONS =====
+
+    // Convert vector to lowercase string (copy)
+    std::string lower = str;
+    std::transform(lower.begin(), lower.end(), lower.begin(),
+                   [](char c){ return std::tolower(static_cast<unsigned char>(c)); });
+    std::cout << "Lowercase string: " << lower << std::endl;
+
+    // Check if vector is palindrome (simple check)
+    bool is_palindrome = std::equal(v.begin(), v.begin() + v.size()/2, v.rbegin());
+    std::cout << "Is palindrome? "
+              << (is_palindrome ? "Yes" : "No") << std::endl;
+
+    // Append more characters safely
+    v.push_back('?');
+    std::cout << "After adding '?': ";
+    for (char c : v) std::cout << c;
+    std::cout << std::endl;
+
+    // ======================================
+
     return 0;
 }

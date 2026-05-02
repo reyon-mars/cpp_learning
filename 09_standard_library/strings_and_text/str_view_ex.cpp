@@ -4,6 +4,8 @@
 #include <chrono>
 #include <ctime>
 #include <numeric>   // added
+#include <vector>    // tiny addition
+#include <algorithm> // tiny addition
 #include "scoped_timer.hpp"
 
 // ======================================================
@@ -167,6 +169,27 @@ int main(void)
     // Check if logging is enabled
     std::cout << "Logging enabled? "
               << (ENABLE_LOGGING ? "Yes" : "No") << '\n';
+
+    // ===== FINAL TINY ADDITIONS =====
+
+    // Find max and min sample
+    auto [min_it, max_it] = std::minmax_element(samples.begin(), samples.end());
+    std::cout << "Min sample: " << *min_it
+              << ", Max sample: " << *max_it << '\n';
+
+    // Count occurrences of a value
+    int count_20 = std::count(samples.begin(), samples.end(), 20);
+    std::cout << "Count of 20: " << count_20 << '\n';
+
+    // Simple throughput estimate
+    auto start = std::chrono::steady_clock::now();
+    for (int i = 0; i < 1000; ++i)
+        log_msg_inline("T", "X");
+    auto end = std::chrono::steady_clock::now();
+
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+    std::cout << "Throughput test (1000 logs): "
+              << duration << " us\n";
 
     // ======================================
 

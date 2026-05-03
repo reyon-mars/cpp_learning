@@ -76,7 +76,29 @@ int main() {
     std::cout << "Loop execution time: "
               << loop_time.count() << " us\n";
 
-    // ===================================
+    // ---- EXTRA SMALL ADDITIONS ----
+
+    // Check clock properties
+    std::cout << "Is steady_clock steady? "
+              << (std::chrono::steady_clock::is_steady ? "Yes" : "No") << "\n";
+
+    // Time since epoch (system_clock)
+    auto since_epoch = now.time_since_epoch();
+    auto seconds_epoch =
+        std::chrono::duration_cast<std::chrono::seconds>(since_epoch);
+    std::cout << "Seconds since epoch: "
+              << seconds_epoch.count() << "\n";
+
+    // Sleep for a very small duration
+    std::this_thread::sleep_for(10ms);
+    std::cout << "Slept for additional 10ms\n";
+
+    // Average of two durations (simple example)
+    auto avg_time = (elapsed + std::chrono::milliseconds(50)) / 2;
+    std::cout << "Average duration: "
+              << avg_time.count() << " ms\n";
+
+    // --------------------------------
 
     return 0;
 }

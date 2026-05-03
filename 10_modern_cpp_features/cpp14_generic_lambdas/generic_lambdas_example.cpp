@@ -55,6 +55,44 @@ int main() {
 
     // --------------------------------------------------
 
+    // ===== VERY SMALL NEW ADDITIONS =====
+
+    // Generic lambda for squaring values
+    auto square = [](auto x) {
+        return x * x;
+    };
+
+    std::cout << "Square of 4: " << square(4) << "\n";
+    std::cout << "Square of 2.5: " << square(2.5) << "\n";
+
+    // Generic lambda with capture
+    int factor = 3;
+    auto multiply_by_factor = [factor](auto x) {
+        return x * factor;
+    };
+
+    std::cout << "Multiply 5 by factor: "
+              << multiply_by_factor(5) << "\n";
+
+    // Use generic lambda with transform
+    std::vector<int> squared(ints.size());
+    std::transform(ints.begin(), ints.end(), squared.begin(), square);
+
+    std::cout << "Squared ints: ";
+    print_container(squared);
+
+    // Generic predicate lambda
+    auto is_even = [](auto x) {
+        return x % 2 == 0;
+    };
+
+    std::cout << "Even numbers: ";
+    for (auto x : ints)
+        if (is_even(x))
+            std::cout << x << " ";
+    std::cout << "\n";
+
+    // ===================================
+
     return 0;
 }
- 

@@ -94,7 +94,28 @@ int main() {
     // check sizes after moves
     std::cout << "v2 size after move: " << v2.get_size() << "\n";
 
-    // ===================================
+    // ---- EXTRA SMALL ADDITIONS ----
+
+    // check if v3 is empty
+    std::cout << "v3 is empty? "
+              << (v3.is_empty() ? "Yes" : "No") << "\n";
+
+    // modify element
+    v3[0] = 99;
+    std::cout << "Modified first element of v3: " << v3[0] << "\n";
+
+    // print state again
+    v3.print_state();
+
+    // create another vector and move into it
+    Vector v4(10);
+    v4 = std::move(v3);
+
+    std::cout << "After moving v3 to v4:\n";
+    v4.print_state();
+    std::cout << "v3 size: " << v3.get_size() << "\n";
+
+    // -----------------------------------
 
     return 0;
 }

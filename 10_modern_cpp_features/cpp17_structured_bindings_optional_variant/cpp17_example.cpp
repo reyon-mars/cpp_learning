@@ -7,10 +7,34 @@
 #include <variant>
 #include <string>
 
+// ---- tiny addition ----
+#include <vector>
+#include <numeric>
+// -----------------------
+
 std::optional<int> safe_divide(int a, int b) {
     if (b == 0) return std::nullopt;
     return a / b;
 }
+
+// ---- VERY SMALL EXTRA HELPERS ----
+
+// check if optional has value
+bool has_value(const std::optional<int>& opt) {
+    return opt.has_value();
+}
+
+// sum vector helper
+int sum_vector(const std::vector<int>& v) {
+    return std::accumulate(v.begin(), v.end(), 0);
+}
+
+// print divider
+void print_divider() {
+    std::cout << "----------------------\n";
+}
+
+// ----------------------------------
 
 int main() {
     // Structured bindings
@@ -59,6 +83,23 @@ int main() {
 
     // -----------------------------------
 
+    // ===== EXTRA SMALL ADDITIONS =====
+
+    print_divider();
+
+    // optional check helper
+    auto test_opt = safe_divide(5, 1);
+    std::cout << "Optional has value? "
+              << (has_value(test_opt) ? "Yes" : "No") << "\n";
+
+    // vector + accumulate demo
+    std::vector<int> nums = {1, 2, 3, 4};
+    std::cout << "Sum of nums: " << sum_vector(nums) << "\n";
+
+    // variant index info
+    std::cout << "Variant index: " << v.index() << "\n";
+
+    // ==================================
+
     return 0;
 }
-

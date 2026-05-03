@@ -88,7 +88,33 @@ int main() {
         std::cout << "Any has value\n";
     }
 
-    // ===================================
+    // ---- EXTRA SMALL ADDITIONS ----
+
+    // swap pairs
+    std::pair<int, std::string> p3(1, "one");
+    std::swap(p, p3);
+    std::cout << "After swap, p: " << p.first << ", " << p.second << "\n";
+
+    // get tuple element count via sizeof...
+    std::cout << "Tuple element count (sizeof...): "
+              << std::tuple_size<decltype(t)>::value << "\n";
+
+    // optional emplace
+    opt_val.emplace(55);
+    std::cout << "Optional after emplace: "
+              << opt_val.value() << "\n";
+
+    // visit variant
+    std::visit([](auto&& arg) {
+        std::cout << "Visited variant value: " << arg << "\n";
+    }, v);
+
+    // reset any
+    a.reset();
+    std::cout << "Any after reset has value? "
+              << (a.has_value() ? "Yes" : "No") << "\n";
+
+    // --------------------------------
 
     return 0;
 }

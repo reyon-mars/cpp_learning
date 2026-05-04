@@ -3,6 +3,8 @@
 
 #include <iostream>
 #include <string>
+#include <vector>     // tiny addition
+#include <numeric>    // tiny addition
 
 // Simple Expected-like implementation for demonstration
 template<typename T, typename E>
@@ -56,6 +58,20 @@ public:
     // ===================================
 };
 
+// ---- VERY SMALL EXTRA HELPERS ----
+
+// sum helper for demo
+int sum_vector(const std::vector<int>& v) {
+    return std::accumulate(v.begin(), v.end(), 0);
+}
+
+// print divider
+void print_divider() {
+    std::cout << "----------------------\n";
+}
+
+// ----------------------------------
+
 int main() {
     Result<int, std::string> success(42);
     Result<int, std::string> failure("Error occurred");
@@ -100,6 +116,20 @@ int main() {
     // print state helper
     success.print_state();
     failure.print_state();
+
+    print_divider();
+
+    // small vector + accumulate demo
+    std::vector<int> nums = {1, 2, 3};
+    std::cout << "Sum of nums: " << sum_vector(nums) << "\n";
+
+    // chaining map example
+    auto chained = success
+        .map([](int x){ return x + 10; })
+        .map([](int x){ return x * 3; });
+
+    std::cout << "Chained map result: "
+              << chained.get_value() << "\n";
 
     // ===================================
 

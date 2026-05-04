@@ -26,6 +26,12 @@ public:
         }
         return instance;
     }
+
+    // ---- VERY SMALL ADDITION ----
+    void say_hello() {
+        std::cout << "Singleton says hello\n";
+    }
+    // -----------------------------
 };
 
 std::mutex ThreadSafeSingleton::mutex;
@@ -58,6 +64,11 @@ public:
         std::lock_guard<std::mutex> lk(mut);
         return data.size();
     }
+
+    bool empty() const {
+        std::lock_guard<std::mutex> lk(mut);
+        return data.empty();
+    }
     // --------------------------------
 };
 
@@ -79,6 +90,13 @@ public:
         std::shared_lock lock(rw_mutex);
         std::cout << "Reader saw value " << value << "\n";
     }
+
+    // ---- VERY SMALL ADDITION ----
+    int get_value() const {
+        std::shared_lock lock(rw_mutex);
+        return value;
+    }
+    // -----------------------------
 };
 
 // ---------------- Thread-safe logging ----------------
@@ -124,15 +142,20 @@ void timed_consumer(Queue<int>& q) {
                 break;
             }
         }
-        if (q.size() >= 0)
-            safe_print("Timed consumer checked queue");
+        safe_print("Timed consumer cycle done");
     }
 }
 
 // Singleton access from multiple threads
 void singleton_task() {
     auto s = ThreadSafeSingleton::get_instance();
+    s->say_hello(); // tiny addition usage
     safe_print("Singleton accessed from thread");
+}
+
+// Small helper to show queue status
+void print_queue_status(const Queue<int>& q) {
+    safe_print("Queue size: " + std::to_string(q.size()));
 }
 
 // -----------------------------------------------------
@@ -143,6 +166,7 @@ int main() {
 
     // Singleton demo
     auto singleton = ThreadSafeSingleton::get_instance();
+    singleton->say_hello(); // tiny addition
     std::cout << "Singleton acquired\n";
 
     // -------- NEW: multiple threads using singleton --------
@@ -160,6 +184,8 @@ int main() {
     p.join();
     c.join();
 
+    print_queue_status(q); // tiny addition
+
     std::cout << "\n";
 
     // -------- NEW: additional consumer --------
@@ -169,6 +195,8 @@ int main() {
     p2.join();
     tc.join();
     // -----------------------------------------
+
+    print_queue_status(q); // tiny addition
 
     // Read-write lock demo
     SharedData data;
@@ -206,6 +234,11 @@ int main() {
     for (auto& t : readers) t.join();
     writer2.join();
     // -----------------------------------------
+
+    // ---- VERY SMALL EXTRA ----
+    std::cout << "Final value (safe read): "
+              << data.get_value() << "\n";
+    // -------------------------
 
     return 0;
 }

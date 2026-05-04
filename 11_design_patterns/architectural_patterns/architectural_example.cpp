@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include <string>
+#include <algorithm> // tiny addition
 
 // Model
 class User {
@@ -64,6 +65,14 @@ public:
         users.clear();
     }
 
+    // --- tiny new helper ---
+    User* find_by_name(const std::string& name) {
+        for (auto& user : users) {
+            if (user.name == name) return &user;
+        }
+        return nullptr;
+    }
+
     // ------------------------------------
 };
 
@@ -96,6 +105,11 @@ public:
         std::cout << "----------------------\n";
     }
 
+    // --- tiny new helper ---
+    void show_not_found(const std::string& type) {
+        std::cout << type << " not found\n";
+    }
+
     // ------------------------------------
 };
 
@@ -113,6 +127,8 @@ public:
     void display_user(int id) {
         if (auto user = repository.find_by_id(id)) {
             view.display_user(*user);
+        } else {
+            view.show_not_found("User");
         }
     }
 
@@ -149,6 +165,15 @@ public:
         view.print_divider();
     }
 
+    // --- tiny new feature ---
+    void find_user_by_name(const std::string& name) {
+        if (auto user = repository.find_by_name(name)) {
+            view.display_user(*user);
+        } else {
+            view.show_not_found("User");
+        }
+    }
+
     // ------------------------------------
 };
 
@@ -171,6 +196,10 @@ int main() {
     controller.show_user_count();
     controller.check_user(1);
     controller.check_user(2);
+
+    // --- tiny new usage ---
+    controller.find_user_by_name("Alice");
+    controller.find_user_by_name("Charlie");
 
     controller.clear_users();
     controller.show_user_count();

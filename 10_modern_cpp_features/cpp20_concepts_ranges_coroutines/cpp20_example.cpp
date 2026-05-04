@@ -6,6 +6,8 @@
 #include <ranges>
 #include <vector>
 #include <string>
+#include <numeric>   // tiny addition
+#include <algorithm> // tiny addition
 
 template<typename T>
 concept Printable = requires(std::ostream& os, T t) {
@@ -34,6 +36,25 @@ concept Container = requires(T a) {
     a.end();
 };
 // ==================================
+
+// ---- VERY SMALL EXTRA HELPERS ----
+
+// sum helper
+int sum_vector(const std::vector<int>& v) {
+    return std::accumulate(v.begin(), v.end(), 0);
+}
+
+// check if contains value
+bool contains(const std::vector<int>& v, int value) {
+    return std::ranges::find(v, value) != v.end();
+}
+
+// print divider
+void print_divider() {
+    std::cout << "----------------------\n";
+}
+
+// ----------------------------------
 
 int main() {
     print(42);
@@ -97,6 +118,20 @@ int main() {
     if constexpr (Container<std::vector<int>>) {
         std::cout << "Vector satisfies Container concept\n";
     }
+
+    // ---- tiny extra usage ----
+
+    print_divider();
+
+    std::cout << "Sum of vector: " << sum_vector(vec) << "\n";
+
+    std::cout << "Contains 3? "
+              << (contains(vec, 3) ? "Yes" : "No") << "\n";
+
+    // all_of using ranges
+    bool all_positive = std::ranges::all_of(vec, [](int x){ return x > 0; });
+    std::cout << "All positive? "
+              << (all_positive ? "Yes" : "No") << "\n";
 
     // ===================================
 

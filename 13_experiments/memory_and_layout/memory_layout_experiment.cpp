@@ -1,12 +1,10 @@
-// Memory and Layout Experiment
-// Understanding object layout, padding, and alignment
-
 #include <iostream>
 #include <cstring>
 #include <cstddef>
 
 // ✅ ADDED
 #include <iomanip>   // for byte printing
+#include <type_traits> // NEW
 
 struct Unaligned {
     char c;      // 1 byte
@@ -87,6 +85,37 @@ void fill_and_dump() {
     dump_bytes(&obj, sizeof(obj));
 }
 
+// ===== VERY SMALL NEW ADDITIONS =====
+
+// Check if type is trivially copyable
+template<typename T>
+void check_trivial(const std::string& name) {
+    std::cout << name << " is trivially copyable? "
+              << (std::is_trivially_copyable<T>::value ? "Yes" : "No") << "\n";
+}
+
+// Show address distance between members
+void show_member_spacing() {
+    Unaligned obj{};
+    std::cout << "\nMember spacing (Unaligned):\n";
+    std::cout << "c -> i: "
+              << (reinterpret_cast<char*>(&obj.i) - reinterpret_cast<char*>(&obj.c))
+              << " bytes\n";
+    std::cout << "i -> d: "
+              << (reinterpret_cast<char*>(&obj.d) - reinterpret_cast<char*>(&obj.i))
+              << " bytes\n";
+}
+
+// Compare packed vs normal layout
+void compare_layouts() {
+    std::cout << "\n--- Layout Comparison ---\n";
+    std::cout << "Packed saves "
+              << (sizeof(Unaligned) - sizeof(Packed))
+              << " bytes compared to Unaligned\n";
+}
+
+// ====================================
+
 // -------------------------------------
 
 int main() {
@@ -139,6 +168,14 @@ int main() {
     check_alignment<Packed>("Packed");
 
     fill_and_dump();
+
+    // ===== NEW USAGE =====
+    check_trivial<Unaligned>("Unaligned");
+    check_trivial<Packed>("Packed");
+
+    show_member_spacing();
+    compare_layouts();
+    // =====================
 
     // ----------------------------------
 

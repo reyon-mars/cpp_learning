@@ -1,7 +1,7 @@
 #include <iostream>
 #include <memory>
 #include <ctime>
-#include <vector>   // ✅ ADDED
+#include <vector>
 #include <string>
 
 // ---------------- Single Responsibility ----------------
@@ -19,7 +19,6 @@ public:
     }
 };
 
-// ✅ ADDED: Separate responsibility (writing logic)
 class FileWriter {
 public:
     void write(const std::string& msg) {
@@ -36,7 +35,6 @@ public:
     }
 };
 
-// ✅ ADDED: Extend behavior without modifying existing classes
 class TimestampLogger : public Logger {
 public:
     void log(const std::string& msg) override {
@@ -45,7 +43,6 @@ public:
     }
 };
 
-// ✅ ADDED: Composed logger (demonstrates SRP + OCP)
 class FileLoggerWithWriter : public Logger {
 private:
     FileWriter writer;
@@ -81,7 +78,6 @@ public:
     }
 };
 
-// ✅ ADDED: Class that only needs printing
 class SimplePrinter : public Printer {
 public:
     void print(const std::string& doc) override {
@@ -122,7 +118,6 @@ public:
     }
 };
 
-// ✅ ADDED: Another valid Shape
 class Circle : public Shape {
 private:
     int radius;
@@ -148,57 +143,73 @@ public:
         logger->log("Application started");
     }
 
-    // ✅ ADDED: Change dependency at runtime
     void set_logger(std::shared_ptr<Logger> new_logger) {
         logger = new_logger;
     }
+
+    // ---- VERY SMALL ADDITION ----
+    bool has_logger() const {
+        return logger != nullptr;
+    }
+    // -----------------------------
 };
 
-// ---------------- Helper Functions (ADDED) ----------------
+// ---------------- Helper Functions ----------------
 
-// Test multiple shapes (LSP demonstration)
 void print_shapes(const std::vector<std::unique_ptr<Shape>>& shapes) {
     for (const auto& s : shapes) {
         std::cout << "Area: " << s->area() << "\n";
     }
 }
 
-// Logger test utility (DIP demonstration)
 void test_logger(std::shared_ptr<Logger> logger) {
     logger->log("Testing logger...");
 }
+
+// ---- VERY SMALL ADDITIONS ----
+
+// Divider
+void print_divider() {
+    std::cout << "-----------------------------\n";
+}
+
+// Count shapes
+std::size_t count_shapes(const std::vector<std::unique_ptr<Shape>>& shapes) {
+    return shapes.size();
+}
+
+// --------------------------------
 
 // ---------------- Main ----------------
 
 int main() {
 
-    // Dependency Inversion
     auto console_logger = std::make_shared<ConsoleLogger>();
     Application app(console_logger);
     app.run();
 
-    std::cout << "\n";
+    std::cout << "App has logger? "
+              << (app.has_logger() ? "Yes" : "No") << "\n";
 
-    // Open/Closed (switch logger implementation)
+    print_divider();
+
     auto file_logger = std::make_shared<FileLogger>();
     Application app2(file_logger);
     app2.run();
 
-    std::cout << "\n";
+    print_divider();
 
-    // Timestamp logger
     auto time_logger = std::make_shared<TimestampLogger>();
     app2.set_logger(time_logger);
     app2.run();
 
-    std::cout << "\n";
+    print_divider();
 
-    // ✅ ADDED: FileWriter-based logger
     auto writer_logger = std::make_shared<FileLoggerWithWriter>();
     app2.set_logger(writer_logger);
     app2.run();
 
-    std::cout << "\n";
+    print_divider();
 
     // Interface Segregation
     MultiFunctionPrinter printer;
@@ -208,7 +219,7 @@ int main() {
     SimplePrinter simple;
     simple.print("Notes.txt");
 
-    std::cout << "\n";
+    print_divider();
 
     // Liskov Substitution
     std::unique_ptr<Shape> shape1 = std::make_unique<Rectangle>(4, 5);
@@ -221,7 +232,6 @@ int main() {
 
     std::cout << "\n--- Shape Collection Test ---\n";
 
-    // ✅ ADDED: polymorphic collection
     std::vector<std::unique_ptr<Shape>> shapes;
     shapes.push_back(std::make_unique<Rectangle>(2, 3));
     shapes.push_back(std::make_unique<Square>(5));
@@ -229,9 +239,13 @@ int main() {
 
     print_shapes(shapes);
 
+    std::cout << "Total shapes: "
+              << count_shapes(shapes) << "\n";
+
+    print_divider();
+
     std::cout << "\n--- Logger Test Utility ---\n";
 
-    // ✅ ADDED: logger testing
     test_logger(console_logger);
     test_logger(file_logger);
     test_logger(time_logger);

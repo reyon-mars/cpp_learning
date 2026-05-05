@@ -2,8 +2,8 @@
 #include <memory>
 #include <string>
 #include <mutex>
-#include <thread>   // ✅ ADDED
-#include <vector>   // ✅ ADDED
+#include <thread>
+#include <vector>
 
 // ---------------- Singleton ----------------
 
@@ -20,7 +20,7 @@ public:
         return instance;
     }
 
-    // ✅ ADDED: Thread-safe access
+    // Thread-safe access
     static Database* get_thread_safe_instance() {
         static std::mutex mtx;
         std::lock_guard<std::mutex> lock(mtx);
@@ -29,6 +29,12 @@ public:
         }
         return instance;
     }
+
+    // ---- VERY SMALL ADDITION ----
+    static bool is_initialized() {
+        return instance != nullptr;
+    }
+    // --------------------------------
     
     void query(const std::string& q) {
         std::cout << "Executing: " << q << "\n";
@@ -55,7 +61,6 @@ public:
     void speak() override { std::cout << "Meow!\n"; }
 };
 
-// ✅ ADDED: New Animal
 class Cow : public Animal {
 public:
     void speak() override { std::cout << "Moo!\n"; }
@@ -85,6 +90,12 @@ public:
         std::cout << "RAM: " << ram << "\n";
         std::cout << "Storage: " << storage << "\n";
     }
+
+    // ---- VERY SMALL ADDITION ----
+    bool is_complete() const {
+        return !cpu.empty() && !ram.empty() && !storage.empty();
+    }
+    // --------------------------------
 };
 
 class ComputerBuilder {
@@ -107,7 +118,6 @@ public:
         return *this;
     }
 
-    // ✅ ADDED: Preset configuration
     ComputerBuilder& gaming_pc() {
         computer.cpu = "Ryzen 9";
         computer.ram = "32GB";
@@ -115,7 +125,6 @@ public:
         return *this;
     }
 
-    // ✅ ADDED: simple validation
     bool is_valid() const {
         return !computer.cpu.empty() &&
                !computer.ram.empty() &&
@@ -130,7 +139,7 @@ public:
     }
 };
 
-// ---------------- Helper Functions (ADDED) ----------------
+// ---------------- Helper Functions ----------------
 
 // Thread function for singleton demo
 void thread_task(int id) {
@@ -152,6 +161,12 @@ void test_factory() {
     }
 }
 
+// ---- VERY SMALL ADDITION ----
+void print_divider() {
+    std::cout << "-----------------------------\n";
+}
+// --------------------------------
+
 // ---------------- Main ----------------
 
 int main() {
@@ -159,12 +174,17 @@ int main() {
     // Singleton usage
     Database::get_instance()->query("SELECT * FROM users");
 
+    // Check initialization
+    std::cout << "DB initialized? "
+              << (Database::is_initialized() ? "Yes" : "No") << "\n";
+
     // Thread-safe singleton usage
     Database::get_thread_safe_instance()->query("SELECT * FROM products");
 
+    print_divider();
+
     std::cout << "\n--- Singleton Threads ---\n";
 
-    // ✅ ADDED: multi-thread test
     std::thread t1(thread_task, 1);
     std::thread t2(thread_task, 2);
     std::thread t3(thread_task, 3);
@@ -173,7 +193,7 @@ int main() {
     t2.join();
     t3.join();
 
-    std::cout << "\n";
+    print_divider();
 
     // Factory usage
     auto dog = AnimalFactory::create("dog");
@@ -185,9 +205,9 @@ int main() {
     if (cow) cow->speak();
 
     std::cout << "\n--- Factory Bulk Test ---\n";
-    test_factory();   // ✅ ADDED
+    test_factory();
 
-    std::cout << "\n";
+    print_divider();
 
     // Builder usage
     Computer pc = ComputerBuilder()
@@ -197,8 +217,9 @@ int main() {
                     .build();
 
     pc.show();
+    std::cout << "Complete? " << (pc.is_complete() ? "Yes" : "No") << "\n";
 
-    std::cout << "\n";
+    print_divider();
 
     // Using preset builder
     Computer gaming = ComputerBuilder()
@@ -207,14 +228,17 @@ int main() {
 
     gaming.show();
 
+    print_divider();
+
     std::cout << "\n--- Invalid Build Demo ---\n";
 
-    // ✅ ADDED: validation demo
     Computer incomplete = ComputerBuilder()
                             .set_cpu("Only CPU")
                             .build();
 
     incomplete.show();
+    std::cout << "Complete? "
+              << (incomplete.is_complete() ? "Yes" : "No") << "\n";
 
     return 0;
 }

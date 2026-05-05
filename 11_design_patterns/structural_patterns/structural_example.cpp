@@ -1,6 +1,6 @@
 #include <iostream>
 #include <memory>
-#include <vector>   // ✅ ADDED
+#include <vector>
 #include <string>
 
 // ---------------- Adapter ----------------
@@ -216,6 +216,21 @@ void test_component(std::shared_ptr<Component> comp) {
     comp->operation();
 }
 
+// ✅ NEW: test multiple shapes
+void test_shapes(const std::vector<std::shared_ptr<Shape>>& shapes) {
+    for (const auto& s : shapes) {
+        s->draw();
+    }
+}
+
+// ✅ NEW: proxy tester
+void test_proxy(Image& img) {
+    std::cout << "First call:\n";
+    img.display();
+    std::cout << "Second call (cached):\n";
+    img.display();
+}
+
 // ---------------- Main ----------------
 
 int main() {
@@ -228,7 +243,7 @@ int main() {
     adapters.push_back(std::make_shared<Adapter>(old));
     adapters.push_back(std::make_shared<PrinterAdapter>(legacy));
 
-    run_adapters(adapters);   // ✅ ADDED unified execution
+    run_adapters(adapters);
 
     std::cout << "\n";
 
@@ -237,7 +252,7 @@ int main() {
     auto decorated = std::make_shared<ConcreteDecorator>(component);
     auto logged = std::make_shared<LoggingDecorator>(decorated);
 
-    test_component(logged);   // ✅ ADDED wrapper test
+    test_component(logged);
 
     std::cout << "\n";
 
@@ -251,12 +266,19 @@ int main() {
     c1.draw();
     c2.draw();
 
+    // ✅ NEW: batch test
+    std::vector<std::shared_ptr<Shape>> shapes;
+    shapes.push_back(std::make_shared<Circle>(vector_renderer, 2.0f));
+    shapes.push_back(std::make_shared<Circle>(raster_renderer, 4.0f));
+
+    std::cout << "\nBatch shape rendering:\n";
+    test_shapes(shapes);
+
     std::cout << "\n";
 
     // Proxy
     ImageProxy img("photo.png");
-    img.display();
-    img.display(); // cached
+    test_proxy(img);   // ✅ NEW helper used
 
     std::cout << "\n";
 

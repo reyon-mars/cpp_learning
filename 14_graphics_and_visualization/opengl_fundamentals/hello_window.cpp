@@ -2,6 +2,10 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 
+// ✅ ADDED
+#include <string>
+#include <chrono>
+
 // ✅ ADDED: Resize callback
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -10,11 +14,21 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 // ---------------- NEW SMALL ADDITIONS ----------------
 
-// process input (ESC to close)
+// process input (ESC to close + NEW: wireframe toggle)
 void process_input(GLFWwindow* window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+
+    // ✅ ADDED: Toggle wireframe mode
+    static bool wireframe = false;
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        wireframe = !wireframe;
+        if (wireframe)
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        else
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
 }
 
 // check shader compilation errors
@@ -42,6 +56,14 @@ void check_shader_errors(unsigned int shader, std::string type)
             std::cout << "ERROR::PROGRAM_LINKING\n"
                       << infoLog << "\n";
         }
+    }
+}
+
+// ✅ ADDED: OpenGL error checker
+void check_gl_error() {
+    GLenum err;
+    while ((err = glGetError()) != GL_NO_ERROR) {
+        std::cout << "OpenGL Error: " << err << "\n";
     }
 }
 
@@ -140,30 +162,49 @@ int main(){
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
+    // ✅ ADDED: FPS counter setup
+    auto lastTime = std::chrono::high_resolution_clock::now();
+    int frames = 0;
+
     // Render loop
     while (!glfwWindowShouldClose(window))
     {
-        // ✅ ADDED: Input handling
         process_input(window);
 
-        // ✅ ADDED: Clear color
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        // ✅ ADDED: animated background color
+        float time = glfwGetTime();
+        float green = (sin(time) / 2.0f) + 0.5f;
+
+        glClearColor(0.1f, green, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // ✅ ADDED: Draw triangle
         glUseProgram(shaderProgram);
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        // ✅ ADDED: FPS calculation
+        frames++;
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        float elapsed = std::chrono::duration<float>(currentTime - lastTime).count();
+
+        if (elapsed >= 1.0f) {
+            std::cout << "FPS: " << frames << "\n";
+            frames = 0;
+            lastTime = currentTime;
+        }
+
+        // ✅ ADDED: OpenGL error check
+        check_gl_error();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    // ---------------- CLEANUP (NEW ADDITION) ----------------
+    // ---------------- CLEANUP ----------------
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteProgram(shaderProgram);
-    // -------------------------------------------------------
+    // -----------------------------------------
 
     glfwTerminate();
     return 0;

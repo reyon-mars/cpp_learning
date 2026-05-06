@@ -6,6 +6,8 @@
 
 // ✅ ADDED
 #include <deque>
+#include <numeric>   // ✅ ADDED
+#include <iomanip>   // ✅ ADDED
 
 // -------- NEW ADDITIONS --------
 
@@ -31,6 +33,30 @@ void compare_reserve_behavior() {
     std::cout << "\nReserve vs No Reserve:\n";
     std::cout << "Without reserve capacity: " << a.capacity() << "\n";
     std::cout << "With reserve capacity: " << b.capacity() << "\n";
+}
+
+// ✅ ADDED: simple reallocation counter
+int count_reallocations() {
+    std::vector<int> v;
+    const int* prev = nullptr;
+    int reallocs = 0;
+
+    for (int i = 0; i < 50; ++i) {
+        v.push_back(i);
+        if (prev && prev != v.data())
+            ++reallocs;
+        prev = v.data();
+    }
+    return reallocs;
+}
+
+// ✅ ADDED: print small stats
+void print_stats(const std::vector<int>& v) {
+    int sum = std::accumulate(v.begin(), v.end(), 0);
+    double avg = v.empty() ? 0.0 : (double)sum / v.size();
+
+    std::cout << "Sum: " << sum << "\n";
+    std::cout << "Average: " << avg << "\n";
 }
 
 // --------------------------------
@@ -119,7 +145,8 @@ int main() {
     std::cout << "Vector capacity: " << vec.capacity() << "\n";
 
     double efficiency = (double)vec.size() / vec.capacity() * 100.0;
-    std::cout << "Usage efficiency: " << efficiency << "%\n";
+    std::cout << "Usage efficiency: " << std::fixed << std::setprecision(2)
+              << efficiency << "%\n";
 
     // ----------------------------------------------------
     // ✅ NEW: Contiguous memory proof
@@ -143,6 +170,15 @@ int main() {
     // ----------------------------------------------------
     // ✅ NEW: Reserve comparison
     compare_reserve_behavior();
+
+    // ----------------------------------------------------
+    // ✅ VERY SMALL EXTRA ADDITIONS
+
+    std::cout << "\nReallocation count (first 50 inserts): "
+              << count_reallocations() << "\n";
+
+    std::cout << "\nVector stats:\n";
+    print_stats(vec);
 
     // ----------------------------------------------------
 

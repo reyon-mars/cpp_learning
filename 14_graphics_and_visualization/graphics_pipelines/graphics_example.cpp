@@ -68,6 +68,18 @@ bool ask_repeat() {
     return (ans == 'y' || ans == 'Y');
 }
 
+// ✅ ADDED: simple header printer
+void print_header(const std::string& title) {
+    std::cout << "\n==============================\n";
+    std::cout << title << "\n";
+    std::cout << "==============================\n";
+}
+
+// ✅ ADDED: fake clear screen (portable)
+void clear_screen() {
+    std::cout << std::string(40, '\n');
+}
+
 // -----------------------------------------
 
 // ✅ ADDED: Menu system
@@ -93,14 +105,25 @@ int main() {
 
     show_topics();
 
+    // ✅ ADDED: track how many demos run
+    int demo_count = 0;
+
     // ✅ UPDATED: looped interaction (non-breaking addition)
     do {
-        std::cout << "\nSelect an experiment (1-4): ";
+        print_header("OpenGL Demo Menu");
+
+        std::cout << "Select an experiment (1-4): ";
         int choice = get_valid_choice();
 
+        clear_screen(); // cleaner output
         run_demo(choice);
 
+        ++demo_count;
+
     } while (ask_repeat());
+
+    // ✅ ADDED: usage summary
+    std::cout << "\nTotal demos run: " << demo_count << "\n";
 
     // ✅ ADDED: future roadmap
     std::cout << "\nUpcoming upgrades:\n";

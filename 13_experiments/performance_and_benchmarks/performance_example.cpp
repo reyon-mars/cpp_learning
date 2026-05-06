@@ -7,6 +7,8 @@
 
 // ✅ ADDED
 #include <numeric>   // for std::accumulate
+#include <algorithm> // ✅ ADDED
+#include <functional> // ✅ ADDED
 
 // -------- NEW ADDITIONS --------
 
@@ -31,6 +33,17 @@ long long benchmark(Func f, int runs = 5) {
 // Warm-up function
 void warmup() {
     for (volatile int i = 0; i < 1000000; ++i);
+}
+
+// ✅ ADDED: simple result printer
+void print_result(const std::string& label, long long time) {
+    std::cout << label << ": " << time << " microseconds\n";
+}
+
+// ✅ ADDED: compare two timings
+void compare(const std::string& name, long long a, long long b) {
+    std::cout << name << " faster: "
+              << (a < b ? "First" : "Second") << "\n";
 }
 
 // --------------------------------
@@ -78,10 +91,12 @@ int main() {
     });
 
     // -------- Results --------
-    std::cout << "Time (range loop): " << duration1 << " microseconds\n";
-    std::cout << "Time (index loop): " << duration2 << " microseconds\n";
-    std::cout << "Time (iterator loop): " << duration3 << " microseconds\n";
-    std::cout << "Time (accumulate): " << duration4 << " microseconds\n";
+    print_result("Time (range loop)", duration1);
+    print_result("Time (index loop)", duration2);
+    print_result("Time (iterator loop)", duration3);
+    print_result("Time (accumulate)", duration4);
+
+    compare("Range vs Index", duration1, duration2);
 
     // ----------------------------------------------------
     // ✅ ADDED: Cache locality experiment (2D array)
@@ -105,8 +120,8 @@ int main() {
     });
 
     std::cout << "\nCache Locality Test (2D vector):\n";
-    std::cout << "Row-wise Time: " << duration5 << " microseconds\n";
-    std::cout << "Column-wise Time: " << duration6 << " microseconds\n";
+    print_result("Row-wise Time", duration5);
+    print_result("Column-wise Time", duration6);
 
     // ----------------------------------------------------
     // ✅ NEW: Contiguous memory vs non-contiguous
@@ -130,8 +145,21 @@ int main() {
     });
 
     std::cout << "\nCache Locality Test (1D contiguous array):\n";
-    std::cout << "Row-wise Time: " << duration7 << " microseconds\n";
-    std::cout << "Column-wise Time: " << duration8 << " microseconds\n";
+    print_result("Row-wise Time", duration7);
+    print_result("Column-wise Time", duration8);
+
+    // ----------------------------------------------------
+    // ✅ VERY SMALL EXTRA ADDITIONS
+
+    // find max element benchmark
+    auto duration9 = benchmark([&]() {
+        return *std::max_element(vec.begin(), vec.end());
+    });
+
+    print_result("\nMax element (std::max_element)", duration9);
+
+    // simple sanity check
+    std::cout << "Sink value (avoid optimization): " << sink << "\n";
 
     // ----------------------------------------------------
 

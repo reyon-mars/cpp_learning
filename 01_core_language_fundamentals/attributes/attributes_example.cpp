@@ -4,6 +4,10 @@
 #include <iostream>
 #include <utility>   // for structured binding pair
 
+// ✅ ADDED
+#include <string>
+#include <vector>
+
 [[nodiscard]] int calculate() {
     return 42;
 }
@@ -67,6 +71,34 @@ void use_result(int value) {
     std::cout << "Using result: " << value << "\n";
 }
 
+// ---------------- NEW SMALL ADDITIONS ----------------
+
+// nodiscard with custom type
+struct [[nodiscard]] Status {
+    bool ok;
+    std::string message;
+};
+
+Status get_status() {
+    return {true, "Everything is fine"};
+}
+
+// maybe_unused lambda
+[[maybe_unused]] auto quick_lambda = []() {
+    std::cout << "Quick lambda executed\n";
+};
+
+// deprecated variable demo
+[[maybe_unused]] [[deprecated("Use new_version instead")]]
+int old_version = 1;
+
+// helper to print divider
+void print_divider() {
+    std::cout << "----------------------\n";
+}
+
+// -----------------------------------------------------
+
 int main() {
 
     // nodiscard used correctly
@@ -122,6 +154,51 @@ int main() {
     // ----------------------------------------------------
     // ✅ ADDED: Explicit ignore pattern
     (void)calculate(); // intentional ignore (no warning in some compilers)
+
+    // ----------------------------------------------------
+    // ✅ NEW: nodiscard custom type usage
+    Status status = get_status();
+
+    std::cout << "Status OK: "
+              << (status.ok ? "Yes" : "No") << "\n";
+
+    std::cout << "Status message: "
+              << status.message << "\n";
+
+    print_divider();
+
+    // ----------------------------------------------------
+    // ✅ NEW: vector with maybe_unused iteration variable
+    std::vector<int> nums = {1, 2, 3};
+
+    for ([[maybe_unused]] int n : nums) {
+        // intentionally unused loop variable
+    }
+
+    std::cout << "Loop with maybe_unused variable completed\n";
+
+    print_divider();
+
+    // ----------------------------------------------------
+    // ✅ NEW: lambda usage
+    quick_lambda();
+
+    // ----------------------------------------------------
+    // ✅ NEW: deprecated variable demo
+    // std::cout << old_version << "\n";
+    // ⚠️ uncomment for deprecated variable warning
+
+    print_divider();
+
+    // ----------------------------------------------------
+    // ✅ NEW: intentional unused structured binding
+    auto [first, second] = std::make_pair(10, 20);
+
+    [[maybe_unused]] int ignored = second;
+
+    std::cout << "First value: " << first << "\n";
+
+    // ----------------------------------------------------
 
     return 0;
 }

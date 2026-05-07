@@ -1,6 +1,10 @@
 #include <iostream>
 #include <string>
 
+// ✅ ADDED
+#include <vector>
+#include <algorithm>
+
 // Put helpers in a small namespace (good practice)
 namespace utils {
 
@@ -30,7 +34,7 @@ inline void printMessage(const std::string& msg) {
     std::cout << msg << std::endl;
 }
 
-// Increment 
+// Increment
 inline int increment(int x) {
     return x + 1;
 }
@@ -127,7 +131,6 @@ inline bool isValidNumber(int x) {
     return x >= 0 && x <= 100;
 }
 
-
 // Clamp value between range
 inline int clamp(int value, int min, int max) {
     return (value < min) ? min : (value > max) ? max : value;
@@ -142,6 +145,49 @@ inline bool isEmpty(const std::string& str) {
 inline double average(int a, int b) {
     return (a + b) / 2.0;
 }
+
+// ---------------- NEW SMALL ADDITIONS ----------------
+
+// Minimum value template
+template<typename T>
+T minValue(T a, T b) {
+    return (a < b) ? a : b;
+}
+
+// Cube function
+constexpr int cube(int x) {
+    return x * x * x;
+}
+
+// Reverse string
+inline std::string reverseString(std::string str) {
+    std::reverse(str.begin(), str.end());
+    return str;
+}
+
+// Print vector values
+inline void printVector(const std::vector<int>& values) {
+    for (int v : values) {
+        std::cout << v << " ";
+    }
+    std::cout << std::endl;
+}
+
+// Sum vector elements
+inline int sumVector(const std::vector<int>& values) {
+    int sum = 0;
+    for (int v : values) {
+        sum += v;
+    }
+    return sum;
+}
+
+// Count characters
+inline size_t charCount(const std::string& str) {
+    return str.size();
+}
+
+// -----------------------------------------------------
 
 } // namespace utils
 
@@ -206,7 +252,6 @@ int main(void) {
 
     // --------------------------------------------------
 
-
     std::cout << "Max of 10 and 20 = " << maxValue(10, 20) << std::endl;
 
     std::cout << "Factorial of 5 = " << factorial(5) << std::endl;
@@ -225,6 +270,31 @@ int main(void) {
 
     std::cout << "Is string empty? "
               << (isEmpty("") ? "Yes" : "No") << std::endl;
+
+    // --------------------------------------------------
+    // ✅ NEW FEATURE USAGE
+
+    printDivider();
+
+    std::cout << "Min of 10 and 20 = "
+              << minValue(10, 20) << std::endl;
+
+    std::cout << "Cube of 3 = "
+              << cube(3) << std::endl;
+
+    std::cout << "Reversed string: "
+              << reverseString("OpenAI") << std::endl;
+
+    std::vector<int> numbers = {1, 2, 3, 4, 5};
+
+    std::cout << "Vector values: ";
+    printVector(numbers);
+
+    std::cout << "Vector sum = "
+              << sumVector(numbers) << std::endl;
+
+    std::cout << "Character count in 'ChatGPT' = "
+              << charCount("ChatGPT") << std::endl;
 
     // --------------------------------------------------
 

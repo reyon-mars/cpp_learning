@@ -4,6 +4,8 @@
 #include <algorithm> // ✅ ADDED
 #include <numeric>   // ✅ ADDED
 #include <cassert>   // ✅ ADDED
+#include <map>       // ✅ ADDED
+#include <set>       // ✅ ADDED
 
 struct Book {
     std::string name;
@@ -122,7 +124,57 @@ void sortByISBN(std::vector<Book>& lib) {
         });
 }
 
-// ----------------------------------------------
+// ----------- NEW SMALL ADDITIONS -----------
+
+// Count books by publisher
+void countPublishers(const std::vector<Book>& lib) {
+    std::map<std::string, int> counts;
+
+    for (const auto& b : lib) {
+        counts[b.publisher]++;
+    }
+
+    std::cout << "\nBooks per publisher:\n";
+    for (const auto& [publisher, count] : counts) {
+        std::cout << publisher << ": " << count << "\n";
+    }
+}
+
+// Check duplicate ISBNs
+bool hasDuplicateISBN(const std::vector<Book>& lib) {
+    std::set<int> seen;
+
+    for (const auto& b : lib) {
+        if (!seen.insert(b.ISBN_NO).second) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Add a new book safely
+void addBook(std::vector<Book>& lib,
+             const std::string& name,
+             int isbn,
+             const std::string& publisher) {
+
+    lib.push_back({name, isbn, publisher});
+}
+
+// Find minimum ISBN book
+Book getEarliestBook(const std::vector<Book>& lib) {
+    Book earliest = lib[0];
+
+    for (const auto& b : lib) {
+        if (b.ISBN_NO < earliest.ISBN_NO) {
+            earliest = b;
+        }
+    }
+
+    return earliest;
+}
+
+// ------------------------------------------------
 
 int main() {
 
@@ -182,6 +234,27 @@ int main() {
     std::cout << "Library size: " << library.size() << "\n";
 
     // =================================================
+
+    // ================= EXTRA SMALL FEATURES =================
+
+    addBook(library, "Effective C++", 777, "OReilly");
+
+    std::cout << "\nAfter adding new book:\n";
+    printLibrary(library);
+
+    Book earliest = getEarliestBook(library);
+
+    std::cout << "\nEarliest book (lowest ISBN):\n";
+    printBook(earliest);
+
+    countPublishers(library);
+
+    std::cout << "\nDuplicate ISBN check: "
+              << (hasDuplicateISBN(library) ? "Duplicates found"
+                                            : "No duplicates")
+              << "\n";
+
+    // ========================================================
 
     return 0;
 }

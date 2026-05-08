@@ -2,6 +2,8 @@
 // Understanding preprocessing, parsing, compilation, and linking
 
 #include <iostream>
+#include <string>   // ✅ ADDED
+#include <vector>   // ✅ ADDED
 
 // Preprocessor macro
 #define APP_VERSION "1.0"
@@ -78,45 +80,167 @@ inline int max_safe(int a, int b) {
 // Macro pitfall example
 #define BAD_SQUARE(x) x * x  // missing parentheses!
 
+// ✅ ADDED: Stringify macro
+#define STRINGIFY(x) #x
+
+// ✅ ADDED: Token pasting macro
+#define CONCAT(a, b) a##b
+
+// ✅ ADDED: Multi-line macro
+#define PRINT_SEPARATOR() \
+    std::cout << "-----------------------------\n"
+
+// ✅ ADDED: Compiler info macro
+#define COMPILER_INFO "Compiled with standard preprocessing"
+
+// ✅ ADDED: Simple constexpr math
+constexpr int cube_constexpr(int x) {
+    return x * x * x;
+}
+
+// ✅ ADDED: Internal linkage helper
+static void internalHelper() {
+    std::cout << "Internal helper executed\n";
+}
+
+// ✅ ADDED: Simulated translation unit info
+void printCompilationStages() {
+
+    std::vector<std::string> stages = {
+        "1. Preprocessing",
+        "2. Parsing",
+        "3. Compilation",
+        "4. Assembly",
+        "5. Linking"
+    };
+
+    std::cout << "\nCompilation Stages:\n";
+
+    for (const auto& stage : stages) {
+        std::cout << stage << "\n";
+    }
+}
+
+// ✅ ADDED: constexpr compile-time test
+constexpr int compileTimeValue = square_constexpr(10);
+
 // ----------------------------------------------
 
 
 int main() {
+
     std::cout << "Compiled successfully\n";
 
     // Added usage
     printVersion();
-    std::cout << "Build number: " << build_number << "\n";
+
+    std::cout << "Build number: "
+              << build_number << "\n";
 
     debugMessage();
 
     internal_counter++;
-    std::cout << "Internal counter: " << internal_counter << "\n";
 
-    std::cout << "Square of 5: " << square(5) << "\n";
+    std::cout << "Internal counter: "
+              << internal_counter << "\n";
+
+    std::cout << "Square of 5: "
+              << square(5) << "\n";
 
     // Macro vs constexpr
-    std::cout << "Square (macro): " << SQUARE_MACRO(5) << "\n";
-    std::cout << "Square (constexpr): " << square_constexpr(5) << "\n";
+    std::cout << "Square (macro): "
+              << SQUARE_MACRO(5) << "\n";
+
+    std::cout << "Square (constexpr): "
+              << square_constexpr(5) << "\n";
 
     // Config usage
-    std::cout << "Max users (macro): " << MAX_USERS << "\n";
+    std::cout << "Max users (macro): "
+              << MAX_USERS << "\n";
 
     // External function simulation
     externalFunction();
 
 
-
     std::cout << "\nAdvanced Macro Features:\n";
 
-    std::cout << "max_safe(5,10): " << max_safe(5,10) << "\n";
+    std::cout << "max_safe(5,10): "
+              << max_safe(5,10) << "\n";
 
     DEBUG_LOG("Testing debug log");
 
-    std::cout << "Mode: " << MODE_STATUS << "\n";
+    std::cout << "Mode: "
+              << MODE_STATUS << "\n";
 
-    std::cout << "BAD_SQUARE(2+3): " << BAD_SQUARE(2+3) << "\n";
-    std::cout << "Correct SQUARE(2+3): " << SQUARE_MACRO(2+3) << "\n";
+    std::cout << "BAD_SQUARE(2+3): "
+              << BAD_SQUARE(2+3) << "\n";
+
+    std::cout << "Correct SQUARE(2+3): "
+              << SQUARE_MACRO(2+3) << "\n";
+
+    // --------------------------------------------------
+
+    // ✅ ADDED: Stringify macro usage
+    std::cout << "\nStringify Macro:\n";
+    std::cout << STRINGIFY(Hello Compilation Model)
+              << "\n";
+
+    // --------------------------------------------------
+
+    // ✅ ADDED: Token concatenation
+    int CONCAT(my,Var) = 25;
+
+    std::cout << "Concatenated variable value: "
+              << myVar << "\n";
+
+    // --------------------------------------------------
+
+    // ✅ ADDED: Separator macro
+    PRINT_SEPARATOR();
+
+    // --------------------------------------------------
+
+    // ✅ ADDED: constexpr cube
+    std::cout << "Cube constexpr of 3: "
+              << cube_constexpr(3) << "\n";
+
+    // --------------------------------------------------
+
+    // ✅ ADDED: compile-time evaluated variable
+    std::cout << "Compile-time value: "
+              << compileTimeValue << "\n";
+
+    // --------------------------------------------------
+
+    // ✅ ADDED: Internal linkage helper
+    internalHelper();
+
+    // --------------------------------------------------
+
+    // ✅ ADDED: Compilation stages
+    printCompilationStages();
+
+    // --------------------------------------------------
+
+    // ✅ ADDED: Compiler info
+    std::cout << "\nCompiler Info:\n";
+    std::cout << COMPILER_INFO << "\n";
+
+    // --------------------------------------------------
+
+    // ✅ ADDED: Built-in macros
+    std::cout << "\nBuilt-in Macros:\n";
+
+    std::cout << "__LINE__: "
+              << __LINE__ << "\n";
+
+    std::cout << "__FILE__: "
+              << __FILE__ << "\n";
+
+    std::cout << "__cplusplus: "
+              << __cplusplus << "\n";
+
+    // --------------------------------------------------
 
     // undef example
     #undef DEBUG_MODE

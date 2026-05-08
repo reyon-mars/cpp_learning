@@ -23,6 +23,13 @@ enum class Food {
     Pasta
 };
 
+// ✅ ADDED: Extra enum
+enum class Color {
+    Red,
+    Green,
+    Blue
+};
+
 // ----------------  HELPERS ----------------
 
 // Validate Animal from int
@@ -41,7 +48,6 @@ const char* enumName(Animal a) {
     }
     return "Unknown";
 }
-
 
 // to_string for Vehicle
 const char* enumName(Vehicle v) {
@@ -64,16 +70,33 @@ const char* enumName(Food f) {
     return "Unknown";
 }
 
+// ✅ ADDED: to_string for Color
+const char* enumName(Color c) {
+    switch (c) {
+        case Color::Red: return "Red";
+        case Color::Green: return "Green";
+        case Color::Blue: return "Blue";
+    }
+    return "Unknown";
+}
+
 // Safe conversion: int → Animal
 bool intToAnimal(int value, Animal& out) {
     if (!isValidAnimal(value)) return false;
+
     out = static_cast<Animal>(value);
+
     return true;
 }
 
 // Iterate all Animal values
 std::vector<Animal> getAllAnimals() {
-    return { Animal::Cat, Animal::Dog, Animal::Bird, Animal::Fish };
+    return {
+        Animal::Cat,
+        Animal::Dog,
+        Animal::Bird,
+        Animal::Fish
+    };
 }
 
 // Compare two enums
@@ -88,6 +111,31 @@ int toInt(T e) {
     return static_cast<int>(e);
 }
 
+// ✅ ADDED: Print divider
+void printDivider() {
+    std::cout << "----------------------\n";
+}
+
+// ✅ ADDED: Count total animals
+size_t animalCount() {
+    return getAllAnimals().size();
+}
+
+// ✅ ADDED: Print all vehicles
+void printVehicles() {
+
+    std::vector<Vehicle> vehicles = {
+        Vehicle::Car,
+        Vehicle::Bike,
+        Vehicle::Bus,
+        Vehicle::Train
+    };
+
+    for (auto vehicle : vehicles) {
+        std::cout << enumName(vehicle) << "\n";
+    }
+}
+
 // ------------------------------------------------
 
 
@@ -99,30 +147,92 @@ int main() {
     Vehicle v = Vehicle::Car;
     Food f = Food::Pizza;
 
+    // ✅ ADDED
+    Color c = Color::Green;
+
     std::cout << "Basic Enum Usage:\n";
-    std::cout << "Animal: " << enumName(a) << "\n";
+
+    std::cout << "Animal: "
+              << enumName(a) << "\n";
 
     // ================= ADD IN MAIN =================
 
+    printDivider();
+
     std::cout << "\nAdvanced Enum Features:\n";
 
-    std::cout << "Vehicle name: " << enumName(v) << "\n";
-    std::cout << "Food name: " << enumName(f) << "\n";
+    std::cout << "Vehicle name: "
+              << enumName(v) << "\n";
+
+    std::cout << "Food name: "
+              << enumName(f) << "\n";
+
+    // ✅ ADDED
+    std::cout << "Color name: "
+              << enumName(c) << "\n";
 
     Animal converted;
+
     if (intToAnimal(1, converted)) {
-        std::cout << "Converted from int 1 → " << enumName(converted) << "\n";
+
+        std::cout << "Converted from int 1 → "
+                  << enumName(converted) << "\n";
     }
 
+    printDivider();
+
     std::cout << "Iterating all animals:\n";
+
     for (auto animal : getAllAnimals()) {
         std::cout << enumName(animal) << "\n";
     }
 
-    std::cout << "Are Cat and Dog same? "
-              << (areSame(Animal::Cat, Animal::Dog) ? "Yes\n" : "No\n");
+    printDivider();
 
-    std::cout << "Animal (Dog) as int: " << toInt(a) << "\n";
+    std::cout << "All vehicles:\n";
+    printVehicles();
+
+    printDivider();
+
+    std::cout << "Are Cat and Dog same? "
+              << (areSame(Animal::Cat, Animal::Dog)
+                  ? "Yes\n"
+                  : "No\n");
+
+    // ✅ ADDED
+    std::cout << "Are Car and Car same? "
+              << (areSame(Vehicle::Car, Vehicle::Car)
+                  ? "Yes\n"
+                  : "No\n");
+
+    printDivider();
+
+    std::cout << "Animal (Dog) as int: "
+              << toInt(a) << "\n";
+
+    // ✅ ADDED
+    std::cout << "Vehicle (Car) as int: "
+              << toInt(v) << "\n";
+
+    std::cout << "Food (Pizza) as int: "
+              << toInt(f) << "\n";
+
+    printDivider();
+
+    // ✅ ADDED
+    std::cout << "Total animals available: "
+              << animalCount() << "\n";
+
+    // ✅ ADDED
+    std::cout << "Animal validation test:\n";
+
+    std::cout << "Is 2 valid? "
+              << (isValidAnimal(2) ? "Yes" : "No")
+              << "\n";
+
+    std::cout << "Is 10 valid? "
+              << (isValidAnimal(10) ? "Yes" : "No")
+              << "\n";
 
     return 0;
 }

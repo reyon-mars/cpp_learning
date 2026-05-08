@@ -29,6 +29,8 @@ int math::multiply(int a, int b) {
 */
 
 #include <iostream>
+#include <vector>     // ✅ ADDED
+#include <string>     // ✅ ADDED
 
 // ---- small added helper ----
 void printModuleHint() {
@@ -78,6 +80,41 @@ namespace math_module_sim {
         }
         return a / b;
     }
+
+    // ✅ ADDED: power function
+    int power(int base, int exp) {
+        int result = 1;
+
+        for (int i = 0; i < exp; ++i) {
+            result *= base;
+        }
+
+        return result;
+    }
+
+    // ✅ ADDED: factorial
+    int factorial(int n) {
+        if (n <= 1) return 1;
+        return n * factorial(n - 1);
+    }
+
+    // ✅ ADDED: average helper
+    double average(const std::vector<int>& nums) {
+        if (nums.empty()) return 0.0;
+
+        int sum = 0;
+
+        for (int v : nums) {
+            sum += v;
+        }
+
+        return static_cast<double>(sum) / nums.size();
+    }
+
+    // ✅ ADDED: module info
+    std::string moduleName() {
+        return "math_module_sim";
+    }
 }
 
 // Function showing module-like usage
@@ -105,6 +142,57 @@ void useMathModule() {
     // ✅ ADDED: division usage
     std::cout << "Divide: "
               << math_module_sim::divide(10, 2) << "\n";
+
+    // ✅ ADDED: power usage
+    std::cout << "Power(2, 5): "
+              << math_module_sim::power(2, 5) << "\n";
+
+    // ✅ ADDED: factorial usage
+    std::cout << "Factorial(5): "
+              << math_module_sim::factorial(5) << "\n";
+
+    // ✅ ADDED: average usage
+    std::vector<int> values = {10, 20, 30, 40};
+
+    std::cout << "Average: "
+              << math_module_sim::average(values) << "\n";
+
+    // ✅ ADDED: module name
+    std::cout << "Module Name: "
+              << math_module_sim::moduleName() << "\n";
+}
+
+// ✅ ADDED: simulate importing another module
+namespace utility_module_sim {
+
+    void printDivider() {
+        std::cout << "-----------------------------\n";
+    }
+
+    void printStatus(const std::string& status) {
+        std::cout << "[STATUS] " << status << "\n";
+    }
+}
+
+// ✅ ADDED: testing helper
+void runModuleTests() {
+
+    utility_module_sim::printDivider();
+
+    std::cout << "Running simulated module tests...\n";
+
+    std::cout << "Test Add: "
+              << math_module_sim::add(1, 2) << "\n";
+
+    std::cout << "Test Multiply: "
+              << math_module_sim::multiply(3, 4) << "\n";
+
+    std::cout << "Test Power: "
+              << math_module_sim::power(3, 3) << "\n";
+
+    utility_module_sim::printStatus("Tests completed");
+
+    utility_module_sim::printDivider();
 }
 
 // ------------------------------------
@@ -123,12 +211,33 @@ int main() {
     useMathModule();
     // ----------------------------------
 
+    // ✅ ADDED: module test runner
+    std::cout << "\nExecuting module test suite:\n";
+    runModuleTests();
+
+    // ✅ ADDED: constexpr compile-time example
+    constexpr int compileTimeSquare = math_module_sim::square(8);
+
+    std::cout << "Compile-time square of 8: "
+              << compileTimeSquare << "\n";
+
+    // ✅ ADDED: safe division demo
+    std::cout << "Division by zero demo:\n";
+    math_module_sim::divide(5, 0);
+
     // ✅ ADDED: explanation output
     std::cout << "\nNote:\n";
     std::cout << "Modules improve compile time and avoid header issues like multiple inclusion.\n";
 
     // ✅ ADDED: extra clarification
     std::cout << "They also provide better encapsulation compared to traditional headers.\n";
+
+    // ✅ ADDED: future learning topics
+    std::cout << "\nFuture module topics:\n";
+    std::cout << "- Real .cppm module interface files\n";
+    std::cout << "- export/import syntax\n";
+    std::cout << "- Partitioned modules\n";
+    std::cout << "- Faster incremental builds\n";
 
     return 0;
 }

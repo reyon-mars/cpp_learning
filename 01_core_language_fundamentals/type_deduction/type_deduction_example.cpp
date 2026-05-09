@@ -3,6 +3,8 @@
 #include <typeinfo>      // ✅ ADDED
 #include <utility>       // ✅ ADDED
 #include <cassert>       // ✅ ADDED
+#include <vector>        // ✅ ADDED
+#include <string>        // ✅ ADDED
 
 // ----------- MORE ADVANCED ADDITIONS -----------
 
@@ -40,6 +42,50 @@ void print_type() {
     std::cout << "Type: " << typeid(T).name() << "\n";
 }
 
+// ----------- NEW SMALL ADDITIONS -----------
+
+// Generic add function
+template<typename T, typename U>
+auto add_generic(T a, U b) {
+    return a + b;
+}
+
+// Check if type is integral
+template<typename T>
+void check_integral() {
+    std::cout << "Is integral? "
+              << std::is_integral<T>::value << "\n";
+}
+
+// Universal reference demo
+template<typename T>
+void universal_reference_demo(T&& value) {
+    std::cout << "Universal reference value: "
+              << value << "\n";
+}
+
+// constexpr deduction helper
+constexpr auto square_auto(auto x) {
+    return x * x;
+}
+
+// Type decay example
+template<typename T>
+void type_decay_demo(T param) {
+    std::cout << "After decay type: "
+              << typeid(T).name() << "\n";
+}
+
+// Print vector types
+template<typename T>
+void print_vector_info(const std::vector<T>& vec) {
+    std::cout << "Vector size: "
+              << vec.size() << "\n";
+
+    std::cout << "Stored type: "
+              << typeid(T).name() << "\n";
+}
+
 // ----------------------------------------------
 
 int main() {
@@ -63,8 +109,9 @@ int main() {
 
     // ✅ trailing return type
     auto mul = multiply_generic(2, 3.5);
+
     static_assert(std::is_same<decltype(mul), double>::value,
-                  "multiply_generic should return double");  // ✅ ADDED
+                  "multiply_generic should return double");
 
     std::cout << "multiply result: " << mul << "\n";
 
@@ -81,11 +128,65 @@ int main() {
 
     // ✅ ADDED: reference behavior demo
     auto ref = returnReference();
-    assert(ref == 50);  // ✅ ADDED check
+
+    assert(ref == 50);
 
     ref = 100; // modifies static variable
 
-    std::cout << "Modified reference value: " << returnReference() << "\n";
+    std::cout << "Modified reference value: "
+              << returnReference() << "\n";
+
+    // ==================================================
+    // ✅ EXTRA SMALL FEATURES
+    // ==================================================
+
+    std::cout << "\nExtra Type Deduction Features:\n";
+
+    // Generic add
+    auto sum = add_generic(10, 2.5);
+
+    std::cout << "Generic add result: "
+              << sum << "\n";
+
+    // Integral checks
+    check_integral<int>();
+    check_integral<double>();
+
+    // Universal reference
+    universal_reference_demo(42);
+
+    std::string text = "Hello";
+    universal_reference_demo(text);
+
+    // constexpr auto
+    constexpr auto sq = square_auto(6);
+
+    static_assert(sq == 36,
+                  "square_auto failed");
+
+    std::cout << "square_auto(6): "
+              << sq << "\n";
+
+    // Type decay
+    const int value = 99;
+    type_decay_demo(value);
+
+    // Vector type info
+    std::vector<std::string> names = {
+        "Alice",
+        "Bob",
+        "Charlie"
+    };
+
+    print_vector_info(names);
+
+    // decltype demo
+    decltype(sum) another_sum = 55.5;
+
+    std::cout << "decltype variable: "
+              << another_sum << "\n";
+
+    // ==================================================
 
     return 0;
 }

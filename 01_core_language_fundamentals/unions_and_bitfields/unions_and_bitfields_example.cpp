@@ -3,6 +3,7 @@
 #include <cstdint>    // ✅ ADDED
 #include <iomanip>    // ✅ ADDED
 #include <cassert>    // ✅ ADDED
+#include <cstring>    // ✅ NEW
 
 // ✅ ADDED: Color union for reinterpretation
 union Color {
@@ -73,7 +74,81 @@ void print_flag_bits(const Flags& f) {
               << std::bitset<8>(*ptr) << "\n";
 }
 
-// ----------------------------------------------
+// --------------------------------------------------
+// ✅ NEW SMALL ADDITIONS
+// --------------------------------------------------
+
+// Print raw memory bytes
+void dump_memory(const void* ptr, size_t size) {
+    const unsigned char* bytes =
+        reinterpret_cast<const unsigned char*>(ptr);
+
+    std::cout << "Raw memory: ";
+
+    for (size_t i = 0; i < size; ++i) {
+        std::cout << std::hex
+                  << std::setw(2)
+                  << std::setfill('0')
+                  << (int)bytes[i] << " ";
+    }
+
+    std::cout << std::dec << "\n";
+}
+
+// Demonstrate bitwise operations
+void bitwise_demo(uint32_t value) {
+
+    std::cout << "\nBitwise Operations Demo:\n";
+
+    std::cout << "Original: ";
+    print_bits(value);
+
+    std::cout << "Shift left by 1:\n";
+    print_bits(value << 1);
+
+    std::cout << "Shift right by 1:\n";
+    print_bits(value >> 1);
+
+    std::cout << "Bitwise NOT:\n";
+    print_bits(~value);
+}
+
+// Show size information
+void print_sizes() {
+    std::cout << "\nSize Information:\n";
+
+    std::cout << "sizeof(Color): "
+              << sizeof(Color) << " bytes\n";
+
+    std::cout << "sizeof(Flags): "
+              << sizeof(Flags) << " bytes\n";
+
+    std::cout << "sizeof(uint32_t): "
+              << sizeof(uint32_t) << " bytes\n";
+}
+
+// Simple memcpy reinterpretation
+void memcpy_demo() {
+
+    uint32_t value = 0x12345678;
+
+    unsigned char buffer[4];
+
+    std::memcpy(buffer, &value, sizeof(value));
+
+    std::cout << "\nMemcpy byte copy:\n";
+
+    for (unsigned char b : buffer) {
+        std::cout << std::hex
+                  << std::setw(2)
+                  << std::setfill('0')
+                  << (int)b << " ";
+    }
+
+    std::cout << std::dec << "\n";
+}
+
+// --------------------------------------------------
 
 int main() {
 
@@ -103,6 +178,39 @@ int main() {
 
     // ✅ Bitfield raw view
     print_flag_bits(f);
+
+    // --------------------------------------------------
+    // ✅ NEW FEATURE USAGE
+    // --------------------------------------------------
+
+    print_sizes();
+
+    std::cout << "\nColor memory dump:\n";
+    dump_memory(&c, sizeof(c));
+
+    bitwise_demo(c.full);
+
+    memcpy_demo();
+
+    // ✅ NEW: Channel verification
+    std::cout << "\nDirect channel access:\n";
+    std::cout << "Red channel: "
+              << (int)c.channels.r << "\n";
+
+    std::cout << "Green channel: "
+              << (int)c.channels.g << "\n";
+
+    std::cout << "Blue channel: "
+              << (int)c.channels.b << "\n";
+
+    std::cout << "Alpha channel: "
+              << (int)c.channels.a << "\n";
+
+    // ✅ NEW: Bitfield size check
+    static_assert(sizeof(Flags) == 1,
+                  "Flags should occupy 1 byte");
+
+    // --------------------------------------------------
 
     return 0;
 }

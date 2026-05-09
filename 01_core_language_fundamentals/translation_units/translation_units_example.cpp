@@ -2,6 +2,8 @@
 #include <memory>
 #include <utility>   // ✅ ADDED
 #include <cassert>   // ✅ ADDED
+#include <vector>    // ✅ ADDED
+#include <string>    // ✅ ADDED
 
 // ---------- SMALL ADDITIONS ----------
 
@@ -111,6 +113,48 @@ void modify_external() {
               << external_counter << "\n";
 }
 
+// ----------- EXTRA SMALL ADDITIONS -----------
+
+// constexpr compile-time helper
+constexpr int cube_constexpr(int x) {
+    return x * x * x;
+}
+
+// Simple resource class
+class Resource {
+public:
+    Resource() {
+        std::cout << "Resource acquired\n";
+    }
+
+    ~Resource() {
+        std::cout << "Resource released\n";
+    }
+};
+
+// RAII demo
+void raii_demo() {
+    Resource res;
+    std::cout << "Using resource safely\n";
+}
+
+// Store debug logs
+std::vector<std::string> debug_history;
+
+// Add debug history
+void add_debug_history(const std::string& msg) {
+    debug_history.push_back(msg);
+}
+
+// Print debug history
+void print_debug_history() {
+    std::cout << "\nDebug History:\n";
+
+    for (const auto& msg : debug_history) {
+        std::cout << "- " << msg << "\n";
+    }
+}
+
 // ------------------------------------------------------
 
 
@@ -182,6 +226,31 @@ int main() {
     modify_external();
 
     // ================================================================
+
+    // ================= EXTRA SMALL FEATURES =================
+
+    std::cout << "\nExtra Compile-Time Features:\n";
+
+    constexpr int cube = cube_constexpr(3);
+
+    std::cout << "Cube constexpr (3^3): "
+              << cube << "\n";
+
+    static_assert(cube_constexpr(2) == 8,
+                  "Cube constexpr failed");
+
+    // RAII demo
+    std::cout << "\nRAII Demonstration:\n";
+    raii_demo();
+
+    // Debug history system
+    add_debug_history("Program initialized");
+    add_debug_history("Storage demo completed");
+    add_debug_history("Translation unit demo completed");
+
+    print_debug_history();
+
+    // ====================================================
 
     #undef DEBUG_MODE
 

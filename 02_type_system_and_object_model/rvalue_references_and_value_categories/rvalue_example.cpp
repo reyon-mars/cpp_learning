@@ -1,6 +1,8 @@
 #include <iostream>
 #include <utility>
 #include <string>
+#include <vector>      // ✅ ADDED
+#include <algorithm>   // ✅ ADDED
 
 class Widget {
 public:
@@ -35,6 +37,17 @@ public:
     // ----------- EXTRA ADDED -----------
     ~Widget() {
         std::cout << "Destructor (data=" << data << ")\n";
+    }
+
+    // ✅ ADDED: reset helper
+    void reset() {
+        data = 0;
+        std::cout << "Widget reset\n";
+    }
+
+    // ✅ ADDED: print helper
+    void print() const {
+        std::cout << "Widget data = " << data << "\n";
     }
 };
 
@@ -112,6 +125,41 @@ Widget make_widget(Args&&... args) {
     return Widget(std::forward<Args>(args)...);
 }
 
+// ✅ ADDED: vector storage demo
+void vector_demo() {
+    std::cout << "\nVector move demo:\n";
+
+    std::vector<Widget> widgets;
+
+    widgets.emplace_back(1);
+    widgets.emplace_back(2);
+    widgets.emplace_back(3);
+
+    std::cout << "Vector size: " << widgets.size() << "\n";
+}
+
+// ✅ ADDED: swap demo
+void swap_demo() {
+    std::cout << "\nSwap demo:\n";
+
+    Widget a(500);
+    Widget b(600);
+
+    std::cout << "Before swap: "
+              << a.data << " , " << b.data << "\n";
+
+    std::swap(a, b);
+
+    std::cout << "After swap: "
+              << a.data << " , " << b.data << "\n";
+}
+
+// ✅ ADDED: pass by value demo
+void by_value_demo(Widget w) {
+    std::cout << "Pass-by-value Widget data: "
+              << w.data << "\n";
+}
+
 // ------------------------------------
 
 int main() {
@@ -159,6 +207,19 @@ int main() {
     std::cout << "\n--- Emplace-style Construction ---\n";
     Widget w7 = make_widget(300);
     std::cout << "w7 data: " << w7.data << "\n";
+
+    // -------- NEW SMALL USAGE --------
+
+    std::cout << "\n--- Reset Demo ---\n";
+    w7.reset();
+    w7.print();
+
+    std::cout << "\n--- Pass By Value Demo ---\n";
+    by_value_demo(w2);
+
+    vector_demo();
+
+    swap_demo();
 
     // ----------------------------------
 

@@ -1,5 +1,7 @@
 #include <iostream>
 #include <type_traits>
+#include <utility>      // ✅ ADDED
+#include <typeinfo>     // ✅ ADDED
 
 template<typename T>
 void print_traits() {
@@ -114,6 +116,49 @@ void reference_category(T&&) {
     }
 }
 
+// ----------- FEW MORE SMALL ADDITIONS -----------
+
+// Check floating point types
+template<typename T>
+void check_floating_point() {
+    std::cout << "Is floating point: "
+              << std::is_floating_point<T>::value << "\n";
+}
+
+// Remove pointer example
+template<typename T>
+void remove_pointer_demo() {
+    using BaseType = typename std::remove_pointer<T>::type;
+
+    std::cout << "Original is pointer? "
+              << std::is_pointer<T>::value << "\n";
+
+    std::cout << "Base type is pointer? "
+              << std::is_pointer<BaseType>::value << "\n";
+}
+
+// Type name printer
+template<typename T>
+void print_type_name() {
+    std::cout << "Type name: "
+              << typeid(T).name() << "\n";
+}
+
+// Move semantics demo
+template<typename T>
+void move_demo(T&& value) {
+    T moved = std::forward<T>(value);
+
+    std::cout << "Move/forward demo executed\n";
+    (void)moved;
+}
+
+// constexpr trait helper
+template<typename T>
+constexpr bool is_numeric() {
+    return std::is_arithmetic<T>::value;
+}
+
 // ------------------------------------
 
 int main() {
@@ -178,6 +223,29 @@ int main() {
     int x = 5;
     reference_category(x);       // lvalue
     reference_category(10);      // rvalue
+
+    // -------- FEW MORE SMALL USAGES --------
+
+    std::cout << "\n--- Floating Point Check ---\n";
+    check_floating_point<float>();
+    check_floating_point<int>();
+
+    std::cout << "\n--- Remove Pointer Demo ---\n";
+    remove_pointer_demo<int*>();
+
+    std::cout << "\n--- Type Name Demo ---\n";
+    print_type_name<double>();
+
+    std::cout << "\n--- Move Demo ---\n";
+    std::string text = "Hello";
+    move_demo(std::move(text));
+
+    std::cout << "\n--- constexpr Trait Demo ---\n";
+    std::cout << "int is numeric? "
+              << is_numeric<int>() << "\n";
+
+    std::cout << "std::string is numeric? "
+              << is_numeric<std::string>() << "\n";
 
     // Compile-time check
     static_assert(sizeof(int) >= 4, "Unexpected int size!");

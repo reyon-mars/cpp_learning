@@ -101,6 +101,44 @@ int* reverse_copy(int* arr, int n) {
     return newArr;
 }
 
+// ----------- FEW MORE SMALL ADDITIONS -----------
+
+// Swap first and last element
+void swap_edges(int* arr, int n) {
+    if(n <= 1) return;
+
+    int temp = arr[0];
+    arr[0] = arr[n - 1];
+    arr[n - 1] = temp;
+}
+
+// Multiply all elements by 2
+void double_elements(int* arr, int n) {
+    for(int i = 0; i < n; i++) {
+        arr[i] *= 2;
+    }
+}
+
+// Count positive numbers
+int count_positive(int* arr, int n) {
+    int count = 0;
+
+    for(int i = 0; i < n; i++) {
+        if(arr[i] > 0)
+            count++;
+    }
+
+    return count;
+}
+
+// Print array in reverse order (without modifying)
+void print_reverse(int* arr, int n) {
+    for(int i = n - 1; i >= 0; i--) {
+        std::cout << arr[i] << " ";
+    }
+    std::cout << "\n";
+}
+
 // ------------------------------------
 
 
@@ -229,10 +267,25 @@ int main(){
     std::cout << "Reverse copy (new array): ";
     print_array(revCopy, n);
 
-    delete []revCopy;
+    // -------- FEW MORE SMALL FEATURES --------
+
+    swap_edges(arr, n);
+    std::cout << "\nAfter swapping first and last: ";
+    print_array(arr, n);
+
+    double_elements(arr, n);
+    std::cout << "After doubling elements: ";
+    print_array(arr, n);
+
+    std::cout << "Positive numbers count: "
+              << count_positive(arr, n) << "\n";
+
+    std::cout << "Print reverse without modifying: ";
+    print_reverse(arr, n);
 
     // ----------------------------------
 
+    delete []revCopy;
     delete []copy;
     delete []arr;
 

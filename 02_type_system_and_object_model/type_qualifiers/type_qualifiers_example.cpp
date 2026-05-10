@@ -1,6 +1,6 @@
 #include <iostream>
 
-// ----------- NEW ADDITIONS -----------
+// ----------- ORIGINAL CODE -----------
 
 // Function with const parameter
 void print_value(const int& val) {
@@ -26,8 +26,6 @@ void modify_const(const int* ptr) {
     int* modifiable = const_cast<int*>(ptr);
     *modifiable = 999; // ⚠️ dangerous if original was truly const
 }
-
-// ----------- EXTRA ADDITIONS -----------
 
 // constexpr example
 constexpr int square(int x) {
@@ -62,99 +60,174 @@ const int& getConstRef(const int& x) {
 void pointer_const_demo() {
     int a = 10, b = 20;
 
-    int* p1 = &a;            // normal pointer
-    const int* p2 = &a;      // pointer to const
-    int* const p3 = &a;      // const pointer
-    const int* const p4 = &a;// const pointer to const
+    int* p1 = &a;             // normal pointer
+    const int* p2 = &a;       // pointer to const
+    int* const p3 = &a;       // const pointer
+    const int* const p4 = &a; // const pointer to const
 
-    p1 = &b;     // allowed
-    // *p2 = 30; // not allowed
-    p2 = &b;     // allowed
-    *p3 = 40;    // allowed
-    // p3 = &b;  // not allowed
+    p1 = &b;      // allowed
+    // *p2 = 30;  // not allowed
+    p2 = &b;      // allowed
+    *p3 = 40;     // allowed
+    // p3 = &b;   // not allowed
 
     std::cout << "Pointer const demo executed\n";
+
+    // ✅ ADDED
+    std::cout << "p1 points to: " << *p1 << "\n";
+    std::cout << "p2 points to: " << *p2 << "\n";
+    std::cout << "p3 points to: " << *p3 << "\n";
+    std::cout << "p4 points to: " << *p4 << "\n";
 }
 
 // constexpr with object
 class ConstexprDemo {
 public:
     int val;
+
     constexpr ConstexprDemo(int v) : val(v) {}
-    constexpr int get() const { return val; }
+
+    constexpr int get() const {
+        return val;
+    }
 };
 
-// Safe const usage (no cast)
+// Safe const usage
 void safe_print(const int& x) {
     std::cout << "Safe const usage: " << x << "\n";
+}
+
+// ----------- SMALL NEW ADDITIONS -----------
+
+// Read-only array printer
+void print_array_const(const int arr[], int size) {
+    std::cout << "Const array values: ";
+
+    for (int i = 0; i < size; ++i) {
+        std::cout << arr[i] << " ";
+    }
+
+    std::cout << "\n";
+}
+
+// Demonstrate const local variable
+void const_local_demo() {
+    const int fixed = 500;
+
+    std::cout << "Const local value: "
+              << fixed << "\n";
+}
+
+// Function using const pointer parameter
+void pointer_reader(const int* ptr) {
+    std::cout << "Pointer reader value: "
+              << *ptr << "\n";
 }
 
 // ------------------------------------
 
 int main() {
+
     int x = 10;
-    
+
     const int a = 5;
 
-    int* const ptr1 = &x;  
+    int* const ptr1 = &x;
     *ptr1 = 15;
 
-    const int* ptr2 = &x;  
+    const int* ptr2 = &x;
     ptr2 = &a;
 
     const int* const ptr3 = &x;
-    
+
     volatile int v = 100;
     v = 200;
-    
+
     const volatile int cv = 300;
-    
+
     std::cout << "x: " << x << "\n";
     std::cout << "a: " << a << "\n";
     std::cout << "v: " << v << "\n";
     std::cout << "cv: " << cv << "\n";
 
-    // -------- NEW FEATURE USAGE --------
+    // -------- ORIGINAL FEATURE USAGE --------
 
     print_value(x);
 
     Demo d(50);
-    std::cout << "Demo data: " << d.getData() << "\n";
-    std::cout << "Access count: " << d.access_count << "\n";
+
+    std::cout << "Demo data: "
+              << d.getData() << "\n";
+
+    std::cout << "Access count: "
+              << d.access_count << "\n";
 
     int normal = 123;
+
     const int* p = &normal;
+
     modify_const(p);
-    std::cout << "After const_cast modify: " << normal << "\n";
+
+    std::cout << "After const_cast modify: "
+              << normal << "\n";
 
     // -------- EXTRA FEATURE USAGE --------
 
     std::cout << "\n--- constexpr demo ---\n";
+
     constexpr int val = square(5);
-    std::cout << "Square (compile-time): " << val << "\n";
+
+    std::cout << "Square (compile-time): "
+              << val << "\n";
 
     std::cout << "\n--- volatile pointer demo ---\n";
+
     volatile_demo();
 
     std::cout << "\n--- const overload demo ---\n";
-    show(x);   // non-const
-    show(a);   // const
+
+    show(x); // non-const
+    show(a); // const
 
     std::cout << "\n--- const reference return ---\n";
+
     const int& ref = getConstRef(x);
-    std::cout << "Const ref value: " << ref << "\n";
+
+    std::cout << "Const ref value: "
+              << ref << "\n";
 
     // -------- MORE EXTRA USAGE --------
 
     std::cout << "\n--- pointer const variations ---\n";
+
     pointer_const_demo();
 
     std::cout << "\n--- constexpr object demo ---\n";
+
     constexpr ConstexprDemo obj(77);
-    std::cout << "Constexpr object value: " << obj.get() << "\n";
+
+    std::cout << "Constexpr object value: "
+              << obj.get() << "\n";
 
     std::cout << "\n--- safe const usage ---\n";
+
     safe_print(a);
+
+    // -------- NEW ADDITIONS USAGE --------
+
+    std::cout << "\n--- const array demo ---\n";
+
+    int numbers[] = {1, 2, 3, 4, 5};
+
+    print_array_const(numbers, 5);
+
+    std::cout << "\n--- const local demo ---\n";
+
+    const_local_demo();
+
+    std::cout << "\n--- const pointer parameter demo ---\n";
+
+    pointer_reader(&x);
 
     // ----------------------------------
 

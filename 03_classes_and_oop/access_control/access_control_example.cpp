@@ -2,6 +2,8 @@
 // public, private, protected, friend
 
 #include <iostream>
+#include <string>      // ✅ ADDED
+#include <cassert>     // ✅ ADDED
 
 class Base {
 public:
@@ -108,6 +110,9 @@ public:
     virtual void draw() {
         std::cout << "Drawing Shape\n";
     }
+
+    // ✅ ADDED virtual destructor
+    virtual ~Shape() = default;
 };
 
 class Circle : public Shape {
@@ -122,6 +127,57 @@ void slicing_demo(Base obj) {
     std::cout << "Slicing demo (Base copy): ";
     obj.print();
 }
+
+// ----------- FEW MORE SMALL ADDITIONS -----------
+
+// Nested class demo
+class Container {
+private:
+    int secret = 500;
+
+public:
+    class Nested {
+    public:
+        void show() {
+            std::cout << "Nested class inside Container\n";
+        }
+    };
+
+    int getSecret() const {
+        return secret;
+    }
+};
+
+// Const member function demo
+class ConstDemo {
+private:
+    int value;
+
+public:
+    ConstDemo(int v) : value(v) {}
+
+    int getValue() const {
+        return value;
+    }
+};
+
+// Protected inheritance visibility test
+class AdvancedDerived : public Derived {
+public:
+    void advancedAccess() {
+        pub_member = 11;
+        prot_member = 22;
+    }
+};
+
+// Friend helper class
+class Inspector {
+public:
+    static void inspect(const Base& obj) {
+        std::cout << "Inspector sees private value via getter: "
+                  << obj.getPrivate() << "\n";
+    }
+};
 
 // ------------------------------------
 
@@ -180,6 +236,32 @@ int main() {
     std::cout << "\n--- Setter Demo ---\n";
     obj.setPrivate(123);
     obj.print();
+
+    // -------- FEW MORE SMALL USAGE --------
+
+    std::cout << "\n--- Nested Class Demo ---\n";
+    Container::Nested nested;
+    nested.show();
+
+    Container container;
+    std::cout << "Container secret: "
+              << container.getSecret() << "\n";
+
+    std::cout << "\n--- Const Function Demo ---\n";
+    const ConstDemo cd(77);
+    std::cout << "Const value: "
+              << cd.getValue() << "\n";
+
+    std::cout << "\n--- Advanced Derived Demo ---\n";
+    AdvancedDerived ad;
+    ad.advancedAccess();
+    ad.print();
+
+    std::cout << "\n--- Inspector Demo ---\n";
+    Inspector::inspect(obj);
+
+    // ✅ ADDED assertion
+    assert(obj.getPrivate() == 123);
 
     // ----------------------------------
 

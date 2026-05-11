@@ -3,6 +3,10 @@
 
 #include <iostream>
 #include <utility>
+#include <vector>      // ✅ ADDED
+#include <algorithm>   // ✅ ADDED
+#include <memory>      // ✅ ADDED
+#include <cassert>     // ✅ ADDED
 
 class MyClass {
 private:
@@ -76,6 +80,28 @@ public:
         std::cout << "MyClass static info function\n";
     }
     // --------------------------------
+
+    // ----------- MORE ADDED FUNCTIONS -----------
+
+    void reset() {
+        value = 0;
+    }
+
+    bool operator==(const MyClass& other) const {
+        return value == other.value;
+    }
+
+    bool operator<(const MyClass& other) const {
+        return value < other.value;
+    }
+
+    friend std::ostream& operator<<(std::ostream& os,
+                                    const MyClass& obj) {
+        os << "MyClass(" << obj.value << ")";
+        return os;
+    }
+
+    // --------------------------------------------
 };
 
 // 🔹 Added derived class
@@ -104,6 +130,25 @@ void showObject(const MyClass& obj) {
     std::cout << "[Helper] Value = " << obj.getValue() << "\n";
 }
 // --------------------------------
+
+// ----------- MORE ADDED HELPERS -----------
+
+void printVector(const std::vector<MyClass>& vec) {
+    for (const auto& obj : vec) {
+        std::cout << obj << " ";
+    }
+    std::cout << "\n";
+}
+
+void sortObjects(std::vector<MyClass>& vec) {
+    std::sort(vec.begin(), vec.end());
+}
+
+void resetObject(MyClass& obj) {
+    obj.reset();
+}
+
+// ------------------------------------------
 
 int main() {
     MyClass obj(42);
@@ -156,6 +201,54 @@ int main() {
     basePtr->display();
 
     delete basePtr;
+
+    // ----------- MORE FEATURE USAGE -----------
+
+    std::cout << "\n--- Operator Overload Demo ---\n";
+
+    MyClass a(10);
+    MyClass b(20);
+    MyClass c(10);
+
+    std::cout << "a == b ? "
+              << (a == b ? "Yes\n" : "No\n");
+
+    std::cout << "a == c ? "
+              << (a == c ? "Yes\n" : "No\n");
+
+    std::cout << "Printing object: " << a << "\n";
+
+    std::cout << "\n--- Vector + Sorting Demo ---\n";
+
+    std::vector<MyClass> vec = {
+        MyClass(30),
+        MyClass(10),
+        MyClass(20)
+    };
+
+    std::cout << "Before sort: ";
+    printVector(vec);
+
+    sortObjects(vec);
+
+    std::cout << "After sort: ";
+    printVector(vec);
+
+    std::cout << "\n--- Reset Demo ---\n";
+
+    resetObject(a);
+    std::cout << "After reset: " << a << "\n";
+
+    std::cout << "\n--- Smart Pointer Demo ---\n";
+
+    std::unique_ptr<MyClass> smartObj =
+        std::make_unique<MyClass>(999);
+
+    assert(smartObj);
+
+    smartObj->display();
+
+    // ------------------------------------------
 
     return 0;
 }

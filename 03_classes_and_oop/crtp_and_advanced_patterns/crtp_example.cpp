@@ -1,4 +1,6 @@
+```cpp
 #include <iostream>
+#include <type_traits> // ✅ ADDED
 
 // ======================================================
 // CRTP Base
@@ -25,6 +27,22 @@ public:
     }
     // -----------------------------------
 
+    // ----------- EXTRA ADDITIONS -----------
+
+    // Compile-time information
+    void typeInfo() {
+        std::cout << "CRTP type size: "
+                  << sizeof(Derived) << " bytes\n";
+    }
+
+    // Static polymorphism check
+    void staticDispatch() {
+        std::cout << "[Base] Static dispatch working\n";
+        static_cast<Derived*>(this)->implementation();
+    }
+
+    // --------------------------------------
+
 private:
     void pre() {
         std::cout << "[Base] Before implementation\n";
@@ -49,6 +67,12 @@ public:
         std::cout << "Derived extra feature\n";
     }
     // -----------------------------------
+
+    // ----------- EXTRA ADDITION -----------
+    void uniqueTask() {
+        std::cout << "Derived unique task executed\n";
+    }
+    // -------------------------------------
 };
 
 // ======================================================
@@ -65,6 +89,12 @@ public:
         std::cout << "AnotherDerived extra feature\n";
     }
     // -----------------------------------
+
+    // ----------- EXTRA ADDITION -----------
+    void uniqueTask() {
+        std::cout << "AnotherDerived unique task executed\n";
+    }
+    // -------------------------------------
 };
 
 // ----------- NEW ADDITION -----------
@@ -78,6 +108,24 @@ void runCRTP(Base<T>& obj) {
 
 // ------------------------------------
 
+// ----------- EXTRA ADDITIONS -----------
+
+// Compile-time checker
+template<typename T>
+void checkCRTP() {
+    std::cout << "Is class type? "
+              << std::is_class<T>::value << "\n";
+}
+
+// Generic helper
+template<typename T>
+void executeExtra(T& obj) {
+    std::cout << "[Generic] Executing extra feature\n";
+    obj.extraFeature();
+}
+
+// --------------------------------------
+
 // ======================================================
 // MAIN
 // ======================================================
@@ -90,6 +138,12 @@ int main() {
     d.callDerivedTwice();     // new usage
     d.extraFeature();         // new usage
 
+    // ----------- EXTRA USAGE -----------
+    d.typeInfo();
+    d.staticDispatch();
+    d.uniqueTask();
+    // -----------------------------------
+
     std::cout << "------------------\n";
 
     ad.interface();
@@ -97,11 +151,37 @@ int main() {
     ad.callDerivedTwice();    // new usage
     ad.extraFeature();        // new usage
 
+    // ----------- EXTRA USAGE -----------
+    ad.typeInfo();
+    ad.staticDispatch();
+    ad.uniqueTask();
+    // -----------------------------------
+
     std::cout << "------------------\n";
 
     // Generic CRTP usage
     runCRTP(d);
     runCRTP(ad);
 
+    std::cout << "------------------\n";
+
+    // ----------- MORE EXTRA USAGE -----------
+
+    checkCRTP<Derived>();
+    checkCRTP<AnotherDerived>();
+
+    executeExtra(d);
+    executeExtra(ad);
+
+    // Compile-time checks
+    static_assert(std::is_base_of<Base<Derived>, Derived>::value,
+                  "Derived must inherit from Base<Derived>");
+
+    static_assert(std::is_base_of<Base<AnotherDerived>, AnotherDerived>::value,
+                  "AnotherDerived must inherit from Base<AnotherDerived>");
+
+    // ----------------------------------------
+
     return 0;
 }
+```

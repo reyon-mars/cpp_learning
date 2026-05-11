@@ -2,6 +2,10 @@
 #include <string>
 #include <vector>
 #include <typeinfo>
+#include <memory>     // ✅ ADDED
+#include <algorithm>  // ✅ ADDED
+#include <cassert>    // ✅ ADDED
+
 using namespace std;
 
 // ======================================================
@@ -25,6 +29,11 @@ public:
     void WakeUp(void) {
         cout << name << " just woke up ";
         MakeSound();
+    }
+
+    // ✅ ADDED
+    string getName() const {
+        return name;
     }
 };
 
@@ -51,6 +60,16 @@ public:
     void WakeUp(void) {
         MakeSound();
     }
+
+    // ✅ ADDED
+    virtual void Info() const {
+        cout << "Pet name: " << name << endl;
+    }
+
+    // ✅ ADDED
+    string getName() const {
+        return name;
+    }
 };
 
 // ======================================================
@@ -63,6 +82,11 @@ public:
     void MakeSound(void) override {
         cout << Pet::name << " Meow meow meow... " << endl;
     }
+
+    // ✅ ADDED
+    void Info() const override {
+        cout << "Cat object: " << name << endl;
+    }
 };
 
 // ======================================================
@@ -74,6 +98,11 @@ public:
 
     void MakeSound(void) override {
         cout << Pet::name << " Woof woof woof... " << endl;
+    }
+
+    // ✅ ADDED
+    void Info() const override {
+        cout << "Dog object: " << name << endl;
     }
 };
 
@@ -147,6 +176,42 @@ void cleanup(vector<Pet*>& pets) {
     pets.clear();
 }
 
+// ---------------- EXTRA SMALL ADDITIONS ----------------
+
+// Print all pet info
+void showPetInfo(const vector<Pet*>& pets) {
+    cout << "\nPet information:\n";
+    for (const auto& p : pets) {
+        p->Info();
+    }
+}
+
+// Find pet by name
+Pet* findPet(const vector<Pet*>& pets, const string& target) {
+    for (auto p : pets) {
+        if (p->getName() == target) {
+            return p;
+        }
+    }
+    return nullptr;
+}
+
+// Sort pets by name
+void sortPets(vector<Pet*>& pets) {
+    sort(pets.begin(), pets.end(),
+        [](Pet* a, Pet* b) {
+            return a->getName() < b->getName();
+        });
+}
+
+// Smart pointer demo
+void smartPointerDemo() {
+    unique_ptr<Pet> smartPet = make_unique<Dog>("SmartDog");
+
+    cout << "\nSmart pointer demo:\n";
+    smartPet->MakeSound();
+}
+
 // ------------------------------------------------
 
 // ======================================================
@@ -198,6 +263,29 @@ int main(void) {
 
     printType(pet1);
     printType(pet2);
+
+    // -------- EXTRA FEATURE USAGE --------
+
+    showPetInfo(pets);
+
+    Pet* found = findPet(pets, "Oreo");
+    if (found) {
+        cout << "\nFound pet: ";
+        found->MakeSound();
+    }
+
+    cout << "\nSorted pets by name:\n";
+    sortPets(pets);
+
+    for (const auto& p : pets) {
+        cout << p->getName() << endl;
+    }
+
+    smartPointerDemo();
+
+    // ✅ ADDED assertion
+    assert(countPets(pets) == 3);
+
     // ---------------------------------------
 
     // Cleanup pets safely

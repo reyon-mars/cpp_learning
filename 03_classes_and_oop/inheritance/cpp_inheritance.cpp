@@ -1,20 +1,37 @@
 #include <iostream>
+#include <typeinfo>   // ✅ ADDED
+#include <memory>     // ✅ ADDED
 using namespace std;
 
 // Definition of a Super Class or Base Class
 class Super {
   private:
     int storage;
+
   protected:
     int accessible_storage;
+
   public:
-    Super() { storage = 0; accessible_storage = 0; }
-    Super(int val) { storage = accessible_storage = val; }
+    Super() {
+        storage = 0;
+        accessible_storage = 0;
+    }
 
-    void set(int val) { storage = accessible_storage = val; }
-    int get() const { return storage; } // ✅ const added
+    Super(int val) {
+        storage = accessible_storage = val;
+    }
 
-    void reset() { storage = accessible_storage = 0; }
+    void set(int val) {
+        storage = accessible_storage = val;
+    }
+
+    int get() const { // ✅ const added
+        return storage;
+    }
+
+    void reset() {
+        storage = accessible_storage = 0;
+    }
 
     virtual void info() {
         cout << "Super class\n";
@@ -31,14 +48,27 @@ class Super {
 class Base {
   protected:
     int storage;
+
   public:
-    Base() { storage = 0; }
-    Base(int val) { storage = val; }
+    Base() {
+        storage = 0;
+    }
 
-    void set(int val) { storage = val; }
-    int get() const { return storage; } // ✅ const added
+    Base(int val) {
+        storage = val;
+    }
 
-    void reset() { storage = 0; }
+    void set(int val) {
+        storage = val;
+    }
+
+    int get() const { // ✅ const added
+        return storage;
+    }
+
+    void reset() {
+        storage = 0;
+    }
 
     virtual void info() {
         cout << "Base class\n";
@@ -53,9 +83,11 @@ class Base {
 
 // Sub Class inheriting from the Super class
 class Sub : public Super {
+
   public:
     void print(void) {
-      cout << " Storage = " << accessible_storage << endl;
+        cout << " Storage = "
+             << accessible_storage << endl;
     }
 
     void increment() {
@@ -67,22 +99,36 @@ class Sub : public Super {
         cout << "Sub class (derived from Super)\n";
     }
     // --------------------------------
+
+    // -------- EXTRA ADDITION --------
+    void showAddress() {
+        cout << "Sub object address: "
+             << this << endl;
+    }
+    // --------------------------------
 };
 
 // Multiple inheritance
 class SubMulti : public Super, public Base {
+
   public:
 
-    SubMulti(int a, int b) : Super(a), Base(b) {}
+    SubMulti(int a, int b)
+        : Super(a), Base(b) {}
+
     SubMulti() {}
 
     void print(void) {
-      cout << " Storage Super = " << Super::accessible_storage << endl;
-      cout << " Storage Base  = " << Base::storage << endl;
+        cout << " Storage Super = "
+             << Super::accessible_storage << endl;
+
+        cout << " Storage Base  = "
+             << Base::storage << endl;
     }
 
     int totalStorage() {
-      return Super::accessible_storage + Base::storage;
+        return Super::accessible_storage
+             + Base::storage;
     }
 
     void setBoth(int a, int b) {
@@ -101,8 +147,11 @@ class SubMulti : public Super, public Base {
     }
 
     void printAddresses() {
-        cout << "Address Super part: " << static_cast<Super*>(this) << endl;
-        cout << "Address Base part : " << static_cast<Base*>(this) << endl;
+        cout << "Address Super part: "
+             << static_cast<Super*>(this) << endl;
+
+        cout << "Address Base part : "
+             << static_cast<Base*>(this) << endl;
     }
 
     // -------- EXTRA ADDITION --------
@@ -117,76 +166,132 @@ class SubMulti : public Super, public Base {
 // Polymorphism demo
 void polymorphism_demo(Super* ptr) {
     cout << "Polymorphism call: ";
-    ptr->info();  // virtual dispatch
+    ptr->info(); // virtual dispatch
 }
 
 // Type identification (RTTI)
 void type_check(Super* ptr) {
     cout << "Type check: ";
-    if (dynamic_cast<Sub*>(ptr)) {
+
+    if(dynamic_cast<Sub*>(ptr)) {
         cout << "Pointer is of type Sub\n";
-    } else {
+    }
+    else {
         cout << "Pointer is NOT Sub\n";
     }
 }
 
-// ---------------------------------------
+// ----------- MORE ADDITIONS -----------
 
+// Reference demo
+void reference_demo(Super& ref) {
+    cout << "Reference polymorphism: ";
+    ref.info();
+}
+
+// RTTI with typeid
+void show_runtime_type(Super* ptr) {
+    cout << "Runtime type: "
+         << typeid(*ptr).name() << endl;
+}
+
+// Smart pointer demo
+void smart_pointer_demo() {
+    unique_ptr<Super> ptr =
+        make_unique<Sub>();
+
+    cout << "Smart pointer polymorphism: ";
+    ptr->info();
+}
+
+// --------------------------------------
+
+
+// MAIN
 int main(void) {
 
-  SubMulti object;
+    SubMulti object;
 
-  object.Super::set(100);
-  object.Base::set(50);
+    object.Super::set(100);
+    object.Base::set(50);
 
-  object.Super::set(object.Super::get() + 1);
+    object.Super::set(
+        object.Super::get() + 1
+    );
 
-  object.print();
+    object.print();
 
-  cout << " Total Storage = "
-       << object.totalStorage() << endl;
+    cout << " Total Storage = "
+         << object.totalStorage()
+         << endl;
 
-  object.Super::reset();
-  object.Base::reset();
+    object.Super::reset();
+    object.Base::reset();
 
-  cout << "\nAfter reset:\n";
-  object.print();
+    cout << "\nAfter reset:\n";
+    object.print();
 
-  // -------- ORIGINAL USAGE --------
+    // -------- ORIGINAL USAGE --------
 
-  SubMulti obj2(10, 20);
-  obj2.print();
+    SubMulti obj2(10, 20);
 
-  obj2.setBoth(30, 40);
-  cout << "After setBoth:\n";
-  obj2.print();
+    obj2.print();
 
-  cout << "Super get: " << obj2.Super::get() << endl;
-  cout << "Base get: " << obj2.Base::get() << endl;
+    obj2.setBoth(30, 40);
 
-  obj2.showInfo();
+    cout << "After setBoth:\n";
+    obj2.print();
 
-  // -------- EXTRA USAGE --------
+    cout << "Super get: "
+         << obj2.Super::get()
+         << endl;
 
-  obj2.incrementBoth();
-  cout << "After incrementBoth:\n";
-  obj2.print();
+    cout << "Base get: "
+         << obj2.Base::get()
+         << endl;
 
-  obj2.printAddresses();
+    obj2.showInfo();
 
-  // -------- NEW ADVANCED DEMOS --------
+    // -------- EXTRA USAGE --------
 
-  cout << "\n--- Polymorphism Demo ---\n";
-  Sub s;
-  polymorphism_demo(&s);
+    obj2.incrementBoth();
 
-  cout << "\n--- Type Check Demo ---\n";
-  type_check(&s);
+    cout << "After incrementBoth:\n";
+    obj2.print();
 
-  cout << "\n--- Direct info() call ---\n";
-  obj2.info();
+    obj2.printAddresses();
 
-  // ----------------------------------
+    // -------- NEW ADVANCED DEMOS --------
 
-  return 0;
+    cout << "\n--- Polymorphism Demo ---\n";
+
+    Sub s;
+
+    polymorphism_demo(&s);
+
+    cout << "\n--- Type Check Demo ---\n";
+    type_check(&s);
+
+    cout << "\n--- Direct info() call ---\n";
+    obj2.info();
+
+    // -------- MORE ADVANCED USAGE --------
+
+    cout << "\n--- Reference Demo ---\n";
+    reference_demo(s);
+
+    cout << "\n--- Runtime Type Demo ---\n";
+    show_runtime_type(&s);
+
+    cout << "\n--- Smart Pointer Demo ---\n";
+    smart_pointer_demo();
+
+    cout << "\n--- Extra Sub Feature ---\n";
+    s.increment();
+    s.print();
+    s.showAddress();
+
+    // ----------------------------------
+
+    return 0;
 }

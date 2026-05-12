@@ -2,11 +2,18 @@
 #include <memory>
 #include <vector>
 #include <typeinfo>
+#include <algorithm> // ✅ ADDED
+#include <cassert>   // ✅ ADDED
 
 class Shape {
 public:
-    Shape() { std::cout << "Shape constructed\n"; }
-    virtual ~Shape() { std::cout << "Shape destroyed\n"; }
+    Shape() {
+        std::cout << "Shape constructed\n";
+    }
+
+    virtual ~Shape() {
+        std::cout << "Shape destroyed\n";
+    }
 
     virtual void draw() const {
         std::cout << "Drawing shape\n";
@@ -20,6 +27,12 @@ public:
 
     // ✅ ADDED: clone pattern
     virtual std::unique_ptr<Shape> clone() const = 0;
+
+    // ----------- EXTRA ADDITION -----------
+    virtual void info() const {
+        std::cout << "Generic shape info\n";
+    }
+    // -------------------------------------
 };
 
 class Circle : public Shape {
@@ -27,7 +40,9 @@ private:
     double radius;
 
 public:
-    Circle(double r) : radius(r) {
+    Circle(double r)
+        : radius(r) {
+
         std::cout << "Circle constructed\n";
     }
 
@@ -51,6 +66,17 @@ public:
     std::unique_ptr<Shape> clone() const override {
         return std::make_unique<Circle>(*this);
     }
+
+    // ----------- EXTRA ADDITION -----------
+    double getRadius() const {
+        return radius;
+    }
+
+    void info() const override {
+        std::cout << "Circle radius = "
+                  << radius << "\n";
+    }
+    // -------------------------------------
 };
 
 class Rectangle : public Shape {
@@ -58,7 +84,9 @@ private:
     double width, height;
 
 public:
-    Rectangle(double w, double h) : width(w), height(h) {
+    Rectangle(double w, double h)
+        : width(w), height(h) {
+
         std::cout << "Rectangle constructed\n";
     }
 
@@ -81,6 +109,14 @@ public:
     std::unique_ptr<Shape> clone() const override {
         return std::make_unique<Rectangle>(*this);
     }
+
+    // ----------- EXTRA ADDITION -----------
+    void info() const override {
+        std::cout << "Rectangle dimensions = "
+                  << width << " x "
+                  << height << "\n";
+    }
+    // -------------------------------------
 };
 
 // ✅ ADDED: new derived class
@@ -89,7 +125,9 @@ private:
     double base, height;
 
 public:
-    Triangle(double b, double h) : base(b), height(h) {
+    Triangle(double b, double h)
+        : base(b), height(h) {
+
         std::cout << "Triangle constructed\n";
     }
 
@@ -97,7 +135,7 @@ public:
         std::cout << "Triangle destroyed\n";
     }
 
-    void draw() const override final { // final prevents further override
+    void draw() const override final {
         std::cout << "Drawing triangle\n";
     }
 
@@ -112,70 +150,174 @@ public:
     std::unique_ptr<Shape> clone() const override {
         return std::make_unique<Triangle>(*this);
     }
+
+    // ----------- EXTRA ADDITION -----------
+    void info() const override {
+        std::cout << "Triangle base = "
+                  << base
+                  << ", height = "
+                  << height << "\n";
+    }
+    // -------------------------------------
 };
 
 // ----------- EXISTING ADDITIONS -----------
 
-double totalArea(const std::vector<std::unique_ptr<Shape>>& shapes) {
+double totalArea(
+    const std::vector<std::unique_ptr<Shape>>& shapes) {
+
     double sum = 0;
+
     for (const auto& s : shapes)
         sum += s->area();
+
     return sum;
 }
 
 void printType(const Shape* s) {
-    std::cout << "RTTI type: " << typeid(*s).name() << "\n";
+    std::cout << "RTTI type: "
+              << typeid(*s).name() << "\n";
 }
 
 // ----------- NEW ADDITIONS -----------
 
 // ✅ Smart factory
 std::unique_ptr<Shape> createShape(int type) {
-    if (type == 1) return std::make_unique<Circle>(3.0);
-    if (type == 2) return std::make_unique<Rectangle>(2.0, 5.0);
+
+    if (type == 1)
+        return std::make_unique<Circle>(3.0);
+
+    if (type == 2)
+        return std::make_unique<Rectangle>(2.0, 5.0);
+
     return std::make_unique<Triangle>(4.0, 6.0);
 }
 
 // ✅ Virtual dispatch helper
 void processShape(const Shape& s) {
-    std::cout << "[Processing] " << s.name() << "\n";
+
+    std::cout << "[Processing] "
+              << s.name() << "\n";
+
     s.draw();
-    std::cout << "Area: " << s.area() << "\n";
+
+    std::cout << "Area: "
+              << s.area() << "\n";
+}
+
+// ----------- EXTRA ADDITIONS -----------
+
+// Find largest shape
+const Shape* largestShape(
+    const std::vector<std::unique_ptr<Shape>>& shapes) {
+
+    if (shapes.empty())
+        return nullptr;
+
+    return (*std::max_element(
+        shapes.begin(),
+        shapes.end(),
+        [](const auto& a, const auto& b) {
+            return a->area() < b->area();
+        }))
+        .get();
+}
+
+// Print all shape info
+void printAllInfo(
+    const std::vector<std::unique_ptr<Shape>>& shapes) {
+
+    for (const auto& s : shapes) {
+        s->info();
+    }
+}
+
+// Count circles
+int countCircles(
+    const std::vector<std::unique_ptr<Shape>>& shapes) {
+
+    int count = 0;
+
+    for (const auto& s : shapes) {
+        if (dynamic_cast<Circle*>(s.get())) {
+            count++;
+        }
+    }
+
+    return count;
+}
+
+// Clone all shapes
+std::vector<std::unique_ptr<Shape>>
+cloneAll(
+    const std::vector<std::unique_ptr<Shape>>& shapes) {
+
+    std::vector<std::unique_ptr<Shape>> copies;
+
+    for (const auto& s : shapes) {
+        copies.push_back(s->clone());
+    }
+
+    return copies;
 }
 
 // ------------------------------------
+
 
 int main() {
 
     std::vector<std::unique_ptr<Shape>> shapes;
 
-    shapes.push_back(std::make_unique<Circle>(5.0));
-    shapes.push_back(std::make_unique<Rectangle>(4.0, 6.0));
-    shapes.push_back(std::make_unique<Triangle>(3.0, 8.0)); // ✅ ADDED
+    shapes.push_back(
+        std::make_unique<Circle>(5.0));
+
+    shapes.push_back(
+        std::make_unique<Rectangle>(4.0, 6.0));
+
+    shapes.push_back(
+        std::make_unique<Triangle>(3.0, 8.0));
+
+    assert(!shapes.empty()); // ✅ ADDED
 
     std::cout << "\n--- Polymorphic Calls ---\n";
 
     for (const auto& shape : shapes) {
         shape->draw();
-        std::cout << "Area: " << shape->area() << "\n";
+
+        std::cout << "Area: "
+                  << shape->area() << "\n";
     }
 
     std::cout << "\n--- Base Reference Example ---\n";
+
     Shape& ref = *shapes[0];
+
     ref.draw();
 
     std::cout << "\n--- Raw Pointer Polymorphism ---\n";
+
     Shape* rawPtr = shapes[1].get();
+
     rawPtr->draw();
-    std::cout << "Area: " << rawPtr->area() << "\n";
+
+    std::cout << "Area: "
+              << rawPtr->area() << "\n";
 
     std::cout << "\n--- Dynamic Cast Check ---\n";
-    if (Circle* c = dynamic_cast<Circle*>(shapes[0].get())) {
+
+    if (Circle* c =
+            dynamic_cast<Circle*>(shapes[0].get())) {
+
         std::cout << "Confirmed: shapes[0] is a Circle\n";
+
+        std::cout << "Radius = "
+                  << c->getRadius() << "\n";
     }
 
     std::cout << "\n--- Base Pointer Array ---\n";
+
     Shape* arr[3];
+
     arr[0] = shapes[0].get();
     arr[1] = shapes[1].get();
     arr[2] = shapes[2].get();
@@ -187,31 +329,77 @@ int main() {
     // -------- NEW FEATURE USAGE --------
 
     std::cout << "\n--- Shape Names ---\n";
+
     for (const auto& s : shapes) {
         std::cout << s->name() << "\n";
     }
 
     std::cout << "\n--- Total Area ---\n";
+
     std::cout << totalArea(shapes) << "\n";
 
     std::cout << "\n--- RTTI Demo ---\n";
+
     for (const auto& s : shapes) {
         printType(s.get());
     }
 
     // ✅ ADDED: clone demo
     std::cout << "\n--- Clone Demo ---\n";
+
     auto cloned = shapes[0]->clone();
+
     cloned->draw();
 
     // ✅ ADDED: smart factory
     std::cout << "\n--- Factory Demo ---\n";
+
     auto newShape = createShape(2);
+
     newShape->draw();
 
     // ✅ ADDED: process helper
     std::cout << "\n--- Process Shape ---\n";
+
     processShape(*shapes[2]);
+
+    // -------- EXTRA FEATURE USAGE --------
+
+    std::cout << "\n--- Largest Shape ---\n";
+
+    const Shape* largest = largestShape(shapes);
+
+    if (largest) {
+        std::cout << "Largest shape: "
+                  << largest->name()
+                  << "\n";
+
+        std::cout << "Largest area: "
+                  << largest->area()
+                  << "\n";
+    }
+
+    std::cout << "\n--- Shape Info ---\n";
+
+    printAllInfo(shapes);
+
+    std::cout << "\n--- Circle Count ---\n";
+
+    std::cout << "Circles found: "
+              << countCircles(shapes)
+              << "\n";
+
+    std::cout << "\n--- Clone All Shapes ---\n";
+
+    auto clonedShapes = cloneAll(shapes);
+
+    for (const auto& s : clonedShapes) {
+        std::cout << "Cloned: "
+                  << s->name()
+                  << " | Area = "
+                  << s->area()
+                  << "\n";
+    }
 
     // ----------------------------------
 

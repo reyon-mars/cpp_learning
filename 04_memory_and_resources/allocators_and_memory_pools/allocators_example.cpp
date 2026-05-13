@@ -3,6 +3,9 @@
 #include <vector>
 #include <new>
 #include <cstddef>
+#include <type_traits> // ✅ ADDED
+#include <cassert>     // ✅ ADDED
+#include <algorithm>   // ✅ ADDED
 
 // ----------- UPDATED ALLOCATOR -----------
 
@@ -23,14 +26,20 @@ public:
     };
 
     T* allocate(std::size_t n) {
+
         std::cout << "[Allocator] Allocating "
                   << n << " object(s) ("
-                  << n * sizeof(T) << " bytes)\n";
+                  << n * sizeof(T)
+                  << " bytes)\n";
 
-        return static_cast<T*>(::operator new(n * sizeof(T)));
+        return static_cast<T*>(
+            ::operator new(n * sizeof(T)));
     }
 
-    void deallocate(T* p, std::size_t n) noexcept {
+    void deallocate(
+        T* p,
+        std::size_t n) noexcept {
+
         std::cout << "[Allocator] Deallocating "
                   << n << " object(s)\n";
 
@@ -41,13 +50,20 @@ public:
 
     template<typename U, typename... Args>
     void construct(U* p, Args&&... args) {
-        std::cout << "[Allocator] Constructing object\n";
-        ::new ((void*)p) U(std::forward<Args>(args)...);
+
+        std::cout
+            << "[Allocator] Constructing object\n";
+
+        ::new ((void*)p)
+            U(std::forward<Args>(args)...);
     }
 
     template<typename U>
     void destroy(U* p) {
-        std::cout << "[Allocator] Destroying object\n";
+
+        std::cout
+            << "[Allocator] Destroying object\n";
+
         p->~U();
     }
 
@@ -56,102 +72,290 @@ public:
         return std::size_t(-1) / sizeof(T);
     }
 
-    bool operator==(const SimpleAllocator&) const { return true; }
-    bool operator!=(const SimpleAllocator&) const { return false; }
+    bool operator==(const SimpleAllocator&) const {
+        return true;
+    }
+
+    bool operator!=(const SimpleAllocator&) const {
+        return false;
+    }
 };
 
+
 // -------- SIMPLE MEMORY POOL --------
+
 class IntPool {
 private:
     std::vector<int> pool;
     std::size_t index = 0;
 
 public:
-    IntPool(std::size_t size) : pool(size) {}
+    IntPool(std::size_t size)
+        : pool(size) {}
 
     int* allocate() {
+
         if (index >= pool.size()) {
             throw std::bad_alloc();
         }
-        std::cout << "[Pool] Allocating index " << index << "\n";
+
+        std::cout
+            << "[Pool] Allocating index "
+            << index << "\n";
+
         return &pool[index++];
     }
 
     void reset() {
-        std::cout << "[Pool] Reset\n";
+
+        std::cout
+            << "[Pool] Reset\n";
+
         index = 0;
     }
 
-    std::size_t capacity() const { return pool.size(); }
-    std::size_t used() const { return index; }
-    bool isFull() const { return index >= pool.size(); }
+    std::size_t capacity() const {
+        return pool.size();
+    }
+
+    std::size_t used() const {
+        return index;
+    }
+
+    bool isFull() const {
+        return index >= pool.size();
+    }
 };
+
 
 // ----------- NEW ADDITION -----------
+
 struct Test {
+
     int x;
-    Test(int v) : x(v) {
-        std::cout << "Test constructed: " << x << "\n";
+
+    Test(int v)
+        : x(v) {
+
+        std::cout
+            << "Test constructed: "
+            << x << "\n";
     }
+
     ~Test() {
-        std::cout << "Test destroyed: " << x << "\n";
+
+        std::cout
+            << "Test destroyed: "
+            << x << "\n";
     }
 };
 
+
 // ✅ ADDED: Generic Object Pool
+
 template<typename T>
 class ObjectPool {
 private:
-    std::vector<std::aligned_storage_t<sizeof(T), alignof(T)>> buffer;
+
+    std::vector<
+        std::aligned_storage_t<
+            sizeof(T),
+            alignof(T)
+        >
+    > buffer;
+
     std::size_t index = 0;
 
 public:
-    ObjectPool(std::size_t size) : buffer(size) {}
+
+    ObjectPool(std::size_t size)
+        : buffer(size) {}
 
     template<typename... Args>
     T* create(Args&&... args) {
+
         if (index >= buffer.size()) {
             throw std::bad_alloc();
         }
 
         void* place = &buffer[index++];
-        std::cout << "[ObjectPool] Creating object at slot "
-                  << index - 1 << "\n";
 
-        return new (place) T(std::forward<Args>(args)...);
+        std::cout
+            << "[ObjectPool] Creating object at slot "
+            << index - 1 << "\n";
+
+        return new (place)
+            T(std::forward<Args>(args)...);
     }
 
     void reset() {
-        std::cout << "[ObjectPool] Reset (no destructors called!)\n";
+
+        std::cout
+            << "[ObjectPool] Reset "
+            << "(no destructors called!)\n";
+
         index = 0;
+    }
+
+    // ----------- EXTRA ADDITIONS -----------
+
+    std::size_t capacity() const {
+        return buffer.size();
+    }
+
+    std::size_t used() const {
+        return index;
+    }
+
+    bool full() const {
+        return index >= buffer.size();
+    }
+
+    // --------------------------------------
+};
+
+
+// ✅ ADDED: RAII guard
+
+class ScopeGuard {
+public:
+
+    ScopeGuard() {
+        std::cout
+            << "[ScopeGuard] Enter\n";
+    }
+
+    ~ScopeGuard() {
+        std::cout
+            << "[ScopeGuard] Exit\n";
     }
 };
 
-// ✅ ADDED: RAII guard
-class ScopeGuard {
-public:
-    ScopeGuard() { std::cout << "[ScopeGuard] Enter\n"; }
-    ~ScopeGuard() { std::cout << "[ScopeGuard] Exit\n"; }
-};
+
+// ----------- EXTRA ADDITIONS -----------
+
+// Helper function
+void printVector(
+    const std::vector<
+        int,
+        SimpleAllocator<int>
+    >& vec) {
+
+    std::cout << "Vector values: ";
+
+    for (int v : vec) {
+        std::cout << v << " ";
+    }
+
+    std::cout << "\n";
+}
+
+
+// Pool usage printer
+void printPoolState(
+    const IntPool& pool) {
+
+    std::cout
+        << "Pool usage: "
+        << pool.used()
+        << "/"
+        << pool.capacity()
+        << "\n";
+}
+
+
+// Manual placement-new demo
+void placementNewDemo() {
+
+    std::cout
+        << "\n--- Placement New Demo ---\n";
+
+    alignas(Test)
+    char raw[sizeof(Test)];
+
+    Test* obj =
+        new (raw) Test(555);
+
+    std::cout
+        << "Placement object value: "
+        << obj->x << "\n";
+
+    obj->~Test();
+}
+
+
+// Alignment checker
+template<typename T>
+void showAlignment() {
+
+    std::cout
+        << "Type size: "
+        << sizeof(T)
+        << "\n";
+
+    std::cout
+        << "Type alignment: "
+        << alignof(T)
+        << "\n";
+}
+
+
+// Custom allocator vector demo
+void allocatorVectorDemo() {
+
+    std::cout
+        << "\n--- Allocator Vector Demo ---\n";
+
+    std::vector<
+        Test,
+        SimpleAllocator<Test>
+    > objects;
+
+    objects.emplace_back(1);
+    objects.emplace_back(2);
+    objects.emplace_back(3);
+
+    std::cout
+        << "Vector size: "
+        << objects.size()
+        << "\n";
+}
+
 
 // ------------------------------------
 
+
+// ======================================================
+// MAIN
+// ======================================================
+
 int main() {
 
-    std::vector<int, SimpleAllocator<int>> vec;
+    std::vector<
+        int,
+        SimpleAllocator<int>
+    > vec;
 
-    std::cout << "\n--- Pushing Elements ---\n";
+    std::cout
+        << "\n--- Pushing Elements ---\n";
 
     vec.push_back(1);
     vec.push_back(2);
     vec.push_back(3);
 
-    std::cout << "\n--- Reserving More Capacity ---\n";
+    printVector(vec);
+
+    assert(vec.size() == 3); // ✅ ADDED
+
+    std::cout
+        << "\n--- Reserving More Capacity ---\n";
+
     vec.reserve(10);
 
     // -------- NEW FEATURE USAGE --------
 
-    std::cout << "\n--- Memory Pool Demo ---\n";
+    std::cout
+        << "\n--- Memory Pool Demo ---\n";
 
     IntPool pool(3);
 
@@ -163,36 +367,57 @@ int main() {
     *b = 20;
     *c = 30;
 
-    std::cout << "Pool values: "
-              << *a << " " << *b << " " << *c << "\n";
+    std::cout
+        << "Pool values: "
+        << *a << " "
+        << *b << " "
+        << *c << "\n";
 
-    std::cout << "Pool used: " << pool.used()
-              << "/" << pool.capacity() << "\n";
+    std::cout
+        << "Pool used: "
+        << pool.used()
+        << "/"
+        << pool.capacity()
+        << "\n";
 
-    std::cout << "Pool full? "
-              << (pool.isFull() ? "Yes\n" : "No\n");
+    std::cout
+        << "Pool full? "
+        << (pool.isFull()
+            ? "Yes\n"
+            : "No\n");
+
+    printPoolState(pool);
 
     pool.reset();
 
     // -------- Allocator with custom type --------
 
-    std::cout << "\n--- Custom Allocator with Objects ---\n";
+    std::cout
+        << "\n--- Custom Allocator with Objects ---\n";
 
     SimpleAllocator<Test> alloc;
 
     Test* t = alloc.allocate(1);
 
     // ✅ modern usage
-    std::allocator_traits<SimpleAllocator<Test>>::construct(alloc, t, 42);
+    std::allocator_traits<
+        SimpleAllocator<Test>
+    >::construct(alloc, t, 42);
 
-    std::cout << "Value inside Test: " << t->x << "\n";
+    std::cout
+        << "Value inside Test: "
+        << t->x << "\n";
 
-    std::allocator_traits<SimpleAllocator<Test>>::destroy(alloc, t);
+    std::allocator_traits<
+        SimpleAllocator<Test>
+    >::destroy(alloc, t);
+
     alloc.deallocate(t, 1);
 
     // -------- NEW: Object Pool --------
 
-    std::cout << "\n--- Object Pool Demo ---\n";
+    std::cout
+        << "\n--- Object Pool Demo ---\n";
 
     ScopeGuard guard;
 
@@ -201,14 +426,56 @@ int main() {
     Test* p1 = objPool.create(100);
     Test* p2 = objPool.create(200);
 
-    std::cout << "Pool objects: "
-              << p1->x << ", " << p2->x << "\n";
+    std::cout
+        << "Pool objects: "
+        << p1->x
+        << ", "
+        << p2->x
+        << "\n";
+
+    std::cout
+        << "ObjectPool usage: "
+        << objPool.used()
+        << "/"
+        << objPool.capacity()
+        << "\n";
+
+    std::cout
+        << "ObjectPool full? "
+        << (objPool.full()
+            ? "Yes\n"
+            : "No\n");
 
     objPool.reset();
 
+    // -------- EXTRA FEATURE USAGE --------
+
+    placementNewDemo();
+
+    std::cout
+        << "\n--- Alignment Demo ---\n";
+
+    showAlignment<Test>();
+
+    std::cout
+        << "\n--- Type Traits Demo ---\n";
+
+    std::cout
+        << "Test is trivially destructible? "
+        << std::is_trivially_destructible<Test>::value
+        << "\n";
+
+    std::cout
+        << "Test is move constructible? "
+        << std::is_move_constructible<Test>::value
+        << "\n";
+
+    allocatorVectorDemo();
+
     // ----------------------------------
 
-    std::cout << "\n--- End of main ---\n";
+    std::cout
+        << "\n--- End of main ---\n";
 
     return 0;
 }

@@ -4,6 +4,8 @@
 #include <stdexcept>
 #include <sstream>
 #include <cctype>   // ✅ ADDED (needed for std::toupper)
+#include <vector>   // ✅ ADDED
+#include <algorithm> // ✅ ADDED
 
 // ======================================================
 // ORIGINAL CLASS (UNCHANGED LOGIC)
@@ -211,12 +213,100 @@ std::string to_uppercase(file_guard& fg) {
     std::string content, line;
     while (std::getline(fg.get(), line)) {
         for (char& c : line)
-            c = std::toupper(c);
+            c = std::toupper(static_cast<unsigned char>(c));
+
         content += line + '\n';
     }
 
     rewind_file(fg);
     return content;
+}
+
+// ======================================================
+// EXTRA NEW ADDITIONS
+// ======================================================
+
+// Count vowels in file
+int count_vowels(file_guard& fg) {
+    rewind_file(fg);
+
+    int count = 0;
+    char ch;
+
+    while (fg.get().get(ch)) {
+        ch = std::tolower(static_cast<unsigned char>(ch));
+
+        if (ch == 'a' || ch == 'e' || ch == 'i' ||
+            ch == 'o' || ch == 'u') {
+            ++count;
+        }
+    }
+
+    rewind_file(fg);
+    return count;
+}
+
+// Read file into vector of lines
+std::vector<std::string> get_lines(file_guard& fg) {
+    rewind_file(fg);
+
+    std::vector<std::string> lines;
+    std::string line;
+
+    while (std::getline(fg.get(), line)) {
+        lines.push_back(line);
+    }
+
+    rewind_file(fg);
+    return lines;
+}
+
+// Print numbered lines
+void print_numbered_lines(file_guard& fg) {
+    rewind_file(fg);
+
+    std::string line;
+    int line_no = 1;
+
+    while (std::getline(fg.get(), line)) {
+        std::cout << line_no++ << ": " << line << '\n';
+    }
+
+    rewind_file(fg);
+}
+
+// Convert file content to lowercase
+std::string to_lowercase(file_guard& fg) {
+    rewind_file(fg);
+
+    std::string content, line;
+
+    while (std::getline(fg.get(), line)) {
+
+        for (char& c : line) {
+            c = std::tolower(static_cast<unsigned char>(c));
+        }
+
+        content += line + '\n';
+    }
+
+    rewind_file(fg);
+    return content;
+}
+
+// Longest line length
+std::size_t longest_line_length(file_guard& fg) {
+    rewind_file(fg);
+
+    std::size_t longest = 0;
+    std::string line;
+
+    while (std::getline(fg.get(), line)) {
+        longest = std::max(longest, line.size());
+    }
+
+    rewind_file(fg);
+    return longest;
 }
 
 // ======================================================
@@ -276,6 +366,34 @@ int main() {
 
         std::cout << "\nLine count after append (reopen to verify): "
                   << count_lines(fg) << '\n';
+
+        // ==================================================
+        // EXTRA NEW FEATURE USAGE
+        // ==================================================
+
+        std::cout << "\n--- Extra File Analysis ---\n";
+
+        std::cout << "Vowel count: "
+                  << count_vowels(fg) << '\n';
+
+        std::cout << "Longest line length: "
+                  << longest_line_length(fg) << '\n';
+
+        std::cout << "\nLowercase version:\n";
+        std::cout << to_lowercase(fg) << '\n';
+
+        std::cout << "--- Numbered Lines ---\n";
+        print_numbered_lines(fg);
+
+        std::cout << "\n--- Lines Stored in Vector ---\n";
+
+        auto lines = get_lines(fg);
+
+        for (const auto& line : lines) {
+            std::cout << line << '\n';
+        }
+
+        // ==================================================
 
     } catch (const std::exception& e) {
         std::cout << "Error: " << e.what() << '\n';

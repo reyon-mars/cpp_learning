@@ -1,6 +1,8 @@
 #include <iostream>
 #include <utility>
 #include <type_traits>
+#include <vector>   // ✅ ADDED
+#include <string>   // ✅ ADDED
 
 class Widget {
 public:
@@ -17,6 +19,18 @@ public:
     Widget(Widget&&) noexcept {
         std::cout << "Move constructor\n";
     }
+
+    // ----------- EXTRA ADDED -----------
+    ~Widget() {
+        std::cout << "Destructor\n";
+    }
+
+    void show(const std::string& label) const {
+        std::cout << label
+                  << " data = "
+                  << data << "\n";
+    }
+    // ----------------------------------
 };
 
 // ❌ Bad forwarding
@@ -120,6 +134,51 @@ void double_forward(T&& arg) {
     process(std::forward<T>(arg)); // might use moved-from object
 }
 
+// ----------- MORE EXTRA ADDITIONS -----------
+
+// Factory wrapper
+template<typename T, typename... Args>
+T make_widget(Args&&... args) {
+    std::cout << "make_widget factory\n";
+    return T(std::forward<Args>(args)...);
+}
+
+// Store widgets in vector
+void vector_forward_demo() {
+
+    std::cout << "\n--- Vector Forward Demo ---\n";
+
+    std::vector<Widget> widgets;
+
+    widgets.emplace_back(1);
+    widgets.emplace_back(2);
+    widgets.emplace_back(3);
+
+    std::cout << "Vector size: "
+              << widgets.size() << "\n";
+}
+
+// Universal reference inspector
+template<typename T>
+void inspect(T&& value) {
+
+    std::cout << "Inspecting type:\n";
+
+    if constexpr (std::is_lvalue_reference<T>::value) {
+        std::cout << "-> lvalue reference\n";
+    } else {
+        std::cout << "-> rvalue reference\n";
+    }
+
+    process(std::forward<T>(value));
+}
+
+// Move-only style usage
+Widget generate_widget() {
+    Widget temp(1500);
+    return temp;
+}
+
 // ------------------------------------
 
 int main() {
@@ -179,6 +238,32 @@ int main() {
 
     std::cout << "\n--- Double forward pitfall ---\n";
     double_forward(Widget(1200));
+
+    // -------- MORE EXTRA USAGE --------
+
+    std::cout << "\n--- Factory Wrapper ---\n";
+    Widget w4 = make_widget<Widget>(1300);
+
+    std::cout << "\n--- Vector Storage Demo ---\n";
+    vector_forward_demo();
+
+    std::cout << "\n--- Universal Reference Inspector ---\n";
+    inspect(w2);
+    inspect(Widget(1400));
+
+    std::cout << "\n--- Generated Widget ---\n";
+    Widget generated = generate_widget();
+    generated.show("generated");
+
+    std::cout << "\n--- Type Trait Checks ---\n";
+
+    std::cout << "Is Widget move constructible? "
+              << std::is_move_constructible<Widget>::value
+              << "\n";
+
+    std::cout << "Is Widget copy constructible? "
+              << std::is_copy_constructible<Widget>::value
+              << "\n";
 
     // ----------------------------------
 

@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <utility>   // ✅ ADDED
 #include <cassert>   // ✅ ADDED
+#include <numeric>   // ✅ ADDED
 
 // ----------------------------------------------------
 // ORIGINAL STRUCT (LOGIC UNCHANGED)
@@ -82,6 +83,51 @@ void print_all(const std::vector<std::unique_ptr<User>>& users) {
     for (const auto& u : users) {
         print_user(u);
     }
+}
+
+// ✅ ADDED: find youngest user
+User* find_youngest(const std::vector<std::unique_ptr<User>>& users) {
+    if (users.empty()) return nullptr;
+
+    return std::min_element(users.begin(), users.end(),
+        [](const auto& a, const auto& b) {
+            return a->age < b->age;
+        })->get();
+}
+
+// ✅ ADDED: average age
+double average_age(const std::vector<std::unique_ptr<User>>& users) {
+    if (users.empty()) return 0.0;
+
+    int total = std::accumulate(users.begin(), users.end(), 0,
+        [](int sum, const auto& u) {
+            return sum + (u ? u->age : 0);
+        });
+
+    return static_cast<double>(total) / users.size();
+}
+
+// ✅ ADDED: search user by name
+User* find_user_by_name(
+    const std::vector<std::unique_ptr<User>>& users,
+    const std::string& target) {
+
+    auto it = std::find_if(users.begin(), users.end(),
+        [&](const auto& u) {
+            return u && u->name == target;
+        });
+
+    return (it != users.end()) ? it->get() : nullptr;
+}
+
+// ✅ ADDED: sort users by age
+void sort_users_by_age(
+    std::vector<std::unique_ptr<User>>& users) {
+
+    std::sort(users.begin(), users.end(),
+        [](const auto& a, const auto& b) {
+            return a->age < b->age;
+        });
 }
 
 // --------------------------------
@@ -180,7 +226,8 @@ int main(void) {
     // Find oldest user
     if (auto oldest = find_oldest(users)) {
         std::cout << "Oldest user: "
-                  << oldest->name << " (" << oldest->age << ")\n";
+                  << oldest->name << " ("
+                  << oldest->age << ")\n";
     }
 
     // const unique_ptr usage
@@ -190,8 +237,43 @@ int main(void) {
     // Lambda with unique_ptr
     std::for_each(users.begin(), users.end(),
         [](const auto& u) {
-            if (u) std::cout << "Lambda user: " << *u << "\n";
+            if (u)
+                std::cout << "Lambda user: "
+                          << *u << "\n";
         });
+
+    // -------- EXTRA SMALL ADDITIONS --------
+
+    std::cout << "\n--- Extra Features ---\n";
+
+    // Find youngest user
+    if (auto youngest = find_youngest(users)) {
+        std::cout << "Youngest user: "
+                  << youngest->name << " ("
+                  << youngest->age << ")\n";
+    }
+
+    // Average age
+    std::cout << "Average age: "
+              << average_age(users) << "\n";
+
+    // Search by name
+    if (auto found = find_user_by_name(users, "B")) {
+        std::cout << "Found user: "
+                  << found->name << "\n";
+    }
+
+    // Sort users
+    sort_users_by_age(users);
+
+    std::cout << "Sorted users by age:\n";
+    print_all(users);
+
+    // emplace_back usage
+    users.emplace_back(create_user("D", 50));
+
+    std::cout << "After emplace_back:\n";
+    print_all(users);
 
     // ----------------------------------
 

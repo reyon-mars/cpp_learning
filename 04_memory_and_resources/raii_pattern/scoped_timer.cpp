@@ -4,6 +4,8 @@
 #include <thread>
 #include <utility>
 #include <functional>   // ✅ ADDED (for callable utilities safety)
+#include <vector>       // ✅ ADDED
+#include <numeric>      // ✅ ADDED
 
 class scoped_timer {
     
@@ -29,6 +31,18 @@ public:
     {
         other.stopped = true;
     }
+
+    // -------- EXTRA ADDITION --------
+    scoped_timer& operator=(scoped_timer&& other) noexcept {
+        if (this != &other) {
+            start = other.start;
+            name = std::move(other.name);
+            stopped = other.stopped;
+            other.stopped = true;
+        }
+        return *this;
+    }
+    // --------------------------------
 
     // Manual stop
     void stop() {
@@ -105,12 +119,38 @@ public:
                    end - begin).count();
     }
 
+    // -------- EXTRA ADDITIONS --------
+
+    // Print elapsed without stopping
+    void print_elapsed() const {
+        std::cout << "[Elapsed] "
+                  << elapsed_us() << " us\n";
+    }
+
+    // Sleep helper
+    static void sleep_ms(int ms) {
+        std::this_thread::sleep_for(
+            std::chrono::milliseconds(ms));
+    }
+
     // --------------------------------
 
     ~scoped_timer() {
         stop();
     }
 };
+
+// -------- EXTRA HELPER FUNCTION --------
+void heavy_task() {
+    std::vector<int> values(100000, 1);
+
+    volatile int sum =
+        std::accumulate(values.begin(),
+                        values.end(), 0);
+
+    (void)sum;
+}
+// ---------------------------------------
 
 // ---------------- Example Usage ----------------
 
@@ -160,6 +200,26 @@ int main() {
         std::this_thread::sleep_for(std::chrono::milliseconds(25));
     });
     std::cout << "Measured (returned): " << duration << " us\n";
+
+    // -------- NEW EXTRA USAGE --------
+
+    {
+        scoped_timer timer("Print elapsed demo");
+        scoped_timer::sleep_ms(15);
+        timer.print_elapsed();
+    }
+
+    std::cout << "\n--- Heavy Task Timing ---\n";
+    scoped_timer::measure("Vector accumulate", heavy_task);
+
+    std::cout << "\n--- Move Assignment Demo ---\n";
+    scoped_timer t1("Timer A");
+    scoped_timer::sleep_ms(5);
+
+    scoped_timer t2("Timer B");
+    t2 = std::move(t1);
+
+    scoped_timer::sleep_ms(5);
 
     // --------------------------------
 

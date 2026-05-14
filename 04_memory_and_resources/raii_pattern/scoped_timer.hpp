@@ -3,6 +3,9 @@
 #include <string>
 #include <utility>     // ✅ ADDED (for std::move)
 #include <functional>  // ✅ ADDED (for callable templates)
+#include <thread>      // ✅ ADDED
+#include <vector>      // ✅ ADDED
+#include <numeric>     // ✅ ADDED
 
 class scoped_timer {
     
@@ -27,6 +30,17 @@ public:
           stopped(other.stopped)   // ✅ added
     {
         other.stopped = true;      // ✅ avoid double print
+    }
+
+    // ✅ ADDED: move assignment
+    scoped_timer& operator=(scoped_timer&& other) noexcept {
+        if (this != &other) {
+            start = other.start;
+            name = std::move(other.name);
+            stopped = other.stopped;
+            other.stopped = true;
+        }
+        return *this;
     }
 
     // Optional reset
@@ -76,6 +90,12 @@ public:
         return stopped;
     }
 
+    // ✅ ADDED: print elapsed without stopping
+    void print_elapsed() const {
+        std::cout << "[Elapsed] "
+                  << elapsed_us() << " us\n";
+    }
+
     // --------------------------------
 
     ~scoped_timer() {
@@ -109,6 +129,17 @@ long long measure_return(Func&& f) {
                end - start).count();
 }
 
+// ✅ ADDED: helper workload
+void heavy_task() {
+    std::vector<int> values(100000, 1);
+
+    volatile int sum =
+        std::accumulate(values.begin(),
+                        values.end(), 0);
+
+    (void)sum;
+}
+
 // --------------------------------
 
 
@@ -130,8 +161,12 @@ int main() {
     {
         scoped_timer timer("Manual stop demo");
         for (volatile int i = 0; i < 500000; ++i);
+
         std::cout << "Mid elapsed: "
                   << timer.elapsed_us() << " us\n";
+
+        timer.print_elapsed();
+
         timer.stop();   // stops early
     }
 
@@ -144,13 +179,55 @@ int main() {
     {
         scoped_timer timer("Check state");
         for (volatile int i = 0; i < 100000; ++i);
-        std::cout << "Stopped? " << timer.is_stopped() << "\n";
+
+        std::cout << "Stopped? "
+                  << timer.is_stopped() << "\n";
     }
 
     auto t = measure_return([] {
         for (volatile int i = 0; i < 150000; ++i);
     });
-    std::cout << "Returned time: " << t << " us\n";
+
+    std::cout << "Returned time: "
+              << t << " us\n";
+
+    // -------- NEW SMALL ADDITIONS --------
+
+    {
+        scoped_timer timer("Reset demo");
+
+        std::this_thread::sleep_for(
+            std::chrono::milliseconds(20));
+
+        std::cout << "Before reset: "
+                  << timer.elapsed_ms() << " ms\n";
+
+        timer.reset();
+
+        std::this_thread::sleep_for(
+            std::chrono::milliseconds(10));
+
+        std::cout << "After reset: "
+                  << timer.elapsed_ms() << " ms\n";
+    }
+
+    std::cout << "\n--- Heavy Task Timing ---\n";
+
+    measure("Vector accumulate", heavy_task);
+
+    std::cout << "\n--- Move Assignment Demo ---\n";
+
+    scoped_timer t1("Timer A");
+
+    std::this_thread::sleep_for(
+        std::chrono::milliseconds(5));
+
+    scoped_timer t2("Timer B");
+
+    t2 = std::move(t1);
+
+    std::this_thread::sleep_for(
+        std::chrono::milliseconds(5));
 
     // --------------------------------
 

@@ -4,6 +4,9 @@
 #include <iostream>
 #include <vector>
 #include <cassert>   // ✅ ADDED
+#include <numeric>   // ✅ ADDED
+#include <algorithm> // ✅ ADDED
+#include <cmath>     // ✅ ADDED
 
 // ----------------------------------
 // Base Expression Template
@@ -63,6 +66,27 @@ public:
         for (size_t i = 0; i < size(); ++i)
             result += data[i] * other.data[i];
         return result;
+    }
+
+    // -------- EXTRA SMALL ADDITIONS --------
+
+    // Vector magnitude
+    double magnitude() const {
+        double sum = 0;
+        for (double x : data)
+            sum += x * x;
+
+        return std::sqrt(sum);
+    }
+
+    // Sum of all elements
+    double sum() const {
+        return std::accumulate(data.begin(), data.end(), 0.0);
+    }
+
+    // Find max element
+    double max_element() const {
+        return *std::max_element(data.begin(), data.end());
     }
 
     // --------------------------------
@@ -176,7 +200,38 @@ ScalarAddExpr<E> operator+(const VectorExpr<E>& expr, double scalar) {
     return ScalarAddExpr<E>(scalar, static_cast<const E&>(expr));
 }
 
-// ------------------------------------------------
+// -------- EXTRA SMALL ADDITIONS --------
+
+// Scalar subtraction expression
+template<typename E>
+class ScalarSubExpr : public VectorExpr<ScalarSubExpr<E>> {
+private:
+    double scalar;
+    const E& expr;
+
+public:
+    ScalarSubExpr(double s, const E& e)
+        : scalar(s), expr(e) {}
+
+    double operator[](size_t i) const {
+        return expr[i] - scalar;
+    }
+
+    size_t size() const {
+        return expr.size();
+    }
+};
+
+template<typename E>
+ScalarSubExpr<E> operator-(const VectorExpr<E>& expr,
+                           double scalar) {
+    return ScalarSubExpr<E>(
+        scalar,
+        static_cast<const E&>(expr)
+    );
+}
+
+// --------------------------------------
 
 // ----------------------------------
 // Main
@@ -220,6 +275,34 @@ int main() {
     // ✅ NEW: dot product
     std::cout << "Dot product (v · v2): "
               << v.dot(v2) << "\n";
+
+    // -------- EXTRA NEW USAGE --------
+
+    auto expr5 = v - 2.0;
+    Vector result5 = expr5;
+
+    std::cout << "After scalar subtraction:\n";
+    result5.print();
+
+    std::cout << "Magnitude of v: "
+              << v.magnitude() << "\n";
+
+    std::cout << "Sum of v: "
+              << v.sum() << "\n";
+
+    std::cout << "Max element in v: "
+              << v.max_element() << "\n";
+
+    // Complex chained expression
+    auto expr6 = 2.0 * v + v2 - v + 3.0;
+    Vector result6 = expr6;
+
+    std::cout << "Chained expression result:\n";
+    result6.print();
+
+    // ✅ Validation
+    assert(result.size() == 5);
+    assert(v.dot(v2) == 15);
 
     // ----------------------------
 

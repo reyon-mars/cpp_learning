@@ -5,6 +5,9 @@
 #include <string>
 #include <type_traits>
 #include <typeinfo>   // ✅ ADDED
+#include <vector>     // ✅ NEW ADDED
+#include <cassert>    // ✅ NEW ADDED
+#include <utility>    // ✅ NEW ADDED
 
 // ----------------------------------
 // Generic template
@@ -81,7 +84,7 @@ struct Printer<const T*> {
     static void print_value(const T* value) {
         std::cout << "Const pointer address: " << value << "\n";
     }
-}
+};
 
 // -------- NEW SMALL ADDITIONS --------
 
@@ -104,6 +107,48 @@ void check_reference(T&& value) {
         std::cout << "Lvalue reference detected\n";
     else
         std::cout << "Rvalue reference detected\n";
+}
+
+// ---------------------------------
+// EXTRA SMALL ADDITIONS
+// ---------------------------------
+
+// Template returning max value
+template<typename T>
+T max_value(const T& a, const T& b) {
+    return (a > b) ? a : b;
+}
+
+// Variadic template print
+template<typename... Args>
+void print_all(const Args&... args) {
+    ((std::cout << args << " "), ...);
+    std::cout << "\n";
+}
+
+// Template specialization for char
+template<>
+void print<char>(const char& value) {
+    std::cout << "Character: '" << value << "'\n";
+}
+
+// Template with default type
+template<typename T = int>
+T multiply(T a, T b) {
+    return a * b;
+}
+
+// Check type category
+template<typename T>
+void type_category() {
+    if constexpr (std::is_pointer_v<T>)
+        std::cout << "Pointer type\n";
+    else if constexpr (std::is_floating_point_v<T>)
+        std::cout << "Floating-point type\n";
+    else if constexpr (std::is_integral_v<T>)
+        std::cout << "Integral type\n";
+    else
+        std::cout << "Other type\n";
 }
 
 // ---------------------------------
@@ -141,6 +186,39 @@ int main() {
 
     check_reference(x);     // lvalue
     check_reference(10);    // rvalue
+
+    // -------- EXTRA NEW USAGE --------
+
+    print('A');
+
+    std::cout << "Max value: "
+              << max_value(10, 20) << "\n";
+
+    std::cout << "Max double: "
+              << max_value(3.5, 7.2) << "\n";
+
+    print_all("Templates:", 1, 2.5, 'X');
+
+    std::cout << "Multiply int: "
+              << multiply(3, 4) << "\n";
+
+    std::cout << "Multiply double: "
+              << multiply<double>(2.5, 4.0) << "\n";
+
+    type_category<int>();
+    type_category<double>();
+    type_category<int*>();
+
+    // Vector demo with templates
+    std::vector<int> vec = {1, 2, 3};
+
+    std::cout << "Vector contents: ";
+    for (const auto& n : vec)
+        std::cout << n << " ";
+    std::cout << "\n";
+
+    // Small validation
+    assert(max_value(5, 9) == 9);
 
     // ----------------------------
 

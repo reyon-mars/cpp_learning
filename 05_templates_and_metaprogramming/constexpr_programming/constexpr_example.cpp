@@ -2,6 +2,8 @@
 #include <type_traits>
 #include <cassert>   // ✅ ADDED
 #include <utility>   // ✅ ADDED
+#include <array>     // ✅ NEW
+#include <string_view> // ✅ NEW
 
 // -----------------------------------
 // Recursive constexpr
@@ -62,6 +64,12 @@ public:
         return s;
     }
 
+    // ✅ NEW: fill all values
+    constexpr void fill(int value) {
+        for (int& x : data)
+            x = value;
+    }
+
     // --------------------------------
 };
 
@@ -93,6 +101,46 @@ constexpr int power(int base, int exp) {
     return result;
 }
 
+// -------- NEW ADDITIONS --------
+
+// constexpr max
+constexpr int max_value(int a, int b) {
+    return (a > b) ? a : b;
+}
+
+// constexpr prime check
+constexpr bool is_prime(int n) {
+    if (n <= 1)
+        return false;
+
+    for (int i = 2; i * i <= n; ++i) {
+        if (n % i == 0)
+            return false;
+    }
+    return true;
+}
+
+// constexpr string length
+constexpr std::size_t str_length(std::string_view str) {
+    return str.size();
+}
+
+// constexpr array sum
+template<std::size_t N>
+constexpr int array_sum(const std::array<int, N>& arr) {
+    int sum = 0;
+    for (int v : arr)
+        sum += v;
+    return sum;
+}
+
+// constexpr swap
+constexpr void constexpr_swap(int& a, int& b) {
+    int temp = a;
+    a = b;
+    b = temp;
+}
+
 // -----------------------------------
 // Main
 // -----------------------------------
@@ -106,8 +154,16 @@ int main() {
 
     static_assert(fact5 == 120, "Factorial incorrect!");
     static_assert(fact6_iter == 720, "Iterative factorial incorrect!");
-    static_assert(is_even(10), "Even check failed");     // ✅ ADDED
-    static_assert(power(3, 3) == 27, "Power failed");    // ✅ ADDED
+    static_assert(is_even(10), "Even check failed");
+    static_assert(power(3, 3) == 27, "Power failed");
+
+    // ✅ NEW static asserts
+    static_assert(max_value(10, 20) == 20);
+    static_assert(is_prime(13));
+    static_assert(str_length("constexpr") == 9);
+
+    constexpr std::array<int, 5> nums = {1, 2, 3, 4, 5};
+    static_assert(array_sum(nums) == 15);
 
     std::cout << "5! = " << fact5 << "\n";
     std::cout << "fib(10) = " << fib10 << "\n";
@@ -129,7 +185,7 @@ int main() {
     std::cout << "Runtime array sum = "
               << runtime_arr.sum() << "\n";
 
-    assert(runtime_arr.get(0) == 42);  // ✅ ADDED
+    assert(runtime_arr.get(0) == 42);
 
     // if constexpr demo
     std::cout << "Add int: " << add(3, 4) << "\n";
@@ -144,6 +200,33 @@ int main() {
 
     std::cout << "Is 10 even? "
               << (is_even(10) ? "Yes\n" : "No\n");
+
+    // -------- NEW FEATURE USAGE --------
+
+    std::cout << "Max(7, 15) = "
+              << max_value(7, 15) << "\n";
+
+    std::cout << "Is 17 prime? "
+              << (is_prime(17) ? "Yes\n" : "No\n");
+
+    constexpr auto len = str_length("CompileTime");
+    std::cout << "String length = "
+              << len << "\n";
+
+    std::cout << "Array sum = "
+              << array_sum(nums) << "\n";
+
+    int a = 5, b = 10;
+    constexpr_swap(a, b);
+
+    std::cout << "After constexpr_swap: "
+              << a << " " << b << "\n";
+
+    // constexpr fill demo
+    runtime_arr.fill(3);
+
+    std::cout << "After fill(), sum = "
+              << runtime_arr.sum() << "\n";
 
     // ----------------------------
 

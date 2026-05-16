@@ -4,8 +4,12 @@
 #include <iostream>
 #include <type_traits>
 #include <vector>
-#include <string>   // 🔹 ADDED
-#include <iterator> // 🔹 ADDED
+#include <string>   
+#include <iterator> 
+#include <list>      // 🔹 ADDED
+#include <map>       // 🔹 ADDED
+#include <cassert>   // 🔹 ADDED
+#include <utility>   // 🔹 ADDED
 
 // ----------------------------------
 // SFINAE via return type
@@ -87,14 +91,17 @@ void safe_process(T value) {
 // 🔥 NEW ADDITIONS
 // ======================================================
 
-// 🔹 SFINAE via default template argument (classic)
+// 🔹 SFINAE via default template argument
 template<typename T, typename = void>
 struct is_streamable : std::false_type {};
 
 template<typename T>
 struct is_streamable<T,
-    std::void_t<decltype(std::declval<std::ostream&>() << std::declval<T>())>>
-    : std::true_type {};
+    std::void_t<
+        decltype(std::declval<std::ostream&>()
+                 << std::declval<T>())
+    >
+> : std::true_type {};
 
 // 🔹 Overload only if streamable
 template<typename T>
@@ -103,7 +110,7 @@ print_streamable(const T& value) {
     std::cout << "Streamable: " << value << "\n";
 }
 
-// 🔹 Detect iterable (has begin/end)
+// 🔹 Detect iterable
 template<typename, typename = std::void_t<>>
 struct is_iterable : std::false_type {};
 
@@ -112,26 +119,32 @@ struct is_iterable<T,
     std::void_t<
         decltype(std::begin(std::declval<T>())),
         decltype(std::end(std::declval<T>()))
-    >> : std::true_type {};
+    >
+> : std::true_type {};
 
 // 🔹 Process iterable types
 template<typename T>
 std::enable_if_t<is_iterable<T>::value>
 process_iterable(const T& container) {
     std::cout << "Iterable elements: ";
+
     for (const auto& x : container)
         std::cout << x << " ";
+
     std::cout << "\n";
 }
 
 // 🔹 Hybrid: if constexpr + SFINAE
 template<typename T>
 void smart_process(const T& value) {
+
     if constexpr (is_iterable<T>::value) {
         process_iterable(value);
-    } else if constexpr (std::is_arithmetic_v<T>) {
+    }
+    else if constexpr (std::is_arithmetic_v<T>) {
         process_v2(value);
-    } else {
+    }
+    else {
         std::cout << "Unknown type\n";
     }
 }
@@ -140,13 +153,63 @@ void smart_process(const T& value) {
 template<typename T>
 requires requires(T t) { t.size(); }
 void process_requires(const T& value) {
-    std::cout << "Requires size(): " << value.size() << "\n";
+    std::cout << "Requires size(): "
+              << value.size() << "\n";
 }
 
-// 🔹 type_identity trick (prevents deduction)
+// 🔹 type_identity trick
 template<typename T>
-void no_deduction(typename std::type_identity<T>::type value) {
-    std::cout << "No deduction type used\n";
+void no_deduction(
+    typename std::type_identity<T>::type value) {
+
+    std::cout << "No deduction type used: "
+              << value << "\n";
+}
+
+// ======================================================
+// EXTRA SMALL ADDITIONS
+// ======================================================
+
+// Detect push_back support
+template<typename, typename = std::void_t<>>
+struct has_push_back : std::false_type {};
+
+template<typename T>
+struct has_push_back<T,
+    std::void_t<
+        decltype(
+            std::declval<T>().push_back(
+                std::declval<typename T::value_type>()
+            )
+        )
+    >
+> : std::true_type {};
+
+// Print whether container supports push_back
+template<typename T>
+void check_push_back_support() {
+
+    if constexpr (has_push_back<T>::value)
+        std::cout << "Supports push_back\n";
+    else
+        std::cout << "Does NOT support push_back\n";
+}
+
+// Arithmetic-only sum
+template<typename T>
+std::enable_if_t<std::is_arithmetic_v<T>, T>
+add_values(T a, T b) {
+    return a + b;
+}
+
+// Pointer checker
+template<typename T>
+void check_pointer() {
+
+    if constexpr (std::is_pointer_v<T>)
+        std::cout << "This is a pointer type\n";
+    else
+        std::cout << "This is NOT a pointer type\n";
 }
 
 // ======================================================
@@ -194,6 +257,27 @@ int main() {
     process_requires(vec);
 
     no_deduction<int>(10);
+
+    // ======================================================
+    // EXTRA SMALL USAGE
+    // ======================================================
+
+    std::cout << "\n--- Extra Utilities ---\n";
+
+    check_push_back_support<std::vector<int>>();
+    check_push_back_support<std::map<int, int>>();
+
+    std::cout << "Add values: "
+              << add_values(5, 7) << "\n";
+
+    check_pointer<int>();
+    check_pointer<int*>();
+
+    std::list<int> lst = {4, 5, 6};
+    smart_process(lst);
+
+    // ✅ Runtime validation
+    assert(add_values(2, 3) == 5);
 
     // ======================================================
 

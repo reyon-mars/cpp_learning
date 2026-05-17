@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <numeric>
 #include <functional>
+#include <cassert>   // 🔹 ADDED
+#include <utility>   // 🔹 ADDED
 
 int add(int a, int b) { return a + b; }
 int multiply(int a, int b) { return a * b; }
@@ -100,6 +102,47 @@ template<typename BinOp>
 int safe_reduce(const std::vector<int>& values, BinOp op, int init = 0) {
     if (values.empty()) return init;
     return reduce(values, op);
+}
+
+// ======================================================
+// 🔥 EXTRA SMALL ADDITIONS
+// ======================================================
+
+// 🔹 negate transformation
+template<typename Func>
+std::vector<int> transform_values(const std::vector<int>& values, Func f) {
+    std::vector<int> result;
+    for (int v : values) {
+        result.push_back(f(v));
+    }
+    return result;
+}
+
+// 🔹 function repeater
+template<typename Func>
+void repeat_action(int times, Func f) {
+    for (int i = 0; i < times; ++i) {
+        f(i);
+    }
+}
+
+// 🔹 generic printer
+void print_vector(const std::vector<int>& values,
+                  const std::string& label) {
+    std::cout << label;
+    for (int v : values)
+        std::cout << v << " ";
+    std::cout << "\n";
+}
+
+// 🔹 higher-order checker
+template<typename Pred>
+bool any_match(const std::vector<int>& values, Pred p) {
+    for (int v : values) {
+        if (p(v))
+            return true;
+    }
+    return false;
 }
 
 // ======================================================
@@ -200,6 +243,31 @@ int main() {
     std::vector<int> empty;
     std::cout << "Safe reduce (empty): "
               << safe_reduce(empty, add, 0) << "\n";
+
+    // ======================================================
+    // 🔥 EXTRA NEW USAGE
+    // ======================================================
+
+    std::cout << "\n--- Extra Higher-Order Tests ---\n";
+
+    auto negatives = transform_values(values,
+        [](int x) { return -x; });
+
+    print_vector(negatives, "Negatives: ");
+
+    repeat_action(3, [](int i) {
+        std::cout << "Repeated call #" << i + 1 << "\n";
+    });
+
+    bool has_large = any_match(values,
+        [](int x) { return x > 20; });
+
+    std::cout << "Any value > 20? "
+              << (has_large ? "Yes" : "No") << "\n";
+
+    // 🔹 validation
+    assert(sum == 15);
+    assert(product == 120);
 
     // ======================================================
 

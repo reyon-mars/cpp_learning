@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <functional>   // 🔹 ADDED
 #include <chrono>       // 🔹 ADDED
+#include <cassert>      // 🔹 ADDED
+#include <string>       // 🔹 ADDED
 
 // ---------------- ORIGINAL FUNCTION ----------------
 auto sum_vector(std::vector<int> vec) {
@@ -16,8 +18,35 @@ auto sum_vector(std::vector<int> vec) {
     };
 }
 
+// ---------------- SMALL ADDITIONS ----------------
+
+// Print vector helper
+void print_vector(const std::vector<int>& vec,
+                  const std::string& label) {
+    std::cout << label << ": ";
+    for (int n : vec)
+        std::cout << n << " ";
+    std::cout << '\n';
+}
+
+// Average calculator
+double average_vector(const std::vector<int>& vec) {
+    if (vec.empty()) return 0.0;
+
+    int total = std::accumulate(vec.begin(), vec.end(), 0);
+    return static_cast<double>(total) / vec.size();
+}
+
+// Find maximum element
+int max_element_value(const std::vector<int>& vec) {
+    return *std::max_element(vec.begin(), vec.end());
+}
+
+// ==================================================
+
 // ---------------- MAIN ----------------
 int main() {
+
     std::vector<int> vec = {1, 2, 3, 4, 5};
 
     int x = [vec](int a, int b) {
@@ -179,6 +208,69 @@ int main() {
     measure([&]() {
         std::accumulate(vec.begin(), vec.end(), 0);
     });
+
+    // ======================================================
+    // 🔥 EXTRA SMALL ADDITIONS
+    // ======================================================
+
+    std::cout << "\n--- Extra Lambda Utilities ---\n";
+
+    // 🔹 Vector helper usage
+    print_vector(vec, "Original vector");
+
+    // 🔹 Average calculation
+    std::cout << "Average value: "
+              << average_vector(vec) << '\n';
+
+    // 🔹 Maximum element
+    std::cout << "Maximum value: "
+              << max_element_value(vec) << '\n';
+
+    // 🔹 Capture by value demo
+    int captured = 50;
+    auto capture_demo = [captured]() {
+        return captured + 25;
+    };
+
+    std::cout << "Capture demo result: "
+              << capture_demo() << '\n';
+
+    // 🔹 Mutable lambda demo
+    auto mutable_lambda = [num = 0]() mutable {
+        num += 5;
+        return num;
+    };
+
+    std::cout << "Mutable lambda calls: "
+              << mutable_lambda() << ", "
+              << mutable_lambda() << '\n';
+
+    // 🔹 Generic lambda with strings
+    auto concat = [](const auto& a, const auto& b) {
+        return a + b;
+    };
+
+    std::cout << "Concatenated string: "
+              << concat(std::string("Hello "), std::string("World"))
+              << '\n';
+
+    // 🔹 Assertion test
+    assert(square(5) == 25);
+
+    // 🔹 Lambda returning another lambda
+    auto power_generator = [](int power) {
+        return [power](int value) {
+            int result = 1;
+            for (int i = 0; i < power; ++i)
+                result *= value;
+            return result;
+        };
+    };
+
+    auto cube = power_generator(3);
+
+    std::cout << "Cube of 4: "
+              << cube(4) << '\n';
 
     // ======================================================
 

@@ -4,6 +4,9 @@
 #include <iostream>
 #include <vector>
 #include <stdexcept>
+#include <algorithm>   // 🔹 ADDED
+#include <cassert>     // 🔹 ADDED
+#include <numeric>     // 🔹 ADDED
 
 class SafeVector {
 private:
@@ -108,7 +111,49 @@ public:
         return data.empty();
     }
 
-    // ------------------------------------------------
+    // =====================================================
+    // 🔥 NEW SMALL ADDITIONS
+    // =====================================================
+
+    // 🔹 remove last matching value (strong guarantee)
+    void remove_value_strong(int value) {
+        std::vector<int> temp = data;
+
+        auto it = std::find(temp.begin(), temp.end(), value);
+        if (it != temp.end()) {
+            temp.erase(it);
+        }
+
+        data = std::move(temp);
+    }
+
+    // 🔹 calculate sum safely
+    int sum() const noexcept {
+        return std::accumulate(data.begin(), data.end(), 0);
+    }
+
+    // 🔹 contains check
+    bool contains(int value) const noexcept {
+        return std::find(data.begin(), data.end(), value)
+               != data.end();
+    }
+
+    // 🔹 reverse with strong guarantee
+    void reverse_strong() {
+        std::vector<int> temp = data;
+        std::reverse(temp.begin(), temp.end());
+        data = std::move(temp);
+    }
+
+    // 🔹 get front safely
+    int front() const {
+        if (data.empty()) {
+            throw std::runtime_error("Vector is empty");
+        }
+        return data.front();
+    }
+
+    // =====================================================
 };
 
 int main() {
@@ -187,6 +232,54 @@ int main() {
               << (sv.empty() ? "Yes" : "No") << "\n";
 
     // --------------------------------------------
+
+    // =====================================================
+    // 🔥 NEW EXTRA TESTS
+    // =====================================================
+
+    std::cout << "\n--- Advanced Exception Safety Tests ---\n";
+
+    // contains
+    std::cout << "Contains 20? "
+              << (sv.contains(20) ? "Yes" : "No") << "\n";
+
+    // sum
+    std::cout << "Vector sum: "
+              << sv.sum() << "\n";
+
+    // reverse
+    sv.reverse_strong();
+    std::cout << "After reverse:\n";
+    sv.print();
+
+    // remove value
+    sv.remove_value_strong(20);
+    std::cout << "After removing 20:\n";
+    sv.print();
+
+    // safe front access
+    try {
+        std::cout << "Front element: "
+                  << sv.front() << "\n";
+    } catch (const std::exception& e) {
+        std::cout << "Front access error: "
+                  << e.what() << "\n";
+    }
+
+    // assertion checks
+    assert(!sv.empty());
+    assert(sv.size() > 0);
+
+    // clear and verify
+    sv.clear();
+
+    std::cout << "After final clear:\n";
+    sv.print();
+
+    std::cout << "Empty now? "
+              << (sv.empty() ? "Yes" : "No") << "\n";
+
+    // =====================================================
 
     return 0;
 }

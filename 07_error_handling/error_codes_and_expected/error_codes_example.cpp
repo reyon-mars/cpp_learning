@@ -3,6 +3,9 @@
 
 #include <iostream>
 #include <string>
+#include <vector>      // 🔹 ADDED
+#include <functional>  // 🔹 ADDED
+#include <cassert>     // 🔹 ADDED
 
 enum class ErrorCode {
     OK = 0,
@@ -46,6 +49,19 @@ public:
         return is_ok() ? value : default_val;
     }
 
+    // 🔹 EXTRA SMALL ADDITIONS
+
+    // unwrap directly
+    int unwrap() const {
+        return value;
+    }
+
+    // reset result
+    void reset() {
+        value = 0;
+        error = ErrorCode::OK;
+    }
+
     // --------------------------------
 };
 
@@ -85,6 +101,21 @@ Result safe_multiply(int a, int b) {
     return Result(a * b);
 }
 
+// 🔹 EXTRA SMALL ADDITIONS
+
+// safe division with validation
+Result safe_modulo(int a, int b) {
+    if (b == 0) {
+        return Result(ErrorCode::DivisionByZero);
+    }
+    return Result(a % b);
+}
+
+// safe square
+Result safe_square(int x) {
+    return Result(x * x);
+}
+
 // Helper printer
 void print_result(const Result& r) {
     if (r.is_ok()) {
@@ -98,6 +129,13 @@ void print_result(const Result& r) {
 void quick_check(const Result& r) {
     std::cout << (r.is_ok() ? "OK -> " : "ERR -> ");
     print_result(r);
+}
+
+// 🔹 EXTRA: batch result printer
+void print_results(const std::vector<Result>& results) {
+    for (const auto& r : results) {
+        print_result(r);
+    }
 }
 
 int main() {
@@ -160,6 +198,73 @@ int main() {
     }
 
     // -----------------------------------
+
+    // ======================================================
+    // 🔥 EXTRA SMALL ADDITIONS
+    // ======================================================
+
+    std::cout << "\n--- Extra Result Utilities ---\n";
+
+    // modulo operation
+    auto mod_result = safe_modulo(10, 3);
+    print_result(mod_result);
+
+    auto mod_fail = safe_modulo(10, 0);
+    print_result(mod_fail);
+
+    // square operation
+    auto sq = safe_square(6);
+    print_result(sq);
+
+    // vector of results
+    std::vector<Result> results = {
+        safe_add(1, 2),
+        divide(9, 3),
+        divide(5, 0),
+        safe_subtract(20, 10)
+    };
+
+    std::cout << "\nBatch results:\n";
+    print_results(results);
+
+    // lambda processor
+    auto process_result = [](const Result& r) {
+        if (r.is_ok())
+            std::cout << "Processed value: "
+                      << r.get_value() * 10 << "\n";
+        else
+            std::cout << "Cannot process error\n";
+    };
+
+    process_result(result);
+    process_result(bad_result);
+
+    // reset demo
+    Result temp(100);
+    print_result(temp);
+
+    temp.reset();
+
+    std::cout << "After reset:\n";
+    print_result(temp);
+
+    // assertion check
+    assert(result.is_ok());
+    assert(!bad_result.is_ok());
+
+    // function wrapper example
+    std::function<Result(int,int)> operation = divide;
+
+    auto fn_result = operation(50, 5);
+    print_result(fn_result);
+
+    // unwrap demo
+    if (sq.is_ok()) {
+        std::cout << "Unwrapped square value: "
+                  << sq.unwrap() << "\n";
+    }
+
+    // ======================================================
 
     return 0;
 }

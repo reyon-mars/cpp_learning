@@ -4,6 +4,8 @@
 #include <coroutine>
 #include <exception>
 #include <iostream>
+#include <vector>      // 🔹 ADDED
+#include <string>      // 🔹 ADDED
 
 // Simplified coroutine example for C++20
 class SimpleCoroutine
@@ -22,6 +24,7 @@ public:
 		{
 			return {};
 		}
+
 		std::suspend_never final_suspend() noexcept
 		{
 			return {};
@@ -118,6 +121,64 @@ void safe_resume(SimpleCoroutine& coro)
 	}
 }
 
+// ======================================================
+// 🔥 EXTRA ADDITIONS
+// ======================================================
+
+// Coroutine with looped suspensions
+SimpleCoroutine counting_coroutine(int limit)
+{
+	for (int i = 1; i <= limit; ++i)
+	{
+		std::cout << "Counter: " << i << "\n";
+		co_await std::suspend_always{};
+	}
+
+	co_return limit;
+}
+
+// Coroutine processing vector values
+SimpleCoroutine vector_sum_coroutine(const std::vector<int>& values)
+{
+	int total = 0;
+
+	for (int v : values)
+	{
+		total += v;
+		std::cout << "Adding: " << v << "\n";
+		co_await std::suspend_always{};
+	}
+
+	co_return total;
+}
+
+// Coroutine returning calculated square
+SimpleCoroutine square_coroutine(int value)
+{
+	std::cout << "Calculating square of " << value << "\n";
+	co_return value * value;
+}
+
+// Coroutine chain demo
+SimpleCoroutine chained_coroutine()
+{
+	std::cout << "Chain start\n";
+	co_await std::suspend_always{};
+
+	std::cout << "Chain continue\n";
+	co_return 999;
+}
+
+// Helper: print coroutine status
+void print_status(const std::string& name, const SimpleCoroutine& coro)
+{
+	std::cout << name << " done? "
+			  << (coro.handle.done() ? "Yes" : "No")
+			  << "\n";
+}
+
+// ======================================================
+
 // ---------------- MAIN ----------------
 int main()
 {
@@ -164,6 +225,66 @@ int main()
 	std::cout << "\nSafe resume demo\n";
 	safe_resume(coro3);  // already finished
 	safe_resume(coro2);  // already finished
+
+	// ======================================================
+	// 🔥 EXTRA USAGE
+	// ======================================================
+
+	std::cout << "\n--- Counting Coroutine ---\n";
+
+	auto counter_coro = counting_coroutine(3);
+
+	print_status("counter_coro", counter_coro);
+
+	counter_coro.resume();
+	counter_coro.resume();
+	counter_coro.resume();
+
+	std::cout << "Counting coroutine result: "
+			  << counter_coro.get() << "\n";
+
+	print_status("counter_coro", counter_coro);
+
+	// ------------------------------------------------------
+
+	std::cout << "\n--- Vector Sum Coroutine ---\n";
+
+	std::vector<int> nums = {1, 2, 3, 4};
+
+	auto sum_coro = vector_sum_coroutine(nums);
+
+	sum_coro.resume();
+	sum_coro.resume();
+	sum_coro.resume();
+	sum_coro.resume();
+
+	std::cout << "Vector sum result: "
+			  << sum_coro.get() << "\n";
+
+	// ------------------------------------------------------
+
+	std::cout << "\n--- Square Coroutine ---\n";
+
+	auto sq = square_coroutine(9);
+	std::cout << "Square result: "
+			  << sq.get() << "\n";
+
+	// ------------------------------------------------------
+
+	std::cout << "\n--- Chained Coroutine ---\n";
+
+	auto chain = chained_coroutine();
+
+	print_status("chain", chain);
+
+	chain.resume();
+
+	std::cout << "Chain result: "
+			  << chain.get() << "\n";
+
+	print_status("chain", chain);
+
+	// ======================================================
 
 	return 0;
 }

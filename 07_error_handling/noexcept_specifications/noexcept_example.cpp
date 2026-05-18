@@ -5,6 +5,9 @@
 #include <vector>
 #include <type_traits>
 #include <stdexcept>
+#include <utility>     // 🔹 ADDED
+#include <cassert>     // 🔹 ADDED
+#include <functional>  // 🔹 ADDED
 
 class Widget {
 private:
@@ -104,6 +107,39 @@ void move_if_noexcept_demo() {
     std::cout << "move_if_noexcept used\n";
 }
 
+// ======================================================
+// 🔥 NEW SMALL ADDITIONS
+// ======================================================
+
+// noexcept swap utility
+void safe_swap(Widget& a, Widget& b) noexcept {
+    Widget temp(std::move(a));
+    a = std::move(b);
+    b = std::move(temp);
+}
+
+// compile-time noexcept checker
+template<typename Func>
+constexpr bool is_noexcept_callable(Func f) {
+    return noexcept(f());
+}
+
+// execute multiple callables safely
+void execute_all(const std::vector<std::function<void()>>& funcs) noexcept {
+    for (const auto& fn : funcs) {
+        try {
+            fn();
+        } catch (...) {
+            std::cout << "Exception caught during execute_all\n";
+        }
+    }
+}
+
+// noexcept lambda demo
+auto safe_lambda = []() noexcept {
+    std::cout << "Safe lambda executed\n";
+};
+
 // ------------------------------------------------
 
 // ---------------- MAIN ----------------
@@ -168,6 +204,59 @@ int main() {
     move_if_noexcept_demo();
 
     // ------------------------------------------------
+
+    // ======================================================
+    // 🔥 NEW ADVANCED TESTS
+    // ======================================================
+
+    std::cout << "\n--- Advanced Noexcept Tests ---\n";
+
+    Widget wa(1);
+    Widget wb(2);
+
+    std::cout << "Before swap: "
+              << wa.get() << ", "
+              << wb.get() << "\n";
+
+    safe_swap(wa, wb);
+
+    std::cout << "After swap: "
+              << wa.get() << ", "
+              << wb.get() << "\n";
+
+    // compile-time noexcept checks
+    static_assert(is_noexcept_callable([]() noexcept {}));
+    static_assert(!is_noexcept_callable([]() {}));
+
+    std::cout << "Compile-time noexcept checks passed\n";
+
+    // execute multiple functions safely
+    std::vector<std::function<void()>> tasks;
+
+    tasks.push_back([]() noexcept {
+        std::cout << "Task 1 completed\n";
+    });
+
+    tasks.push_back([]() {
+        throw std::runtime_error("Task failure");
+    });
+
+    tasks.push_back([]() noexcept {
+        std::cout << "Task 3 completed\n";
+    });
+
+    execute_all(tasks);
+
+    // safe lambda demo
+    safe_lambda();
+
+    // assertion checks
+    assert(noexcept(safe_lambda()));
+    assert(noexcept(create_widget(5)));
+
+    std::cout << "Assertions passed successfully\n";
+
+    // ======================================================
 
     return 0;
 }

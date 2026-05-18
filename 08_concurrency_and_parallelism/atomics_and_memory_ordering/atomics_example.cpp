@@ -6,6 +6,8 @@
 #include <atomic>
 #include <vector>
 #include <chrono>
+#include <numeric>   // 🔹 ADDED
+#include <mutex>     // 🔹 ADDED
 
 std::atomic<int> counter(0);
 std::atomic<bool> ready(false);
@@ -112,6 +114,44 @@ void fence_demo() {
     t2.join();
 }
 
+// ======================================================
+// 🔥 NEW SMALL ADDITIONS
+// ======================================================
+
+// Atomic countdown demo
+std::atomic<int> countdown(5);
+
+void countdown_worker() {
+    while (true) {
+        int old = countdown.fetch_sub(1, std::memory_order_acq_rel);
+
+        if (old <= 0)
+            break;
+
+        std::cout << "Countdown: " << old - 1 << "\n";
+    }
+}
+
+// Atomic boolean toggle
+std::atomic<bool> toggle_flag(false);
+
+void toggle_demo() {
+    bool old = toggle_flag.exchange(true, std::memory_order_acq_rel);
+
+    std::cout << "Old toggle value: "
+              << old << "\n";
+
+    std::cout << "New toggle value: "
+              << toggle_flag.load() << "\n";
+}
+
+// Atomic statistics collector
+std::atomic<int> stat_sum(0);
+
+void stats_worker(int value) {
+    stat_sum.fetch_add(value, std::memory_order_relaxed);
+}
+
 // ------------------------------------------------
 
 // ---------------- MAIN ----------------
@@ -194,6 +234,50 @@ int main() {
     fence_demo();
 
     // ------------------------------------------------
+
+    // ======================================================
+    // 🔥 NEW ADVANCED TESTS
+    // ======================================================
+
+    std::cout << "\n--- Advanced Atomic Features ---\n";
+
+    // Countdown demo
+    std::thread c1(countdown_worker);
+    std::thread c2(countdown_worker);
+
+    c1.join();
+    c2.join();
+
+    std::cout << "Final countdown value: "
+              << countdown.load() << "\n";
+
+    // Toggle demo
+    toggle_demo();
+
+    // Atomic statistics demo
+    std::vector<std::thread> stat_threads;
+
+    for (int i = 1; i <= 5; ++i) {
+        stat_threads.emplace_back(stats_worker, i * 10);
+    }
+
+    for (auto& t : stat_threads) {
+        t.join();
+    }
+
+    std::cout << "Atomic stats sum: "
+              << stat_sum.load() << "\n";
+
+    // fetch_sub example
+    int previous = counter.fetch_sub(5, std::memory_order_seq_cst);
+
+    std::cout << "Counter before fetch_sub: "
+              << previous << "\n";
+
+    std::cout << "Counter after fetch_sub: "
+              << counter.load() << "\n";
+
+    // ======================================================
 
     return 0;
 }

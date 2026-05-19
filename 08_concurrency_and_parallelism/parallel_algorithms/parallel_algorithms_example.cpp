@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <execution>
 #include <numeric>
+#include <functional>   // 🔹 ADDED
+#include <chrono>       // 🔹 ADDED
 
 // ---------------- SMALL ADDITIONS ----------------
 
@@ -44,26 +46,96 @@ void replace_even(std::vector<int>& v) {
                     0);
 }
 
+// ---------------- EXTRA ADDITIONS ----------------
+
+// 🔹 NEW: parallel transform_reduce
+int parallel_dot_product(const std::vector<int>& a,
+                         const std::vector<int>& b) {
+
+    return std::transform_reduce(
+        std::execution::par,
+        a.begin(), a.end(),
+        b.begin(),
+        0
+    );
+}
+
+// 🔹 NEW: parallel remove odd values
+void remove_odds(std::vector<int>& v) {
+    auto it = std::remove_if(std::execution::par,
+                             v.begin(), v.end(),
+                             [](int x) {
+                                 return x % 2 != 0;
+                             });
+
+    v.erase(it, v.end());
+}
+
+// 🔹 NEW: execution timer
+template<typename Func>
+void measure_time(const std::string& label, Func f) {
+
+    auto start = std::chrono::high_resolution_clock::now();
+
+    f();
+
+    auto end = std::chrono::high_resolution_clock::now();
+
+    auto duration =
+        std::chrono::duration_cast<
+            std::chrono::microseconds>(end - start);
+
+    std::cout << label
+              << " took "
+              << duration.count()
+              << " us\n";
+}
+
+// 🔹 NEW: parallel adjacent difference
+std::vector<int> adjacent_diff_demo(const std::vector<int>& v) {
+
+    std::vector<int> result(v.size());
+
+    std::adjacent_difference(
+        std::execution::par,
+        v.begin(), v.end(),
+        result.begin()
+    );
+
+    return result;
+}
+
 // ---------------- MAIN ----------------
 
 int main() {
+
     std::vector<int> data(1000);
     std::iota(data.begin(), data.end(), 1);
 
     // Sequential reduce
-    auto sum_seq = std::reduce(std::execution::seq, data.begin(), data.end(), 0);
-    std::cout << "Sequential sum: " << sum_seq << "\n";
+    auto sum_seq = std::reduce(std::execution::seq,
+                               data.begin(), data.end(), 0);
+
+    std::cout << "Sequential sum: "
+              << sum_seq << "\n";
 
     // Parallel reduce
-    auto sum_par = std::reduce(std::execution::par, data.begin(), data.end(), 0);
-    std::cout << "Parallel sum: " << sum_par << "\n";
+    auto sum_par = std::reduce(std::execution::par,
+                               data.begin(), data.end(), 0);
+
+    std::cout << "Parallel sum: "
+              << sum_par << "\n";
 
     // Parallel + SIMD
-    auto sum_pv = std::reduce(std::execution::par_unseq, data.begin(), data.end(), 0);
-    std::cout << "Parallel + SIMD sum: " << sum_pv << "\n";
+    auto sum_pv = std::reduce(std::execution::par_unseq,
+                              data.begin(), data.end(), 0);
+
+    std::cout << "Parallel + SIMD sum: "
+              << sum_pv << "\n";
 
 
     // ---------------- Parallel transform ----------------
+
     std::vector<int> squared(data.size());
 
     std::transform(std::execution::par,
@@ -73,34 +145,45 @@ int main() {
                    [](int x) { return x * x; });
 
     std::cout << "First 5 squared values: ";
+
     for (int i = 0; i < 5; ++i) {
         std::cout << squared[i] << " ";
     }
+
     std::cout << "\n";
 
 
     // ---------------- Parallel for_each ----------------
+
     std::for_each(std::execution::par,
                   data.begin(),
                   data.end(),
                   [](int& x) { x += 1; });
 
     std::cout << "First 5 incremented values: ";
+
     for (int i = 0; i < 5; ++i) {
         std::cout << data[i] << " ";
     }
+
     std::cout << "\n";
 
 
     // ---------------- Parallel sort ----------------
-    std::vector<int> unsorted = {9, 4, 7, 1, 3, 6, 8, 2, 5};
 
-    std::sort(std::execution::par, unsorted.begin(), unsorted.end());
+    std::vector<int> unsorted =
+        {9, 4, 7, 1, 3, 6, 8, 2, 5};
+
+    std::sort(std::execution::par,
+              unsorted.begin(),
+              unsorted.end());
 
     std::cout << "Sorted values: ";
+
     for (int v : unsorted) {
         std::cout << v << " ";
     }
+
     std::cout << "\n";
 
 
@@ -108,50 +191,146 @@ int main() {
 
     // Check all positive
     std::cout << "All elements positive? "
-              << (all_positive(data) ? "Yes" : "No") << "\n";
+              << (all_positive(data) ? "Yes" : "No")
+              << "\n";
 
     // Count even numbers
     std::cout << "Even numbers count: "
-              << count_even(data) << "\n";
+              << count_even(data)
+              << "\n";
 
     // Parallel min/max
-    auto minmax = std::minmax_element(std::execution::par,
-                                     data.begin(), data.end());
+    auto minmax =
+        std::minmax_element(std::execution::par,
+                            data.begin(), data.end());
 
     std::cout << "Min: " << *minmax.first
-              << ", Max: " << *minmax.second << "\n";
+              << ", Max: " << *minmax.second
+              << "\n";
 
     // Parallel copy
     std::vector<int> copied(data.size());
+
     std::copy(std::execution::par,
               data.begin(), data.end(),
               copied.begin());
 
     std::cout << "First 5 copied values: ";
+
     for (int i = 0; i < 5; ++i) {
         std::cout << copied[i] << " ";
     }
+
     std::cout << "\n";
 
     // 🔹 NEW: find value
     int found = find_value(data, 500);
-    std::cout << "Find 500: " << found << "\n";
+
+    std::cout << "Find 500: "
+              << found << "\n";
 
     // 🔹 NEW: prefix sum demo
     auto pref = prefix_sum(data);
+
     std::cout << "First 5 prefix sums: ";
+
     for (int i = 0; i < 5; ++i) {
         std::cout << pref[i] << " ";
     }
+
     std::cout << "\n";
 
     // 🔹 NEW: replace even numbers
     replace_even(data);
+
     std::cout << "After replacing evens (first 5): ";
+
     for (int i = 0; i < 5; ++i) {
         std::cout << data[i] << " ";
     }
+
     std::cout << "\n";
+
+    // ======================================================
+    // 🔥 EXTRA NEW ADDITIONS
+    // ======================================================
+
+    std::cout << "\n--- Extra Parallel Tests ---\n";
+
+    // 🔹 Parallel dot product
+    std::vector<int> vec1 = {1, 2, 3, 4, 5};
+    std::vector<int> vec2 = {5, 4, 3, 2, 1};
+
+    int dot =
+        parallel_dot_product(vec1, vec2);
+
+    std::cout << "Dot product: "
+              << dot << "\n";
+
+    // 🔹 Remove odd numbers
+    std::vector<int> nums =
+        {1,2,3,4,5,6,7,8,9,10};
+
+    remove_odds(nums);
+
+    std::cout << "After removing odds: ";
+
+    for (int n : nums) {
+        std::cout << n << " ";
+    }
+
+    std::cout << "\n";
+
+    // 🔹 Adjacent difference
+    auto diff = adjacent_diff_demo(vec1);
+
+    std::cout << "Adjacent differences: ";
+
+    for (int n : diff) {
+        std::cout << n << " ";
+    }
+
+    std::cout << "\n";
+
+    // 🔹 Timing sequential reduce
+    measure_time("Sequential reduce", [&]() {
+
+        std::reduce(std::execution::seq,
+                    data.begin(),
+                    data.end(),
+                    0);
+    });
+
+    // 🔹 Timing parallel reduce
+    measure_time("Parallel reduce", [&]() {
+
+        std::reduce(std::execution::par,
+                    data.begin(),
+                    data.end(),
+                    0);
+    });
+
+    // 🔹 Parallel generate
+    std::vector<int> generated(10);
+
+    int seed = 1;
+
+    std::generate(std::execution::par,
+                  generated.begin(),
+                  generated.end(),
+                  [&seed]() {
+                      return seed++;
+                  });
+
+    std::cout << "Generated values: ";
+
+    for (int n : generated) {
+        std::cout << n << " ";
+    }
+
+    std::cout << "\n";
+
+    // ======================================================
 
     return 0;
 }

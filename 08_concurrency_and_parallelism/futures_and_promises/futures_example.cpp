@@ -6,6 +6,8 @@
 #include <future>
 #include <chrono>
 #include <stdexcept>
+#include <vector>     // 🔹 ADDED
+#include <numeric>    // 🔹 ADDED
 
 // ---------------- ORIGINAL FUNCTION ----------------
 
@@ -49,6 +51,39 @@ void check_status(std::future<int>& fut) {
     } else {
         std::cout << "Future ready!\n";
     }
+}
+
+// ---------------- EXTRA ADDITIONS ----------------
+
+// 🔹 NEW: async subtraction task
+void async_subtract(std::promise<int> p, int a, int b) {
+    try {
+        std::this_thread::sleep_for(std::chrono::milliseconds(30));
+        p.set_value(a - b);
+    } catch (...) {
+        p.set_exception(std::current_exception());
+    }
+}
+
+// 🔹 NEW: batch async calculator
+std::future<int> async_square(int n) {
+    return std::async(std::launch::async, [n]() {
+        return n * n;
+    });
+}
+
+// 🔹 NEW: delayed future demo
+std::future<int> delayed_future(int value) {
+    return std::async(std::launch::async, [value]() {
+        std::this_thread::sleep_for(std::chrono::milliseconds(80));
+        return value;
+    });
+}
+
+// 🔹 NEW: shared_future helper
+void shared_future_reader(std::shared_future<int> sf, int id) {
+    std::cout << "Reader " << id
+              << " received: " << sf.get() << "\n";
 }
 
 // ---------------- MAIN ----------------
@@ -158,6 +193,81 @@ int main() {
 
     std::cout << "Chained result: " << future6.get() << "\n";
     t5.join();
+
+    // ======================================================
+    // 🔥 EXTRA NEW ADDITIONS
+    // ======================================================
+
+    std::cout << "\n--- Extra Future Tests ---\n";
+
+    // 🔹 async subtraction
+    std::promise<int> promise7;
+    std::future<int> future7 = promise7.get_future();
+
+    std::thread t6(async_subtract, std::move(promise7), 20, 8);
+
+    std::cout << "Subtract result: "
+              << future7.get() << "\n";
+
+    t6.join();
+
+    // 🔹 async square batch
+    std::vector<std::future<int>> futures;
+
+    for (int i = 1; i <= 5; ++i) {
+        futures.push_back(async_square(i));
+    }
+
+    std::cout << "Square results: ";
+    for (auto& f : futures) {
+        std::cout << f.get() << " ";
+    }
+    std::cout << "\n";
+
+    // 🔹 delayed future demo
+    auto delayed = delayed_future(999);
+
+    if (delayed.wait_for(std::chrono::milliseconds(20))
+        == std::future_status::timeout) {
+        std::cout << "Delayed future still running...\n";
+    }
+
+    std::cout << "Delayed future result: "
+              << delayed.get() << "\n";
+
+    // 🔹 shared_future with multiple readers
+    std::promise<int> promise8;
+    std::shared_future<int> shared2 =
+        promise8.get_future().share();
+
+    std::thread writer([&promise8]() {
+        std::this_thread::sleep_for(
+            std::chrono::milliseconds(50));
+        promise8.set_value(777);
+    });
+
+    std::thread r1(shared_future_reader, shared2, 1);
+    std::thread r2(shared_future_reader, shared2, 2);
+    std::thread r3(shared_future_reader, shared2, 3);
+
+    writer.join();
+    r1.join();
+    r2.join();
+    r3.join();
+
+    // 🔹 combine async results
+    auto f1 = std::async(std::launch::async,
+                         calculate_sum, 1, 2);
+
+    auto f2 = std::async(std::launch::async,
+                         calculate_sum, 3, 4);
+
+    int combined = f1.get() + f2.get();
+
+    std::cout << "Combined async total: "
+              << combined << "\n";
+
+    // ======================================================
 
     return 0;
 }

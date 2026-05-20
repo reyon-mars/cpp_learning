@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <functional> // 🔹 NEW
 
 int main() {
     // sort
@@ -17,6 +18,10 @@ int main() {
     // stable_sort
     data = {5, 2, 8, 1, 9, 3};
     std::stable_sort(data.begin(), data.end());
+
+    std::cout << "Stable sorted: ";
+    for (int v : data) std::cout << v << " ";
+    std::cout << "\n";
     
     // nth_element
     data = {5, 2, 8, 1, 9, 3};
@@ -27,6 +32,10 @@ int main() {
     data = {5, 2, 8, 1, 9, 3};
     auto pivot = std::partition(data.begin(), data.end(), 
                                [](int x) { return x < 5; });
+
+    std::cout << "Partition index: "
+              << std::distance(data.begin(), pivot) << "\n";
+
     std::cout << "After partition: ";
     for (int v : data) std::cout << v << " ";
     std::cout << "\n";
@@ -46,6 +55,7 @@ int main() {
     // partition_point (works after partition)
     auto point = std::partition_point(data.begin(), data.end(),
                                      [](int x) { return x < 5; });
+
     std::cout << "Partition point index: "
               << std::distance(data.begin(), point) << "\n";
 
@@ -53,6 +63,7 @@ int main() {
 
     // binary_search (requires sorted data)
     std::sort(data.begin(), data.end());
+
     bool found = std::binary_search(data.begin(), data.end(), 5);
     std::cout << "Binary search for 5: "
               << (found ? "Found" : "Not Found") << "\n";
@@ -69,12 +80,14 @@ int main() {
 
     // equal_range
     auto range = std::equal_range(data.begin(), data.end(), 5);
+
     std::cout << "Equal range for 5: ["
               << std::distance(data.begin(), range.first) << ", "
               << std::distance(data.begin(), range.second) << ")\n";
 
     // partial_sort (top 3 smallest elements sorted)
     data = {5, 2, 8, 1, 9, 3};
+
     std::partial_sort(data.begin(), data.begin() + 3, data.end());
 
     std::cout << "Partial sort (first 3 smallest): ";
@@ -83,11 +96,74 @@ int main() {
 
     // is_partitioned check
     data = {1, 2, 3, 6, 7, 8};
+
     bool is_part = std::is_partitioned(data.begin(), data.end(),
                                        [](int x) { return x < 5; });
 
     std::cout << "Is partitioned (<5)? "
               << (is_part ? "Yes" : "No") << "\n";
+
+    // ---------------- EXTRA ADDITIONS ----------------
+
+    // sort in descending order
+    data = {5, 2, 8, 1, 9, 3};
+
+    std::sort(data.begin(), data.end(), std::greater<int>());
+
+    std::cout << "Descending sort: ";
+    for (int v : data) std::cout << v << " ";
+    std::cout << "\n";
+
+    // stable_partition
+    data = {1, 2, 3, 4, 5, 6};
+
+    std::stable_partition(data.begin(), data.end(),
+                          [](int x) { return x % 2 == 0; });
+
+    std::cout << "Stable partition (evens first): ";
+    for (int v : data) std::cout << v << " ";
+    std::cout << "\n";
+
+    // inplace_merge
+    std::vector<int> merged = {1, 3, 5, 2, 4, 6};
+
+    std::inplace_merge(merged.begin(),
+                       merged.begin() + 3,
+                       merged.end());
+
+    std::cout << "Inplace merged data: ";
+    for (int v : merged) std::cout << v << " ";
+    std::cout << "\n";
+
+    // next_permutation
+    std::vector<int> perm = {1, 2, 3};
+
+    std::next_permutation(perm.begin(), perm.end());
+
+    std::cout << "Next permutation: ";
+    for (int v : perm) std::cout << v << " ";
+    std::cout << "\n";
+
+    // prev_permutation
+    std::prev_permutation(perm.begin(), perm.end());
+
+    std::cout << "Previous permutation: ";
+    for (int v : perm) std::cout << v << " ";
+    std::cout << "\n";
+
+    // heap operations
+    std::vector<int> heap_data = {4, 1, 7, 3, 8, 5};
+
+    std::make_heap(heap_data.begin(), heap_data.end());
+
+    std::cout << "Heap front element: "
+              << heap_data.front() << "\n";
+
+    std::pop_heap(heap_data.begin(), heap_data.end());
+
+    std::cout << "After pop_heap: ";
+    for (int v : heap_data) std::cout << v << " ";
+    std::cout << "\n";
 
     // ----------------------------------------------------
 

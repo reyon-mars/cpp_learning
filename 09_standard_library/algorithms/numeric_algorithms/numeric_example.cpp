@@ -5,6 +5,7 @@
 #include <vector>
 #include <numeric>
 #include <algorithm>
+#include <functional> // 🔹 ADDED
 
 int main() {
     std::vector<int> vec = {1, 2, 3, 4, 5};
@@ -128,6 +129,80 @@ int main() {
         std::cout << v << " ";
     }
     std::cout << "\n";
+
+    // ---------------- EXTRA ADDITIONS ----------------
+
+    // 🔹 NEW: transform_reduce
+    int transform_reduce_result = std::transform_reduce(
+        vec.begin(), vec.end(),
+        vec2.begin(),
+        0
+    );
+
+    std::cout << "Transform reduce result: "
+              << transform_reduce_result << "\n";
+
+    // 🔹 NEW: gcd accumulation
+    int gcd_result = std::accumulate(
+        vec.begin(), vec.end(),
+        vec[0],
+        [](int a, int b) {
+            return std::gcd(a, b);
+        }
+    );
+
+    std::cout << "GCD of all elements: "
+              << gcd_result << "\n";
+
+    // 🔹 NEW: lcm accumulation
+    int lcm_result = std::accumulate(
+        vec.begin(), vec.end(),
+        1,
+        [](int a, int b) {
+            return std::lcm(a, b);
+        }
+    );
+
+    std::cout << "LCM of all elements: "
+              << lcm_result << "\n";
+
+    // 🔹 NEW: adjacent difference with subtraction check
+    std::vector<int> custom_diff(vec.size());
+
+    std::adjacent_difference(
+        vec.begin(),
+        vec.end(),
+        custom_diff.begin(),
+        [](int a, int b) {
+            return a - b;
+        }
+    );
+
+    std::cout << "Custom adjacent differences: ";
+    for (int v : custom_diff) {
+        std::cout << v << " ";
+    }
+    std::cout << "\n";
+
+    // 🔹 NEW: cumulative minimum
+    std::vector<int> cumulative_min(vec.size());
+
+    std::partial_sum(
+        vec.begin(),
+        vec.end(),
+        cumulative_min.begin(),
+        [](int a, int b) {
+            return std::min(a, b);
+        }
+    );
+
+    std::cout << "Cumulative minimums: ";
+    for (int v : cumulative_min) {
+        std::cout << v << " ";
+    }
+    std::cout << "\n";
+
+    // ------------------------------------------------
 
     return 0;
 }

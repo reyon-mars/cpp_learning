@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <algorithm>   // tiny addition
+#include <vector>      // 🔹 NEW
+#include <numeric>     // 🔹 NEW
 
 int main() {
     std::unordered_map<std::string, int> counts;
@@ -88,6 +90,60 @@ int main() {
     temp_set.clear();
     std::cout << "Temp set cleared, size: "
               << temp_set.size() << "\n";
+
+    // ---------------- NEW SMALL ADDITIONS ----------------
+
+    // emplace example
+    counts.emplace("grape", 4);
+
+    std::cout << "After emplace:\n";
+    for (const auto& [key, val] : counts) {
+        std::cout << key << ": " << val << "\n";
+    }
+
+    // Count total values in map
+    int total = 0;
+    for (const auto& [key, val] : counts) {
+        total += val;
+    }
+
+    std::cout << "Total stored counts: "
+              << total << "\n";
+
+    // Rehash demo
+    counts.rehash(20);
+
+    std::cout << "Bucket count after rehash: "
+              << counts.bucket_count() << "\n";
+
+    // Swap unordered sets
+    std::unordered_set<int> another_set = {50, 60};
+
+    unique_nums.swap(another_set);
+
+    std::cout << "unique_nums after swap: ";
+    for (int n : unique_nums) {
+        std::cout << n << " ";
+    }
+    std::cout << "\n";
+
+    // Find specific element in set
+    auto set_it = unique_nums.find(50);
+
+    if (set_it != unique_nums.end()) {
+        std::cout << "Found value in set: "
+                  << *set_it << "\n";
+    }
+
+    // Vector to unordered_set conversion
+    std::vector<int> values = {7, 7, 8, 9, 9};
+
+    std::unordered_set<int> converted(values.begin(), values.end());
+
+    std::cout << "Converted set size: "
+              << converted.size() << "\n";
+
+    // ----------------------------------------------------
 
     return 0;
 }

@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <cstddef>
+#include <algorithm>   // 🔹 NEW
 
 // ======================================================
 // ORIGINAL CODE (LOGIC PRESERVED)
@@ -86,6 +87,36 @@ std::size_t count_value(const std::forward_list<std::string>& lst,
 void print_divider()
 {
     std::cout << "----------------------\n";
+}
+
+// 🔹 NEW: print first N elements
+void print_first_n(const std::forward_list<std::string>& lst, int n)
+{
+    int count = 0;
+    for (const auto& s : lst) {
+        if (count++ >= n) break;
+        std::cout << s << " ";
+    }
+    std::cout << "\n";
+}
+
+// 🔹 NEW: check if all strings are non-empty
+bool all_non_empty(const std::forward_list<std::string>& lst)
+{
+    return std::all_of(lst.begin(), lst.end(),
+        [](const std::string& s) {
+            return !s.empty();
+        });
+}
+
+// 🔹 NEW: total character count
+std::size_t total_characters(const std::forward_list<std::string>& lst)
+{
+    std::size_t total = 0;
+    for (const auto& s : lst)
+        total += s.size();
+
+    return total;
 }
 
 // ======================================================
@@ -197,6 +228,30 @@ int main() {
     // check empty again
     cout << "Is list empty now? "
          << (lst.empty() ? "Yes\n" : "No\n");
+
+    // 🔹 NEW TESTS
+
+    // print first 3 elements
+    cout << "First 3 elements: ";
+    print_first_n(lst, 3);
+
+    // all strings non-empty?
+    cout << "All strings non-empty? "
+         << (all_non_empty(lst) ? "Yes\n" : "No\n");
+
+    // total characters
+    cout << "Total character count: "
+         << total_characters(lst) << "\n";
+
+    // emplace_front example
+    lst.emplace_front("starter");
+    cout << "After emplace_front: ";
+    print_list(lst);
+
+    // resize list
+    lst.resize(5);
+    cout << "After resize(5): ";
+    print_list(lst);
 
     // ----------------------------------------------------
 

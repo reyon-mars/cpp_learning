@@ -6,6 +6,8 @@
 #include <queue>
 #include <vector>
 #include <functional>
+#include <deque>     // 🔹 NEW
+#include <string>    // 🔹 NEW
 
 int main() {
     // Stack
@@ -119,6 +121,68 @@ int main() {
               << (q.empty() ? "Yes" : "No") << "\n";
 
     // ----------------------------------------------------
+    // 🔹 EXTRA ADDED CODE (ORIGINAL LOGIC UNCHANGED)
+    // ----------------------------------------------------
+
+    // deque used with stack
+    std::deque<int> dq = {11, 22, 33};
+    std::stack<int, std::deque<int>> custom_stack(dq);
+
+    std::cout << "Custom stack top: "
+              << custom_stack.top() << "\n";
+
+    // queue with strings
+    std::queue<std::string> names;
+    names.push("Alice");
+    names.push("Bob");
+
+    std::cout << "Names queue front: "
+              << names.front() << "\n";
+
+    // max priority queue example
+    std::priority_queue<int> max_pq;
+    max_pq.push(100);
+    max_pq.push(50);
+    max_pq.push(200);
+
+    std::cout << "Max priority queue top: "
+              << max_pq.top() << "\n";
+
+    // push multiple elements into stack
+    for (int i = 1; i <= 3; ++i) {
+        s.push(i * 10);
+    }
+
+    std::cout << "Stack after loop pushes: ";
+    while (!s.empty()) {
+        std::cout << s.top() << " ";
+        s.pop();
+    }
+    std::cout << "\n";
+
+    // refill queue for demo
+    q.push(1);
+    q.push(2);
+    q.push(3);
+
+    std::cout << "Queue contents: ";
+    while (!q.empty()) {
+        std::cout << q.front() << " ";
+        q.pop();
+    }
+    std::cout << "\n";
+
+    // priority queue with negative values
+    pq.push(-1);
+    pq.push(-5);
+    pq.push(2);
+
+    std::cout << "Priority queue values: ";
+    while (!pq.empty()) {
+        std::cout << pq.top() << " ";
+        pq.pop();
+    }
+    std::cout << "\n";
 
     return 0;
 }

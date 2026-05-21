@@ -2,6 +2,7 @@
 #include <iostream>
 #include <algorithm>
 #include <numeric>   // tiny addition for accumulate
+#include <iterator>  // 🔹 NEW
 
 // ---------------- ORIGINAL LOGIC ----------------
 
@@ -67,6 +68,25 @@ int max_list(const std::list<int>& L) {
 // Divider
 void print_divider() {
     std::cout << "----------------------\n";
+}
+
+// 🔹 NEW: minimum element
+int min_list(const std::list<int>& L) {
+    return L.empty() ? 0 : *std::min_element(L.begin(), L.end());
+}
+
+// 🔹 NEW: average of elements
+double average_list(const std::list<int>& L) {
+    if (L.empty()) return 0.0;
+    return static_cast<double>(sum_list(L)) / L.size();
+}
+
+// 🔹 NEW: print list in reverse
+void print_reverse(const std::list<int>& L) {
+    for (auto it = L.rbegin(); it != L.rend(); ++it) {
+        std::cout << *it << " ";
+    }
+    std::cout << "\n";
 }
 
 // ---------------- MAIN ----------------
@@ -144,6 +164,32 @@ int main(void) {
     // check if list is empty after operations
     std::cout << "Is demo empty? "
               << (demo.empty() ? "Yes" : "No") << "\n";
+
+    // 🔹 NEW TESTS
+
+    // minimum element
+    std::cout << "Minimum value: "
+              << min_list(demo) << "\n";
+
+    // average value
+    std::cout << "Average value: "
+              << average_list(demo) << "\n";
+
+    // reverse iterator print
+    std::cout << "Reverse print: ";
+    print_reverse(demo);
+
+    // insert at front and back
+    demo.push_front(500);
+    demo.push_back(900);
+
+    std::cout << "After push_front and push_back: ";
+    print_list(demo);
+
+    // resize list
+    demo.resize(5);
+    std::cout << "After resize(5): ";
+    print_list(demo);
 
     // clear list
     demo.clear();

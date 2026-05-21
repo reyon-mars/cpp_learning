@@ -4,6 +4,9 @@
 #include <iostream>
 #include <map>
 #include <set>
+#include <string>   // 🔹 NEW
+#include <vector>   // 🔹 NEW
+#include <algorithm> // 🔹 NEW
 
 int main() {
     // std::map
@@ -111,6 +114,88 @@ int main() {
     numbers.clear();
     std::cout << "Multiset cleared, size: "
               << numbers.size() << "\n";
+
+    // ----------------------------------------------------
+    // 🔹 EXTRA ADDITIONS (ORIGINAL CODE UNCHANGED)
+    // ----------------------------------------------------
+
+    // map contains check (C++20)
+    if (age_map.contains("Alice")) {
+        std::cout << "Alice exists in map\n";
+    }
+
+    // update existing value
+    age_map["Alice"] += 1;
+    std::cout << "Updated Alice age: "
+              << age_map["Alice"] << "\n";
+
+    // copy map into another map
+    std::map<std::string, int> copied_map = age_map;
+
+    std::cout << "Copied map entries:\n";
+    for (const auto& [name, age] : copied_map) {
+        std::cout << name << ": " << age << "\n";
+    }
+
+    // swap sets
+    std::set<int> other_set = {100, 200, 300};
+
+    unique_values.swap(other_set);
+
+    std::cout << "After swap, unique_values: ";
+    for (int v : unique_values) {
+        std::cout << v << " ";
+    }
+    std::cout << "\n";
+
+    // restore values
+    unique_values.swap(other_set);
+
+    // multimap count
+    std::cout << "Entries for Alice in multimap: "
+              << scores.count("Alice") << "\n";
+
+    // insert more duplicate values into multiset
+    numbers.insert(10);
+    numbers.insert(10);
+    numbers.insert(20);
+
+    std::cout << "Updated multiset values: ";
+    for (int n : numbers) {
+        std::cout << n << " ";
+    }
+    std::cout << "\n";
+
+    // multiset equal_range
+    auto num_range = numbers.equal_range(10);
+
+    std::cout << "Values equal to 10: ";
+    for (auto itr = num_range.first; itr != num_range.second; ++itr) {
+        std::cout << *itr << " ";
+    }
+    std::cout << "\n";
+
+    // vector to set conversion
+    std::vector<int> values = {9, 8, 7, 7, 6, 5};
+    std::set<int> converted(values.begin(), values.end());
+
+    std::cout << "Converted set: ";
+    for (int v : converted) {
+        std::cout << v << " ";
+    }
+    std::cout << "\n";
+
+    // check empty
+    std::cout << "Is multiset empty? "
+              << (numbers.empty() ? "Yes" : "No") << "\n";
+
+    // erase by key in map
+    age_map.erase("David");
+
+    std::cout << "After erasing David:\n";
+    for (const auto& [name, age] : age_map) {
+        std::cout << name << ": " << age << "\n";
+    }
 
     // ----------------------------------------------------
 

@@ -2,6 +2,7 @@
 #include <list>
 #include <numeric>     // tiny addition
 #include <algorithm>   // tiny addition
+#include <iterator>    // NEW small addition
 
 // -------------------------------------------------------
 // SMALL ADDITION (FORWARD DECLARATION ONLY)
@@ -20,6 +21,10 @@ double average_list(const std::list<int>& lst);
 // ---- extra tiny helpers ----
 bool contains_value(const std::list<int>& lst, int value);
 int count_value(const std::list<int>& lst, int value);
+
+// ---- NEW small helpers ----
+void print_front_back(const std::list<int>& lst);
+bool all_positive(const std::list<int>& lst);
 
 // ---------------- ORIGINAL CODE (UNCHANGED) ----------------
 
@@ -87,7 +92,41 @@ int main(void)
     std::cout << "After unique(): ";
     print_list(v);
 
-    // -------------------------------
+    // ---------------- NEW SMALL ADDITIONS ----------------
+
+    // push_front and push_back
+    v.push_front(100);
+    v.push_back(200);
+
+    std::cout << "After push_front/back: ";
+    print_list(v);
+
+    // front and back values
+    print_front_back(v);
+
+    // pop operations
+    v.pop_front();
+    v.pop_back();
+
+    std::cout << "After pop_front/back: ";
+    print_list(v);
+
+    // check positivity
+    std::cout << "All positive? "
+              << (all_positive(v) ? "Yes" : "No") << std::endl;
+
+    // resize list
+    v.resize(6, 9);
+    std::cout << "After resize: ";
+    print_list(v);
+
+    // clear list
+    std::list<int> temp = v;
+    temp.clear();
+    std::cout << "Temp list cleared. Size: "
+              << temp.size() << std::endl;
+
+    // -----------------------------------------------------
 
     return 0;
 }
@@ -152,6 +191,24 @@ int count_value(const std::list<int>& lst, int value)
         if (v == value)
             ++count;
     return count;
+}
+
+// Print front and back safely
+void print_front_back(const std::list<int>& lst)
+{
+    if (!lst.empty()) {
+        std::cout << "Front: " << lst.front() << std::endl;
+        std::cout << "Back: " << lst.back() << std::endl;
+    }
+}
+
+// Check if all elements are positive
+bool all_positive(const std::list<int>& lst)
+{
+    for (int v : lst)
+        if (v <= 0)
+            return false;
+    return true;
 }
 
 // Tiny divider

@@ -3,8 +3,32 @@
 
 #include <iostream>
 #include <filesystem>
+#include <vector>      // 🔹 added
+#include <algorithm>   // 🔹 added
 
 namespace fs = std::filesystem;
+
+// ---------------- SMALL EXTRA HELPERS ----------------
+
+// Print divider
+void print_divider() {
+    std::cout << "-----------------------------\n";
+}
+
+// Check if file has extension
+bool has_txt_extension(const fs::path& p) {
+    return p.extension() == ".txt";
+}
+
+// Print path components
+void print_components(const fs::path& p) {
+    std::cout << "Path components:\n";
+    for (const auto& part : p) {
+        std::cout << part << "\n";
+    }
+}
+
+// =====================================================
 
 int main() {
     // Create path
@@ -85,6 +109,54 @@ int main() {
     // File status check
     std::cout << "Exists (again check): "
               << (fs::exists(file_path) ? "Yes" : "No") << "\n";
+
+    // ==================================================
+    // 🔹 NEW SMALL ADDITIONS
+    // ==================================================
+
+    print_divider();
+
+    // Check root path
+    std::cout << "Root path: "
+              << file_path.root_path() << "\n";
+
+    // Relative path
+    std::cout << "Relative path: "
+              << file_path.relative_path() << "\n";
+
+    // Check extension helper
+    std::cout << "Has .txt extension? "
+              << (has_txt_extension(file_path) ? "Yes" : "No") << "\n";
+
+    // Print path components
+    print_components(file_path);
+
+    // Lexically normal path
+    fs::path messy = "/tmp/../tmp/test.txt";
+    std::cout << "Normalized path: "
+              << messy.lexically_normal() << "\n";
+
+    // Copy path into vector
+    std::vector<fs::path> paths = {
+        file_path,
+        modified,
+        messy
+    };
+
+    std::cout << "Stored paths:\n";
+    for (const auto& p : paths) {
+        std::cout << p << "\n";
+    }
+
+    // Sort paths alphabetically
+    std::sort(paths.begin(), paths.end());
+
+    std::cout << "Sorted paths:\n";
+    for (const auto& p : paths) {
+        std::cout << p << "\n";
+    }
+
+    // ==================================================
 
     return 0;
 }

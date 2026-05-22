@@ -1,5 +1,6 @@
 #include <forward_list>
 #include <iostream>
+#include <algorithm>   // 🔹 NEW
 
 // ======================================================
 // ORIGINAL CODE (LOGIC UNCHANGED)
@@ -121,6 +122,84 @@ int main(void) {
         std::cout << v << " ";
     }
     std::cout << "\n";
+
+    // ---------------- NEW SMALL ADDITIONS ----------------
+
+    // Count even numbers
+    int even_count = 0;
+    for (int v : f_lst) {
+        if (v % 2 == 0)
+            ++even_count;
+    }
+
+    std::cout << "Even count: "
+              << even_count << "\n";
+
+    // Product of all elements
+    int product = 1;
+
+    if (!f_lst.empty()) {
+        for (int v : f_lst) {
+            product *= v;
+        }
+        std::cout << "Product: "
+                  << product << "\n";
+    }
+
+    // Push front
+    f_lst.push_front(100);
+    std::cout << "After push_front: ";
+    for (int v : f_lst) {
+        std::cout << v << " ";
+    }
+    std::cout << "\n";
+
+    // Pop front
+    f_lst.pop_front();
+    std::cout << "After pop_front: ";
+    for (int v : f_lst) {
+        std::cout << v << " ";
+    }
+    std::cout << "\n";
+
+    // Remove a specific value
+    f_lst.remove(4);
+    std::cout << "After removing 4: ";
+    for (int v : f_lst) {
+        std::cout << v << " ";
+    }
+    std::cout << "\n";
+
+    // Unique example
+    f_lst.push_front(2);
+    f_lst.push_front(2);
+    f_lst.unique();
+
+    std::cout << "After unique(): ";
+    for (int v : f_lst) {
+        std::cout << v << " ";
+    }
+    std::cout << "\n";
+
+    // Check if sorted
+    std::cout << "Is sorted? "
+              << (std::is_sorted(f_lst.begin(), f_lst.end())
+                  ? "Yes" : "No")
+              << "\n";
+
+    // Resize example
+    f_lst.resize(4);
+    std::cout << "After resize(4): ";
+    for (int v : f_lst) {
+        std::cout << v << " ";
+    }
+    std::cout << "\n";
+
+    // Clear list
+    f_lst.clear();
+    std::cout << "After clear, empty? "
+              << (f_lst.empty() ? "Yes" : "No")
+              << "\n";
 
     // ------------------------------------------------------
 

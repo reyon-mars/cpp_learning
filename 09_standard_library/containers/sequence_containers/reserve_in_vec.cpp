@@ -17,6 +17,11 @@ double average_vector(const std::vector<int>& v);
 int count_even(const std::vector<int>& v);
 int count_odd(const std::vector<int>& v);
 
+// ---- NEW SMALL HELPERS ----
+void print_divider();
+void print_vector_info(const std::vector<int>& v);
+bool is_sorted_vector(const std::vector<int>& v);
+
 // ======================================================
 // ORIGINAL CODE (UNCHANGED LOGIC)
 // ======================================================
@@ -38,6 +43,29 @@ int main(void) {
         std::cout << num << " ";
     }
     std::cout << std::endl;
+
+    // ---- NEW SMALL ADDITIONS ----
+    print_divider();
+
+    std::cout << "Vector info after reverse:\n";
+    print_vector_info(vec);
+
+    std::cout << "Is vector sorted? "
+              << (is_sorted_vector(vec) ? "Yes" : "No") << '\n';
+
+    // sort again
+    std::sort(vec.begin(), vec.end());
+
+    std::cout << "After sorting main vector: ";
+    for (const auto num : vec) {
+        std::cout << num << " ";
+    }
+    std::cout << '\n';
+
+    std::cout << "Front element: " << vec.front() << '\n';
+    std::cout << "Back element: " << vec.back() << '\n';
+
+    print_divider();
 
     // ---- small extra call ----
     run_extra_vector_demo();
@@ -100,6 +128,29 @@ int count_odd(const std::vector<int>& v) {
                          [](int x) { return x % 2 != 0; });
 }
 
+// ---- NEW SMALL HELPERS ----
+
+// Divider
+void print_divider() {
+    std::cout << "-----------------------------\n";
+}
+
+// Print vector statistics
+void print_vector_info(const std::vector<int>& v) {
+    std::cout << "Size: " << v.size() << '\n';
+    std::cout << "Sum: " << sum_vector(v) << '\n';
+    std::cout << "Min: " << min_vector(v) << '\n';
+    std::cout << "Max: " << max_vector(v) << '\n';
+    std::cout << "Average: " << average_vector(v) << '\n';
+    std::cout << "Even count: " << count_even(v) << '\n';
+    std::cout << "Odd count: " << count_odd(v) << '\n';
+}
+
+// Check if vector is sorted
+bool is_sorted_vector(const std::vector<int>& v) {
+    return std::is_sorted(v.begin(), v.end());
+}
+
 // ======================================================
 // EXTRA DEMO (VERY SMALL)
 // ======================================================
@@ -133,4 +184,25 @@ void run_extra_vector_demo() {
     std::sort(extra.begin(), extra.end());
     std::cout << "Sorted: ";
     print_vector(extra);
+
+    // ---- NEW SMALL TESTS ----
+
+    print_divider();
+
+    std::cout << "Extra vector info:\n";
+    print_vector_info(extra);
+
+    extra.push_back(10);
+    extra.push_back(20);
+
+    std::cout << "After push_back operations: ";
+    print_vector(extra);
+
+    extra.pop_back();
+
+    std::cout << "After pop_back: ";
+    print_vector(extra);
+
+    std::cout << "Is sorted now? "
+              << (is_sorted_vector(extra) ? "Yes" : "No") << '\n';
 }

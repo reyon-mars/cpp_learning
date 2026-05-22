@@ -1,5 +1,6 @@
 #include <forward_list>
 #include <iostream>
+#include <algorithm>   // 🔹 NEW
 
 // ======================================================
 // ORIGINAL CODE (LOGIC UNCHANGED)
@@ -127,6 +128,48 @@ void print_divider() {
     std::cout << "-----------------------------\n";
 }
 
+// 🔹 NEW: Count even numbers
+int count_evens(const std::forward_list<int>& lst) {
+    int count = 0;
+    for (int v : lst)
+        if (v % 2 == 0)
+            ++count;
+
+    return count;
+}
+
+// 🔹 NEW: Multiply all elements
+int multiply_elements(const std::forward_list<int>& lst) {
+    int product = 1;
+
+    if (is_empty(lst))
+        return 0;
+
+    for (int v : lst)
+        product *= v;
+
+    return product;
+}
+
+// 🔹 NEW: Print first N elements
+void print_first_n(const std::forward_list<int>& lst, int n) {
+    int count = 0;
+
+    for (int v : lst) {
+        if (count++ >= n)
+            break;
+
+        std::cout << v << " ";
+    }
+
+    std::cout << "\n";
+}
+
+// 🔹 NEW: Check if sorted
+bool is_sorted_list(const std::forward_list<int>& lst) {
+    return std::is_sorted(lst.begin(), lst.end());
+}
+
 // ======================================================
 // MAIN
 // ======================================================
@@ -232,6 +275,46 @@ int main() {
     fl1.unique();
     std::cout << "After unique(): ";
     print_list(fl1);
+
+    // ---------------- NEW SMALL ADDITIONS ----------------
+
+    // count evens
+    std::cout << "Even count: "
+              << count_evens(fl1) << "\n";
+
+    // multiply elements
+    std::cout << "Product of elements: "
+              << multiply_elements(fl1) << "\n";
+
+    // print first 3 elements
+    std::cout << "First 3 elements: ";
+    print_first_n(fl1, 3);
+
+    // check sorted state
+    std::cout << "Is fl1 sorted? "
+              << (is_sorted_list(fl1) ? "Yes" : "No") << "\n";
+
+    // emplace_front example
+    fl1.emplace_front(500);
+    std::cout << "After emplace_front: ";
+    print_list(fl1);
+
+    // resize example
+    fl1.resize(4);
+    std::cout << "After resize(4): ";
+    print_list(fl1);
+
+    // splice_after example
+    std::forward_list<int> extra = {50, 60};
+    fl1.splice_after(fl1.before_begin(), extra);
+
+    std::cout << "After splice_after: ";
+    print_list(fl1);
+
+    // clear example
+    fl2.clear();
+    std::cout << "After clearing fl2, empty? "
+              << (is_empty(fl2) ? "Yes" : "No") << "\n";
 
     return 0;
 }

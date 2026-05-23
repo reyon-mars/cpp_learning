@@ -5,7 +5,7 @@
 class int_range {
 private:
     int start;
-    int end;
+    int end_value;   // renamed to avoid conflict with end()
 
 public:
     class Iterator {
@@ -25,15 +25,20 @@ public:
         bool operator!=(const Iterator& other) const {
             return current_ != other.current_;
         }
+
+        // 🔹 NEW: equality operator
+        bool operator==(const Iterator& other) const {
+            return current_ == other.current_;
+        }
     };
 
-    explicit int_range(int s, int e) : start(s), end(e) {}
+    explicit int_range(int s, int e) : start(s), end_value(e) {}
 
     Iterator begin() { return Iterator(start); }
-    Iterator end()   { return Iterator(end); }
+    Iterator end()   { return Iterator(end_value); }
 
     Iterator begin() const { return Iterator(start); }
-    Iterator end()   const { return Iterator(end); }
+    Iterator end()   const { return Iterator(end_value); }
 };
 
 // ---------------- SMALL ADDITIONS ----------------
@@ -94,8 +99,10 @@ int range_max(const int_range& r) {
 void print_reverse(const int_range& r) {
     int last = 0;
     for (int v : r) last = v;
+
     for (int i = last; contains(r, i); --i)
         std::cout << i << " ";
+
     std::cout << "\n";
 }
 
@@ -156,6 +163,42 @@ void print_squares(const int_range& r) {
     std::cout << "\n";
 }
 
+// 🔹 NEW: print cubes
+void print_cubes(const int_range& r) {
+    for (int v : r)
+        std::cout << v * v * v << " ";
+    std::cout << "\n";
+}
+
+// 🔹 NEW: count multiples of a number
+int count_multiples(const int_range& r, int divisor) {
+    int count = 0;
+
+    for (int v : r)
+        if (v % divisor == 0)
+            ++count;
+
+    return count;
+}
+
+// 🔹 NEW: print only even values
+void print_even_values(const int_range& r) {
+    for (int v : r)
+        if (v % 2 == 0)
+            std::cout << v << " ";
+
+    std::cout << "\n";
+}
+
+// 🔹 NEW: print only odd values
+void print_odd_values(const int_range& r) {
+    for (int v : r)
+        if (v % 2 != 0)
+            std::cout << v << " ";
+
+    std::cout << "\n";
+}
+
 // ---------------- MAIN ----------------
 
 int main(void) {
@@ -198,6 +241,20 @@ int main(void) {
 
     std::cout << "Squared values: ";
     print_squares(r);
+
+    // 🔹 NEW TESTS
+
+    std::cout << "Cubed values: ";
+    print_cubes(r);
+
+    std::cout << "Multiples of 2: "
+              << count_multiples(r, 2) << "\n";
+
+    std::cout << "Even values: ";
+    print_even_values(r);
+
+    std::cout << "Odd values: ";
+    print_odd_values(r);
 
     return 0;
 }

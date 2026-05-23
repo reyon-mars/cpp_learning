@@ -6,6 +6,27 @@
 #include <ranges>
 #include <numeric>   // added
 #include <algorithm> // added
+#include <iterator>  // tiny addition
+
+// ---- SMALL EXTRA HELPERS ----
+
+// print any range
+template <typename Range>
+void print_range(const Range& r, const std::string& label) {
+    std::cout << label;
+    for (auto v : r)
+        std::cout << v << " ";
+    std::cout << "\n";
+}
+
+// sum helper
+int range_sum(const std::vector<int>& v) {
+    return std::accumulate(v.begin(), v.end(), 0);
+}
+
+// ======================================================
+// MAIN
+// ======================================================
 
 int main() {
     std::vector<int> vec = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
@@ -107,6 +128,49 @@ int main() {
     // Count even numbers
     auto even_count = std::ranges::count_if(vec, [](int x){ return x % 2 == 0; });
     std::cout << "Even count: " << even_count << "\n";
+
+    // =================================
+    // NEW SMALL ADDITIONS
+    // =================================
+
+    // Odd numbers view
+    auto odds = vec | std::views::filter([](int x) {
+        return x % 2 != 0;
+    });
+
+    print_range(odds, "Odd numbers: ");
+
+    // Cubed values
+    auto cubed = vec | std::views::transform([](int x) {
+        return x * x * x;
+    });
+
+    print_range(cubed, "Cubed values: ");
+
+    // Numbers greater than 5
+    auto greater_than_five = vec | std::views::filter([](int x) {
+        return x > 5;
+    });
+
+    print_range(greater_than_five, "Greater than 5: ");
+
+    // Reverse + take
+    auto reverse_take = vec
+        | std::views::reverse
+        | std::views::take(3);
+
+    print_range(reverse_take, "Last three reversed: ");
+
+    // Sum helper usage
+    std::cout << "Range sum helper: "
+              << range_sum(vec) << "\n";
+
+    // Count odd numbers
+    auto odd_count = std::ranges::count_if(vec,
+        [](int x){ return x % 2 != 0; });
+
+    std::cout << "Odd count: "
+              << odd_count << "\n";
 
     // =================================
 

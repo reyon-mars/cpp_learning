@@ -106,5 +106,46 @@ int main() {
 
     std::cout << "Average of generated vector: " << avg << "\n";
 
+    // -----------------------------------
+    // EXTRA SMALL ADDITIONS (MORE)
+    // -----------------------------------
+
+    // Count even numbers in generated vector
+    int even_count = std::count_if(generated.begin(), generated.end(),
+                                   [](int x) { return x % 2 == 0; });
+
+    std::cout << "Even numbers count: "
+              << even_count << "\n";
+
+    // Sort generated vector
+    std::sort(generated.begin(), generated.end());
+
+    std::cout << "Sorted generated vector: ";
+    for (int n : generated)
+        std::cout << n << " ";
+    std::cout << "\n";
+
+    // Reverse generated vector
+    std::reverse(generated.begin(), generated.end());
+
+    std::cout << "Reversed generated vector: ";
+    for (int n : generated)
+        std::cout << n << " ";
+    std::cout << "\n";
+
+    // Random character generation
+    std::uniform_int_distribution<int> char_dist(65, 90);
+
+    std::cout << "Random uppercase letters: ";
+    for (int i = 0; i < 5; ++i) {
+        std::cout << static_cast<char>(char_dist(rng)) << " ";
+    }
+    std::cout << "\n";
+
+    // Check if vector is empty
+    std::cout << "Generated vector is "
+              << (generated.empty() ? "empty" : "not empty")
+              << "\n";
+
     return 0;
 }

@@ -6,6 +6,28 @@
 #include <numeric>   // added
 
 // ==================================================
+// SMALL EXTRA HELPERS
+// ==================================================
+
+// print vector characters
+void print_chars(const std::vector<char>& v) {
+    for (char c : v)
+        std::cout << c;
+    std::cout << std::endl;
+}
+
+// count vowels
+int count_vowels(const std::vector<char>& v) {
+    return std::count_if(v.begin(), v.end(),
+        [](char c) {
+            char lower = std::tolower(static_cast<unsigned char>(c));
+            return lower == 'a' || lower == 'e' ||
+                   lower == 'i' || lower == 'o' ||
+                   lower == 'u';
+        });
+}
+
+// ==================================================
 // ORIGINAL CODE (LOGIC UNCHANGED)
 // ==================================================
 
@@ -115,6 +137,48 @@ int main(void) {
     std::cout << "After adding '?': ";
     for (char c : v) std::cout << c;
     std::cout << std::endl;
+
+    // ======================================
+
+    // ===== NEW SMALL ADDITIONS =====
+
+    // Print using helper
+    std::cout << "Printed using helper: ";
+    print_chars(v);
+
+    // Count vowels
+    std::cout << "Vowel count: "
+              << count_vowels(v) << std::endl;
+
+    // Remove punctuation in copy
+    std::vector<char> letters_only;
+    std::copy_if(v.begin(), v.end(),
+                 std::back_inserter(letters_only),
+                 [](char c) {
+                     return std::isalpha(
+                         static_cast<unsigned char>(c));
+                 });
+
+    std::cout << "Letters only: ";
+    print_chars(letters_only);
+
+    // Check if all alphabetic
+    bool all_alpha = std::all_of(v.begin(), v.end(),
+        [](char c) {
+            return std::isalpha(
+                static_cast<unsigned char>(c));
+        });
+
+    std::cout << "All alphabetic? "
+              << (all_alpha ? "Yes" : "No")
+              << std::endl;
+
+    // Reverse actual vector copy
+    std::vector<char> reversed_copy = v;
+    std::reverse(reversed_copy.begin(), reversed_copy.end());
+
+    std::cout << "Reversed copy: ";
+    print_chars(reversed_copy);
 
     // ======================================
 

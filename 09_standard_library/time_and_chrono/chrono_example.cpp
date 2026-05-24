@@ -5,6 +5,9 @@
 #include <chrono>
 #include <thread>
 #include <ctime>
+#include <numeric>   // tiny addition
+#include <vector>    // tiny addition
+#include <algorithm> // tiny addition
 
 int main() {
     using namespace std::chrono_literals;
@@ -97,6 +100,43 @@ int main() {
     auto avg_time = (elapsed + std::chrono::milliseconds(50)) / 2;
     std::cout << "Average duration: "
               << avg_time.count() << " ms\n";
+
+    // --------------------------------
+    // FINAL SMALL ADDITIONS
+    // --------------------------------
+
+    // Store sample durations
+    std::vector<long long> samples = {
+        elapsed.count(),
+        static_cast<long long>(steady_elapsed.count() / 1000),
+        total_time.count()
+    };
+
+    // Sum of sample durations
+    auto sample_sum = std::accumulate(samples.begin(), samples.end(), 0LL);
+    std::cout << "Sample duration sum: "
+              << sample_sum << " ms\n";
+
+    // Min and max sample durations
+    auto [min_it, max_it] =
+        std::minmax_element(samples.begin(), samples.end());
+
+    std::cout << "Min sample: " << *min_it << " ms\n";
+    std::cout << "Max sample: " << *max_it << " ms\n";
+
+    // Count samples greater than 50ms
+    auto count_large =
+        std::count_if(samples.begin(), samples.end(),
+                      [](long long t) { return t > 50; });
+
+    std::cout << "Samples > 50ms: "
+              << count_large << "\n";
+
+    // Print all sample durations
+    std::cout << "All samples: ";
+    for (auto t : samples)
+        std::cout << t << " ";
+    std::cout << "\n";
 
     // --------------------------------
 

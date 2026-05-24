@@ -7,6 +7,9 @@
 #include <variant>
 #include <any>
 #include <string>
+#include <vector>      // added
+#include <algorithm>   // added
+#include <numeric>     // added
 
 int main() {
     // std::pair
@@ -113,6 +116,60 @@ int main() {
     a.reset();
     std::cout << "Any after reset has value? "
               << (a.has_value() ? "Yes" : "No") << "\n";
+
+    // --------------------------------
+    // FINAL SMALL ADDITIONS
+    // --------------------------------
+
+    // vector of pairs
+    std::vector<std::pair<int, std::string>> vp = {
+        {1, "one"},
+        {2, "two"},
+        {3, "three"}
+    };
+
+    std::cout << "Vector of pairs:\n";
+    for (const auto& [id, word] : vp) {
+        std::cout << id << " -> " << word << "\n";
+    }
+
+    // accumulate values from vector
+    std::vector<int> nums = {1, 2, 3, 4, 5};
+    int total = std::accumulate(nums.begin(), nums.end(), 0);
+
+    std::cout << "Accumulated sum: " << total << "\n";
+
+    // count even numbers
+    int even_count = std::count_if(nums.begin(), nums.end(),
+        [](int x) { return x % 2 == 0; });
+
+    std::cout << "Even count: " << even_count << "\n";
+
+    // find maximum value
+    auto max_it = std::max_element(nums.begin(), nums.end());
+    if (max_it != nums.end()) {
+        std::cout << "Max value: " << *max_it << "\n";
+    }
+
+    // optional comparison
+    std::optional<int> opt_a = 5;
+    std::optional<int> opt_b = 10;
+
+    std::cout << "opt_a < opt_b ? "
+              << ((*opt_a < *opt_b) ? "Yes" : "No") << "\n";
+
+    // variant reassignment
+    v = std::string("new variant text");
+    std::visit([](auto&& arg) {
+        std::cout << "Updated variant: " << arg << "\n";
+    }, v);
+
+    // any with double
+    a = 3.1415;
+    if (a.type() == typeid(double)) {
+        std::cout << "Any double: "
+                  << std::any_cast<double>(a) << "\n";
+    }
 
     // --------------------------------
 

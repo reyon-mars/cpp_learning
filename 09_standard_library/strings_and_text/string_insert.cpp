@@ -100,6 +100,37 @@ std::string safe_replace(std::string& s,
     return s;
 }
 
+// ===== NEW SMALL HELPERS =====
+
+// Count spaces
+int count_spaces(const std::string& s)
+{
+    return std::count(s.begin(), s.end(), ' ');
+}
+
+// Check palindrome
+bool is_palindrome(std::string s)
+{
+    std::string copy = s;
+
+    copy.erase(
+        std::remove_if(copy.begin(), copy.end(),
+                       [](char c) {
+                           return std::isspace(
+                               static_cast<unsigned char>(c));
+                       }),
+        copy.end());
+
+    std::transform(copy.begin(), copy.end(), copy.begin(),
+                   [](unsigned char c) {
+                       return std::tolower(c);
+                   });
+
+    return std::equal(copy.begin(),
+                      copy.begin() + copy.size() / 2,
+                      copy.rbegin());
+}
+
 // ======================================================
 // MAIN
 // ======================================================
@@ -182,6 +213,28 @@ int main() {
     });
     if (it != text.end())
         std::cout << "First uppercase: " << *it << '\n';
+
+    // ===== FINAL TINY ADDITIONS =====
+
+    // Count spaces
+    std::cout << "Space count: "
+              << count_spaces(text) << '\n';
+
+    // Check palindrome
+    std::cout << "Is palindrome? "
+              << (is_palindrome(text) ? "Yes" : "No")
+              << '\n';
+
+    // String length check
+    std::cout << "String is "
+              << (text.empty() ? "empty" : "not empty")
+              << '\n';
+
+    // Append extra text safely
+    std::string appended = text;
+    appended += " Demo";
+    std::cout << "Appended string: "
+              << appended << '\n';
 
     // ======================================
 

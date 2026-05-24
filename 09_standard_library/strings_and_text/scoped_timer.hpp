@@ -5,6 +5,7 @@
 #include <ctime>
 #include <numeric>   // added
 #include <vector>    // tiny addition
+#include <algorithm> // tiny addition
 
 // ======================================================
 // ORIGINAL CODE (UNCHANGED LOGIC)
@@ -80,6 +81,25 @@ void timed_sleep(const std::string& label, int ms) {
 void print_current_time() {
     auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     std::cout << "[Current time] " << std::ctime(&now);
+}
+
+// ===== EXTRA SMALL HELPERS =====
+
+// Find average from timings
+double average_time(const std::vector<long long>& times) {
+    if (times.empty()) return 0.0;
+
+    long long total =
+        std::accumulate(times.begin(), times.end(), 0LL);
+
+    return static_cast<double>(total) / times.size();
+}
+
+// Print vector helper
+void print_times(const std::vector<long long>& times) {
+    for (long long t : times)
+        std::cout << t << " ";
+    std::cout << "\n";
 }
 
 // ---------------------------------------------------------
@@ -170,6 +190,43 @@ int main() {
     std::cout << "Throughput: "
               << ops / (duration ? duration : 1)
               << " ops/us\n";
+
+    // ======================================
+    // NEW SMALL ADDITIONS
+    // ======================================
+
+    // Print stored sample times
+    std::cout << "Sample times: ";
+    print_times(sample_times);
+
+    // Average using helper
+    std::cout << "Average using helper: "
+              << average_time(sample_times)
+              << " us\n";
+
+    // Find minimum and maximum timing
+    auto [min_it, max_it] =
+        std::minmax_element(sample_times.begin(),
+                            sample_times.end());
+
+    std::cout << "Minimum sample time: "
+              << *min_it << " us\n";
+
+    std::cout << "Maximum sample time: "
+              << *max_it << " us\n";
+
+    // Sort timing values
+    std::sort(sample_times.begin(), sample_times.end());
+
+    std::cout << "Sorted sample times: ";
+    print_times(sample_times);
+
+    // Small sleep demo
+    timed_sleep("tiny sleep (50ms)", 50);
+
+    // Count total samples
+    std::cout << "Number of samples: "
+              << sample_times.size() << "\n";
 
     // ======================================
 

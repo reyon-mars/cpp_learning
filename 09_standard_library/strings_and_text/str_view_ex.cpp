@@ -86,6 +86,36 @@ void print_timestamp()
     std::cout << "[Time] " << std::ctime(&now);
 }
 
+// ===== EXTRA SMALL HELPERS =====
+
+// simple logger with newline spacing
+void spaced_log(std::string_view tag, std::string_view msg)
+{
+    std::cout << '\n';
+    log_msg(tag, msg);
+}
+
+// check if message is empty
+bool is_empty_message(std::string_view msg)
+{
+    return msg.empty();
+}
+
+// count total characters in vector of messages
+std::size_t total_characters(const std::vector<std::string>& msgs)
+{
+    std::size_t total = 0;
+    for (const auto& s : msgs)
+        total += s.size();
+    return total;
+}
+
+// print simple benchmark note
+void print_note(const std::string& text)
+{
+    std::cout << "[Note] " << text << '\n';
+}
+
 // ======================================================
 // MAIN
 // ======================================================
@@ -190,6 +220,35 @@ int main(void)
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
     std::cout << "Throughput test (1000 logs): "
               << duration << " us\n";
+
+    // ======================================
+    // NEW SMALL ADDITIONS ONLY
+    // ======================================
+
+    // test empty message helper
+    std::cout << "Empty message check: "
+              << (is_empty_message("") ? "Yes" : "No") << '\n';
+
+    // spaced log example
+    spaced_log("Extra", "Spaced logger example");
+
+    // total characters example
+    std::vector<std::string> msg_list = {
+        "Hello",
+        "Logging",
+        "Benchmark"
+    };
+
+    std::cout << "Total characters in messages: "
+              << total_characters(msg_list) << '\n';
+
+    // print note
+    print_note("Benchmark completed successfully");
+
+    // small loop logging demo
+    for (int i = 1; i <= 3; ++i) {
+        log_msg_inline("Loop", "Iteration");
+    }
 
     // ======================================
 

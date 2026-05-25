@@ -54,7 +54,30 @@ void print_divider() {
     std::cout << "----------------------\n";
 }
 
-// ----------------------------------
+// ---- EXTRA SMALL HELPERS (NEW) ----
+
+// average helper
+double average_vector(const std::vector<int>& v) {
+    if (v.empty()) return 0.0;
+    return static_cast<double>(sum_vector(v)) / v.size();
+}
+
+// count even numbers
+int count_even(const std::vector<int>& v) {
+    return std::ranges::count_if(v, [](int x) {
+        return x % 2 == 0;
+    });
+}
+
+// print container helper
+template<Container T>
+void print_container(const T& c) {
+    for (const auto& item : c)
+        std::cout << item << " ";
+    std::cout << "\n";
+}
+
+// ===================================
 
 int main() {
     print(42);
@@ -134,6 +157,34 @@ int main() {
               << (all_positive ? "Yes" : "No") << "\n";
 
     // ===================================
+
+    // ===== EXTRA SMALL ADDITIONS (NEW) =====
+
+    // average of vector
+    std::cout << "Average: "
+              << average_vector(vec) << "\n";
+
+    // count evens
+    std::cout << "Even count: "
+              << count_even(vec) << "\n";
+
+    // min and max element
+    auto [min_it, max_it] =
+        std::minmax_element(vec.begin(), vec.end());
+
+    std::cout << "Min: " << *min_it
+              << ", Max: " << *max_it << "\n";
+
+    // check if sorted
+    std::cout << "Is sorted? "
+              << (std::ranges::is_sorted(vec) ? "Yes" : "No")
+              << "\n";
+
+    // print vector using helper
+    std::cout << "Vector contents: ";
+    print_container(vec);
+
+    // ======================================
 
     return 0;
 }

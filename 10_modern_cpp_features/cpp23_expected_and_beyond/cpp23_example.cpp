@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>     // tiny addition
 #include <numeric>    // tiny addition
+#include <algorithm>  // tiny addition
 
 // Simple Expected-like implementation for demonstration
 template<typename T, typename E>
@@ -56,6 +57,20 @@ public:
     }
 
     // ===================================
+
+    // ===== EXTRA SMALL ADDITIONS =====
+
+    // simple state getter
+    bool has_value() const {
+        return is_success;
+    }
+
+    // print compact info
+    void print_compact() const {
+        std::cout << (is_success ? "Success" : "Failure") << "\n";
+    }
+
+    // =================================
 };
 
 // ---- VERY SMALL EXTRA HELPERS ----
@@ -68,6 +83,19 @@ int sum_vector(const std::vector<int>& v) {
 // print divider
 void print_divider() {
     std::cout << "----------------------\n";
+}
+
+// average helper
+double average_vector(const std::vector<int>& v) {
+    if (v.empty()) return 0.0;
+    return static_cast<double>(sum_vector(v)) / v.size();
+}
+
+// print vector helper
+void print_vector(const std::vector<int>& v) {
+    for (int n : v)
+        std::cout << n << " ";
+    std::cout << "\n";
 }
 
 // ----------------------------------
@@ -132,6 +160,35 @@ int main() {
               << chained.get_value() << "\n";
 
     // ===================================
+
+    // ===== EXTRA SMALL ADDITIONS (NEW) =====
+
+    // has_value demo
+    std::cout << "Success has value? "
+              << (success.has_value() ? "Yes" : "No") << "\n";
+
+    // compact print demo
+    success.print_compact();
+    failure.print_compact();
+
+    // vector average
+    std::cout << "Average of nums: "
+              << average_vector(nums) << "\n";
+
+    // reverse vector copy
+    std::vector<int> reversed = nums;
+    std::reverse(reversed.begin(), reversed.end());
+
+    std::cout << "Reversed nums: ";
+    print_vector(reversed);
+
+    // find maximum value
+    auto max_it = std::max_element(nums.begin(), nums.end());
+    if (max_it != nums.end()) {
+        std::cout << "Max value: " << *max_it << "\n";
+    }
+
+    // ======================================
 
     return 0;
 }

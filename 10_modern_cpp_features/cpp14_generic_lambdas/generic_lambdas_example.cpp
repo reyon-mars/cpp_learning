@@ -4,6 +4,8 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <numeric>   // small addition
+#include <string>    // tiny addition
 
 int main() {
     std::vector<int> ints = {1, 2, 3, 4, 5};
@@ -93,6 +95,81 @@ int main() {
     std::cout << "\n";
 
     // ===================================
+
+    // ===== EXTRA SMALL ADDITIONS =====
+
+    // Generic minimum lambda
+    auto minimum = [](auto a, auto b) {
+        return (a < b) ? a : b;
+    };
+
+    std::cout << "Minimum of 8 and 3: "
+              << minimum(8, 3) << "\n";
+
+    // Generic string join lambda
+    auto join_text = [](auto a, auto b) {
+        return a + b;
+    };
+
+    std::cout << "Joined string: "
+              << join_text(std::string("Hello "), std::string("World"))
+              << "\n";
+
+    // Count odd numbers using generic lambda
+    auto is_odd = [](auto x) {
+        return x % 2 != 0;
+    };
+
+    int odd_count = std::count_if(ints.begin(), ints.end(), is_odd);
+
+    std::cout << "Odd count: "
+              << odd_count << "\n";
+
+    // Sum all integers
+    int total = std::accumulate(ints.begin(), ints.end(), 0);
+
+    std::cout << "Sum of ints: "
+              << total << "\n";
+
+    // =================================
+
+    // ===== FINAL TINY ADDITIONS =====
+
+    // Generic absolute value lambda
+    auto absolute = [](auto x) {
+        return (x < 0) ? -x : x;
+    };
+
+    std::cout << "Absolute of -9: "
+              << absolute(-9) << "\n";
+
+    // Multiply doubles using generic lambda
+    auto multiply = [](auto a, auto b) {
+        return a * b;
+    };
+
+    std::cout << "Multiply doubles: "
+              << multiply(2.5, 4.0) << "\n";
+
+    // Find max element
+    auto max_it = std::max_element(ints.begin(), ints.end());
+
+    if (max_it != ints.end())
+        std::cout << "Max int: "
+                  << *max_it << "\n";
+
+    // Reverse print using generic lambda
+    auto reverse_print = [](const auto& container) {
+        for (auto it = container.rbegin();
+             it != container.rend(); ++it)
+            std::cout << *it << " ";
+        std::cout << "\n";
+    };
+
+    std::cout << "Reverse ints: ";
+    reverse_print(ints);
+
+    // =================================
 
     return 0;
 }

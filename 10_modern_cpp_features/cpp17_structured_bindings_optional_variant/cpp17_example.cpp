@@ -10,6 +10,7 @@
 // ---- tiny addition ----
 #include <vector>
 #include <numeric>
+#include <algorithm> // added
 // -----------------------
 
 std::optional<int> safe_divide(int a, int b) {
@@ -35,6 +36,28 @@ void print_divider() {
 }
 
 // ----------------------------------
+
+// ===== EXTRA SMALL HELPERS =====
+
+// average helper
+double average_vector(const std::vector<int>& v) {
+    if (v.empty()) return 0.0;
+    return static_cast<double>(sum_vector(v)) / v.size();
+}
+
+// check if vector contains value
+bool contains_value(const std::vector<int>& v, int value) {
+    return std::find(v.begin(), v.end(), value) != v.end();
+}
+
+// print vector
+void print_vector(const std::vector<int>& v) {
+    for (int n : v)
+        std::cout << n << " ";
+    std::cout << "\n";
+}
+
+// =================================
 
 int main() {
     // Structured bindings
@@ -98,6 +121,37 @@ int main() {
 
     // variant index info
     std::cout << "Variant index: " << v.index() << "\n";
+
+    // ==================================
+
+    // ===== FINAL TINY ADDITIONS =====
+
+    // print vector contents
+    std::cout << "Vector contents: ";
+    print_vector(nums);
+
+    // average calculation
+    std::cout << "Average of nums: "
+              << average_vector(nums) << "\n";
+
+    // min and max element
+    auto [min_it, max_it] =
+        std::minmax_element(nums.begin(), nums.end());
+
+    std::cout << "Min: " << *min_it
+              << ", Max: " << *max_it << "\n";
+
+    // contains value check
+    std::cout << "Contains 3? "
+              << (contains_value(nums, 3) ? "Yes" : "No")
+              << "\n";
+
+    // reverse vector copy
+    std::vector<int> reversed = nums;
+    std::reverse(reversed.begin(), reversed.end());
+
+    std::cout << "Reversed nums: ";
+    print_vector(reversed);
 
     // ==================================
 

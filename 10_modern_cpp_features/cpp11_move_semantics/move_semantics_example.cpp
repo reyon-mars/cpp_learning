@@ -3,6 +3,8 @@
 
 #include <iostream>
 #include <utility>
+#include <algorithm> // tiny addition
+#include <numeric>   // tiny addition
 
 class Vector {
 private:
@@ -67,6 +69,34 @@ public:
 
     // ===================================
 
+    // ===== EXTRA SMALL ADDITIONS =====
+
+    // print vector values
+    void print_values() const {
+        for (size_t i = 0; i < size; ++i)
+            std::cout << data[i] << " ";
+        std::cout << "\n";
+    }
+
+    // calculate sum
+    int sum() const {
+        return std::accumulate(data, data + size, 0);
+    }
+
+    // find max value
+    int max_value() const {
+        if (size == 0) return 0;
+        return *std::max_element(data, data + size);
+    }
+
+    // find min value
+    int min_value() const {
+        if (size == 0) return 0;
+        return *std::min_element(data, data + size);
+    }
+
+    // ==================================
+
     ~Vector() { delete[] data; }
 };
 
@@ -116,6 +146,42 @@ int main() {
     std::cout << "v3 size: " << v3.get_size() << "\n";
 
     // -----------------------------------
+
+    // ===== FINAL SMALL ADDITIONS =====
+
+    // fill v4 with a new value
+    v4.fill(7);
+
+    std::cout << "v4 values: ";
+    v4.print_values();
+
+    // vector statistics
+    std::cout << "Sum of v4: "
+              << v4.sum() << "\n";
+
+    std::cout << "Max value in v4: "
+              << v4.max_value() << "\n";
+
+    std::cout << "Min value in v4: "
+              << v4.min_value() << "\n";
+
+    // average value
+    double avg = v4.get_size() == 0
+        ? 0.0
+        : static_cast<double>(v4.sum()) / v4.get_size();
+
+    std::cout << "Average value in v4: "
+              << avg << "\n";
+
+    // swap first and last element
+    if (v4.get_size() > 1) {
+        std::swap(v4[0], v4[v4.get_size() - 1]);
+    }
+
+    std::cout << "After swapping first/last: ";
+    v4.print_values();
+
+    // ===================================
 
     return 0;
 }

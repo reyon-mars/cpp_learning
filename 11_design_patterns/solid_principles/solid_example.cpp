@@ -3,6 +3,8 @@
 #include <ctime>
 #include <vector>
 #include <string>
+#include <algorithm> // tiny addition
+#include <numeric>   // tiny addition
 
 // ---------------- Single Responsibility ----------------
 
@@ -152,6 +154,12 @@ public:
         return logger != nullptr;
     }
     // -----------------------------
+
+    // ---- EXTRA SMALL ADDITION ----
+    void stop() {
+        logger->log("Application stopped");
+    }
+    // --------------------------------
 };
 
 // ---------------- Helper Functions ----------------
@@ -176,6 +184,25 @@ void print_divider() {
 // Count shapes
 std::size_t count_shapes(const std::vector<std::unique_ptr<Shape>>& shapes) {
     return shapes.size();
+}
+
+// --------------------------------
+
+// ---- EXTRA SMALL HELPERS ----
+
+// calculate total area
+int total_area(const std::vector<std::unique_ptr<Shape>>& shapes) {
+    int total = 0;
+
+    for (const auto& s : shapes)
+        total += s->area();
+
+    return total;
+}
+
+// print title
+void print_title(const std::string& title) {
+    std::cout << "\n=== " << title << " ===\n";
 }
 
 // --------------------------------
@@ -242,6 +269,25 @@ int main() {
     std::cout << "Total shapes: "
               << count_shapes(shapes) << "\n";
 
+    // ---- EXTRA SMALL ADDITIONS ----
+
+    std::cout << "Total combined area: "
+              << total_area(shapes) << "\n";
+
+    auto max_shape = std::max_element(
+        shapes.begin(),
+        shapes.end(),
+        [](const auto& a, const auto& b) {
+            return a->area() < b->area();
+        });
+
+    if (max_shape != shapes.end()) {
+        std::cout << "Largest area: "
+                  << (*max_shape)->area() << "\n";
+    }
+
+    // --------------------------------
+
     print_divider();
 
     std::cout << "\n--- Logger Test Utility ---\n";
@@ -249,6 +295,27 @@ int main() {
     test_logger(console_logger);
     test_logger(file_logger);
     test_logger(time_logger);
+
+    // ===== FINAL SMALL ADDITIONS =====
+
+    print_title("Numeric Utility Demo");
+
+    std::vector<int> nums = {10, 20, 30, 40};
+
+    int sum = std::accumulate(nums.begin(), nums.end(), 0);
+
+    std::cout << "Sum: " << sum << "\n";
+
+    std::cout << "Average: "
+              << (sum / nums.size()) << "\n";
+
+    std::cout << "Max value: "
+              << *std::max_element(nums.begin(), nums.end())
+              << "\n";
+
+    app.stop();
+
+    // =================================
 
     return 0;
 }

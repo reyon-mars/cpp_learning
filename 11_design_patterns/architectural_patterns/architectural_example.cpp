@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 #include <algorithm> // tiny addition
+#include <numeric>   // tiny addition
 
 // Model
 class User {
@@ -73,7 +74,20 @@ public:
         return nullptr;
     }
 
-    // ------------------------------------
+    // ===== FINAL TINY ADDITIONS =====
+
+    int total_ids() const {
+        int sum = 0;
+        for (const auto& user : users)
+            sum += user.id;
+        return sum;
+    }
+
+    bool empty() const {
+        return users.empty();
+    }
+
+    // =================================
 };
 
 // View
@@ -110,7 +124,18 @@ public:
         std::cout << type << " not found\n";
     }
 
-    // ------------------------------------
+    // ===== FINAL TINY ADDITIONS =====
+
+    void show_total_ids(int sum) {
+        std::cout << "Sum of user IDs: " << sum << "\n";
+    }
+
+    void show_empty(bool value) {
+        std::cout << "Repository empty? "
+                  << (value ? "Yes" : "No") << "\n";
+    }
+
+    // =================================
 };
 
 // Controller
@@ -174,7 +199,17 @@ public:
         }
     }
 
-    // ------------------------------------
+    // ===== FINAL TINY ADDITIONS =====
+
+    void show_total_ids() {
+        view.show_total_ids(repository.total_ids());
+    }
+
+    void show_if_empty() {
+        view.show_empty(repository.empty());
+    }
+
+    // =================================
 };
 
 int main() {
@@ -201,9 +236,21 @@ int main() {
     controller.find_user_by_name("Alice");
     controller.find_user_by_name("Charlie");
 
+    // ===== FINAL TINY USAGE =====
+
+    controller.show_total_ids();
+    controller.show_if_empty();
+
+    controller.divider();
+
+    // =================================
+
     controller.clear_users();
     controller.show_user_count();
-    // --------------------------------
+
+    // ---- extra final check ----
+    controller.show_if_empty();
+    // ---------------------------
 
     return 0;
 }

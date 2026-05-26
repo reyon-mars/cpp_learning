@@ -4,6 +4,8 @@
 #include <mutex>
 #include <thread>
 #include <vector>
+#include <algorithm> // tiny addition
+#include <numeric>   // tiny addition
 
 // ---------------- Singleton ----------------
 
@@ -33,6 +35,17 @@ public:
     // ---- VERY SMALL ADDITION ----
     static bool is_initialized() {
         return instance != nullptr;
+    }
+    // --------------------------------
+
+    // ---- EXTRA SMALL ADDITIONS ----
+    static void print_status() {
+        std::cout << "Database status: "
+                  << (instance ? "Active" : "Not initialized") << "\n";
+    }
+
+    void ping() {
+        std::cout << "Database ping successful\n";
     }
     // --------------------------------
     
@@ -74,6 +87,14 @@ public:
         if (type == "cow") return std::make_unique<Cow>();
         return nullptr;
     }
+
+    // ---- EXTRA SMALL ADDITION ----
+    static bool is_supported(const std::string& type) {
+        return type == "dog" ||
+               type == "cat" ||
+               type == "cow";
+    }
+    // --------------------------------
 };
 
 // ---------------- Builder ----------------
@@ -94,6 +115,14 @@ public:
     // ---- VERY SMALL ADDITION ----
     bool is_complete() const {
         return !cpu.empty() && !ram.empty() && !storage.empty();
+    }
+    // --------------------------------
+
+    // ---- EXTRA SMALL ADDITION ----
+    void summary() const {
+        std::cout << cpu << " | "
+                  << ram << " | "
+                  << storage << "\n";
     }
     // --------------------------------
 };
@@ -167,6 +196,23 @@ void print_divider() {
 }
 // --------------------------------
 
+// ---- EXTRA SMALL HELPERS ----
+
+// count supported animals
+int count_supported(const std::vector<std::string>& types) {
+    return std::count_if(types.begin(), types.end(),
+        [](const std::string& t) {
+            return AnimalFactory::is_supported(t);
+        });
+}
+
+// print simple title
+void print_title(const std::string& title) {
+    std::cout << "\n=== " << title << " ===\n";
+}
+
+// --------------------------------
+
 // ---------------- Main ----------------
 
 int main() {
@@ -180,6 +226,11 @@ int main() {
 
     // Thread-safe singleton usage
     Database::get_thread_safe_instance()->query("SELECT * FROM products");
+
+    // ---- EXTRA SMALL USAGE ----
+    Database::print_status();
+    Database::get_instance()->ping();
+    // --------------------------------
 
     print_divider();
 
@@ -207,6 +258,14 @@ int main() {
     std::cout << "\n--- Factory Bulk Test ---\n";
     test_factory();
 
+    // ---- EXTRA SMALL USAGE ----
+    std::vector<std::string> animals =
+        {"dog", "cat", "cow", "bird"};
+
+    std::cout << "Supported animal types: "
+              << count_supported(animals) << "\n";
+    // --------------------------------
+
     print_divider();
 
     // Builder usage
@@ -218,6 +277,10 @@ int main() {
 
     pc.show();
     std::cout << "Complete? " << (pc.is_complete() ? "Yes" : "No") << "\n";
+
+    // ---- EXTRA SMALL USAGE ----
+    pc.summary();
+    // --------------------------------
 
     print_divider();
 
@@ -239,6 +302,27 @@ int main() {
     incomplete.show();
     std::cout << "Complete? "
               << (incomplete.is_complete() ? "Yes" : "No") << "\n";
+
+    // ===== FINAL SMALL ADDITIONS =====
+
+    print_title("Numeric Demo");
+
+    std::vector<int> nums = {1, 2, 3, 4, 5};
+
+    int total = std::accumulate(nums.begin(), nums.end(), 0);
+
+    std::cout << "Accumulated sum: "
+              << total << "\n";
+
+    std::cout << "Max value: "
+              << *std::max_element(nums.begin(), nums.end())
+              << "\n";
+
+    std::cout << "Min value: "
+              << *std::min_element(nums.begin(), nums.end())
+              << "\n";
+
+    // =================================
 
     return 0;
 }

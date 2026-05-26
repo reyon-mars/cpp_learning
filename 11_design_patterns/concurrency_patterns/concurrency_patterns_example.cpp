@@ -8,6 +8,8 @@
 #include <shared_mutex>
 #include <vector>
 #include <chrono>
+#include <numeric>   // tiny addition
+#include <atomic>    // tiny addition
 
 // ---------------- Thread-safe singleton ----------------
 
@@ -32,6 +34,12 @@ public:
         std::cout << "Singleton says hello\n";
     }
     // -----------------------------
+
+    // ---- EXTRA SMALL ADDITION ----
+    void print_address() {
+        std::cout << "Singleton address: " << this << "\n";
+    }
+    // --------------------------------
 };
 
 std::mutex ThreadSafeSingleton::mutex;
@@ -70,6 +78,14 @@ public:
         return data.empty();
     }
     // --------------------------------
+
+    // ---- EXTRA SMALL ADDITION ----
+    void clear() {
+        std::lock_guard<std::mutex> lk(mut);
+        while (!data.empty())
+            data.pop();
+    }
+    // --------------------------------
 };
 
 // ---------------- Read-write lock example ----------------
@@ -77,7 +93,7 @@ public:
 class SharedData {
 private:
     int value = 0;
-    std::shared_mutex rw_mutex;
+    mutable std::shared_mutex rw_mutex;
 
 public:
     void write(int v) {
@@ -158,6 +174,21 @@ void print_queue_status(const Queue<int>& q) {
     safe_print("Queue size: " + std::to_string(q.size()));
 }
 
+// ---- EXTRA SMALL ADDITIONS ----
+
+// simple worker
+void worker_task(int id) {
+    safe_print("Worker thread " + std::to_string(id) + " running");
+}
+
+// atomic counter demo
+std::atomic<int> atomic_counter{0};
+
+void increment_counter() {
+    for (int i = 0; i < 1000; ++i)
+        ++atomic_counter;
+}
+
 // -----------------------------------------------------
 
 // ---------------- Main ----------------
@@ -167,6 +198,7 @@ int main() {
     // Singleton demo
     auto singleton = ThreadSafeSingleton::get_instance();
     singleton->say_hello(); // tiny addition
+    singleton->print_address(); // extra addition
     std::cout << "Singleton acquired\n";
 
     // -------- NEW: multiple threads using singleton --------
@@ -239,6 +271,42 @@ int main() {
     std::cout << "Final value (safe read): "
               << data.get_value() << "\n";
     // -------------------------
+
+    // ===== EXTRA SMALL ADDITIONS =====
+
+    std::cout << "\nAdditional worker threads:\n";
+
+    std::thread w1(worker_task, 1);
+    std::thread w2(worker_task, 2);
+
+    w1.join();
+    w2.join();
+
+    // atomic counter demo
+    std::thread a1(increment_counter);
+    std::thread a2(increment_counter);
+
+    a1.join();
+    a2.join();
+
+    std::cout << "Atomic counter value: "
+              << atomic_counter.load() << "\n";
+
+    // vector + accumulate demo
+    std::vector<int> nums = {1, 2, 3, 4, 5};
+
+    int total = std::accumulate(nums.begin(), nums.end(), 0);
+
+    std::cout << "Accumulated sum: "
+              << total << "\n";
+
+    // queue clear demo
+    q.clear();
+
+    std::cout << "Queue empty after clear? "
+              << (q.empty() ? "Yes" : "No") << "\n";
+
+    // =================================
 
     return 0;
 }

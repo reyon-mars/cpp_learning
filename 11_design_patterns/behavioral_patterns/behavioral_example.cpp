@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 #include <algorithm> // tiny addition
+#include <numeric>   // tiny addition
 
 // ---------------- Observer ----------------
 
@@ -24,6 +25,11 @@ public:
     
     void update(const std::string& msg) override {
         std::cout << name << " received: " << msg << "\n";
+    }
+
+    // ---- tiny addition ----
+    const std::string& get_name() const {
+        return name;
     }
 };
 
@@ -59,6 +65,11 @@ public:
             obs->update(msg);
         }
     }
+
+    // ---- EXTRA SMALL ADDITION ----
+    bool empty() const {
+        return observers.empty();
+    }
 };
 
 // ---------------- Strategy ----------------
@@ -77,6 +88,12 @@ public:
 class MultiplyStrategy : public Strategy {
 public:
     int execute(int a, int b) override { return a * b; }
+};
+
+// ---- tiny addition ----
+class SubtractStrategy : public Strategy {
+public:
+    int execute(int a, int b) override { return a - b; }
 };
 
 // Context for Strategy
@@ -146,6 +163,11 @@ public:
     void clear_history() {
         history.clear();
     }
+
+    // ---- EXTRA SMALL ADDITION ----
+    std::size_t history_size() const {
+        return history.size();
+    }
 };
 // ------------------------
 
@@ -168,6 +190,14 @@ class WorkingState : public State {
 public:
     void handle() override {
         std::cout << "System is working\n";
+    }
+};
+
+// ---- tiny addition ----
+class ErrorState : public State {
+public:
+    void handle() override {
+        std::cout << "System error state\n";
     }
 };
 
@@ -203,11 +233,18 @@ void print_divider() {
     std::cout << "------------------------\n";
 }
 
+// ---- EXTRA SMALL HELPER ----
+void print_title(const std::string& title) {
+    std::cout << "\n=== " << title << " ===\n";
+}
+
 // ---------------- Main ----------------
 
 int main() {
 
     // Observer demo
+    print_title("Observer Pattern");
+
     Subject subject;
     auto obs1 = std::make_shared<ConcreteObserver>("Observer1");
     auto obs2 = std::make_shared<ConcreteObserver>("Observer2");
@@ -226,12 +263,18 @@ int main() {
     print_divider();
 
     // Strategy demo
+    print_title("Strategy Pattern");
+
     Calculator calc;
     calc.set_strategy(std::make_shared<AddStrategy>());
     std::cout << "Add result: " << calc.compute(3, 4) << "\n";
 
     calc.set_strategy(std::make_shared<MultiplyStrategy>());
     std::cout << "Multiply result: " << calc.compute(3, 4) << "\n";
+
+    // ---- EXTRA SMALL USAGE ----
+    calc.set_strategy(std::make_shared<SubtractStrategy>());
+    std::cout << "Subtract result: " << calc.compute(10, 4) << "\n";
 
     std::cout << "Has strategy? "
               << (calc.has_strategy() ? "Yes" : "No") << "\n";
@@ -244,12 +287,18 @@ int main() {
     print_divider();
 
     // Command demo
+    print_title("Command Pattern");
+
     CommandInvoker invoker;
     std::shared_ptr<Command> cmd =
         std::make_shared<PrintCommand>("Hello from command pattern");
 
     invoker.run(cmd);
     invoker.print_history();
+
+    // ---- EXTRA SMALL USAGE ----
+    std::cout << "History size: "
+              << invoker.history_size() << "\n";
 
     // ---- tiny new usage ----
     invoker.clear_history();
@@ -258,11 +307,17 @@ int main() {
     print_divider();
 
     // State demo
+    print_title("State Pattern");
+
     Context context;
     context.set_state(std::make_shared<IdleState>());
     context.request();
 
     context.set_state(std::make_shared<WorkingState>());
+    context.request();
+
+    // ---- EXTRA SMALL USAGE ----
+    context.set_state(std::make_shared<ErrorState>());
     context.request();
 
     std::cout << "Has state? "
@@ -279,6 +334,24 @@ int main() {
     subject.detach_all();
     std::cout << "Observers after clear: "
               << subject.observer_count() << "\n";
+
+    // ---- FINAL TINY ADDITIONS ----
+
+    std::vector<int> demo_values = {1, 2, 3, 4};
+
+    int total = std::accumulate(
+        demo_values.begin(),
+        demo_values.end(),
+        0
+    );
+
+    std::cout << "Accumulated value: "
+              << total << "\n";
+
+    std::cout << "Subject empty? "
+              << (subject.empty() ? "Yes" : "No") << "\n";
+
+    // --------------------------------
 
     return 0;
 }

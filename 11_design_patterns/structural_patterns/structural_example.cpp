@@ -2,6 +2,8 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <algorithm> // tiny addition
+#include <numeric>   // tiny addition
 
 // ---------------- Adapter ----------------
 
@@ -138,6 +140,12 @@ public:
     void draw() override {
         renderer->render_circle(radius);
     }
+
+    // ---- EXTRA SMALL ADDITION ----
+    float get_radius() const {
+        return radius;
+    }
+    // --------------------------------
 };
 
 // ---------------- Proxy ----------------
@@ -176,6 +184,12 @@ public:
         }
         real_image->display();
     }
+
+    // ---- EXTRA SMALL ADDITION ----
+    bool is_loaded() const {
+        return real_image != nullptr;
+    }
+    // --------------------------------
 };
 
 // ✅ ADDED: Secure proxy with access control
@@ -231,6 +245,28 @@ void test_proxy(Image& img) {
     img.display();
 }
 
+// ---- EXTRA SMALL HELPERS ----
+
+// print divider
+void print_divider() {
+    std::cout << "---------------------------\n";
+}
+
+// count total radius
+float total_radius(const std::vector<std::shared_ptr<Shape>>& shapes) {
+    float total = 0.0f;
+
+    for (const auto& s : shapes) {
+        auto circle = std::dynamic_pointer_cast<Circle>(s);
+        if (circle)
+            total += circle->get_radius();
+    }
+
+    return total;
+}
+
+// --------------------------------
+
 // ---------------- Main ----------------
 
 int main() {
@@ -274,11 +310,21 @@ int main() {
     std::cout << "\nBatch shape rendering:\n";
     test_shapes(shapes);
 
+    // ---- EXTRA SMALL ADDITION ----
+    std::cout << "Total radius: "
+              << total_radius(shapes) << "\n";
+    // --------------------------------
+
     std::cout << "\n";
 
     // Proxy
     ImageProxy img("photo.png");
     test_proxy(img);   // ✅ NEW helper used
+
+    // ---- EXTRA SMALL ADDITION ----
+    std::cout << "Image loaded? "
+              << (img.is_loaded() ? "Yes" : "No") << "\n";
+    // --------------------------------
 
     std::cout << "\n";
 
@@ -288,6 +334,27 @@ int main() {
 
     secure_img.display();
     secure_img2.display();
+
+    // ===== FINAL SMALL ADDITIONS =====
+
+    print_divider();
+
+    std::vector<int> nums = {1, 2, 3, 4, 5};
+
+    int total = std::accumulate(nums.begin(), nums.end(), 0);
+
+    std::cout << "Numeric sum: "
+              << total << "\n";
+
+    std::cout << "Largest value: "
+              << *std::max_element(nums.begin(), nums.end())
+              << "\n";
+
+    std::cout << "Smallest value: "
+              << *std::min_element(nums.begin(), nums.end())
+              << "\n";
+
+    // =================================
 
     return 0;
 }

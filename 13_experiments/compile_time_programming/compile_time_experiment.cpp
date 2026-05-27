@@ -1,6 +1,8 @@
 #include <iostream>
 #include <array>
 #include <type_traits>   // ✅ ADDED
+#include <algorithm>     // tiny addition
+#include <numeric>       // tiny addition
 
 constexpr int fibonacci_ct(int n) {
     return n <= 1 ? n : fibonacci_ct(n - 1) + fibonacci_ct(n - 2);
@@ -112,6 +114,26 @@ constexpr bool is_odd_ct(int n) {
 
 // ====================================
 
+// ---- EXTRA SMALL ADDITIONS ----
+
+// Compile-time cube
+constexpr int cube_ct(int x) {
+    return x * x * x;
+}
+
+// Compile-time clamp
+constexpr int clamp_ct(int value, int low, int high) {
+    return (value < low) ? low :
+           (value > high) ? high :
+           value;
+}
+
+// Compile-time average
+template<std::size_t N>
+constexpr int avg_array_ct(const std::array<int, N>& arr) {
+    return sum_array_ct(arr) / static_cast<int>(N);
+}
+
 // ------------------------------------
 
 int main() {
@@ -141,6 +163,12 @@ int main() {
     constexpr int abs_val = abs_ct(-25);
     constexpr int gcd_val = gcd_ct(48, 18);
     constexpr bool odd_check = is_odd_ct(7);
+
+    // ---- EXTRA SMALL USAGE ----
+    constexpr int cube_val = cube_ct(3);
+    constexpr int clamped = clamp_ct(150, 0, 100);
+    constexpr int avg_val = avg_array_ct(sequence);
+
     // =====================
 
     // --------------------------
@@ -164,6 +192,12 @@ int main() {
     static_assert(abs_ct(-10) == 10, "Abs failed");
     static_assert(gcd_ct(48, 18) == 6, "GCD failed");
     static_assert(is_odd_ct(3), "Odd check failed");
+
+    // ---- EXTRA SMALL ASSERTS ----
+    static_assert(cube_ct(2) == 8, "Cube failed");
+    static_assert(clamp_ct(120, 0, 100) == 100, "Clamp failed");
+    static_assert(avg_array_ct(generate_sequence()) == 28, "Average failed");
+
     // =======================
 
     // ----------------------------
@@ -194,6 +228,23 @@ int main() {
     std::cout << "Absolute(-25): " << abs_val << "\n";
     std::cout << "GCD(48,18): " << gcd_val << "\n";
     std::cout << "Is 7 odd? " << (odd_check ? "Yes" : "No") << "\n";
+
+    // ---- EXTRA SMALL OUTPUT ----
+    std::cout << "Cube(3): " << cube_val << "\n";
+    std::cout << "Clamped value: " << clamped << "\n";
+    std::cout << "Average of sequence: " << avg_val << "\n";
+
+    // runtime algorithm demo
+    int runtime_sum =
+        std::accumulate(sequence.begin(), sequence.end(), 0);
+
+    std::cout << "Runtime accumulate sum: "
+              << runtime_sum << "\n";
+
+    std::cout << "Largest runtime value: "
+              << *std::max_element(sequence.begin(), sequence.end())
+              << "\n";
+
     // ======================
 
     // ---------------------------

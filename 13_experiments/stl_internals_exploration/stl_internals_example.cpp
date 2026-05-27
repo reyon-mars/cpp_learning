@@ -6,8 +6,11 @@
 
 // ✅ ADDED
 #include <deque>
-#include <numeric>   // ✅ ADDED
-#include <iomanip>   // ✅ ADDED
+#include <numeric>
+#include <iomanip>
+#include <list>        // NEW
+#include <array>       // NEW
+#include <algorithm>   // NEW
 
 // -------- NEW ADDITIONS --------
 
@@ -59,6 +62,44 @@ void print_stats(const std::vector<int>& v) {
     std::cout << "Average: " << avg << "\n";
 }
 
+// ===== VERY SMALL NEW ADDITIONS =====
+
+// Print divider
+void print_divider() {
+    std::cout << "-----------------------------\n";
+}
+
+// Show front/back elements
+void print_front_back(const std::vector<int>& v) {
+    if (!v.empty()) {
+        std::cout << "Front: " << v.front() << "\n";
+        std::cout << "Back: " << v.back() << "\n";
+    }
+}
+
+// Compare vector and list sizes
+void compare_container_sizes() {
+    std::vector<int> vec(10);
+    std::list<int> lst(10);
+
+    std::cout << "\nContainer comparison:\n";
+    std::cout << "Vector size: " << vec.size() << "\n";
+    std::cout << "List size: " << lst.size() << "\n";
+}
+
+// Small array demo
+void array_demo() {
+    std::array<int, 5> arr = {1, 2, 3, 4, 5};
+
+    std::cout << "\nstd::array contents: ";
+    for (int v : arr)
+        std::cout << v << " ";
+
+    std::cout << "\n";
+}
+
+// ====================================
+
 // --------------------------------
 
 int main() {
@@ -90,10 +131,10 @@ int main() {
 
         // ✅ ADDED: Detect growth pattern
         if (vec.capacity() != prev_capacity) {
-            std::cout << "  [capacity grew from " 
-                      << prev_capacity << " to " 
+            std::cout << "  [capacity grew from "
+                      << prev_capacity << " to "
                       << vec.capacity() << "]";
-            
+
             // ✅ NEW: growth factor
             print_growth(prev_capacity, vec.capacity());
 
@@ -162,8 +203,8 @@ int main() {
     std::cout << "\nPush vs Emplace Demo:\n";
     std::vector<std::pair<int,int>> pairs;
 
-    pairs.push_back({1,2});      // temporary object
-    pairs.emplace_back(3,4);     // constructed in-place
+    pairs.push_back({1,2});
+    pairs.emplace_back(3,4);
 
     std::cout << "pairs size: " << pairs.size() << "\n";
 
@@ -179,6 +220,33 @@ int main() {
 
     std::cout << "\nVector stats:\n";
     print_stats(vec);
+
+    // ===== NEW SMALL USAGE =====
+
+    print_divider();
+
+    print_front_back(vec);
+
+    compare_container_sizes();
+
+    array_demo();
+
+    // max element demo
+    auto max_it = std::max_element(vec.begin(), vec.end());
+    if (max_it != vec.end()) {
+        std::cout << "\nMax element in vector: "
+                  << *max_it << "\n";
+    }
+
+    // clear demo
+    std::vector<int> temp = vec;
+    temp.clear();
+
+    std::cout << "After clear():\n";
+    std::cout << "temp size: " << temp.size() << "\n";
+    std::cout << "temp capacity: " << temp.capacity() << "\n";
+
+    // ====================================
 
     // ----------------------------------------------------
 

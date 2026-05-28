@@ -4,10 +4,20 @@
 #include <iostream>
 #include <string>
 #include <type_traits>
-#include <typeinfo>   // ✅ ADDED
-#include <vector>     // ✅ NEW ADDED
-#include <cassert>    // ✅ NEW ADDED
-#include <utility>    // ✅ NEW ADDED
+#include <typeinfo>   
+#include <vector>     
+#include <cassert>    
+#include <utility>
+
+// ------------------------------
+// Max Template
+// ------------------------------
+
+template<typename T>
+T max( T a, T b )
+{
+    return b < a ?  a : b;
+}
 
 // ----------------------------------
 // Generic template
@@ -61,8 +71,6 @@ struct Printer<T*> {
     }
 };
 
-// -------- SMALL ADDITIONS --------
-
 // Overload for arrays
 template<typename T, size_t N>
 void print(const T (&arr)[N]) {
@@ -86,8 +94,6 @@ struct Printer<const T*> {
     }
 };
 
-// -------- NEW SMALL ADDITIONS --------
-
 // Floating-point specialization
 template<>
 void print<double>(const double& value) {
@@ -109,9 +115,6 @@ void check_reference(T&& value) {
         std::cout << "Rvalue reference detected\n";
 }
 
-// ---------------------------------
-// EXTRA SMALL ADDITIONS
-// ---------------------------------
 
 // Template returning max value
 template<typename T>
@@ -169,7 +172,6 @@ int main() {
     Printer<int>::print_value(x);
     Printer<int*>::print_value(&x);
 
-    // -------- ADDED USAGE --------
 
     bool flag = true;
     print(flag);
@@ -180,14 +182,12 @@ int main() {
     const int* cptr = &x;
     Printer<const int*>::print_value(cptr);
 
-    // -------- NEW USAGE --------
 
     print_type(x);
 
     check_reference(x);     // lvalue
     check_reference(10);    // rvalue
 
-    // -------- EXTRA NEW USAGE --------
 
     print('A');
 
@@ -217,7 +217,7 @@ int main() {
         std::cout << n << " ";
     std::cout << "\n";
 
-    // Small validation
+    // validation
     assert(max_value(5, 9) == 9);
 
     // ----------------------------

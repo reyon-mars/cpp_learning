@@ -19,6 +19,18 @@ T max( T a, T b )
     return b < a ?  a : b;
 }
 
+// -----------------------------
+// Template Find 
+// -----------------------------
+template <typename arr_elem_type>
+int find_position( arr_elem_type* array, arr_elem_type value, int size )
+{
+    for( int i = 0; i < size; i++ ){
+        if( array[j] == value ) return i;
+    }
+    return -1;
+}
+
 // ----------------------------------
 // Generic template
 // ----------------------------------

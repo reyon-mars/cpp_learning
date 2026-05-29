@@ -6,6 +6,10 @@
 #include <string>
 #include <chrono>
 
+// ===== VERY SMALL NEW ADDITIONS =====
+#include <cmath>
+#include <iomanip>
+
 // ✅ ADDED: Resize callback
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -22,13 +26,23 @@ void process_input(GLFWwindow* window)
 
     // ✅ ADDED: Toggle wireframe mode
     static bool wireframe = false;
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+    static bool keyPressed = false;
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS && !keyPressed) {
         wireframe = !wireframe;
+        keyPressed = true;
+
         if (wireframe)
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         else
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+        std::cout << "Wireframe mode: "
+                  << (wireframe ? "ON" : "OFF") << "\n";
     }
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_RELEASE)
+        keyPressed = false;
 }
 
 // check shader compilation errors
@@ -68,6 +82,28 @@ void check_gl_error() {
 }
 
 // -----------------------------------------------------
+
+// ===== VERY SMALL EXTRA HELPERS =====
+
+// Print OpenGL information
+void print_opengl_info() {
+    std::cout << "Renderer: "
+              << glGetString(GL_RENDERER) << "\n";
+
+    std::cout << "OpenGL Version: "
+              << glGetString(GL_VERSION) << "\n";
+}
+
+// Simple runtime timer
+float get_runtime_seconds(
+    const std::chrono::high_resolution_clock::time_point& start)
+{
+    auto now = std::chrono::high_resolution_clock::now();
+
+    return std::chrono::duration<float>(now - start).count();
+}
+
+// ====================================
 
 // ✅ ADDED: Shader sources
 const char* vertexShaderSource = R"(
@@ -122,6 +158,10 @@ int main(){
     // ✅ ADDED: Set viewport
     glViewport(0, 0, 800, 600);
 
+    // ===== VERY SMALL EXTRA ADDITION =====
+    print_opengl_info();
+    // =====================================
+
     // ✅ ADDED: Triangle data
     float vertices[] = {
          0.0f,  0.5f, 0.0f,
@@ -164,6 +204,11 @@ int main(){
 
     // ✅ ADDED: FPS counter setup
     auto lastTime = std::chrono::high_resolution_clock::now();
+
+    // ===== VERY SMALL EXTRA ADDITION =====
+    auto appStart = std::chrono::high_resolution_clock::now();
+    // =====================================
+
     int frames = 0;
 
     // Render loop
@@ -173,7 +218,7 @@ int main(){
 
         // ✅ ADDED: animated background color
         float time = glfwGetTime();
-        float green = (sin(time) / 2.0f) + 0.5f;
+        float green = (std::sin(time) / 2.0f) + 0.5f;
 
         glClearColor(0.1f, green, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -185,10 +230,21 @@ int main(){
         // ✅ ADDED: FPS calculation
         frames++;
         auto currentTime = std::chrono::high_resolution_clock::now();
-        float elapsed = std::chrono::duration<float>(currentTime - lastTime).count();
+
+        float elapsed =
+            std::chrono::duration<float>(currentTime - lastTime).count();
 
         if (elapsed >= 1.0f) {
-            std::cout << "FPS: " << frames << "\n";
+
+            // ===== VERY SMALL EXTRA OUTPUT =====
+            float runtime = get_runtime_seconds(appStart);
+            // ===================================
+
+            std::cout << "FPS: " << frames
+                      << " | Runtime: "
+                      << std::fixed << std::setprecision(1)
+                      << runtime << "s\n";
+
             frames = 0;
             lastTime = currentTime;
         }
@@ -205,6 +261,8 @@ int main(){
     glDeleteBuffers(1, &VBO);
     glDeleteProgram(shaderProgram);
     // -----------------------------------------
+
+    std::cout << "OpenGL resources cleaned successfully\n";
 
     glfwTerminate();
     return 0;

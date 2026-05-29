@@ -6,6 +6,10 @@
 // ✅ ADDED
 #include <string>
 
+// ===== VERY SMALL NEW ADDITIONS =====
+#include <vector>
+#include <iomanip>
+
 // Placeholder function for future graphics demos
 void show_topics() {
     std::cout << "\nTopics to explore:\n";
@@ -82,6 +86,37 @@ void clear_screen() {
 
 // -----------------------------------------
 
+// ===== VERY SMALL EXTRA HELPERS =====
+
+// Demo history tracker
+void show_history(const std::vector<std::string>& history) {
+    std::cout << "\nDemo History:\n";
+
+    if (history.empty()) {
+        std::cout << "No demos executed yet\n";
+        return;
+    }
+
+    for (std::size_t i = 0; i < history.size(); ++i) {
+        std::cout << i + 1 << ". " << history[i] << "\n";
+    }
+}
+
+// Fake FPS counter
+void simulate_fps() {
+    std::cout << "Simulated FPS: "
+              << std::fixed << std::setprecision(1)
+              << 60.0 << "\n";
+}
+
+// Small OpenGL tips
+void graphics_tip() {
+    std::cout << "\nGraphics Tip:\n";
+    std::cout << "- Modern OpenGL uses shaders instead of fixed pipeline\n";
+}
+
+// =====================================
+
 // ✅ ADDED: Menu system
 void run_demo(int choice) {
     switch (choice) {
@@ -108,6 +143,10 @@ int main() {
     // ✅ ADDED: track how many demos run
     int demo_count = 0;
 
+    // ===== VERY SMALL NEW ADDITIONS =====
+    std::vector<std::string> history;
+    // ====================================
+
     // ✅ UPDATED: looped interaction (non-breaking addition)
     do {
         print_header("OpenGL Demo Menu");
@@ -118,12 +157,30 @@ int main() {
         clear_screen(); // cleaner output
         run_demo(choice);
 
+        // ===== VERY SMALL EXTRA USAGE =====
+
+        switch (choice) {
+            case 1: history.push_back("Basic Rendering"); break;
+            case 2: history.push_back("Shader Experiment"); break;
+            case 3: history.push_back("3D Transformations"); break;
+            case 4: history.push_back("Lighting Models"); break;
+        }
+
+        simulate_fps();
+        graphics_tip();
+
+        // ==================================
+
         ++demo_count;
 
     } while (ask_repeat());
 
     // ✅ ADDED: usage summary
     std::cout << "\nTotal demos run: " << demo_count << "\n";
+
+    // ===== VERY SMALL EXTRA OUTPUT =====
+    show_history(history);
+    // ===================================
 
     // ✅ ADDED: future roadmap
     std::cout << "\nUpcoming upgrades:\n";

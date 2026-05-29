@@ -11,6 +11,10 @@
 // -------- NEW ADDITIONS --------
 #include <array>
 
+// ✅ VERY SMALL EXTRA ADDITIONS
+#include <memory>
+#include <limits>
+
 // Safe division helper
 void safe_division(int a, int b) {
     if (b == 0) {
@@ -21,6 +25,37 @@ void safe_division(int a, int b) {
 }
 
 // --------------------------------
+
+// ===== VERY SMALL NEW ADDITIONS =====
+
+// Safe narrowing conversion
+void safe_narrowing(long long value) {
+    if (value > std::numeric_limits<int>::max() ||
+        value < std::numeric_limits<int>::min()) {
+        std::cout << "Narrowing conversion would overflow int\n";
+    } else {
+        int converted = static_cast<int>(value);
+        std::cout << "Safely converted: " << converted << "\n";
+    }
+}
+
+// Smart pointer safety example
+void smart_pointer_demo() {
+    std::unique_ptr<int> ptr = std::make_unique<int>(99);
+
+    std::cout << "Smart pointer value: " << *ptr << "\n";
+
+    ptr.reset();
+
+    std::cout << "Smart pointer reset safely\n";
+}
+
+// Small divider helper
+void print_divider() {
+    std::cout << "-----------------------------\n";
+}
+
+// =====================================
 
 int main() {
 
@@ -139,6 +174,40 @@ int main() {
     std::cout << "\nAlignment info:\n";
     std::cout << "Alignment of int: " << alignof(int) << "\n";
     std::cout << "Alignment of double: " << alignof(double) << "\n";
+
+    // ====================================================
+    // ✅ VERY SMALL EXTRA USAGE
+
+    print_divider();
+
+    std::cout << "\nSafe narrowing conversion:\n";
+    safe_narrowing(100);
+    safe_narrowing(999999999999LL);
+
+    print_divider();
+
+    std::cout << "\nSmart pointer safety demo:\n";
+    smart_pointer_demo();
+
+    print_divider();
+
+    // Safe null pointer check
+    int* safe_ptr = nullptr;
+
+    if (safe_ptr == nullptr) {
+        std::cout << "Null pointer detected safely\n";
+    }
+
+    print_divider();
+
+    // Safe loop bounds
+    std::cout << "\nSafe vector iteration:\n";
+    for (std::size_t i = 0; i < v.size(); ++i) {
+        std::cout << v[i] << " ";
+    }
+    std::cout << "\n";
+
+    // ====================================================
 
     return 0;
 }

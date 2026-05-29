@@ -6,6 +6,10 @@
 // ✅ ADDED
 #include <string>
 
+// ===== VERY SMALL NEW ADDITIONS =====
+#include <vector>
+#include <iomanip>
+
 // Example GLSL shaders as strings
 void show_example_shaders() {
 
@@ -135,6 +139,56 @@ void pipeline_overview() {
 
 // -----------------------------------------------------
 
+// ===== VERY SMALL EXTRA HELPERS =====
+
+// pretty section header
+void print_header(const std::string& title) {
+    std::cout << "\n=================================\n";
+    std::cout << title << "\n";
+    std::cout << "=================================\n";
+}
+
+// show shader difficulty
+void shader_difficulty(int choice) {
+
+    std::cout << "Difficulty: ";
+
+    switch (choice) {
+        case 1:
+            std::cout << "Beginner\n";
+            break;
+        case 2:
+            std::cout << "Beginner\n";
+            break;
+        case 3:
+            std::cout << "Intermediate\n";
+            break;
+        case 4:
+            std::cout << "Advanced\n";
+            break;
+        default:
+            std::cout << "Unknown\n";
+    }
+}
+
+// explored history
+void show_history(const std::vector<std::string>& history) {
+
+    std::cout << "\nExplored Shader Types:\n";
+
+    if (history.empty()) {
+        std::cout << "None\n";
+        return;
+    }
+
+    for (std::size_t i = 0; i < history.size(); ++i) {
+        std::cout << std::setw(2) << i + 1
+                  << ". " << history[i] << "\n";
+    }
+}
+
+// ====================================
+
 int main() {
 
     std::cout << "Shader programming area\n";
@@ -150,12 +204,35 @@ int main() {
     // ✅ ADDED
     pipeline_overview();
 
+    // ===== VERY SMALL NEW ADDITIONS =====
+    int explored_count = 0;
+    std::vector<std::string> history;
+    // ====================================
+
     // ✅ UPDATED: loop interaction
     do {
+
+        print_header("Shader Learning Menu");
+
         std::cout << "\nSelect shader type to learn more (1-4): ";
         int choice = get_valid_choice();
 
         explain_shader(choice);
+
+        // ===== VERY SMALL EXTRA USAGE =====
+
+        shader_difficulty(choice);
+
+        switch (choice) {
+            case 1: history.push_back("Vertex Shader"); break;
+            case 2: history.push_back("Fragment Shader"); break;
+            case 3: history.push_back("Geometry Shader"); break;
+            case 4: history.push_back("Compute Shader"); break;
+        }
+
+        ++explored_count;
+
+        // ==================================
 
     } while (ask_repeat());
 
@@ -163,8 +240,19 @@ int main() {
     uniform_shader_example();
     lighting_shader_example();
 
+    // ===== VERY SMALL EXTRA OUTPUT =====
+    std::cout << "\nTotal shader topics explored: "
+              << explored_count << "\n";
+
+    show_history(history);
+    // ===================================
+
     // ✅ ADDED: Summary
     std::cout << "\nTip: Shaders run on GPU and control rendering pipeline stages.\n";
+
+    // ===== VERY SMALL EXTRA TIP =====
+    std::cout << "Modern graphics engines rely heavily on optimized GLSL shaders.\n";
+    // =================================
 
     return 0;
 }

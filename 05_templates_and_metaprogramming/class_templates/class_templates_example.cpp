@@ -1,9 +1,39 @@
 #include <iostream>
 #include <typeinfo>
-#include <utility>   // ✅ ADDED
-#include <cassert>   // ✅ ADDED
-#include <vector>    // ✅ ADDED
-#include <algorithm> // ✅ ADDED
+#include <utility>   
+#include <cassert>   
+#include <vector>    
+#include <algorithm> 
+
+// Members defined outside the Class definition
+template< typename T >
+class Stack{
+    private:
+        T st[MAX];
+        int top;
+    public:
+        Stack();
+        void push( T var );
+        Type pop();
+};
+
+template<class T>
+Stack<T>::Stack()
+{
+    top = -1;
+}
+
+template<class T>
+void Stack<T>::push( T var )
+{
+    st[++top] = var;
+}
+
+template<class T>
+T Stack<T>::pop()
+{
+    return st[top--];
+}
 
 template<typename T>
 class Container {
@@ -21,7 +51,7 @@ public:
     Container(const Container<U>& other)
         : data(static_cast<T>(other.get())) {}
 
-    // ✅ ADDED: move constructor
+    // move constructor
     Container(T&& value)
         : data(std::move(value)) {}
 
@@ -31,7 +61,7 @@ public:
         data = value;
     }
 
-    // ✅ ADDED: move setter
+    // move setter
     void set(T&& value) {
         data = std::move(value);
     }
@@ -45,8 +75,6 @@ public:
     bool equals(const T& other) const {
         return data == other;
     }
-
-    // -------- SMALL ADDITIONS --------
 
     // Print type of stored data
     void print_type() const {
@@ -65,17 +93,17 @@ public:
         swap(data, other.data);
     }
 
-    // ✅ ADDED: reset to default
+    // reset to default
     void reset() {
         data = T{};
     }
 
-    // ✅ ADDED: print stored value
+    // print stored value
     void print() const {
         std::cout << "Value: " << data << "\n";
     }
 
-    // ✅ ADDED: compare with another container
+    // compare with another container
     bool operator==(const Container<T>& other) const {
         return data == other.data;
     }
@@ -90,7 +118,6 @@ std::ostream& operator<<(std::ostream& os,
     return os << c.get();
 }
 
-// -------- NEW ADDITIONS --------
 
 // Generic print helper
 template<typename T>
@@ -170,7 +197,6 @@ int main() {
               << int_container << ", "
               << another_int << "\n";
 
-    // ✅ ADDED: small validation
     assert(int_container.equals(10));
 
     // -------- NEW FEATURE USAGE --------

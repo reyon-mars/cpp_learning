@@ -6,6 +6,10 @@
 // ✅ ADDED
 #include <string>
 
+// ===== VERY SMALL NEW ADDITIONS =====
+#include <vector>
+#include <iomanip>
+
 // Helper function to show rendering topics
 void show_rendering_topics() {
     std::cout << "\nCommon Rendering Techniques:\n";
@@ -91,6 +95,39 @@ void compare_modes() {
 
 // -----------------------------------------------------
 
+// ===== VERY SMALL EXTRA HELPERS =====
+
+// print section title
+void print_header(const std::string& title) {
+    std::cout << "\n================================\n";
+    std::cout << title << "\n";
+    std::cout << "================================\n";
+}
+
+// fake GPU stats
+void show_gpu_stats() {
+    std::cout << "\n[GPU Stats Simulation]\n";
+    std::cout << "VRAM Usage: " << std::fixed << std::setprecision(1)
+              << 2.5 << " GB\n";
+    std::cout << "GPU Load: 78%\n";
+}
+
+// show explored history
+void show_history(const std::vector<std::string>& history) {
+    std::cout << "\nExplored Techniques:\n";
+
+    if (history.empty()) {
+        std::cout << "No techniques explored\n";
+        return;
+    }
+
+    for (std::size_t i = 0; i < history.size(); ++i) {
+        std::cout << i + 1 << ". " << history[i] << "\n";
+    }
+}
+
+// ====================================
+
 // ✅ ADDED: Menu system
 void run_demo(int choice) {
     switch (choice) {
@@ -115,20 +152,55 @@ int main() {
     // ✅ ADDED
     pipeline_breakdown();
 
+    // ===== VERY SMALL NEW ADDITIONS =====
+    int explored_count = 0;
+    std::vector<std::string> history;
+    // ====================================
+
     // ✅ UPDATED: loop interaction
     do {
+
+        print_header("Rendering Technique Explorer");
+
         std::cout << "\nSelect a technique to explore (1-5): ";
         int choice = get_valid_choice();
 
         run_demo(choice);
+
+        // ===== VERY SMALL EXTRA USAGE =====
+
+        switch (choice) {
+            case 1: history.push_back("Rasterization"); break;
+            case 2: history.push_back("Ray Tracing"); break;
+            case 3: history.push_back("Shadow Mapping"); break;
+            case 4: history.push_back("Deferred Rendering"); break;
+            case 5: history.push_back("Physically Based Rendering"); break;
+        }
+
+        ++explored_count;
+
+        show_gpu_stats();
+
+        // ==================================
 
     } while (ask_repeat());
 
     // ✅ ADDED
     compare_modes();
 
+    // ===== VERY SMALL EXTRA OUTPUT =====
+    std::cout << "\nTotal techniques explored: "
+              << explored_count << "\n";
+
+    show_history(history);
+    // ===================================
+
     // ✅ ADDED: Summary tip
     std::cout << "\nTip: Rasterization is fast, Ray Tracing is realistic.\n";
+
+    // ===== VERY SMALL EXTRA TIP =====
+    std::cout << "Modern game engines often combine multiple rendering techniques.\n";
+    // =================================
 
     return 0;
 }

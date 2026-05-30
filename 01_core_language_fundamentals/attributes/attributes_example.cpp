@@ -8,6 +8,10 @@
 #include <string>
 #include <vector>
 
+// ===== VERY SMALL NEW ADDITIONS =====
+#include <type_traits>
+#include <array>
+
 [[nodiscard]] int calculate() {
     return 42;
 }
@@ -96,6 +100,38 @@ int old_version = 1;
 void print_divider() {
     std::cout << "----------------------\n";
 }
+
+// ===== VERY SMALL EXTRA HELPERS =====
+
+// compile-time attribute info
+void attribute_summary() {
+    std::cout << "\nAttribute Summary:\n";
+    std::cout << "[[nodiscard]] -> warns if result ignored\n";
+    std::cout << "[[deprecated]] -> warns when entity is used\n";
+    std::cout << "[[maybe_unused]] -> suppresses unused warnings\n";
+}
+
+// simple template utility
+template<typename T>
+void print_type_info(const std::string& name) {
+    std::cout << name
+              << " is trivially copyable? "
+              << (std::is_trivially_copyable<T>::value ? "Yes" : "No")
+              << "\n";
+}
+
+// nodiscard enum-style result
+enum class OperationState {
+    Success,
+    Failure
+};
+
+[[nodiscard]]
+OperationState perform_operation() {
+    return OperationState::Success;
+}
+
+// ====================================
 
 // -----------------------------------------------------
 
@@ -198,7 +234,31 @@ int main() {
 
     std::cout << "First value: " << first << "\n";
 
-    // ----------------------------------------------------
+    print_divider();
+
+    // ===== VERY SMALL EXTRA DEMOS =====
+
+    attribute_summary();
+
+    print_divider();
+
+    print_type_info<ImportantResult>("ImportantResult");
+    print_type_info<Status>("Status");
+
+    print_divider();
+
+    auto state = perform_operation();
+
+    std::cout << "Operation state: "
+              << (state == OperationState::Success
+                  ? "Success"
+                  : "Failure")
+              << "\n";
+
+    // small maybe_unused array example
+    [[maybe_unused]] std::array<int, 3> sample = {1, 2, 3};
+
+    // ==================================
 
     return 0;
 }

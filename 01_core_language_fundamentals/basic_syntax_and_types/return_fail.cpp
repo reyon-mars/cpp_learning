@@ -5,6 +5,7 @@
 // ✅ ADDED
 #include <vector>
 #include <ctime>
+#include <map>
 
 // Custom status codes
 enum StatusCode {
@@ -118,6 +119,29 @@ public:
     int total() const {
         return history.size();
     }
+
+    // ✅ NEW
+    int successCount() const {
+        int count = 0;
+        for (int code : history) {
+            if (code == SUCCESS)
+                ++count;
+        }
+        return count;
+    }
+
+    // ✅ NEW
+    int errorCount() const {
+        return total() - successCount();
+    }
+
+    // ✅ NEW
+    int lastError() const {
+        if (history.empty())
+            return SUCCESS;
+
+        return history.back();
+    }
 };
 
 // ✅ ADDED: Divider helper
@@ -126,7 +150,79 @@ void printDivider() {
     std::cout << "-----------------------------\n";
 }
 
-// ------------------------------------------------
+// =====================================================
+// ✅ NEW ADDITIONS
+// =====================================================
+
+// Error severity
+std::string errorSeverity(int code) {
+
+    switch (code) {
+
+        case SUCCESS:
+            return "NONE";
+
+        case FILE_ERROR:
+            return "LOW";
+
+        case NETWORK_ERROR:
+            return "MEDIUM";
+
+        case MEMORY_ERROR:
+            return "HIGH";
+
+        default:
+            return "UNKNOWN";
+    }
+}
+
+// Print error summary statistics
+void printStatistics(const ErrorTracker& tracker) {
+
+    std::cout << "\n--- Statistics ---\n";
+
+    std::cout << "Total events: "
+              << tracker.total() << "\n";
+
+    std::cout << "Success count: "
+              << tracker.successCount() << "\n";
+
+    std::cout << "Error count: "
+              << tracker.errorCount() << "\n";
+
+    if (tracker.total() > 0) {
+
+        double successRate =
+            (static_cast<double>(tracker.successCount()) /
+             tracker.total()) * 100.0;
+
+        std::cout << "Success rate: "
+                  << successRate << "%\n";
+    }
+}
+
+// Frequency report
+void printFrequencyReport(const std::vector<int>& codes) {
+
+    std::map<int, int> freq;
+
+    for (int code : codes) {
+        ++freq[code];
+    }
+
+    std::cout << "\n--- Frequency Report ---\n";
+
+    for (const auto& entry : freq) {
+
+        std::cout
+            << errorToString(entry.first)
+            << " -> "
+            << entry.second
+            << "\n";
+    }
+}
+
+// =====================================================
 
 int main(void) {
 
@@ -152,6 +248,11 @@ int main(void) {
 
         // ✅ ADDED
         logError(status);
+
+        // ✅ NEW
+        std::cout << "Severity: "
+                  << errorSeverity(status)
+                  << "\n";
 
         if (isRecoverable(status)) {
 
@@ -190,9 +291,13 @@ int main(void) {
         MEMORY_ERROR
     };
 
+    // ✅ NEW
+    std::vector<int> allCodes;
+
     for (int code : simulatedErrors) {
 
         tracker.add(code);
+        allCodes.push_back(code);
 
         std::cout << "\nCode: " << code << "\n";
 
@@ -200,6 +305,11 @@ int main(void) {
 
         std::cout << "Recoverable? "
                   << (isRecoverable(code) ? "Yes" : "No")
+                  << "\n";
+
+        // ✅ NEW
+        std::cout << "Severity: "
+                  << errorSeverity(code)
                   << "\n";
     }
 
@@ -209,6 +319,22 @@ int main(void) {
 
     std::cout << "\nTotal tracked errors: "
               << tracker.total() << "\n";
+
+    // =================================================
+    // ✅ NEW REPORTING FEATURES
+    // =================================================
+
+    printDivider();
+
+    std::cout << "Most recent status: "
+              << errorToString(tracker.lastError())
+              << "\n";
+
+    printStatistics(tracker);
+
+    printFrequencyReport(allCodes);
+
+    printDivider();
 
     // ------------------------------------------------
 

@@ -106,6 +106,32 @@ void showCompilationSteps() {
 }
 
 // ------------------------------------------------------
+// ✅ NEW ADDITIONS
+
+void printBuildInfo() {
+    std::cout << "Build Date: " << __DATE__ << "\n";
+    std::cout << "Build Time: " << __TIME__ << "\n";
+}
+
+void printCompilerInfo() {
+#if defined(__GNUC__)
+    std::cout << "Compiler: GCC/Clang compatible\n";
+#elif defined(_MSC_VER)
+    std::cout << "Compiler: MSVC\n";
+#else
+    std::cout << "Compiler: Unknown\n";
+#endif
+}
+
+void printBinary(unsigned int value) {
+    std::cout << "Binary: ";
+    for (int i = 31; i >= 0; --i) {
+        std::cout << ((value >> i) & 1);
+    }
+    std::cout << "\n";
+}
+
+// ------------------------------------------------------
 
 int main() {
 
@@ -118,6 +144,12 @@ int main() {
 
     std::cout << "Build number: "
               << build_number << "\n";
+
+    printDivider();
+
+    // ✅ NEW
+    printBuildInfo();
+    printCompilerInfo();
 
     printDivider();
 
@@ -196,6 +228,43 @@ int main() {
                   "Compile-time cube failed");
 
     std::cout << "Static assertions passed successfully\n";
+
+    printDivider();
+
+    // ✅ NEW: Binary demonstration
+    std::cout << "Binary representation of 42:\n";
+    printBinary(42);
+
+    printDivider();
+
+    // ✅ NEW: Macro vs constexpr comparison
+    std::cout << "Macro result (3): "
+              << SQUARE_MACRO(3)
+              << "\n";
+
+    std::cout << "Constexpr result (3): "
+              << square_constexpr(3)
+              << "\n";
+
+    printDivider();
+
+    // ✅ NEW: Additional compile-time checks
+    static_assert(square_constexpr(10) == 100,
+                  "Square verification failed");
+
+    static_assert(cube_constexpr(3) == 27,
+                  "Cube verification failed");
+
+    std::cout << "Additional static assertions passed\n";
+
+    printDivider();
+
+    // ✅ NEW: Summary
+    std::cout << "Compilation Model Summary:\n";
+    std::cout << "- Macros expanded during preprocessing\n";
+    std::cout << "- Syntax checked during parsing\n";
+    std::cout << "- Code translated during compilation\n";
+    std::cout << "- Symbols resolved during linking\n";
 
     // --------------------------------------------
 

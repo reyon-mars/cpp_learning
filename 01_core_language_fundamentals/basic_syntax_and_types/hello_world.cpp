@@ -5,6 +5,10 @@
 #include <vector>
 #include <algorithm>
 
+// ===== VERY SMALL NEW ADDITIONS =====
+#include <numeric>
+#include <cctype>
+
 // Put helpers in a small namespace (good practice)
 namespace utils {
 
@@ -187,6 +191,34 @@ inline size_t charCount(const std::string& str) {
     return str.size();
 }
 
+// ===== VERY SMALL EXTRA ADDITIONS =====
+
+// Check if number is odd
+inline bool isOdd(int x) {
+    return x % 2 != 0;
+}
+
+// Lowercase conversion
+inline std::string toLower(std::string str) {
+    for (char& c : str) {
+        c = static_cast<char>(std::tolower(
+            static_cast<unsigned char>(c)));
+    }
+    return str;
+}
+
+// Find largest element in vector
+inline int maxInVector(const std::vector<int>& values) {
+    return *std::max_element(values.begin(), values.end());
+}
+
+// Count vector elements
+inline std::size_t vectorSize(const std::vector<int>& values) {
+    return values.size();
+}
+
+// ======================================
+
 // -----------------------------------------------------
 
 } // namespace utils
@@ -295,6 +327,24 @@ int main(void) {
 
     std::cout << "Character count in 'ChatGPT' = "
               << charCount("ChatGPT") << std::endl;
+
+    // --------------------------------------------------
+    // ✅ VERY SMALL EXTRA USAGE
+
+    printDivider();
+
+    std::cout << "Execution count is "
+              << (isOdd(executionCount) ? "odd" : "even")
+              << std::endl;
+
+    std::cout << "Lowercase: "
+              << toLower("HELLO WORLD") << std::endl;
+
+    std::cout << "Largest vector value = "
+              << maxInVector(numbers) << std::endl;
+
+    std::cout << "Vector size = "
+              << vectorSize(numbers) << std::endl;
 
     // --------------------------------------------------
 

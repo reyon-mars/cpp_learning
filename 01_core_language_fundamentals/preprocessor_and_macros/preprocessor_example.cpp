@@ -4,6 +4,8 @@
 #include <iostream>
 #include <string>   // ✅ ADDED
 #include <vector>   // ✅ ADDED
+#include <array>    // ✅ NEW
+#include <functional> // ✅ NEW
 
 // Preprocessor macro
 #define APP_VERSION "1.0"
@@ -78,7 +80,7 @@ inline int max_safe(int a, int b) {
 #endif
 
 // Macro pitfall example
-#define BAD_SQUARE(x) x * x  // missing parentheses!
+#define BAD_SQUARE(x) x * x
 
 // ✅ ADDED: Stringify macro
 #define STRINGIFY(x) #x
@@ -124,7 +126,47 @@ void printCompilationStages() {
 // ✅ ADDED: constexpr compile-time test
 constexpr int compileTimeValue = square_constexpr(10);
 
-// ----------------------------------------------
+// ====================================================
+// ✅ NEW ADDITIONS (Original Code Unchanged)
+// ====================================================
+
+// Namespace example
+namespace CompilerDemo {
+    void showNamespaceInfo() {
+        std::cout << "Namespace function executed\n";
+    }
+}
+
+// Enum class
+enum class BuildType {
+    Debug,
+    Release
+};
+
+// Function pointer target
+int multiply(int a, int b) {
+    return a * b;
+}
+
+// Compile-time array
+constexpr std::array<int, 5> compileArray = {1,2,3,4,5};
+
+// Template function
+template<typename T>
+void printValue(T value) {
+    std::cout << value << "\n";
+}
+
+// Lambda demonstration
+void lambdaDemo() {
+    auto greet = []() {
+        std::cout << "Lambda function executed\n";
+    };
+
+    greet();
+}
+
+// ====================================================
 
 
 int main() {
@@ -161,7 +203,6 @@ int main() {
     // External function simulation
     externalFunction();
 
-
     std::cout << "\nAdvanced Macro Features:\n";
 
     std::cout << "max_safe(5,10): "
@@ -180,14 +221,12 @@ int main() {
 
     // --------------------------------------------------
 
-    // ✅ ADDED: Stringify macro usage
     std::cout << "\nStringify Macro:\n";
     std::cout << STRINGIFY(Hello Compilation Model)
               << "\n";
 
     // --------------------------------------------------
 
-    // ✅ ADDED: Token concatenation
     int CONCAT(my,Var) = 25;
 
     std::cout << "Concatenated variable value: "
@@ -195,40 +234,33 @@ int main() {
 
     // --------------------------------------------------
 
-    // ✅ ADDED: Separator macro
     PRINT_SEPARATOR();
 
     // --------------------------------------------------
 
-    // ✅ ADDED: constexpr cube
     std::cout << "Cube constexpr of 3: "
               << cube_constexpr(3) << "\n";
 
     // --------------------------------------------------
 
-    // ✅ ADDED: compile-time evaluated variable
     std::cout << "Compile-time value: "
               << compileTimeValue << "\n";
 
     // --------------------------------------------------
 
-    // ✅ ADDED: Internal linkage helper
     internalHelper();
 
     // --------------------------------------------------
 
-    // ✅ ADDED: Compilation stages
     printCompilationStages();
 
     // --------------------------------------------------
 
-    // ✅ ADDED: Compiler info
     std::cout << "\nCompiler Info:\n";
     std::cout << COMPILER_INFO << "\n";
 
     // --------------------------------------------------
 
-    // ✅ ADDED: Built-in macros
     std::cout << "\nBuilt-in Macros:\n";
 
     std::cout << "__LINE__: "
@@ -240,7 +272,65 @@ int main() {
     std::cout << "__cplusplus: "
               << __cplusplus << "\n";
 
-    // --------------------------------------------------
+    // ====================================================
+    // ✅ NEWLY ADDED EXECUTION SECTION
+    // ====================================================
+
+    PRINT_SEPARATOR();
+
+    std::cout << "\nNamespace Example:\n";
+    CompilerDemo::showNamespaceInfo();
+
+    PRINT_SEPARATOR();
+
+    std::cout << "\nEnum Class Example:\n";
+    BuildType build = BuildType::Debug;
+
+    if (build == BuildType::Debug) {
+        std::cout << "Current build type: Debug\n";
+    }
+
+    PRINT_SEPARATOR();
+
+    std::cout << "\nFunction Pointer Example:\n";
+    int (*funcPtr)(int, int) = multiply;
+
+    std::cout << "6 * 7 = "
+              << funcPtr(6, 7)
+              << "\n";
+
+    PRINT_SEPARATOR();
+
+    std::cout << "\nCompile-Time Array:\n";
+
+    for (auto value : compileArray) {
+        std::cout << value << " ";
+    }
+
+    std::cout << "\n";
+
+    PRINT_SEPARATOR();
+
+    std::cout << "\nTemplate Function Example:\n";
+    printValue(100);
+    printValue(std::string("Template Works"));
+
+    PRINT_SEPARATOR();
+
+    std::cout << "\nLambda Demonstration:\n";
+    lambdaDemo();
+
+    PRINT_SEPARATOR();
+
+    std::cout << "\nAdditional Predefined Macros:\n";
+
+    std::cout << "__DATE__: "
+              << __DATE__ << "\n";
+
+    std::cout << "__TIME__: "
+              << __TIME__ << "\n";
+
+    // ====================================================
 
     // undef example
     #undef DEBUG_MODE

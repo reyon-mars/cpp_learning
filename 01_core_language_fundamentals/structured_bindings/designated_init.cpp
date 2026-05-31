@@ -254,7 +254,6 @@ int main() {
                                             : "No duplicates")
               << "\n";
 
-    // ========================================================
-
+    std::cout << "\nProgram completed successfully.\n";
     return 0;
 }

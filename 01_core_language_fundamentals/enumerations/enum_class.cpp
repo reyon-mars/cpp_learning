@@ -137,6 +137,38 @@ void printVehicles() {
 }
 
 // ------------------------------------------------
+// ✅ NEW ADDITIONS
+
+std::vector<Color> getAllColors() {
+    return {
+        Color::Red,
+        Color::Green,
+        Color::Blue
+    };
+}
+
+size_t vehicleCount() {
+    return 4;
+}
+
+size_t foodCount() {
+    return 3;
+}
+
+void printColors() {
+    for (auto color : getAllColors()) {
+        std::cout << enumName(color) << "\n";
+    }
+}
+
+template<typename T>
+void printEnumValue(const char* label, T value) {
+    std::cout << label << ": "
+              << static_cast<int>(value)
+              << "\n";
+}
+
+// ------------------------------------------------
 
 
 // ================= MAIN =================
@@ -194,6 +226,12 @@ int main() {
 
     printDivider();
 
+    // ✅ NEW
+    std::cout << "All colors:\n";
+    printColors();
+
+    printDivider();
+
     std::cout << "Are Cat and Dog same? "
               << (areSame(Animal::Cat, Animal::Dog)
                   ? "Yes\n"
@@ -217,11 +255,23 @@ int main() {
     std::cout << "Food (Pizza) as int: "
               << toInt(f) << "\n";
 
+    std::cout << "Color (Green) as int: "
+              << toInt(c) << "\n";
+
     printDivider();
 
     // ✅ ADDED
     std::cout << "Total animals available: "
               << animalCount() << "\n";
+
+    // ✅ NEW
+    std::cout << "Total vehicles available: "
+              << vehicleCount() << "\n";
+
+    std::cout << "Total foods available: "
+              << foodCount() << "\n";
+
+    printDivider();
 
     // ✅ ADDED
     std::cout << "Animal validation test:\n";
@@ -233,6 +283,25 @@ int main() {
     std::cout << "Is 10 valid? "
               << (isValidAnimal(10) ? "Yes" : "No")
               << "\n";
+
+    printDivider();
+
+    // ✅ NEW
+    std::cout << "Generic enum integer values:\n";
+
+    printEnumValue("Animal::Dog", a);
+    printEnumValue("Vehicle::Car", v);
+    printEnumValue("Food::Pizza", f);
+    printEnumValue("Color::Green", c);
+
+    printDivider();
+
+    // ✅ NEW
+    std::cout << "Enum Statistics Summary:\n";
+    std::cout << "- Animals: " << animalCount() << "\n";
+    std::cout << "- Vehicles: " << vehicleCount() << "\n";
+    std::cout << "- Foods: " << foodCount() << "\n";
+    std::cout << "- Colors: " << getAllColors().size() << "\n";
 
     return 0;
 }

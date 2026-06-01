@@ -6,6 +6,7 @@
 #include <bitset>     // ✅ NEW
 #include <cassert>    // ✅ NEW
 #include <climits>    // ✅ NEW
+#include <typeinfo>   // ✅ EXTRA ADDED
 
 // ----------------------------------------------
 
@@ -83,7 +84,44 @@ void ascii_demo() {
               << static_cast<int>(ch) << "\n";
 }
 
-// ----------------------------------------------
+// --------------------------------------------------
+// ✅ EXTRA ADDITIONS
+// --------------------------------------------------
+
+// Show signedness of types
+template<typename T>
+void show_type_info(const char* name) {
+
+    std::cout << name
+              << " -> size: "
+              << sizeof(T)
+              << " bytes, signed: "
+              << std::numeric_limits<T>::is_signed
+              << "\n";
+}
+
+// Pointer arithmetic demo
+void pointer_arithmetic_demo() {
+
+    int arr[3] = {10, 20, 30};
+
+    int* p = arr;
+
+    std::cout << "\nPointer Arithmetic Demo:\n";
+
+    std::cout << *p << "\n";
+    std::cout << *(p + 1) << "\n";
+    std::cout << *(p + 2) << "\n";
+}
+
+// Enum demo
+enum Day {
+    Monday,
+    Tuesday,
+    Wednesday
+};
+
+// --------------------------------------------------
 
 int main() {
 
@@ -197,6 +235,36 @@ int main() {
     std::cout << "\nNext character after A: "
               << static_cast<char>(letter + 1)
               << "\n";
+
+    // --------------------------------------------------
+    // ✅ EXTRA FEATURE USAGE
+    // --------------------------------------------------
+
+    std::cout << "\nType Information:\n";
+
+    show_type_info<char>("char");
+    show_type_info<int>("int");
+    show_type_info<unsigned int>("unsigned int");
+    show_type_info<double>("double");
+
+    pointer_arithmetic_demo();
+
+    Day today = Tuesday;
+
+    std::cout << "\nEnum value (Tuesday): "
+              << today << "\n";
+
+    std::cout << "\nType name of variable x: "
+              << typeid(x).name() << "\n";
+
+    std::cout << "\nAddress of value: "
+              << &value << "\n";
+
+    std::cout << "Address stored in ptr: "
+              << ptr << "\n";
+
+    static_assert(sizeof(char) == 1,
+                  "char must be 1 byte");
 
     // --------------------------------------------------
 

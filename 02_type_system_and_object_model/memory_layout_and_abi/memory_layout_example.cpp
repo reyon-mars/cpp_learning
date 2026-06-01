@@ -5,6 +5,7 @@
 #include <cstddef>       // ✅ NEW
 #include <iomanip>       // ✅ NEW
 #include <cassert>       // ✅ NEW
+#include <string>        // ✅ NEW
 
 // ✅ ADDED: Packed struct (from earlier context)
 #pragma pack(push, 1)
@@ -44,6 +45,13 @@ struct Unaligned {
     char a;
     int b;
     char c;
+};
+
+// ✅ EXTRA ADDITION
+struct Compact {
+    double value;
+    int id;
+    char flag;
 };
 
 // Memory layout printer
@@ -109,6 +117,34 @@ void compare_sizes() {
               << sizeof(Optimized) << "\n";
 }
 
+// ✅ EXTRA ADDITION
+template<typename T>
+void print_alignment_gap(const std::string& name) {
+
+    std::cout << name
+              << " alignment remainder: "
+              << (sizeof(T) % alignof(T))
+              << "\n";
+}
+
+// ✅ EXTRA ADDITION
+void print_addresses(const Packed& p) {
+
+    std::cout << "\nPacked member addresses:\n";
+
+    std::cout << "&c = "
+              << static_cast<const void*>(&p.c)
+              << "\n";
+
+    std::cout << "&i = "
+              << static_cast<const void*>(&p.i)
+              << "\n";
+
+    std::cout << "&d = "
+              << static_cast<const void*>(&p.d)
+              << "\n";
+}
+
 // ----------------------------------------------
 
 int main() {
@@ -147,6 +183,7 @@ int main() {
     print_layout<Packed>("Packed");
     print_layout<Unaligned>("Unaligned");
     print_layout<Aligned16>("Aligned16");
+    print_layout<Compact>("Compact");
 
     print_offsets();
 
@@ -189,6 +226,26 @@ int main() {
     std::cout << "Packed is POD-like? "
               << std::is_trivial<Packed>::value
               << "\n";
+
+    // --------------------------------------------------
+    // ✅ EXTRA FEATURE USAGE (ADDED WITHOUT CHANGING ORIGINAL LOGIC)
+    // --------------------------------------------------
+
+    print_alignment_gap<Packed>("Packed");
+    print_alignment_gap<Optimized>("Optimized");
+    print_alignment_gap<Aligned16>("Aligned16");
+
+    print_addresses(p);
+
+    Compact comp{3.14, 101, 'Y'};
+
+    std::cout << "\nCompact struct:\n";
+    std::cout << "value = " << comp.value
+              << ", id = " << comp.id
+              << ", flag = " << comp.flag
+              << "\n";
+
+    assert(sizeof(Compact) >= sizeof(double));
 
     // --------------------------------------------------
 

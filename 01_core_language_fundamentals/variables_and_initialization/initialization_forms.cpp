@@ -3,6 +3,7 @@
 #include <vector>           // ✅ NEW
 #include <cassert>          // ✅ NEW
 #include <type_traits>      // ✅ NEW
+#include <array>            // ✅ EXTRA ADDED
 
 // ✅ ADDED: Point struct
 struct Point {
@@ -103,7 +104,50 @@ struct Config {
     bool debug;
 };
 
-// ----------------------------------------------
+// ----------------------------------------------------
+// ✅ EXTRA ADDITIONS
+// ----------------------------------------------------
+
+// Default member initialization
+struct Settings {
+    int width = 800;
+    int height = 600;
+};
+
+// Delegating constructors
+class Rectangle {
+private:
+    int width;
+    int height;
+
+public:
+    Rectangle() : Rectangle(1, 1) {}
+
+    Rectangle(int w, int h)
+        : width(w), height(h) {}
+
+    void print() const {
+        std::cout << "Rectangle("
+                  << width
+                  << ", "
+                  << height
+                  << ")\n";
+    }
+};
+
+// Value initialization demo
+void value_init_demo() {
+    int x{};
+    double y{};
+    bool z{};
+
+    std::cout << "\nValue Initialization:\n";
+    std::cout << "int: " << x << "\n";
+    std::cout << "double: " << y << "\n";
+    std::cout << "bool: " << z << "\n";
+}
+
+// ----------------------------------------------------
 
 int main() {
 
@@ -184,6 +228,45 @@ int main() {
     for (const auto& p : points) {
         print_point(p);
     }
+
+    // --------------------------------------------------
+    // ✅ EXTRA FEATURE USAGE
+    // --------------------------------------------------
+
+    Settings settings{};
+
+    std::cout << "\nSettings:\n";
+    std::cout << "Width: "
+              << settings.width
+              << "\n";
+
+    std::cout << "Height: "
+              << settings.height
+              << "\n";
+
+    Rectangle r1;
+    Rectangle r2(10, 20);
+
+    std::cout << "\nDelegating Constructors:\n";
+    r1.print();
+    r2.print();
+
+    value_init_demo();
+
+    std::array<int, 5> arr{1, 2, 3, 4, 5};
+
+    std::cout << "\nstd::array contents:\n";
+    for (int n : arr) {
+        std::cout << n << " ";
+    }
+    std::cout << "\n";
+
+    Point origin{};
+    std::cout << "\nOrigin point: ";
+    print_point(origin);
+
+    static_assert(std::is_aggregate<Point>::value,
+                  "Point should be an aggregate type");
 
     // --------------------------------------------------
 

@@ -188,5 +188,7 @@ int main() {
 
     // ==================================================
 
+    std::cout << "Type deduction demonstration completed.\n";
+    
     return 0;
 }

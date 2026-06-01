@@ -149,6 +149,66 @@ void memcpy_demo() {
 }
 
 // --------------------------------------------------
+// ✅ EXTRA ADDITIONS (NEW)
+// --------------------------------------------------
+
+// Show binary representation of each color channel
+void print_channel_bits(const Color& c) {
+    std::cout << "\nChannel Bit Patterns:\n";
+
+    std::cout << "R: "
+              << std::bitset<8>(c.channels.r) << "\n";
+
+    std::cout << "G: "
+              << std::bitset<8>(c.channels.g) << "\n";
+
+    std::cout << "B: "
+              << std::bitset<8>(c.channels.b) << "\n";
+
+    std::cout << "A: "
+              << std::bitset<8>(c.channels.a) << "\n";
+}
+
+// Toggle a bit in an integer
+uint32_t toggle_bit(uint32_t value, int bit) {
+    return value ^ (1u << bit);
+}
+
+// Count set bits
+int count_set_bits(uint32_t value) {
+    int count = 0;
+
+    while (value) {
+        count += value & 1;
+        value >>= 1;
+    }
+
+    return count;
+}
+
+// Compare reinterpret_cast vs memcpy
+void cast_vs_memcpy_demo() {
+
+    uint32_t value = 0xDEADBEEF;
+
+    unsigned char* castPtr =
+        reinterpret_cast<unsigned char*>(&value);
+
+    unsigned char buffer[4];
+    std::memcpy(buffer, &value, sizeof(value));
+
+    std::cout << "\nCast first byte: "
+              << std::hex
+              << (int)castPtr[0]
+              << std::dec << "\n";
+
+    std::cout << "Memcpy first byte: "
+              << std::hex
+              << (int)buffer[0]
+              << std::dec << "\n";
+}
+
+// --------------------------------------------------
 
 int main() {
 
@@ -161,7 +221,7 @@ int main() {
     Color c;
     c.full = 0xAABBCCDD;
 
-    assert(sizeof(Color) == sizeof(uint32_t));  // ✅ ADDED sanity check
+    assert(sizeof(Color) == sizeof(uint32_t));
 
     // ✅ Bit visualization
     print_bits(c.full);
@@ -209,6 +269,29 @@ int main() {
     // ✅ NEW: Bitfield size check
     static_assert(sizeof(Flags) == 1,
                   "Flags should occupy 1 byte");
+
+    // --------------------------------------------------
+    // ✅ EXTRA FEATURE USAGE
+    // --------------------------------------------------
+
+    print_channel_bits(c);
+
+    std::cout << "\nSet bits in color value: "
+              << count_set_bits(c.full)
+              << "\n";
+
+    uint32_t toggled = toggle_bit(c.full, 0);
+
+    std::cout << "\nAfter toggling bit 0:\n";
+    print_bits(toggled);
+
+    cast_vs_memcpy_demo();
+
+    std::cout << "\nMemory address of Color object: "
+              << &c << "\n";
+
+    std::cout << "Memory address of Flags object: "
+              << &f << "\n";
 
     // --------------------------------------------------
 

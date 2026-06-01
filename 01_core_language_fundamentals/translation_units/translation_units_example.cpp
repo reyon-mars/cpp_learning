@@ -86,8 +86,6 @@ void safe_delete(int*& ptr) {
     ptr = nullptr;
 }
 
-// ----------- NEW: TRANSLATION UNIT ADDITIONS -----------
-
 // Simulating external variable
 extern int external_counter;
 
@@ -112,8 +110,6 @@ void modify_external() {
     std::cout << "Modified external_counter: "
               << external_counter << "\n";
 }
-
-// ----------- EXTRA SMALL ADDITIONS -----------
 
 // constexpr compile-time helper
 constexpr int cube_constexpr(int x) {
@@ -225,8 +221,6 @@ int main() {
 
     modify_external();
 
-    // ================================================================
-
     // ================= EXTRA SMALL FEATURES =================
 
     std::cout << "\nExtra Compile-Time Features:\n";
@@ -251,6 +245,7 @@ int main() {
     print_debug_history();
 
     // ====================================================
+    std::cout << "Program execution completed successfully.\n";
 
     #undef DEBUG_MODE
 

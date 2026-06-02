@@ -1,193 +1,142 @@
 #include <iostream>
 #include <type_traits>
-#include <utility>      // ✅ ADDED
-#include <typeinfo>     // ✅ ADDED
+#include <utility>
+#include <typeinfo>
+#include <string>
+#include <memory>
 
 template<typename T>
 void print_traits() {
-    std::cout << "Is integral: " << std::is_integral<T>::value << "\n";
-    std::cout << "Is pointer: " << std::is_pointer<T>::value << "\n";
-    std::cout << "Size: " << sizeof(T) << "\n";
-    std::cout << "Alignment: " << alignof(T) << "\n";
+    std::cout << "Is integral:  " << std::is_integral_v<T>  << "\n"
+              << "Is pointer:   " << std::is_pointer_v<T>   << "\n"
+              << "Size:         " << sizeof(T)               << "\n"
+              << "Alignment:    " << alignof(T)              << "\n";
 }
-
-// ----------- NEW ADDITIONS -----------
 
 template<typename T>
 void print_more_traits() {
-    std::cout << "Is const: " << std::is_const<T>::value << "\n";
-    std::cout << "Is reference: " << std::is_reference<T>::value << "\n";
-    std::cout << "Is same as int: "
-              << std::is_same<T, int>::value << "\n";
+    std::cout << "Is const:       " << std::is_const_v<T>          << "\n"
+              << "Is reference:   " << std::is_reference_v<T>      << "\n"
+              << "Is same as int: " << std::is_same_v<T, int>      << "\n";
 }
 
 template<typename T>
 void analyze_type() {
-    if constexpr (std::is_integral<T>::value) {
-        std::cout << "This is an integral type\n";
+    if constexpr (std::is_integral_v<T>) {
+        std::cout << "Integral type\n";
+    } else if constexpr (std::is_floating_point_v<T>) {
+        std::cout << "Floating-point type\n";
+    } else if constexpr (std::is_class_v<T>) {
+        std::cout << "Class type\n";
     } else {
-        std::cout << "This is NOT an integral type\n";
+        std::cout << "Other type\n";
     }
 }
 
 struct alignas(32) AlignedStruct {
-    int x;
+    int    x;
     double y;
 };
 
-// ----------- EXTRA ADDITIONS -----------
-
-// Type transformations
-template<typename T>
-void transform_type() {
-    using no_const = typename std::remove_const<T>::type;
-    using no_ref   = typename std::remove_reference<T>::type;
-
-    std::cout << "Removed const? "
-              << std::is_const<no_const>::value << "\n";
-
-    std::cout << "Removed reference? "
-              << std::is_reference<no_ref>::value << "\n";
-}
-
-// Advanced traits
-template<typename T>
-void advanced_traits() {
-    std::cout << "Trivially copyable: "
-              << std::is_trivially_copyable<T>::value << "\n";
-
-    std::cout << "Standard layout: "
-              << std::is_standard_layout<T>::value << "\n";
-}
-
-// Padding demo struct
 struct PaddingDemo {
     char a;
-    int b;
+    int  b;
     char c;
 };
 
-// aligned_storage example
-void aligned_storage_demo() {
-    using Storage = std::aligned_storage<sizeof(int), alignof(int)>::type;
+template<typename T>
+void transform_type() {
+    using NoConst = std::remove_const_t<T>;
+    using NoRef   = std::remove_reference_t<T>;
 
-    Storage storage;
-    int* ptr = reinterpret_cast<int*>(&storage);
-    *ptr = 42;
-
-    std::cout << "Aligned storage value: " << *ptr << "\n";
+    std::cout << "After remove_const, still const?    " << std::is_const_v<NoConst> << "\n"
+              << "After remove_reference, still ref?  " << std::is_reference_v<NoRef> << "\n";
 }
 
-// ----------- MORE ADVANCED ADDITIONS -----------
+template<typename T>
+void advanced_traits() {
+    std::cout << "Trivially copyable:  " << std::is_trivially_copyable_v<T> << "\n"
+              << "Standard layout:     " << std::is_standard_layout_v<T>    << "\n";
+}
 
-// Type decay demo
+void aligned_storage_demo() {
+    alignas(alignof(int)) std::byte storage[sizeof(int)];
+    auto* ptr = new (&storage) int{42};
+    std::cout << "Aligned storage value: " << *ptr << "\n";
+    std::destroy_at(ptr);
+}
+
 template<typename T>
 void decay_demo() {
-    using Decayed = typename std::decay<T>::type;
-
-    std::cout << "Original is reference? "
-              << std::is_reference<T>::value << "\n";
-
-    std::cout << "After decay is reference? "
-              << std::is_reference<Decayed>::value << "\n";
+    using Decayed = std::decay_t<T>;
+    std::cout << "Original is reference?      " << std::is_reference_v<T>       << "\n"
+              << "After decay is reference?   " << std::is_reference_v<Decayed> << "\n"
+              << "After decay is pointer?     " << std::is_pointer_v<Decayed>   << "\n";
 }
 
-// Enable_if example (only for integral types)
 template<typename T>
-typename std::enable_if<std::is_integral<T>::value>::type
-only_integral(T val) {
+    requires std::is_integral_v<T>
+void only_integral(T val) {
     std::cout << "Integral value: " << val << "\n";
 }
 
-// Detect if type is class
-template<typename T>
-void check_class() {
-    std::cout << "Is class type: "
-              << std::is_class<T>::value << "\n";
-}
-
-// Reference category checker
 template<typename T>
 void reference_category(T&&) {
-    if constexpr (std::is_lvalue_reference<T>::value) {
-        std::cout << "Lvalue reference detected\n";
+    if constexpr (std::is_lvalue_reference_v<T>) {
+        std::cout << "Lvalue reference\n";
     } else {
-        std::cout << "Rvalue reference detected\n";
+        std::cout << "Rvalue reference\n";
     }
 }
 
-// ----------- FEW MORE SMALL ADDITIONS -----------
-
-// Check floating point types
-template<typename T>
-void check_floating_point() {
-    std::cout << "Is floating point: "
-              << std::is_floating_point<T>::value << "\n";
-}
-
-// Remove pointer example
 template<typename T>
 void remove_pointer_demo() {
-    using BaseType = typename std::remove_pointer<T>::type;
-
-    std::cout << "Original is pointer? "
-              << std::is_pointer<T>::value << "\n";
-
-    std::cout << "Base type is pointer? "
-              << std::is_pointer<BaseType>::value << "\n";
+    using Base = std::remove_pointer_t<T>;
+    std::cout << "Original is pointer?   " << std::is_pointer_v<T>    << "\n"
+              << "Base type is pointer?  " << std::is_pointer_v<Base> << "\n";
 }
 
-// Type name printer
 template<typename T>
 void print_type_name() {
-    std::cout << "Type name: "
-              << typeid(T).name() << "\n";
+    std::cout << "Type name: " << typeid(T).name() << "\n";
 }
 
-// Move semantics demo
 template<typename T>
 void move_demo(T&& value) {
-    T moved = std::forward<T>(value);
-
-    std::cout << "Move/forward demo executed\n";
-    (void)moved;
+    [[maybe_unused]] T moved = std::forward<T>(value);
+    std::cout << "Perfect-forward executed\n";
 }
 
-// constexpr trait helper
 template<typename T>
-constexpr bool is_numeric() {
-    return std::is_arithmetic<T>::value;
-}
-
-// ------------------------------------
+inline constexpr bool is_numeric_v = std::is_arithmetic_v<T>;
 
 int main() {
+    static_assert(sizeof(int) >= 4, "Unexpected int size");
+
+    std::cout << "--- print_traits<int> ---\n";
     print_traits<int>();
+
+    std::cout << "\n--- print_traits<int*> ---\n";
     print_traits<int*>();
-    
+
     alignas(64) char buffer[256];
-    std::cout << "Buffer alignment: " << alignof(decltype(buffer)) << "\n";
+    std::cout << "\nBuffer alignment: " << alignof(decltype(buffer)) << "\n";
 
-    // -------- NEW FEATURE USAGE --------
-
-    std::cout << "\nMore traits for int:\n";
+    std::cout << "\n--- More traits: int ---\n";
     print_more_traits<int>();
 
-    std::cout << "\nMore traits for const int&:\n";
+    std::cout << "\n--- More traits: const int& ---\n";
     print_more_traits<const int&>();
 
-    std::cout << "\nAnalyze types:\n";
+    std::cout << "\n--- analyze_type ---\n";
     analyze_type<int>();
     analyze_type<double>();
+    analyze_type<AlignedStruct>();
 
-    std::cout << "\nCustom aligned struct:\n";
-    std::cout << "Size: " << sizeof(AlignedStruct) << "\n";
-    std::cout << "Alignment: " << alignof(AlignedStruct) << "\n";
-
-    std::cout << "alignment_of<int>: "
-              << std::alignment_of<int>::value << "\n";
-
-    // -------- EXTRA FEATURE USAGE --------
+    std::cout << "\n--- AlignedStruct ---\n"
+              << "Size:      " << sizeof(AlignedStruct)              << "\n"
+              << "Alignment: " << alignof(AlignedStruct)             << "\n"
+              << "alignment_of<int>: " << std::alignment_of_v<int>  << "\n";
 
     std::cout << "\n--- Type Transformations ---\n";
     transform_type<const int&>();
@@ -196,61 +145,42 @@ int main() {
     advanced_traits<int>();
     advanced_traits<AlignedStruct>();
 
-    std::cout << "\n--- Padding Demo ---\n";
-    std::cout << "Size of PaddingDemo: "
-              << sizeof(PaddingDemo) << "\n";
+    std::cout << "\n--- PaddingDemo ---\n"
+              << "Size:      " << sizeof(PaddingDemo)  << "\n"
+              << "Alignment: " << alignof(PaddingDemo) << "\n";
 
-    std::cout << "Alignment of PaddingDemo: "
-              << alignof(PaddingDemo) << "\n";
-
-    std::cout << "\n--- Aligned Storage Demo ---\n";
+    std::cout << "\n--- Aligned Storage ---\n";
     aligned_storage_demo();
-
-    // -------- MORE ADVANCED USAGE --------
 
     std::cout << "\n--- Decay Demo ---\n";
     decay_demo<const int&>();
+    decay_demo<int[3]>();
 
-    std::cout << "\n--- enable_if Demo ---\n";
+    std::cout << "\n--- requires constraint (only_integral) ---\n";
     only_integral(10);
-    // only_integral(3.14); // ❌ won't compile
-
-    std::cout << "\n--- Class Detection ---\n";
-    check_class<int>();
-    check_class<AlignedStruct>();
 
     std::cout << "\n--- Reference Category ---\n";
     int x = 5;
-    reference_category(x);       // lvalue
-    reference_category(10);      // rvalue
-
-    // -------- FEW MORE SMALL USAGES --------
+    reference_category(x);
+    reference_category(42);
 
     std::cout << "\n--- Floating Point Check ---\n";
-    check_floating_point<float>();
-    check_floating_point<int>();
+    std::cout << "float is floating_point: " << std::is_floating_point_v<float> << "\n"
+              << "int is floating_point:   " << std::is_floating_point_v<int>   << "\n";
 
-    std::cout << "\n--- Remove Pointer Demo ---\n";
+    std::cout << "\n--- Remove Pointer ---\n";
     remove_pointer_demo<int*>();
 
-    std::cout << "\n--- Type Name Demo ---\n";
+    std::cout << "\n--- Type Name ---\n";
     print_type_name<double>();
 
-    std::cout << "\n--- Move Demo ---\n";
+    std::cout << "\n--- Move/Forward Demo ---\n";
     std::string text = "Hello";
     move_demo(std::move(text));
 
-    std::cout << "\n--- constexpr Trait Demo ---\n";
-    std::cout << "int is numeric? "
-              << is_numeric<int>() << "\n";
-
-    std::cout << "std::string is numeric? "
-              << is_numeric<std::string>() << "\n";
-
-    // Compile-time check
-    static_assert(sizeof(int) >= 4, "Unexpected int size!");
-
-    // ----------------------------------
+    std::cout << "\n--- is_numeric_v ---\n"
+              << "int:         " << is_numeric_v<int>         << "\n"
+              << "std::string: " << is_numeric_v<std::string> << "\n";
 
     return 0;
 }

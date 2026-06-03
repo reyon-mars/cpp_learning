@@ -1,52 +1,54 @@
-// Access Control Exercise
-// public, private, protected, friend
-
 #include <iostream>
-#include <string>      // ✅ ADDED
-#include <cassert>     // ✅ ADDED
+#include <string>
+#include <string_view>
+#include <memory>
+#include <cassert>
+
+class Friend;
+void friend_function();
 
 class Base {
 public:
     int pub_member = 0;
 
     void print() const {
-        std::cout << "pub: " << pub_member
+        std::cout << "pub: "  << pub_member
                   << " prot: " << prot_member
                   << " priv: " << priv_member << "\n";
     }
-    
+
+    [[nodiscard]] int getPrivate() const noexcept { return priv_member; }
+    void setPrivate(int val) noexcept              { priv_member = val;  }
+
 protected:
     int prot_member = 0;
-    
+
 private:
     int priv_member = 0;
-    
+
     friend class Friend;
     friend void friend_function();
-
-public:
-    int getPrivate() const {
-        return priv_member;
-    }
-
-    // ----------- EXTRA ADDITION -----------
-    void setPrivate(int val) {
-        priv_member = val;
-    }
-    // -------------------------------------
 };
 
 class Derived : public Base {
 public:
     void access() {
-        pub_member = 1;      
-        prot_member = 2;     
+        pub_member  = 1;
+        prot_member = 2;
+    }
+};
+
+class AdvancedDerived : public Derived {
+public:
+    void advancedAccess() {
+        pub_member  = 11;
+        prot_member = 22;
     }
 };
 
 class Friend {
 public:
-    void access(Base& obj) {
+    void access(Base& obj) noexcept {
         obj.priv_member = 10;
     }
 };
@@ -57,12 +59,10 @@ void friend_function() {
     obj.print();
 }
 
-// ----------- NEW ADDITIONS -----------
-
 class ProtectedDerived : protected Base {
 public:
     void test() {
-        pub_member = 5;
+        pub_member  = 5;
         prot_member = 6;
     }
 };
@@ -70,200 +70,139 @@ public:
 class PrivateDerived : private Base {
 public:
     void test() {
-        pub_member = 7;
+        pub_member  = 7;
         prot_member = 8;
     }
 };
 
-void friend_modify(Base& obj) {
-    obj.priv_member = 99;
-}
-
-// ----------- EXTRA SMALL ADDITIONS -----------
-
-void show_state(const Base& obj, const std::string& label) {
+void show_state(const Base& obj, std::string_view label) {
     std::cout << "[" << label << "] ";
     obj.print();
 }
 
-void modify_public(Base& obj) {
+void modify_public(Base& obj) noexcept {
     obj.pub_member += 5;
 }
 
-// ----------- MORE ADVANCED ADDITIONS -----------
-
-// Static member demo
 class Counter {
 public:
-    static int count;
-
-    Counter() {
-        count++;
-    }
+    static inline int count = 0;
+    Counter() noexcept { ++count; }
 };
 
-int Counter::count = 0;
-
-// Virtual function demo
 class Shape {
 public:
-    virtual void draw() {
-        std::cout << "Drawing Shape\n";
-    }
-
-    // ✅ ADDED virtual destructor
+    virtual void draw() const { std::cout << "Drawing Shape\n"; }
     virtual ~Shape() = default;
 };
 
-class Circle : public Shape {
+class Circle final : public Shape {
 public:
-    void draw() override {
-        std::cout << "Drawing Circle\n";
-    }
+    void draw() const override { std::cout << "Drawing Circle\n"; }
 };
 
-// Object slicing demo
 void slicing_demo(Base obj) {
-    std::cout << "Slicing demo (Base copy): ";
+    std::cout << "Sliced Base copy: ";
     obj.print();
 }
 
-// ----------- FEW MORE SMALL ADDITIONS -----------
-
-// Nested class demo
 class Container {
-private:
-    int secret = 500;
-
 public:
     class Nested {
     public:
-        void show() {
-            std::cout << "Nested class inside Container\n";
-        }
+        void show() const { std::cout << "Nested inside Container\n"; }
     };
 
-    int getSecret() const {
-        return secret;
-    }
-};
+    [[nodiscard]] int getSecret() const noexcept { return secret_; }
 
-// Const member function demo
-class ConstDemo {
 private:
-    int value;
-
-public:
-    ConstDemo(int v) : value(v) {}
-
-    int getValue() const {
-        return value;
-    }
+    int secret_ = 500;
 };
 
-// Protected inheritance visibility test
-class AdvancedDerived : public Derived {
+class ConstDemo {
 public:
-    void advancedAccess() {
-        pub_member = 11;
-        prot_member = 22;
-    }
+    explicit ConstDemo(int v) noexcept : value_{v} {}
+    [[nodiscard]] int getValue() const noexcept { return value_; }
+
+private:
+    int value_;
 };
 
-// Friend helper class
 class Inspector {
 public:
     static void inspect(const Base& obj) {
-        std::cout << "Inspector sees private value via getter: "
-                  << obj.getPrivate() << "\n";
+        std::cout << "Inspector (via getter): " << obj.getPrivate() << "\n";
     }
 };
-
-// ------------------------------------
 
 int main() {
     Base obj;
     obj.pub_member = 5;
-
     obj.print();
 
+    std::cout << "\n--- Derived public access ---\n";
     Derived d;
     d.access();
     d.print();
 
+    std::cout << "\n--- Friend class ---\n";
     Friend f;
     f.access(obj);
     obj.print();
 
+    std::cout << "\n--- Friend function ---\n";
     friend_function();
 
-    // -------- NEW FEATURE USAGE --------
-
+    std::cout << "\n--- Protected/Private inheritance ---\n";
     ProtectedDerived pd;
     pd.test();
 
     PrivateDerived pr;
     pr.test();
 
-    friend_modify(obj);
-    std::cout << "After friend_modify: ";
-    obj.print();
+    std::cout << "\n--- setPrivate / getter ---\n";
+    obj.setPrivate(99);
+    show_state(obj, "after setPrivate(99)");
+    std::cout << "getPrivate: " << obj.getPrivate() << "\n";
 
-    std::cout << "Access via getter: "
-              << obj.getPrivate() << "\n";
-
-    // -------- EXTRA USAGE --------
-
-    show_state(obj, "Current State");
-
+    std::cout << "\n--- modify_public ---\n";
     modify_public(obj);
-    show_state(obj, "After modify_public");
+    show_state(obj, "after modify_public");
 
-    // -------- MORE ADVANCED USAGE --------
-
-    std::cout << "\n--- Static Member Demo ---\n";
+    std::cout << "\n--- Static member ---\n";
     Counter c1, c2, c3;
-    std::cout << "Objects created: " << Counter::count << "\n";
+    std::cout << "Counter::count: " << Counter::count << "\n";
 
-    std::cout << "\n--- Polymorphism Demo ---\n";
-    Shape* s = new Circle();
-    s->draw();   // runtime polymorphism
-    delete s;
+    std::cout << "\n--- Polymorphism (unique_ptr) ---\n";
+    std::unique_ptr<Shape> shape = std::make_unique<Circle>();
+    shape->draw();
 
-    std::cout << "\n--- Object Slicing Demo ---\n";
-    slicing_demo(d);  // Derived → Base copy
+    std::cout << "\n--- Object slicing ---\n";
+    slicing_demo(d);
 
-    std::cout << "\n--- Setter Demo ---\n";
+    std::cout << "\n--- setPrivate(123) ---\n";
     obj.setPrivate(123);
     obj.print();
 
-    // -------- FEW MORE SMALL USAGE --------
-
-    std::cout << "\n--- Nested Class Demo ---\n";
+    std::cout << "\n--- Nested class ---\n";
     Container::Nested nested;
     nested.show();
-
     Container container;
-    std::cout << "Container secret: "
-              << container.getSecret() << "\n";
+    std::cout << "Container secret: " << container.getSecret() << "\n";
 
-    std::cout << "\n--- Const Function Demo ---\n";
-    const ConstDemo cd(77);
-    std::cout << "Const value: "
-              << cd.getValue() << "\n";
+    std::cout << "\n--- Const member function ---\n";
+    const ConstDemo cd{77};
+    std::cout << "Const value: " << cd.getValue() << "\n";
 
-    std::cout << "\n--- Advanced Derived Demo ---\n";
+    std::cout << "\n--- AdvancedDerived ---\n";
     AdvancedDerived ad;
     ad.advancedAccess();
     ad.print();
 
-    std::cout << "\n--- Inspector Demo ---\n";
+    std::cout << "\n--- Inspector ---\n";
     Inspector::inspect(obj);
 
-    // ✅ ADDED assertion
     assert(obj.getPrivate() == 123);
-
-    // ----------------------------------
 
     return 0;
 }

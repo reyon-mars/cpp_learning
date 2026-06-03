@@ -1,297 +1,179 @@
 #include <iostream>
-#include <typeinfo>   // ✅ ADDED
-#include <memory>     // ✅ ADDED
-using namespace std;
+#include <typeinfo>
+#include <memory>
+#include <string_view>
 
-// Definition of a Super Class or Base Class
 class Super {
-  private:
-    int storage;
+public:
+    Super() noexcept : storage_{0}, accessible_storage_{0} {}
+    explicit Super(int val) noexcept : storage_{val}, accessible_storage_{val} {}
 
-  protected:
-    int accessible_storage;
+    virtual ~Super() { std::cout << "Super destructor\n"; }
 
-  public:
-    Super() {
-        storage = 0;
-        accessible_storage = 0;
-    }
+    void set(int val) noexcept   { storage_ = accessible_storage_ = val; }
+    void reset() noexcept        { storage_ = accessible_storage_ = 0;   }
+    [[nodiscard]] int get() const noexcept { return storage_; }
 
-    Super(int val) {
-        storage = accessible_storage = val;
-    }
+    virtual void info() const { std::cout << "Super\n"; }
 
-    void set(int val) {
-        storage = accessible_storage = val;
-    }
+protected:
+    int accessible_storage_;
 
-    int get() const { // ✅ const added
-        return storage;
-    }
-
-    void reset() {
-        storage = accessible_storage = 0;
-    }
-
-    virtual void info() {
-        cout << "Super class\n";
-    }
-
-    // -------- EXTRA ADDITION --------
-    virtual ~Super() {
-        cout << "Super destructor\n";
-    }
-    // --------------------------------
+private:
+    int storage_;
 };
 
-// Definition of another Base class
 class Base {
-  protected:
-    int storage;
+public:
+    Base() noexcept : storage_{0} {}
+    explicit Base(int val) noexcept : storage_{val} {}
 
-  public:
-    Base() {
-        storage = 0;
-    }
+    virtual ~Base() { std::cout << "Base destructor\n"; }
 
-    Base(int val) {
-        storage = val;
-    }
+    void set(int val) noexcept   { storage_ = val; }
+    void reset() noexcept        { storage_ = 0;   }
+    [[nodiscard]] int get() const noexcept { return storage_; }
 
-    void set(int val) {
-        storage = val;
-    }
+    virtual void info() const { std::cout << "Base\n"; }
 
-    int get() const { // ✅ const added
-        return storage;
-    }
-
-    void reset() {
-        storage = 0;
-    }
-
-    virtual void info() {
-        cout << "Base class\n";
-    }
-
-    // -------- EXTRA ADDITION --------
-    virtual ~Base() {
-        cout << "Base destructor\n";
-    }
-    // --------------------------------
+protected:
+    int storage_;
 };
 
-// Sub Class inheriting from the Super class
-class Sub : public Super {
-
-  public:
-    void print(void) {
-        cout << " Storage = "
-             << accessible_storage << endl;
+class Sub final : public Super {
+public:
+    void print() const {
+        std::cout << "Storage = " << accessible_storage_ << "\n";
     }
 
-    void increment() {
-        accessible_storage++;
-    }
+    void increment() noexcept { ++accessible_storage_; }
 
-    // -------- NEW ADDITION --------
-    void info() override {
-        cout << "Sub class (derived from Super)\n";
-    }
-    // --------------------------------
+    void info() const override { std::cout << "Sub (derives Super)\n"; }
 
-    // -------- EXTRA ADDITION --------
-    void showAddress() {
-        cout << "Sub object address: "
-             << this << endl;
+    void showAddress() const {
+        std::cout << "Sub object address: " << static_cast<const void*>(this) << "\n";
     }
-    // --------------------------------
 };
 
-// Multiple inheritance
-class SubMulti : public Super, public Base {
+class SubMulti final : public Super, public Base {
+public:
+    SubMulti() noexcept = default;
+    SubMulti(int superVal, int baseVal) noexcept
+        : Super{superVal}, Base{baseVal} {}
 
-  public:
-
-    SubMulti(int a, int b)
-        : Super(a), Base(b) {}
-
-    SubMulti() {}
-
-    void print(void) {
-        cout << " Storage Super = "
-             << Super::accessible_storage << endl;
-
-        cout << " Storage Base  = "
-             << Base::storage << endl;
+    void print() const {
+        std::cout << "Storage Super = " << Super::accessible_storage_ << "\n"
+                  << "Storage Base  = " << Base::storage_             << "\n";
     }
 
-    int totalStorage() {
-        return Super::accessible_storage
-             + Base::storage;
+    [[nodiscard]] int totalStorage() const noexcept {
+        return Super::accessible_storage_ + Base::storage_;
     }
 
-    void setBoth(int a, int b) {
+    void setBoth(int a, int b) noexcept {
         Super::set(a);
         Base::set(b);
     }
 
-    void showInfo() {
+    void resetBoth() noexcept {
+        Super::reset();
+        Base::reset();
+    }
+
+    void showInfo() const {
         Super::info();
         Base::info();
     }
 
-    void incrementBoth() {
-        Super::accessible_storage++;
-        Base::storage++;
+    void incrementBoth() noexcept {
+        ++Super::accessible_storage_;
+        ++Base::storage_;
     }
 
-    void printAddresses() {
-        cout << "Address Super part: "
-             << static_cast<Super*>(this) << endl;
-
-        cout << "Address Base part : "
-             << static_cast<Base*>(this) << endl;
+    void printAddresses() const {
+        std::cout << "Address Super part: "
+                  << static_cast<const void*>(static_cast<const Super*>(this)) << "\n"
+                  << "Address Base part:  "
+                  << static_cast<const void*>(static_cast<const Base*>(this))  << "\n";
     }
 
-    // -------- EXTRA ADDITION --------
-    void info() {
-        cout << "SubMulti class (multiple inheritance)\n";
-    }
-    // --------------------------------
+    void info() const override { std::cout << "SubMulti (multiple inheritance)\n"; }
 };
 
-// -------- EXTRA GLOBAL ADDITIONS --------
-
-// Polymorphism demo
-void polymorphism_demo(Super* ptr) {
-    cout << "Polymorphism call: ";
-    ptr->info(); // virtual dispatch
+void polymorphismDemo(Super& obj) {
+    std::cout << "Virtual dispatch: ";
+    obj.info();
 }
 
-// Type identification (RTTI)
-void type_check(Super* ptr) {
-    cout << "Type check: ";
-
-    if(dynamic_cast<Sub*>(ptr)) {
-        cout << "Pointer is of type Sub\n";
-    }
-    else {
-        cout << "Pointer is NOT Sub\n";
+void typeCheck(Super& obj) {
+    std::cout << "Type check: ";
+    if (dynamic_cast<Sub*>(&obj)) {
+        std::cout << "Sub\n";
+    } else {
+        std::cout << "not Sub\n";
     }
 }
 
-// ----------- MORE ADDITIONS -----------
-
-// Reference demo
-void reference_demo(Super& ref) {
-    cout << "Reference polymorphism: ";
-    ref.info();
+void showRuntimeType(const Super& obj) {
+    std::cout << "Runtime type: " << typeid(obj).name() << "\n";
 }
 
-// RTTI with typeid
-void show_runtime_type(Super* ptr) {
-    cout << "Runtime type: "
-         << typeid(*ptr).name() << endl;
-}
-
-// Smart pointer demo
-void smart_pointer_demo() {
-    unique_ptr<Super> ptr =
-        make_unique<Sub>();
-
-    cout << "Smart pointer polymorphism: ";
+void smartPointerDemo() {
+    auto ptr = std::make_unique<Sub>();
+    std::cout << "Smart pointer dispatch: ";
     ptr->info();
 }
 
-// --------------------------------------
-
-
-// MAIN
-int main(void) {
-
+int main() {
     SubMulti object;
-
     object.Super::set(100);
     object.Base::set(50);
+    object.Super::set(object.Super::get() + 1);
+    object.print();
+    std::cout << "Total Storage = " << object.totalStorage() << "\n";
 
-    object.Super::set(
-        object.Super::get() + 1
-    );
-
+    object.resetBoth();
+    std::cout << "\nAfter reset:\n";
     object.print();
 
-    cout << " Total Storage = "
-         << object.totalStorage()
-         << endl;
-
-    object.Super::reset();
-    object.Base::reset();
-
-    cout << "\nAfter reset:\n";
-    object.print();
-
-    // -------- ORIGINAL USAGE --------
-
-    SubMulti obj2(10, 20);
-
+    std::cout << "\n--- setBoth ---\n";
+    SubMulti obj2{10, 20};
     obj2.print();
-
     obj2.setBoth(30, 40);
-
-    cout << "After setBoth:\n";
+    std::cout << "After setBoth:\n";
     obj2.print();
-
-    cout << "Super get: "
-         << obj2.Super::get()
-         << endl;
-
-    cout << "Base get: "
-         << obj2.Base::get()
-         << endl;
-
+    std::cout << "Super::get = " << obj2.Super::get() << "\n"
+              << "Base::get  = " << obj2.Base::get()  << "\n";
     obj2.showInfo();
 
-    // -------- EXTRA USAGE --------
-
+    std::cout << "\n--- incrementBoth ---\n";
     obj2.incrementBoth();
-
-    cout << "After incrementBoth:\n";
     obj2.print();
-
     obj2.printAddresses();
 
-    // -------- NEW ADVANCED DEMOS --------
-
-    cout << "\n--- Polymorphism Demo ---\n";
-
+    std::cout << "\n--- Polymorphism ---\n";
     Sub s;
+    polymorphismDemo(s);
 
-    polymorphism_demo(&s);
+    std::cout << "\n--- Type Check ---\n";
+    typeCheck(s);
 
-    cout << "\n--- Type Check Demo ---\n";
-    type_check(&s);
-
-    cout << "\n--- Direct info() call ---\n";
+    std::cout << "\n--- SubMulti info ---\n";
     obj2.info();
 
-    // -------- MORE ADVANCED USAGE --------
+    std::cout << "\n--- Reference polymorphism ---\n";
+    polymorphismDemo(s);
 
-    cout << "\n--- Reference Demo ---\n";
-    reference_demo(s);
+    std::cout << "\n--- Runtime Type ---\n";
+    showRuntimeType(s);
 
-    cout << "\n--- Runtime Type Demo ---\n";
-    show_runtime_type(&s);
+    std::cout << "\n--- Smart Pointer ---\n";
+    smartPointerDemo();
 
-    cout << "\n--- Smart Pointer Demo ---\n";
-    smart_pointer_demo();
-
-    cout << "\n--- Extra Sub Feature ---\n";
+    std::cout << "\n--- Sub features ---\n";
     s.increment();
     s.print();
     s.showAddress();
-
-    // ----------------------------------
 
     return 0;
 }

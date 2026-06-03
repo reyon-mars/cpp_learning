@@ -1,297 +1,198 @@
 #include <iostream>
 #include <string>
+#include <string_view>
 #include <vector>
+#include <memory>
+#include <algorithm>
 #include <typeinfo>
-#include <memory>     // ✅ ADDED
-#include <algorithm>  // ✅ ADDED
-#include <cassert>    // ✅ ADDED
+#include <cassert>
 
-using namespace std;
-
-// ======================================================
-// Animal base class
-// ======================================================
 class Animal {
 protected:
-    string name;
+    std::string name_;
 
 public:
-    Animal(string name) : name(name) {
-        MakeSound();
+    explicit Animal(std::string_view name) : name_{name} {}
+    virtual ~Animal() = default;
+
+    virtual void makeSound() const {
+        std::cout << name_ << " is making a sound\n";
     }
 
-    virtual ~Animal() { }
-
-    virtual void MakeSound(void) {
-        cout << name << " is making a sound " << endl;
+    void wakeUp() const {
+        std::cout << name_ << " just woke up — ";
+        makeSound();
     }
 
-    void WakeUp(void) {
-        cout << name << " just woke up ";
-        MakeSound();
-    }
-
-    // ✅ ADDED
-    string getName() const {
-        return name;
-    }
+    [[nodiscard]] std::string_view getName() const noexcept { return name_; }
 };
 
-// ======================================================
-// Pet base class
-// ======================================================
 class Pet {
 protected:
-    string name;
+    std::string name_;
 
 public:
-    Pet(string n) : name(n) {}
+    explicit Pet(std::string_view name) : name_{name} {}
+    virtual ~Pet() = default;
 
-    virtual ~Pet() { }
-
-    void Run(void) {
-        cout << name << " is running" << endl;
+    virtual void makeSound() const {
+        std::cout << name_ << " is making a sound\n";
     }
 
-    virtual void MakeSound(void) {
-        cout << name << " is making sound " << endl;
+    virtual void info() const {
+        std::cout << "Pet: " << name_ << "\n";
     }
 
-    void WakeUp(void) {
-        MakeSound();
+    void run() const {
+        std::cout << name_ << " is running\n";
     }
 
-    // ✅ ADDED
-    virtual void Info() const {
-        cout << "Pet name: " << name << endl;
+    void wakeUp() const { makeSound(); }
+
+    [[nodiscard]] std::string_view getName() const noexcept { return name_; }
+};
+
+class Cat final : public Pet {
+public:
+    explicit Cat(std::string_view name) : Pet{name} {}
+
+    void makeSound() const override {
+        std::cout << name_ << " — Meow meow meow...\n";
     }
 
-    // ✅ ADDED
-    string getName() const {
-        return name;
+    void info() const override {
+        std::cout << "Cat: " << name_ << "\n";
     }
 };
 
-// ======================================================
-// Cat
-// ======================================================
-class Cat : public Pet {
+class Dog final : public Pet {
 public:
-    Cat(string n) : Pet(n) {}
+    explicit Dog(std::string_view name) : Pet{name} {}
 
-    void MakeSound(void) override {
-        cout << Pet::name << " Meow meow meow... " << endl;
+    void makeSound() const override {
+        std::cout << name_ << " — Woof woof woof...\n";
     }
 
-    // ✅ ADDED
-    void Info() const override {
-        cout << "Cat object: " << name << endl;
+    void info() const override {
+        std::cout << "Dog: " << name_ << "\n";
     }
 };
 
-// ======================================================
-// Dog
-// ======================================================
-class Dog : public Pet {
+class Parrot final : public Animal {
 public:
-    Dog(string n) : Pet(n) {}
+    explicit Parrot(std::string_view name) : Animal{name} {}
 
-    void MakeSound(void) override {
-        cout << Pet::name << " Woof woof woof... " << endl;
-    }
-
-    // ✅ ADDED
-    void Info() const override {
-        cout << "Dog object: " << name << endl;
+    void makeSound() const override {
+        std::cout << name_ << " — Caw caw caw...\n";
     }
 };
 
-// ======================================================
-// Parrot
-// ======================================================
-class Parrot : public Animal {
-public:
-    Parrot(string n) : Animal(n) {}
+class Friend;
+void doIt(const class ClassObj&);
 
-    void MakeSound(void) override {
-        cout << name << " Caw Caw Caw Caw... " << endl;
-    }
-};
-
-// ======================================================
-// Friend & Class example
-// ======================================================
-class Class {
-private:
+class ClassObj {
     friend class Friend;
-    friend void DoIt(const Class& c);
+    friend void doIt(const ClassObj&);
 
-    int data = 0;
-    string name = "None";
+    int         data_ = 0;
+    std::string name_ = "None";
 
-    void print(void) const {
-        cout << "Friend and Class are friends forever "
-             << data << " " << name << endl;
+    void print() const {
+        std::cout << "Friends forever — " << data_ << " " << name_ << "\n";
     }
 };
 
 class Friend {
 public:
-    void DoIt(Class& c) {
-        c.data = 2;
-        c.name = "Friends";
+    void doIt(ClassObj& c) {
+        c.data_ = 2;
+        c.name_ = "Friends";
         c.print();
     }
 };
 
-void DoIt(const Class& c) {
-    c.print();
+void doIt(const ClassObj& c) { c.print(); }
+
+using PetVec = std::vector<std::unique_ptr<Pet>>;
+
+void makeAllSound(const PetVec& pets) {
+    std::cout << "\nAll pets making sound:\n";
+    for (const auto& p : pets) { p->makeSound(); }
 }
 
-// ---------------- NEW ADDITIONS ----------------
-
-// Polymorphic function
-void makeAllSound(const vector<Pet*>& pets) {
-    cout << "\nAll pets making sound:\n";
-    for (const auto& p : pets) {
-        p->MakeSound();
-    }
+void showPetInfo(const PetVec& pets) {
+    std::cout << "\nPet information:\n";
+    for (const auto& p : pets) { p->info(); }
 }
 
-// RTTI demo
-void printType(Pet* p) {
-    cout << "Actual type: " << typeid(*p).name() << endl;
+void printType(const Pet& p) {
+    std::cout << "Actual type: " << typeid(p).name() << "\n";
 }
 
-// Count pets
-int countPets(const vector<Pet*>& pets) {
-    return pets.size();
+const Pet* findPet(const PetVec& pets, std::string_view target) {
+    auto it = std::ranges::find_if(pets, [target](const auto& p) {
+        return p->getName() == target;
+    });
+    return it != pets.end() ? it->get() : nullptr;
 }
 
-// Safe delete helper
-void cleanup(vector<Pet*>& pets) {
-    for (auto p : pets) {
-        delete p;
-    }
-    pets.clear();
+void sortPets(PetVec& pets) {
+    std::ranges::sort(pets, [](const auto& a, const auto& b) {
+        return a->getName() < b->getName();
+    });
 }
 
-// ---------------- EXTRA SMALL ADDITIONS ----------------
+int main() {
+    PetVec pets;
+    pets.push_back(std::make_unique<Cat>("Tom"));
+    pets.push_back(std::make_unique<Dog>("Huckelberry"));
+    pets.push_back(std::make_unique<Cat>("Oreo"));
 
-// Print all pet info
-void showPetInfo(const vector<Pet*>& pets) {
-    cout << "\nPet information:\n";
-    for (const auto& p : pets) {
-        p->Info();
-    }
-}
+    pets[0]->run();
+    pets[1]->makeSound();
 
-// Find pet by name
-Pet* findPet(const vector<Pet*>& pets, const string& target) {
-    for (auto p : pets) {
-        if (p->getName() == target) {
-            return p;
-        }
-    }
-    return nullptr;
-}
-
-// Sort pets by name
-void sortPets(vector<Pet*>& pets) {
-    sort(pets.begin(), pets.end(),
-        [](Pet* a, Pet* b) {
-            return a->getName() < b->getName();
-        });
-}
-
-// Smart pointer demo
-void smartPointerDemo() {
-    unique_ptr<Pet> smartPet = make_unique<Dog>("SmartDog");
-
-    cout << "\nSmart pointer demo:\n";
-    smartPet->MakeSound();
-}
-
-// ------------------------------------------------
-
-// ======================================================
-// MAIN
-// ======================================================
-int main(void) {
-
-    Pet* pet1 = new Cat("Tom");
-    Pet* pet2 = new Dog("Huckelberry");
-
-    pet1->Run();
-    pet2->MakeSound();
-
-    static_cast<Cat*>(pet1)->MakeSound();
-
-    if (Cat* safeCat = dynamic_cast<Cat*>(pet1)) {
-        cout << "dynamic_cast successful: ";
-        safeCat->MakeSound();
+    if (auto* cat = dynamic_cast<Cat*>(pets[0].get())) {
+        std::cout << "dynamic_cast<Cat> succeeded: ";
+        cat->makeSound();
     }
 
-    // Failed dynamic_cast
-    if (Cat* wrongCast = dynamic_cast<Cat*>(pet2)) {
-        wrongCast->MakeSound();
+    if (auto* wrongCast = dynamic_cast<Cat*>(pets[1].get())) {
+        wrongCast->makeSound();
     } else {
-        cout << "dynamic_cast failed (Dog is not Cat)\n";
+        std::cout << "dynamic_cast<Cat> on Dog — correctly failed\n";
     }
 
-    Cat* cat1 = new Cat("Oreo");
-    static_cast<Pet*>(cat1)->MakeSound();
+    auto parrot = std::make_unique<Parrot>("Jack");
+    Animal* animal = parrot.get();
+    animal->makeSound();
+    parrot->wakeUp();
 
-    Parrot* parrot;
-    Animal* animal1 = parrot = new Parrot("Jack");
-
-    animal1->MakeSound();
-    parrot->WakeUp();
-
-    Class class_object;
-    Friend friend_object;
-
-    friend_object.DoIt(class_object);
-    DoIt(class_object);
-
-    // -------- NEW POLYMORPHISM USAGE --------
-    vector<Pet*> pets = { pet1, pet2, cat1 };
+    ClassObj classObj;
+    Friend   friendObj;
+    friendObj.doIt(classObj);
+    doIt(classObj);
 
     makeAllSound(pets);
+    std::cout << "Total pets: " << pets.size() << "\n";
 
-    cout << "Total pets: " << countPets(pets) << endl;
-
-    printType(pet1);
-    printType(pet2);
-
-    // -------- EXTRA FEATURE USAGE --------
+    for (const auto& p : pets) { printType(*p); }
 
     showPetInfo(pets);
 
-    Pet* found = findPet(pets, "Oreo");
-    if (found) {
-        cout << "\nFound pet: ";
-        found->MakeSound();
+    if (const Pet* found = findPet(pets, "Oreo")) {
+        std::cout << "\nFound — ";
+        found->makeSound();
     }
 
-    cout << "\nSorted pets by name:\n";
+    std::cout << "\nSorted pets by name:\n";
     sortPets(pets);
+    for (const auto& p : pets) { std::cout << p->getName() << "\n"; }
 
-    for (const auto& p : pets) {
-        cout << p->getName() << endl;
-    }
+    std::cout << "\nSmart pointer demo:\n";
+    auto smartPet = std::make_unique<Dog>("SmartDog");
+    smartPet->makeSound();
 
-    smartPointerDemo();
-
-    // ✅ ADDED assertion
-    assert(countPets(pets) == 3);
-
-    // ---------------------------------------
-
-    // Cleanup pets safely
-    cleanup(pets);
-
-    delete parrot;
+    assert(pets.size() == 3);
 
     return 0;
 }

@@ -1,254 +1,153 @@
-// Member Functions Exercise
-// const, non-const, ref-qualified, virtual member functions
-
 #include <iostream>
 #include <utility>
-#include <vector>      // ✅ ADDED
-#include <algorithm>   // ✅ ADDED
-#include <memory>      // ✅ ADDED
-#include <cassert>     // ✅ ADDED
+#include <vector>
+#include <algorithm>
+#include <memory>
+#include <cassert>
 
 class MyClass {
-private:
-    int value;
-    
 public:
-    MyClass(int v) : value(v) {}
+    explicit MyClass(int v) noexcept : value_{v} {}
 
-    // -------- EXTRA ADDITIONS (Rule of 5 basics) --------
-    MyClass(const MyClass&) = default;
-    MyClass(MyClass&&) noexcept = default;
+    MyClass(const MyClass&)            = default;
+    MyClass(MyClass&&) noexcept        = default;
     MyClass& operator=(const MyClass&) = default;
     MyClass& operator=(MyClass&&) noexcept = default;
-    ~MyClass() = default;
-    // ---------------------------------------------------
-    
-    // Non-const member function
-    void setValue(int v) { value = v; }
-    
-    // Const member function
-    int getValue() const { return value; }
-    
-    // Ref-qualified member functions (C++11)
-    void process() & { std::cout << "Lvalue reference\n"; }
-    void process() && { std::cout << "Rvalue reference\n"; }
+    virtual ~MyClass()                 = default;
 
-    // -------- NEW ADDITIONS --------
-    void process() const & { std::cout << "Const lvalue reference\n"; }
-    void process() const && { std::cout << "Const rvalue reference\n"; }
+    void setValue(int v) noexcept { value_ = v; }
+    void reset()         noexcept { value_ = 0; }
 
-    // Method chaining
-    MyClass& add(int v) {
-        value += v;
-        return *this;
+    [[nodiscard]] int  getValue() const noexcept { return value_; }
+    [[nodiscard]] int  safeGet()  const noexcept { return value_; }
+    [[nodiscard]] bool isPositive() const noexcept { return value_ > 0; }
+
+    void process()        &  { std::cout << "Lvalue\n";        }
+    void process()        && { std::cout << "Rvalue\n";        }
+    void process() const  &  { std::cout << "Const lvalue\n";  }
+    void process() const  && { std::cout << "Const rvalue\n";  }
+
+    MyClass& add(int v)      noexcept { value_ += v; return *this; }
+    MyClass& multiply(int v) noexcept { value_ *= v; return *this; }
+
+    [[nodiscard]] MyClass addConst(int v) const noexcept {
+        return MyClass{value_ + v};
     }
 
-    // noexcept function
     void safePrint() const noexcept {
-        std::cout << "Safe value: " << value << "\n";
+        std::cout << "Safe value: " << value_ << "\n";
     }
 
-    // -------- EXTRA ADDITIONS --------
-    MyClass& multiply(int v) {
-        value *= v;
-        return *this;
-    }
-
-    bool isPositive() const {
-        return value > 0;
-    }
-
-    // const-qualified chaining (returns new object)
-    MyClass addConst(int v) const {
-        return MyClass(value + v);
-    }
-    // --------------------------------
-    
-    // Virtual member function
     virtual void display() const {
-        std::cout << "Value: " << value << "\n";
+        std::cout << "MyClass(" << value_ << ")\n";
     }
 
-    // -------- EXTRA ADDITION --------
-    [[nodiscard]] int safeGet() const {
-        return value;
-    }
-    // --------------------------------
-
-    // -------- EXTRA ADDITION --------
     static void classInfo() {
-        std::cout << "MyClass static info function\n";
-    }
-    // --------------------------------
-
-    // ----------- MORE ADDED FUNCTIONS -----------
-
-    void reset() {
-        value = 0;
+        std::cout << "MyClass — static info\n";
     }
 
-    bool operator==(const MyClass& other) const {
-        return value == other.value;
+    [[nodiscard]] bool operator==(const MyClass&) const = default;
+
+    [[nodiscard]] bool operator<(const MyClass& other) const noexcept {
+        return value_ < other.value_;
     }
 
-    bool operator<(const MyClass& other) const {
-        return value < other.value;
+    friend std::ostream& operator<<(std::ostream& os, const MyClass& obj) {
+        return os << "MyClass(" << obj.value_ << ")";
     }
 
-    friend std::ostream& operator<<(std::ostream& os,
-                                    const MyClass& obj) {
-        os << "MyClass(" << obj.value << ")";
-        return os;
-    }
-
-    // --------------------------------------------
+private:
+    int value_;
 };
 
-// 🔹 Added derived class
 class Derived : public MyClass {
 public:
-    Derived(int v) : MyClass(v) {}
+    explicit Derived(int v) noexcept : MyClass{v} {}
 
     void display() const override {
-        std::cout << "Derived display\n";
+        std::cout << "Derived(" << getValue() << ")\n";
     }
 };
 
-// -------- NEW ADDITION --------
 class FinalDerived final : public MyClass {
 public:
-    FinalDerived(int v) : MyClass(v) {}
+    explicit FinalDerived(int v) noexcept : MyClass{v} {}
 
     void display() const override {
-        std::cout << "FinalDerived display\n";
+        std::cout << "FinalDerived(" << getValue() << ")\n";
     }
 };
-// --------------------------------
 
-// -------- EXTRA ADDITION --------
 void showObject(const MyClass& obj) {
-    std::cout << "[Helper] Value = " << obj.getValue() << "\n";
+    std::cout << "[Helper] " << obj << "\n";
 }
-// --------------------------------
-
-// ----------- MORE ADDED HELPERS -----------
 
 void printVector(const std::vector<MyClass>& vec) {
-    for (const auto& obj : vec) {
-        std::cout << obj << " ";
-    }
+    for (const auto& obj : vec) { std::cout << obj << " "; }
     std::cout << "\n";
 }
 
 void sortObjects(std::vector<MyClass>& vec) {
-    std::sort(vec.begin(), vec.end());
+    std::ranges::sort(vec);
 }
-
-void resetObject(MyClass& obj) {
-    obj.reset();
-}
-
-// ------------------------------------------
 
 int main() {
-    MyClass obj(42);
+    MyClass obj{42};
     obj.setValue(100);
-
     std::cout << "Value: " << obj.getValue() << "\n";
     obj.display();
 
-    // 🔹 Call ref-qualified functions
-    obj.process();                 
-    std::move(obj).process();      
+    std::cout << "\n--- Ref-qualified overloads ---\n";
+    obj.process();
+    std::move(obj).process();
 
-    // -------- NEW FEATURE USAGE --------
+    const MyClass cobj{300};
+    cobj.process();
+    std::move(cobj).process();
 
-    const MyClass cobj(300);
-    cobj.process();                     
-    std::move(cobj).process();          
-
-    // Method chaining
+    std::cout << "\n--- Method chaining ---\n";
     obj.add(10).add(20).multiply(2);
-    std::cout << "After chaining: " << obj.getValue() << "\n";
-
+    std::cout << "After chaining: " << obj << "\n";
     obj.safePrint();
+    std::cout << "Is positive: " << std::boolalpha << obj.isPositive() << "\n";
 
-    std::cout << "Is positive? "
-              << (obj.isPositive() ? "Yes\n" : "No\n");
-
-    FinalDerived fd(500);
-    fd.display();
-
-    showObject(obj);
-
-    // -------- EXTRA USAGE --------
-
-    std::cout << "\n--- Const chaining demo ---\n";
+    std::cout << "\n--- Const chaining (addConst) ---\n";
     MyClass newObj = cobj.addConst(50);
-    std::cout << "New object value: " << newObj.getValue() << "\n";
+    std::cout << "New object: " << newObj << "\n";
 
-    std::cout << "\n--- [[nodiscard]] demo ---\n";
-    int safeVal = obj.safeGet();
-    std::cout << "Safe value retrieved: " << safeVal << "\n";
-
-    std::cout << "\n--- Static function demo ---\n";
+    std::cout << "\n--- safeGet / classInfo ---\n";
+    std::cout << "safeGet: " << obj.safeGet() << "\n";
     MyClass::classInfo();
 
-    // ----------------------------------
+    std::cout << "\n--- FinalDerived ---\n";
+    FinalDerived fd{500};
+    fd.display();
+    showObject(fd);
 
-    // 🔹 Virtual dispatch demonstration
-    MyClass* basePtr = new Derived(200);
+    std::cout << "\n--- Virtual dispatch ---\n";
+    std::unique_ptr<MyClass> basePtr = std::make_unique<Derived>(200);
     basePtr->display();
 
-    delete basePtr;
+    std::cout << "\n--- Operator overloads ---\n";
+    MyClass a{10}, b{20}, c{10};
+    std::cout << "a == b: " << (a == b) << "\n"
+              << "a == c: " << (a == c) << "\n"
+              << "a: " << a << "\n";
 
-    // ----------- MORE FEATURE USAGE -----------
-
-    std::cout << "\n--- Operator Overload Demo ---\n";
-
-    MyClass a(10);
-    MyClass b(20);
-    MyClass c(10);
-
-    std::cout << "a == b ? "
-              << (a == b ? "Yes\n" : "No\n");
-
-    std::cout << "a == c ? "
-              << (a == c ? "Yes\n" : "No\n");
-
-    std::cout << "Printing object: " << a << "\n";
-
-    std::cout << "\n--- Vector + Sorting Demo ---\n";
-
-    std::vector<MyClass> vec = {
-        MyClass(30),
-        MyClass(10),
-        MyClass(20)
-    };
-
-    std::cout << "Before sort: ";
-    printVector(vec);
-
+    std::cout << "\n--- Vector + sort ---\n";
+    std::vector<MyClass> vec{MyClass{30}, MyClass{10}, MyClass{20}};
+    std::cout << "Before: "; printVector(vec);
     sortObjects(vec);
+    std::cout << "After:  "; printVector(vec);
 
-    std::cout << "After sort: ";
-    printVector(vec);
-
-    std::cout << "\n--- Reset Demo ---\n";
-
-    resetObject(a);
+    std::cout << "\n--- Reset ---\n";
+    a.reset();
     std::cout << "After reset: " << a << "\n";
 
-    std::cout << "\n--- Smart Pointer Demo ---\n";
-
-    std::unique_ptr<MyClass> smartObj =
-        std::make_unique<MyClass>(999);
-
-    assert(smartObj);
-
+    std::cout << "\n--- Smart pointer ---\n";
+    auto smartObj = std::make_unique<MyClass>(999);
+    assert(smartObj != nullptr);
     smartObj->display();
-
-    // ------------------------------------------
 
     return 0;
 }

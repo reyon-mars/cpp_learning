@@ -1,187 +1,120 @@
-```cpp
 #include <iostream>
-#include <type_traits> // ✅ ADDED
+#include <type_traits>
+#include <concepts>
 
-// ======================================================
-// CRTP Base
-// ======================================================
 template<typename Derived>
 class Base {
 public:
     void interface() {
         pre();
-        static_cast<Derived*>(this)->implementation();
+        self().implementation();
         post();
     }
 
-    // 🔹 default behavior reusable by all derived classes
-    void common() {
+    void common() const {
         std::cout << "Common CRTP behavior\n";
     }
 
-    // ----------- NEW ADDITION -----------
     void callDerivedTwice() {
         std::cout << "[Base] Calling implementation twice:\n";
-        static_cast<Derived*>(this)->implementation();
-        static_cast<Derived*>(this)->implementation();
-    }
-    // -----------------------------------
-
-    // ----------- EXTRA ADDITIONS -----------
-
-    // Compile-time information
-    void typeInfo() {
-        std::cout << "CRTP type size: "
-                  << sizeof(Derived) << " bytes\n";
+        self().implementation();
+        self().implementation();
     }
 
-    // Static polymorphism check
+    void typeInfo() const {
+        std::cout << "CRTP Derived size: " << sizeof(Derived) << " bytes\n";
+    }
+
     void staticDispatch() {
-        std::cout << "[Base] Static dispatch working\n";
-        static_cast<Derived*>(this)->implementation();
+        std::cout << "[Base] Static dispatch: ";
+        self().implementation();
     }
-
-    // --------------------------------------
 
 private:
-    void pre() {
-        std::cout << "[Base] Before implementation\n";
+    [[nodiscard]] Derived& self() noexcept {
+        return *static_cast<Derived*>(this);
     }
 
-    void post() {
-        std::cout << "[Base] After implementation\n";
+    [[nodiscard]] const Derived& self() const noexcept {
+        return *static_cast<const Derived*>(this);
     }
+
+    void pre()  const { std::cout << "[Base] Before implementation\n"; }
+    void post() const { std::cout << "[Base] After implementation\n";  }
 };
 
-// ======================================================
-// First Derived
-// ======================================================
+template<typename T>
+concept CRTPDerived = requires(T obj) {
+    { obj.implementation() };
+    { obj.extraFeature()   };
+    { obj.uniqueTask()     };
+};
+
 class Derived : public Base<Derived> {
 public:
-    void implementation() {
-        std::cout << "Derived implementation\n";
-    }
-
-    // ----------- NEW ADDITION -----------
-    void extraFeature() {
-        std::cout << "Derived extra feature\n";
-    }
-    // -----------------------------------
-
-    // ----------- EXTRA ADDITION -----------
-    void uniqueTask() {
-        std::cout << "Derived unique task executed\n";
-    }
-    // -------------------------------------
+    void implementation() const { std::cout << "Derived::implementation\n";  }
+    void extraFeature()   const { std::cout << "Derived::extraFeature\n";    }
+    void uniqueTask()     const { std::cout << "Derived::uniqueTask\n";      }
 };
 
-// ======================================================
-// Second Derived (reuse without virtuals)
-// ======================================================
 class AnotherDerived : public Base<AnotherDerived> {
 public:
-    void implementation() {
-        std::cout << "AnotherDerived implementation\n";
-    }
-
-    // ----------- NEW ADDITION -----------
-    void extraFeature() {
-        std::cout << "AnotherDerived extra feature\n";
-    }
-    // -----------------------------------
-
-    // ----------- EXTRA ADDITION -----------
-    void uniqueTask() {
-        std::cout << "AnotherDerived unique task executed\n";
-    }
-    // -------------------------------------
+    void implementation() const { std::cout << "AnotherDerived::implementation\n"; }
+    void extraFeature()   const { std::cout << "AnotherDerived::extraFeature\n";   }
+    void uniqueTask()     const { std::cout << "AnotherDerived::uniqueTask\n";     }
 };
 
-// ----------- NEW ADDITION -----------
-
-// Generic function using CRTP base
 template<typename T>
 void runCRTP(Base<T>& obj) {
-    std::cout << "[Generic] Running CRTP interface\n";
+    std::cout << "[Generic] runCRTP:\n";
     obj.interface();
 }
 
-// ------------------------------------
-
-// ----------- EXTRA ADDITIONS -----------
-
-// Compile-time checker
 template<typename T>
 void checkCRTP() {
-    std::cout << "Is class type? "
-              << std::is_class<T>::value << "\n";
+    std::cout << "Is class type: " << std::is_class_v<T> << "\n";
+    static_assert(std::is_base_of_v<Base<T>, T>,
+                  "T must publicly inherit Base<T>");
 }
 
-// Generic helper
-template<typename T>
-void executeExtra(T& obj) {
-    std::cout << "[Generic] Executing extra feature\n";
+template<CRTPDerived T>
+void executeExtra(const T& obj) {
+    std::cout << "[Generic] extraFeature: ";
     obj.extraFeature();
 }
 
-// --------------------------------------
+template<CRTPDerived T>
+void runAll(T& obj) {
+    obj.interface();
+    obj.common();
+    obj.callDerivedTwice();
+    obj.extraFeature();
+    obj.typeInfo();
+    obj.staticDispatch();
+    obj.uniqueTask();
+}
 
-// ======================================================
-// MAIN
-// ======================================================
 int main() {
-    Derived d;
+    Derived       d;
     AnotherDerived ad;
 
-    d.interface();
-    d.common();
-    d.callDerivedTwice();     // new usage
-    d.extraFeature();         // new usage
+    std::cout << "=== Derived ===\n";
+    runAll(d);
 
-    // ----------- EXTRA USAGE -----------
-    d.typeInfo();
-    d.staticDispatch();
-    d.uniqueTask();
-    // -----------------------------------
+    std::cout << "\n=== AnotherDerived ===\n";
+    runAll(ad);
 
-    std::cout << "------------------\n";
-
-    ad.interface();
-    ad.common();
-    ad.callDerivedTwice();    // new usage
-    ad.extraFeature();        // new usage
-
-    // ----------- EXTRA USAGE -----------
-    ad.typeInfo();
-    ad.staticDispatch();
-    ad.uniqueTask();
-    // -----------------------------------
-
-    std::cout << "------------------\n";
-
-    // Generic CRTP usage
+    std::cout << "\n=== Generic runCRTP ===\n";
     runCRTP(d);
     runCRTP(ad);
 
-    std::cout << "------------------\n";
-
-    // ----------- MORE EXTRA USAGE -----------
-
+    std::cout << "\n=== checkCRTP ===\n";
     checkCRTP<Derived>();
     checkCRTP<AnotherDerived>();
 
+    std::cout << "\n=== executeExtra ===\n";
     executeExtra(d);
     executeExtra(ad);
 
-    // Compile-time checks
-    static_assert(std::is_base_of<Base<Derived>, Derived>::value,
-                  "Derived must inherit from Base<Derived>");
-
-    static_assert(std::is_base_of<Base<AnotherDerived>, AnotherDerived>::value,
-                  "AnotherDerived must inherit from Base<AnotherDerived>");
-
-    // ----------------------------------------
-
     return 0;
 }
-```

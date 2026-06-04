@@ -1,276 +1,156 @@
-// Multiple Inheritance Exercise
-// Diamond problem, virtual inheritance
-
 #include <iostream>
 #include <typeinfo>
-#include <memory>      // ✅ ADDED
-#include <cassert>     // ✅ ADDED
-#include <iomanip>     // ✅ ADDED
+#include <memory>
+#include <cassert>
+#include <cstdint>
 
 class A {
 public:
-    A() { std::cout << "A constructed\n"; }
-    virtual ~A() { std::cout << "A destroyed\n"; }
+    A()          { std::cout << "A constructed\n"; }
+    virtual ~A() { std::cout << "A destroyed\n";   }
 
-    virtual void method() {
-        std::cout << "A::method\n";
-    }
+    virtual void method() const { std::cout << "A::method\n"; }
+    virtual void info()   const { std::cout << "A info\n";    }
 
-    void identify() {
-        std::cout << "I am A\n";
-    }
-
-    // -------- NEW ADDITION --------
-    virtual void info() const {
-        std::cout << "Base class A info\n";
-    }
-    // --------------------------------
+    void identify() const { std::cout << "I am A\n"; }
 };
 
 class B : virtual public A {
 public:
-    B() { std::cout << "B constructed\n"; }
+    B()  { std::cout << "B constructed\n"; }
+    ~B() { std::cout << "B destroyed\n";   }
 
-    ~B() {
-        std::cout << "B destroyed\n";
-    }
+    void method() const override { std::cout << "B::method\n"; }
+    void info()   const override { std::cout << "B info\n";    }
 
-    void method() override {
-        std::cout << "B::method\n";
-    }
-
-    void identifyB() {
-        std::cout << "I am B\n";
-    }
-
-    // -------- NEW ADDITION --------
-    void info() const override {
-        std::cout << "Derived class B info\n";
-    }
-    // --------------------------------
+    void identifyB() const { std::cout << "I am B\n"; }
 };
 
 class C : virtual public A {
 public:
-    C() { std::cout << "C constructed\n"; }
+    C()  { std::cout << "C constructed\n"; }
+    ~C() { std::cout << "C destroyed\n";   }
 
-    ~C() {
-        std::cout << "C destroyed\n";
-    }
+    void method() const override { std::cout << "C::method\n"; }
+    void info()   const override { std::cout << "C info\n";    }
 
-    void method() override {
-        std::cout << "C::method\n";
-    }
-
-    void identifyC() {
-        std::cout << "I am C\n";
-    }
-
-    // -------- NEW ADDITION --------
-    void info() const override {
-        std::cout << "Derived class C info\n";
-    }
-    // --------------------------------
+    void identifyC() const { std::cout << "I am C\n"; }
 };
 
-class D : public B, public C {
+class D final : public B, public C {
 public:
-    // ✅ Explicit virtual base initialization
-    D() : A() {
-        std::cout << "D constructed\n";
-    }
+    D() : A{}, B{}, C{} { std::cout << "D constructed\n"; }
+    ~D()                 { std::cout << "D destroyed\n";   }
 
-    ~D() {
-        std::cout << "D destroyed\n";
-    }
+    void method() const override final { std::cout << "D::method\n"; }
+    void info()   const override       { std::cout << "D info\n";    }
 
-    // ✅ final override
-    void method() override final {
-        std::cout << "D::method\n";
-    }
-
-    void callBaseVersions() {
+    void callBaseVersions() const {
         B::method();
         C::method();
         A::method();
     }
 
-    void identifyAll() {
+    void identifyAll() const {
         identify();
         identifyB();
         identifyC();
         std::cout << "I am D\n";
     }
 
-    void printObjectLayout() {
-        std::cout << "Address of D: " << this << "\n";
-
-        std::cout << "Address as B: "
-                  << static_cast<B*>(this) << "\n";
-
-        std::cout << "Address as C: "
-                  << static_cast<C*>(this) << "\n";
-
-        std::cout << "Address as A: "
-                  << static_cast<A*>(this) << "\n";
+    void printObjectLayout() const {
+        auto addr = [](const void* p) { return reinterpret_cast<std::uintptr_t>(p); };
+        std::cout << "D:  0x" << std::hex << addr(this)                    << "\n"
+                  << "B:  0x" << addr(static_cast<const B*>(this))         << "\n"
+                  << "C:  0x" << addr(static_cast<const C*>(this))         << "\n"
+                  << "A:  0x" << addr(static_cast<const A*>(this))         << std::dec << "\n";
     }
 
-    // -------- EXTRA ADDITIONS --------
-
-    void printSizes() {
-        std::cout << "Size of A: "
-                  << sizeof(A) << "\n";
-
-        std::cout << "Size of B: "
-                  << sizeof(B) << "\n";
-
-        std::cout << "Size of C: "
-                  << sizeof(C) << "\n";
-
-        std::cout << "Size of D: "
-                  << sizeof(D) << "\n";
+    void printSizes() const {
+        std::cout << "sizeof A=" << sizeof(A)
+                  << " B="       << sizeof(B)
+                  << " C="       << sizeof(C)
+                  << " D="       << sizeof(D) << "\n"
+                  << "alignof D=" << alignof(D) << "\n";
     }
 
-    void runtimeTypeInfo(A* ptr) {
-        std::cout << "RTTI type: "
-                  << typeid(*ptr).name() << "\n";
+    void runtimeTypeInfo(const A& ref) const {
+        std::cout << "RTTI: " << typeid(ref).name() << "\n";
     }
-
-    // -------- MORE ADDITIONS --------
-
-    void info() const override {
-        std::cout << "Most derived class D info\n";
-    }
-
-    void showAlignment() {
-        std::cout << "Alignment of D: "
-                  << alignof(D) << "\n";
-    }
-
-    void printVptrHint() {
-        std::cout << "Object address: "
-                  << this << "\n";
-    }
-
-    // --------------------------------
 };
 
-// -------- GLOBAL HELPER ADDITIONS --------
-
-// Polymorphism helper
 void callInfo(const A& obj) {
     obj.info();
 }
 
-// Safe smart pointer demo
 void smartPointerDemo() {
-    std::unique_ptr<A> ptr = std::make_unique<D>();
-
-    std::cout << "\nSmart pointer polymorphism:\n";
-    ptr->method();
-
+    auto ptr = std::make_unique<D>();
     assert(ptr != nullptr);
+    std::cout << "Smart pointer dispatch: ";
+    ptr->method();
 }
 
-// Reference cast demo
 void referenceCastDemo(A& obj) {
     try {
         D& dref = dynamic_cast<D&>(obj);
-
-        std::cout << "Reference cast successful\n";
+        std::cout << "dynamic_cast<D&> succeeded: ";
         dref.method();
-    }
-    catch (const std::bad_cast& e) {
-        std::cout << "Reference cast failed: "
-                  << e.what() << "\n";
+    } catch (const std::bad_cast& e) {
+        std::cout << "dynamic_cast<D&> failed: " << e.what() << "\n";
     }
 }
 
-// -----------------------------------------
-
 int main() {
-
     D obj;
 
-    std::cout << "---- Direct call ----\n";
+    std::cout << "\n--- Direct call ---\n";
     obj.method();
 
-    std::cout << "---- Through A reference ----\n";
-    A& a = obj;
-    a.method();
+    std::cout << "\n--- Through A& ---\n";
+    A& aRef = obj;
+    aRef.method();
 
-    std::cout << "---- Through B pointer ----\n";
-    B* b = &obj;
-    b->method();
+    std::cout << "\n--- Through B* ---\n";
+    static_cast<B*>(&obj)->method();
 
-    std::cout << "---- Through C pointer ----\n";
-    C* c = &obj;
-    c->method();
+    std::cout << "\n--- Through C* ---\n";
+    static_cast<C*>(&obj)->method();
 
-    std::cout << "---- Explicit base calls ----\n";
+    std::cout << "\n--- Explicit base calls ---\n";
     obj.callBaseVersions();
 
-    B* bPtr = &obj;
-    C* cPtr = &obj;
+    std::cout << "\n--- Single A subobject (virtual inheritance) ---\n";
+    std::cout << "A* via B == A* via C: " << std::boolalpha
+              << (static_cast<A*>(static_cast<B*>(&obj)) ==
+                  static_cast<A*>(static_cast<C*>(&obj))) << "\n";
 
-    std::cout << "Address of A via B: "
-              << static_cast<A*>(bPtr) << "\n";
-
-    std::cout << "Address of A via C: "
-              << static_cast<A*>(cPtr) << "\n";
-
-    // -------- EXTRA USAGE --------
-
-    std::cout << "---- Identity check ----\n";
+    std::cout << "\n--- Identity ---\n";
     obj.identifyAll();
 
-    std::cout << "---- Object layout ----\n";
+    std::cout << "\n--- Object layout ---\n";
     obj.printObjectLayout();
 
-    // -------- NEW ADVANCED USAGE --------
-
-    std::cout << "---- Size Analysis ----\n";
+    std::cout << "\n--- Sizes & alignment ---\n";
     obj.printSizes();
 
-    std::cout << "---- RTTI Demo ----\n";
-    obj.runtimeTypeInfo(&obj);
+    std::cout << "\n--- RTTI ---\n";
+    obj.runtimeTypeInfo(obj);
 
-    std::cout << "---- dynamic_cast Demo ----\n";
-
+    std::cout << "\n--- dynamic_cast<D*> ---\n";
     A* basePtr = &obj;
-
-    if (D* derivedPtr = dynamic_cast<D*>(basePtr)) {
-        std::cout << "Successfully cast A* to D*\n";
+    if (D* dp = dynamic_cast<D*>(basePtr)) {
+        std::cout << "Cast succeeded: ";
+        dp->method();
     }
 
-    // -------- MORE ADDED FEATURES --------
-
-    std::cout << "---- Virtual info() dispatch ----\n";
+    std::cout << "\n--- Virtual info() dispatch ---\n";
     callInfo(obj);
 
-    std::cout << "---- Alignment Demo ----\n";
-    obj.showAlignment();
-
-    std::cout << "---- Vptr Hint ----\n";
-    obj.printVptrHint();
-
-    std::cout << "---- Smart Pointer Demo ----\n";
+    std::cout << "\n--- Smart pointer ---\n";
     smartPointerDemo();
 
-    std::cout << "---- Reference Cast Demo ----\n";
+    std::cout << "\n--- Reference cast ---\n";
     referenceCastDemo(obj);
-
-    std::cout << "---- Memory Layout Formatting ----\n";
-
-    std::cout << std::hex << std::showbase;
-
-    std::cout << "D object address: "
-              << reinterpret_cast<std::uintptr_t>(&obj)
-              << "\n";
-
-    std::cout << std::dec;
-
-    // ----------------------------------
 
     return 0;
 }

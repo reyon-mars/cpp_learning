@@ -1,329 +1,168 @@
 #include <iostream>
 #include <memory>
 #include <vector>
-#include <typeinfo>   // ✅ ADDED
-#include <cassert>    // ✅ ADDED
-#include <utility>    // ✅ ADDED
+#include <typeinfo>
+#include <utility>
+#include <cassert>
 
 class Animal {
 public:
-    Animal() {
-        std::cout << "Animal constructed\n";
-    }
+    Animal()                       { std::cout << "Animal constructed\n"; }
+    Animal(const Animal&)          { std::cout << "Animal copied\n";      }
+    Animal(Animal&&) noexcept      { std::cout << "Animal moved\n";       }
+    virtual ~Animal()              { std::cout << "Animal destroyed\n";   }
 
-    Animal(const Animal&) {
-        std::cout << "Animal copied\n";
-    }
-    
-    // ✅ ADDED: move constructor
-    Animal(Animal&&) noexcept {
-        std::cout << "Animal moved\n";
-    }
+    Animal& operator=(const Animal&)     = default;
+    Animal& operator=(Animal&&) noexcept = default;
 
-    virtual ~Animal() {
-        std::cout << "Animal destroyed\n";
-    }
-
-    virtual void speak() const {
-        std::cout << "Animal\n";
-    }
-
-    // -------- EXTRA ADDITION --------
-    virtual void info() const {
-        std::cout << "Generic Animal\n";
-    }
-    // --------------------------------
+    virtual void speak() const { std::cout << "...\n";            }
+    virtual void info()  const { std::cout << "Generic Animal\n"; }
 };
 
 class Dog : public Animal {
 public:
-    Dog() {
-        std::cout << "Dog constructed\n";
-    }
+    Dog()                     { std::cout << "Dog constructed\n"; }
+    Dog(const Dog&)           { std::cout << "Dog copied\n";      }
+    Dog(Dog&&) noexcept       { std::cout << "Dog moved\n";       }
+    ~Dog() override           { std::cout << "Dog destroyed\n";   }
 
-    Dog(const Dog&) {
-        std::cout << "Dog copied\n";
-    }
-
-    // ✅ ADDED: move constructor
-    Dog(Dog&&) noexcept {
-        std::cout << "Dog moved\n";
-    }
-
-    ~Dog() override {
-        std::cout << "Dog destroyed\n";
-    }
-
-    void speak() const override {
-        std::cout << "Woof!\n";
-    }
-
-    // -------- EXTRA ADDITION --------
-    void info() const override {
-        std::cout << "This is a Dog\n";
-    }
-    // --------------------------------
+    void speak() const override { std::cout << "Woof!\n";         }
+    void info()  const override { std::cout << "This is a Dog\n"; }
 };
-
-// ----------- NEW ADDITIONS -----------
 
 class Cat : public Animal {
 public:
-    Cat() {
-        std::cout << "Cat constructed\n";
-    }
+    Cat()                     { std::cout << "Cat constructed\n"; }
+    Cat(const Cat&)           { std::cout << "Cat copied\n";      }
+    Cat(Cat&&) noexcept       { std::cout << "Cat moved\n";       }
+    ~Cat() override           { std::cout << "Cat destroyed\n";   }
 
-    // ✅ ADDED: move constructor
-    Cat(Cat&&) noexcept {
-        std::cout << "Cat moved\n";
-    }
-
-    ~Cat() override {
-        std::cout << "Cat destroyed\n";
-    }
-
-    void speak() const override {
-        std::cout << "Meow!\n";
-    }
-
-    // -------- EXTRA ADDITION --------
-    void info() const override {
-        std::cout << "This is a Cat\n";
-    }
-    // --------------------------------
+    void speak() const override { std::cout << "Meow!\n";         }
+    void info()  const override { std::cout << "This is a Cat\n"; }
 };
 
-// ✅ ADDED: final class (cannot be inherited further)
 class Bird final : public Animal {
 public:
-    Bird() {
-        std::cout << "Bird constructed\n";
-    }
+    Bird()          { std::cout << "Bird constructed\n"; }
+    ~Bird() override{ std::cout << "Bird destroyed\n";   }
 
-    ~Bird() override {
-        std::cout << "Bird destroyed\n";
-    }
-
-    void speak() const override {
-        std::cout << "Chirp!\n";
-    }
-
-    // -------- EXTRA ADDITION --------
-    void info() const override {
-        std::cout << "This is a Bird\n";
-    }
-    // --------------------------------
+    void speak() const override { std::cout << "Chirp!\n";          }
+    void info()  const override { std::cout << "This is a Bird\n";  }
 };
 
-// Function using reference (no slicing)
-void makeSpeak(const Animal& a) {
-    a.speak();
+void makeSpeak(const Animal& a) { a.speak(); }
+
+[[nodiscard]] std::unique_ptr<Animal> createAnimal(bool isDog) {
+    return isDog ? std::unique_ptr<Animal>{std::make_unique<Dog>()}
+                 : std::unique_ptr<Animal>{std::make_unique<Cat>()};
 }
 
-// Raw pointer factory
-Animal* createAnimal(bool isDog) {
-    if (isDog)
-        return new Dog();
-
-    return new Cat();
-}
-
-// ✅ ADDED: smart factory (recommended)
-std::unique_ptr<Animal> createAnimalSmart(bool isDog) {
-    if (isDog)
-        return std::make_unique<Dog>();
-
-    return std::make_unique<Cat>();
-}
-
-// ✅ ADDED: lifetime tracker
-void lifetimeTracker() {
-    std::cout << "\n[Lifetime Tracker]\n";
-
-    Animal a;
-}
-
-// ----------- MORE ADVANCED ADDITIONS -----------
-
-// RTTI demo
 void printType(const Animal& a) {
-    std::cout << "RTTI type: "
-              << typeid(a).name() << "\n";
+    std::cout << "RTTI: " << typeid(a).name() << "\n";
 }
 
-// dynamic_cast demo
-void checkDog(const Animal* a) {
-    if (const Dog* d = dynamic_cast<const Dog*>(a)) {
-        std::cout << "dynamic_cast success → Dog detected\n";
+void checkDog(const Animal& a) {
+    if (const auto* d = dynamic_cast<const Dog*>(&a)) {
+        std::cout << "dynamic_cast<Dog> succeeded: ";
         d->speak();
-    }
-    else {
-        std::cout << "dynamic_cast failed → Not a Dog\n";
+    } else {
+        std::cout << "dynamic_cast<Dog> failed\n";
     }
 }
 
-// Pass by rvalue reference
 void consumeAnimal(Animal&& a) {
-    std::cout << "Consuming temporary animal\n";
+    std::cout << "Consuming rvalue animal: ";
     a.speak();
 }
 
-// Move semantics demo
 void moveDemo() {
-    std::cout << "\n[Move Demo]\n";
-
+    std::cout << "\n--- Move Demo ---\n";
     Dog d1;
     Dog d2 = std::move(d1);
-
     d2.speak();
 }
 
-// Smart pointer ownership transfer
 void ownershipTransfer() {
-    std::cout << "\n[Ownership Transfer]\n";
-
-    std::unique_ptr<Animal> ptr1 = std::make_unique<Dog>();
-
+    std::cout << "\n--- Ownership Transfer ---\n";
+    auto ptr1 = std::make_unique<Dog>();
     assert(ptr1 != nullptr);
-
-    std::unique_ptr<Animal> ptr2 = std::move(ptr1);
-
-    if (!ptr1) {
-        std::cout << "ptr1 is now null after move\n";
-    }
-
+    auto ptr2 = std::move(ptr1);
+    std::cout << "ptr1 null after move: " << std::boolalpha << (ptr1 == nullptr) << "\n";
     ptr2->speak();
 }
 
-// ------------------------------------
+void lifetimeDemo() {
+    std::cout << "\n--- Lifetime Tracker ---\n";
+    Animal a;
+}
 
 int main() {
-
-    std::cout << "---- Object slicing ----\n";
-
+    std::cout << "--- Object slicing ---\n";
     Dog dog;
+    Animal sliced = dog;
+    sliced.speak();
 
-    Animal animal = dog;  // Slicing occurs here
-    animal.speak();
-
-    std::cout << "---- Passing by value (slicing again) ----\n";
-
-    auto byValue = [](Animal a) {
-        a.speak();
-    };
-
+    std::cout << "\n--- Slicing via by-value lambda ---\n";
+    auto byValue = [](Animal a) { a.speak(); };
     byValue(dog);
 
-    std::cout << "---- Reference (no slicing) ----\n";
-
+    std::cout << "\n--- Reference (no slicing) ---\n";
     Animal& ref = dog;
     ref.speak();
 
-    std::cout << "---- Raw pointer (no slicing) ----\n";
-
+    std::cout << "\n--- Pointer (no slicing) ---\n";
     Animal* ptr = &dog;
     ptr->speak();
 
-    std::cout << "---- Dynamic allocation ----\n";
+    std::cout << "\n--- unique_ptr (best practice) ---\n";
+    auto smartDog = std::make_unique<Dog>();
+    smartDog->speak();
 
-    Animal* dyn = new Dog();
-
-    dyn->speak();
-
-    delete dyn;
-
-    std::cout << "---- Smart pointer (best practice) ----\n";
-
-    std::unique_ptr<Animal> smartPtr =
-        std::make_unique<Dog>();
-
-    smartPtr->speak();
-
-    // -------- NEW FEATURE USAGE --------
-
-    std::cout << "---- Polymorphism with vector ----\n";
-
+    std::cout << "\n--- Polymorphic vector ---\n";
     std::vector<std::unique_ptr<Animal>> animals;
+    animals.reserve(3);
+    animals.push_back(std::make_unique<Dog>());
+    animals.push_back(std::make_unique<Cat>());
+    animals.push_back(std::make_unique<Bird>());
+    for (const auto& a : animals) { a->speak(); }
 
-    // ✅ emplace_back (more efficient)
-    animals.emplace_back(std::make_unique<Dog>());
-    animals.emplace_back(std::make_unique<Cat>());
-    animals.emplace_back(std::make_unique<Bird>());
-
-    for (const auto& a : animals) {
-        a->speak();
-    }
-
-    std::cout << "---- Function with reference ----\n";
-
+    std::cout << "\n--- makeSpeak (by reference) ---\n";
     makeSpeak(dog);
 
-    std::cout << "---- Factory function ----\n";
+    std::cout << "\n--- Smart factory ---\n";
+    auto f1 = createAnimal(true);
+    auto f2 = createAnimal(false);
+    f1->speak();
+    f2->speak();
 
-    Animal* a1 = createAnimal(true);
-    Animal* a2 = createAnimal(false);
+    lifetimeDemo();
 
-    a1->speak();
-    a2->speak();
-
-    delete a1;
-    delete a2;
-
-    // ✅ ADDED: smart factory usage
-    std::cout << "---- Smart Factory ----\n";
-
-    auto s1 = createAnimalSmart(true);
-    auto s2 = createAnimalSmart(false);
-
-    s1->speak();
-    s2->speak();
-
-    // ✅ ADDED: lifetime tracking
-    lifetimeTracker();
-
-    // -------- EXTRA ADVANCED USAGE --------
-
-    std::cout << "---- RTTI Demo ----\n";
-
-    printType(dog);
-
+    std::cout << "\n--- RTTI ---\n";
     Cat cat;
+    printType(dog);
     printType(cat);
 
-    std::cout << "---- dynamic_cast Demo ----\n";
+    std::cout << "\n--- dynamic_cast ---\n";
+    checkDog(dog);
+    checkDog(cat);
 
-    checkDog(&dog);
-    checkDog(&cat);
-
-    std::cout << "---- Virtual info() Demo ----\n";
-
-    dog.info();
-    cat.info();
-
+    std::cout << "\n--- Virtual info() ---\n";
     Bird bird;
-    bird.info();
-
-    std::cout << "---- Rvalue Reference Demo ----\n";
-
-    consumeAnimal(Dog());
-
-    std::cout << "---- Move Constructor Demo ----\n";
-
-    moveDemo();
-
-    std::cout << "---- Ownership Transfer Demo ----\n";
-
-    ownershipTransfer();
-
-    std::cout << "---- Vector Iteration with info() ----\n";
-
-    for (const auto& a : animals) {
+    for (const Animal* a : {static_cast<const Animal*>(&dog),
+                             static_cast<const Animal*>(&cat),
+                             static_cast<const Animal*>(&bird)}) {
         a->info();
     }
 
-    // ----------------------------------
+    std::cout << "\n--- Rvalue reference ---\n";
+    consumeAnimal(Dog{});
 
-    std::cout << "---- End of main ----\n";
+    moveDemo();
+    ownershipTransfer();
 
+    std::cout << "\n--- Vector info() ---\n";
+    for (const auto& a : animals) { a->info(); }
+
+    std::cout << "\n--- End of main ---\n";
     return 0;
 }

@@ -1,281 +1,256 @@
-// New and Delete Expressions Exercise
-// Dynamic memory management with new/delete
-
 #include <iostream>
-#include <new>       // for std::size_t, std::nothrow
-#include <memory>    // ✅ ADDED
-#include <vector>    // ✅ ADDED
-#include <cstdlib>   // ✅ ADDED
+#include <new>
+#include <memory>
+#include <vector>
+#include <numeric>
+#include <algorithm>
+#include <span>
+#include <cstdlib>
+#include <string_view>
 
 class MyClass {
-private:
-    int value;
+    int value_;
 
 public:
-    // 🔹 Added default constructor (needed for array allocation)
-    MyClass() : value(0) {
-        std::cout << "Default Constructor\n";
+    MyClass() : value_(0) {
+        std::cout << "MyClass() : value=0\n";
     }
 
-    MyClass(int v) : value(v) {
-        std::cout << "Constructor: " << v << "\n";
+    explicit MyClass(int v) : value_(v) {
+        std::cout << "MyClass(" << v << ")\n";
     }
 
     ~MyClass() {
-        std::cout << "Destructor: " << value << "\n";
+        std::cout << "~MyClass(" << value_ << ")\n";
     }
 
-    // 🔹 Custom operator new
+    MyClass(const MyClass&)            = default;
+    MyClass& operator=(const MyClass&) = default;
+    MyClass(MyClass&&)                 = default;
+    MyClass& operator=(MyClass&&)      = default;
+
+    [[nodiscard]] int value() const noexcept { return value_; }
+
+    void show() const {
+        std::cout << "value = " << value_ << '\n';
+    }
+
     static void* operator new(std::size_t size) {
-        std::cout << "operator new called ("
-                  << size << " bytes)\n";
+        std::cout << "operator new(" << size << " bytes)\n";
         return ::operator new(size);
     }
 
-    // 🔹 Custom operator delete
+    static void* operator new(std::size_t size, const std::nothrow_t&) noexcept {
+        std::cout << "operator new nothrow(" << size << " bytes)\n";
+        return ::operator new(size, std::nothrow);
+    }
+
+    static void* operator new(std::size_t size, void* place) noexcept {
+        std::cout << "operator new placement(" << size << " bytes)\n";
+        return ::operator new(size, place);
+    }
+
+    static void* operator new[](std::size_t size) {
+        std::cout << "operator new[](" << size << " bytes)\n";
+        return ::operator new(size);
+    }
+
+    static void* operator new[](std::size_t size, void* place) noexcept {
+        std::cout << "operator new[] placement(" << size << " bytes)\n";
+        return ::operator new(size, place);
+    }
+
     static void operator delete(void* ptr) noexcept {
-        std::cout << "operator delete called\n";
+        std::cout << "operator delete\n";
         ::operator delete(ptr);
     }
 
-    // -------- NEW ADDITIONS --------
+    static void operator delete(void* ptr, std::size_t size) noexcept {
+        std::cout << "sized operator delete(" << size << " bytes)\n";
+        ::operator delete(ptr, size);
+    }
 
-    // Array allocation
-    static void* operator new[](std::size_t size) {
-        std::cout << "operator new[] called ("
-                  << size << " bytes)\n";
-        return ::operator new(size);
+    static void operator delete(void* ptr, const std::nothrow_t&) noexcept {
+        std::cout << "operator delete nothrow\n";
+        ::operator delete(ptr);
+    }
+
+    static void operator delete(void*, void*) noexcept {
+        std::cout << "placement operator delete\n";
     }
 
     static void operator delete[](void* ptr) noexcept {
-        std::cout << "operator delete[] called\n";
+        std::cout << "operator delete[]\n";
         ::operator delete(ptr);
     }
 
-    // 🔹 Sized delete (C++14+)
-    static void operator delete(void* ptr, std::size_t size) noexcept {
-        std::cout << "sized delete called ("
-                  << size << " bytes)\n";
-
-        ::operator delete(ptr);
+    static void operator delete[](void*, void*) noexcept {
+        std::cout << "placement operator delete[]\n";
     }
-
-    // 🔹 Placement delete (called if constructor throws)
-    static void operator delete(void* ptr, void* place) noexcept {
-        std::cout << "placement delete called\n";
-    }
-
-    // -------- EXTRA ADDITIONS --------
-
-    void show() const {
-        std::cout << "Value = "
-                  << value << "\n";
-    }
-
-    int getValue() const {
-        return value;
-    }
-
-    // --------------------------------
 };
 
-// -------- EXTRA GLOBAL ADDITIONS --------
-
-// Factory function
-MyClass* createObject(int value) {
-
-    std::cout << "[Factory] Creating object\n";
-
-    return new MyClass(value);
-}
-
-// Smart pointer demo
-void smart_pointer_demo() {
-
-    std::cout << "\n--- Smart Pointer Demo ---\n";
-
-    std::unique_ptr<MyClass> ptr =
-        std::make_unique<MyClass>(500);
-
-    ptr->show();
-}
-
-// Vector dynamic allocation demo
-void vector_demo() {
-
-    std::cout << "\n--- Vector of Pointers Demo ---\n";
-
-    std::vector<MyClass*> objects;
-
-    for (int i = 0; i < 3; ++i) {
-        objects.push_back(new MyClass(i * 100));
+class ScopeTracker {
+    std::string_view label_;
+public:
+    explicit ScopeTracker(std::string_view label) : label_(label) {
+        std::cout << "[Entering Scope: " << label_ << "]\n";
     }
+    ~ScopeTracker() {
+        std::cout << "[Leaving Scope: " << label_ << "]\n";
+    }
+    ScopeTracker(const ScopeTracker&)            = delete;
+    ScopeTracker& operator=(const ScopeTracker&) = delete;
+};
 
-    for (auto obj : objects) {
+[[nodiscard]] std::unique_ptr<MyClass> createObject(int value) {
+    std::cout << "[factory] creating MyClass(" << value << ")\n";
+    return std::make_unique<MyClass>(value);
+}
+
+void placementNewDemo() {
+    std::cout << "\n--- Placement New ---\n";
+    alignas(MyClass) std::byte storage[sizeof(MyClass)];
+    auto* p = new(storage) MyClass(99);
+    p->show();
+    p->~MyClass();
+}
+
+void manualArrayPlacementDemo() {
+    std::cout << "\n--- Manual Array Placement ---\n";
+    constexpr std::size_t count = 2;
+    alignas(MyClass) std::byte storage[sizeof(MyClass) * count];
+    auto* arr = reinterpret_cast<MyClass*>(storage);
+    new(&arr[0]) MyClass(10);
+    new(&arr[1]) MyClass(20);
+    std::span<MyClass> view(arr, count);
+    for (const auto& obj : view) {
+        obj.show();
+    }
+    std::for_each(view.rbegin(), view.rend(), [](MyClass& obj) { obj.~MyClass(); });
+}
+
+void nothrowDemo() {
+    std::cout << "\n--- nothrow new ---\n";
+    auto* safe = new(std::nothrow) MyClass(77);
+    if (safe) {
+        safe->show();
+        delete safe;
+    } else {
+        std::cout << "allocation failed\n";
+    }
+}
+
+void nullptrDeleteDemo() {
+    std::cout << "\n--- Deleting nullptr ---\n";
+    MyClass* nullObj = nullptr;
+    delete nullObj;
+    std::cout << "delete nullptr: no-op\n";
+}
+
+void smartPointerDemo() {
+    std::cout << "\n--- Smart Pointer Demo ---\n";
+    auto uptr = std::make_unique<MyClass>(500);
+    uptr->show();
+
+    auto shared = std::make_shared<MyClass>(600);
+    std::weak_ptr<MyClass> weak = shared;
+    if (auto locked = weak.lock()) {
+        locked->show();
+    }
+}
+
+void vectorDemo() {
+    std::cout << "\n--- Vector of unique_ptr Demo ---\n";
+    std::vector<std::unique_ptr<MyClass>> objects;
+    objects.reserve(3);
+    for (int i = 0; i < 3; ++i) {
+        objects.push_back(std::make_unique<MyClass>(i * 100));
+    }
+    for (const auto& obj : objects) {
+        obj->show();
+    }
+}
+
+void mallocDemo() {
+    std::cout << "\n--- malloc/free Demo ---\n";
+    auto* ptr = static_cast<int*>(std::malloc(sizeof(int)));
+    if (!ptr) {
+        std::cerr << "malloc failed\n";
+        return;
+    }
+    *ptr = 1234;
+    std::cout << "malloc value: " << *ptr << '\n';
+    std::free(ptr);
+}
+
+void dynamicArrayDemo() {
+    std::cout << "\n--- Dynamic Object Array (std::vector) ---\n";
+    std::vector<MyClass> objects;
+    objects.reserve(3);
+    for (int i = 0; i < 3; ++i) {
+        objects.emplace_back(i * 10);
+    }
+    for (const auto& obj : objects) {
+        obj.show();
+    }
+}
+
+void doublePointerDemo() {
+    std::cout << "\n--- Double Pointer Demo ---\n";
+    constexpr std::size_t count = 2;
+    auto ptrArray = std::make_unique<std::unique_ptr<MyClass>[]>(count);
+    ptrArray[0] = std::make_unique<MyClass>(1000);
+    ptrArray[1] = std::make_unique<MyClass>(2000);
+    for (std::size_t i = 0; i < count; ++i) {
+        ptrArray[i]->show();
+    }
+}
+
+int main() {
+    ScopeTracker mainTracker("main");
+
+    std::cout << "\n--- Single Object ---\n";
+    {
+        auto obj = std::make_unique<MyClass>(42);
         obj->show();
     }
 
-    for (auto obj : objects) {
-        delete obj;
-    }
-}
-
-// malloc/free comparison
-void malloc_demo() {
-
-    std::cout << "\n--- malloc/free Demo ---\n";
-
-    int* ptr =
-        static_cast<int*>(std::malloc(sizeof(int)));
-
-    if (ptr) {
-
-        *ptr = 1234;
-
-        std::cout << "malloc value: "
-                  << *ptr << "\n";
-
-        std::free(ptr);
-    }
-}
-
-// RAII helper
-class ScopeTracker {
-public:
-    ScopeTracker() {
-        std::cout << "[Entering Scope]\n";
+    std::cout << "\n--- Array of int (std::vector) ---\n";
+    {
+        std::vector<int> arr(10);
+        std::iota(arr.begin(), arr.end(), 0);
+        for (int v : arr) {
+            std::cout << v << ' ';
+        }
+        std::cout << '\n';
     }
 
-    ~ScopeTracker() {
-        std::cout << "[Leaving Scope]\n";
-    }
-};
-
-// ----------------------------------
-
-int main() {
-
-    ScopeTracker tracker; // ✅ ADDED
-
-    std::cout << "\n--- Single Object ---\n";
-
-    MyClass* obj = new MyClass(42);
-
-    delete obj;
-
-    std::cout << "\n--- Array of int ---\n";
-
-    int* arr = new int[10];
-
-    for (int i = 0; i < 10; ++i)
-        arr[i] = i;
-
-    delete[] arr;
-
-    std::cout << "\n--- Array of MyClass ---\n";
-
-    MyClass* objs =
-        new MyClass[2]{ {1}, {2} };
-
-    delete[] objs;
-
-    // -------- NEW FEATURE USAGE --------
-
-    std::cout << "\n--- Placement New ---\n";
-
-    void* raw =
-        ::operator new(sizeof(MyClass)); // raw memory
-
-    MyClass* p =
-        new(raw) MyClass(99); // placement new
-
-    p->~MyClass();  // manual destructor
-
-    ::operator delete(raw);
-
-    std::cout << "\n--- nothrow new ---\n";
-
-    MyClass* safe =
-        new(std::nothrow) MyClass(77);
-
-    if (safe) {
-
-        delete safe;
-
-    } else {
-
-        std::cout << "Allocation failed\n";
+    std::cout << "\n--- Array of MyClass (new[]) ---\n";
+    {
+        MyClass* objs = new MyClass[2]{ MyClass(1), MyClass(2) };
+        std::span<MyClass> view(objs, 2);
+        for (const auto& obj : view) {
+            obj.show();
+        }
+        delete[] objs;
     }
 
-    // 🔹 Manual array placement new
-    std::cout << "\n--- Manual Array Placement ---\n";
-
-    void* rawArr =
-        ::operator new(sizeof(MyClass) * 2);
-
-    MyClass* arrPtr =
-        static_cast<MyClass*>(rawArr);
-
-    new(&arrPtr[0]) MyClass(10);
-    new(&arrPtr[1]) MyClass(20);
-
-    arrPtr[0].~MyClass();
-    arrPtr[1].~MyClass();
-
-    ::operator delete(rawArr);
-
-    // 🔹 Null pointer delete safety
-    std::cout << "\n--- Deleting nullptr ---\n";
-
-    MyClass* nullObj = nullptr;
-
-    delete nullObj;  // safe
-
-    // -------- EXTRA USAGE --------
+    placementNewDemo();
+    nothrowDemo();
+    manualArrayPlacementDemo();
+    nullptrDeleteDemo();
 
     std::cout << "\n--- Factory Function ---\n";
-
-    MyClass* factoryObj =
-        createObject(300);
-
-    factoryObj->show();
-
-    delete factoryObj;
-
-    smart_pointer_demo();
-
-    vector_demo();
-
-    malloc_demo();
-
-    // -------- MORE EXTRA USAGE --------
-
-    std::cout << "\n--- Dynamic Object Array ---\n";
-
-    MyClass* dynamicArr = new MyClass[3];
-
-    for (int i = 0; i < 3; ++i) {
-        dynamicArr[i].show();
+    {
+        auto factoryObj = createObject(300);
+        factoryObj->show();
     }
 
-    delete[] dynamicArr;
-
-    std::cout << "\n--- Double Pointer Demo ---\n";
-
-    MyClass** ptrArray = new MyClass*[2];
-
-    ptrArray[0] = new MyClass(1000);
-    ptrArray[1] = new MyClass(2000);
-
-    ptrArray[0]->show();
-    ptrArray[1]->show();
-
-    delete ptrArray[0];
-    delete ptrArray[1];
-
-    delete[] ptrArray;
-
-    // ----------------------------------
+    smartPointerDemo();
+    vectorDemo();
+    mallocDemo();
+    dynamicArrayDemo();
+    doublePointerDemo();
 
     return 0;
 }

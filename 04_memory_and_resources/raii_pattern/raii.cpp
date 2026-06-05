@@ -1,402 +1,208 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <string_view>
 #include <stdexcept>
-#include <sstream>
-#include <cctype>   // ✅ ADDED (needed for std::toupper)
-#include <vector>   // ✅ ADDED
-#include <algorithm> // ✅ ADDED
+#include <vector>
+#include <algorithm>
+#include <numeric>
+#include <cctype>
+#include <filesystem>
+#include <ranges>
+#include <span>
 
-// ======================================================
-// ORIGINAL CLASS (UNCHANGED LOGIC)
-// ======================================================
+namespace fs = std::filesystem;
 
 class file_guard {
-private:
-    std::fstream f_handle;
+    std::fstream handle_;
 
 public:
-    explicit file_guard(const std::string& filename)
-        : f_handle(filename, std::ios::in)
+    explicit file_guard(const fs::path& path)
+        : handle_(path, std::ios::in)
     {
-        if (!f_handle.is_open()) {
-            throw std::runtime_error("Failed to open " + filename);
-        }
+        if (!handle_.is_open())
+            throw std::runtime_error("Failed to open: " + path.string());
     }
 
-    ~file_guard() {
-        if (f_handle.is_open()) {
-            f_handle.close();
-        }
-    }
+    ~file_guard() = default;
 
-    file_guard(const file_guard&) = delete;
+    file_guard(const file_guard&)            = delete;
     file_guard& operator=(const file_guard&) = delete;
+    file_guard(file_guard&&)                 = default;
+    file_guard& operator=(file_guard&&)      = default;
 
-    std::fstream& get() { return f_handle; }
+    [[nodiscard]] std::fstream& get() noexcept { return handle_; }
+
+    void rewind() {
+        handle_.clear();
+        handle_.seekg(0);
+    }
 };
 
-// ======================================================
-// SMALL EXTRA CODE (ADDED ONLY)
-// ======================================================
-
-// Check if file exists
-bool file_exists(const std::string& filename) {
-    std::ifstream f(filename);
-    return f.good();
+[[nodiscard]] std::string read_all(file_guard& fg) {
+    fg.rewind();
+    return std::string(std::istreambuf_iterator<char>(fg.get()),
+                       std::istreambuf_iterator<char>());
 }
 
-// Reset file stream to beginning
-void rewind_file(file_guard& fg) {
-    auto& f = fg.get();
-    f.clear();
-    f.seekg(0);
-}
-
-// Read entire file
-std::string read_all(file_guard& fg) {
-    rewind_file(fg);
-
-    std::string content, line;
-    while (std::getline(fg.get(), line)) {
-        content += line + '\n';
-    }
-    return content;
-}
-
-// Count number of lines
-int count_lines(file_guard& fg) {
-    rewind_file(fg);
-
-    int count = 0;
-    std::string line;
-    while (std::getline(fg.get(), line))
-        ++count;
-
-    return count;
-}
-
-// Read first line
-std::string read_first_line(file_guard& fg) {
-    rewind_file(fg);
-    std::string line;
-    std::getline(fg.get(), line);
-    return line;
-}
-
-// Print preview (first N characters)
-void print_preview(file_guard& fg, std::size_t n) {
-    rewind_file(fg);
-
-    char ch;
-    std::size_t count = 0;
-    while (fg.get().get(ch) && count < n) {
-        std::cout << ch;
-        ++count;
-    }
-    std::cout << '\n';
-}
-
-// ---------------- NEW SMALL ADDITIONS ----------------
-
-// Get file size
-std::size_t file_size(file_guard& fg) {
-    rewind_file(fg);
-    auto& f = fg.get();
-
-    f.seekg(0, std::ios::end);
-    std::size_t size = f.tellg();
-    rewind_file(fg);
-    return size;
-}
-
-// Count words
-int count_words(file_guard& fg) {
-    rewind_file(fg);
-
-    int count = 0;
-    std::string word;
-    while (fg.get() >> word)
-        ++count;
-
-    rewind_file(fg);
-    return count;
-}
-
-// Append text to file
-void append_to_file(const std::string& filename,
-                    const std::string& text) {
-    std::ofstream out(filename, std::ios::app);
-    if (out.is_open()) {
-        out << text << '\n';
-    }
-}
-
-// -------- MORE ADDITIONS --------
-
-// Check if file is empty
-bool is_file_empty(file_guard& fg) {
-    return file_size(fg) == 0;
-}
-
-// Count characters
-std::size_t count_characters(file_guard& fg) {
-    rewind_file(fg);
-
-    std::size_t count = 0;
-    char ch;
-    while (fg.get().get(ch))
-        ++count;
-
-    rewind_file(fg);
-    return count;
-}
-
-// Search for a word
-bool contains_word(file_guard& fg, const std::string& target) {
-    rewind_file(fg);
-
-    std::string word;
-    while (fg.get() >> word) {
-        if (word == target)
-            return true;
-    }
-
-    rewind_file(fg);
-    return false;
-}
-
-// Read last line
-std::string read_last_line(file_guard& fg) {
-    rewind_file(fg);
-
-    std::string line, last;
-    while (std::getline(fg.get(), line)) {
-        last = line;
-    }
-    return last;
-}
-
-// Safe append with message
-void append_with_status(const std::string& filename,
-                        const std::string& text) {
-    std::ofstream out(filename, std::ios::app);
-    if (out.is_open()) {
-        out << text << '\n';
-        std::cout << "Append successful\n";
-    } else {
-        std::cout << "Append failed\n";
-    }
-}
-
-// -------- EXTRA SMALL ADDITIONS --------
-
-// Count occurrences of a specific word
-int count_occurrences(file_guard& fg, const std::string& target) {
-    rewind_file(fg);
-
-    int count = 0;
-    std::string word;
-    while (fg.get() >> word) {
-        if (word == target)
-            ++count;
-    }
-
-    rewind_file(fg);
-    return count;
-}
-
-// Convert file content to uppercase
-std::string to_uppercase(file_guard& fg) {
-    rewind_file(fg);
-
-    std::string content, line;
-    while (std::getline(fg.get(), line)) {
-        for (char& c : line)
-            c = std::toupper(static_cast<unsigned char>(c));
-
-        content += line + '\n';
-    }
-
-    rewind_file(fg);
-    return content;
-}
-
-// ======================================================
-// EXTRA NEW ADDITIONS
-// ======================================================
-
-// Count vowels in file
-int count_vowels(file_guard& fg) {
-    rewind_file(fg);
-
-    int count = 0;
-    char ch;
-
-    while (fg.get().get(ch)) {
-        ch = std::tolower(static_cast<unsigned char>(ch));
-
-        if (ch == 'a' || ch == 'e' || ch == 'i' ||
-            ch == 'o' || ch == 'u') {
-            ++count;
-        }
-    }
-
-    rewind_file(fg);
-    return count;
-}
-
-// Read file into vector of lines
-std::vector<std::string> get_lines(file_guard& fg) {
-    rewind_file(fg);
-
+[[nodiscard]] std::vector<std::string> get_lines(file_guard& fg) {
+    fg.rewind();
     std::vector<std::string> lines;
-    std::string line;
-
-    while (std::getline(fg.get(), line)) {
-        lines.push_back(line);
-    }
-
-    rewind_file(fg);
+    for (std::string line; std::getline(fg.get(), line);)
+        lines.push_back(std::move(line));
+    fg.rewind();
     return lines;
 }
 
-// Print numbered lines
-void print_numbered_lines(file_guard& fg) {
-    rewind_file(fg);
-
-    std::string line;
-    int line_no = 1;
-
-    while (std::getline(fg.get(), line)) {
-        std::cout << line_no++ << ": " << line << '\n';
-    }
-
-    rewind_file(fg);
+[[nodiscard]] std::size_t file_size(file_guard& fg) {
+    fg.rewind();
+    fg.get().seekg(0, std::ios::end);
+    auto size = static_cast<std::size_t>(fg.get().tellg());
+    fg.rewind();
+    return size;
 }
 
-// Convert file content to lowercase
-std::string to_lowercase(file_guard& fg) {
-    rewind_file(fg);
+[[nodiscard]] bool is_file_empty(file_guard& fg) {
+    return file_size(fg) == 0;
+}
 
-    std::string content, line;
+[[nodiscard]] std::size_t count_lines(file_guard& fg) {
+    return get_lines(fg).size();
+}
 
-    while (std::getline(fg.get(), line)) {
+[[nodiscard]] std::size_t count_characters(file_guard& fg) {
+    return file_size(fg);
+}
 
-        for (char& c : line) {
-            c = std::tolower(static_cast<unsigned char>(c));
-        }
+[[nodiscard]] std::size_t count_words(file_guard& fg) {
+    fg.rewind();
+    std::size_t count = 0;
+    for (std::string word; fg.get() >> word;) ++count;
+    fg.rewind();
+    return count;
+}
 
-        content += line + '\n';
-    }
+[[nodiscard]] std::size_t count_occurrences(file_guard& fg, std::string_view target) {
+    fg.rewind();
+    std::size_t count = 0;
+    for (std::string word; fg.get() >> word;)
+        if (word == target) ++count;
+    fg.rewind();
+    return count;
+}
 
-    rewind_file(fg);
+[[nodiscard]] bool contains_word(file_guard& fg, std::string_view target) {
+    return count_occurrences(fg, target) > 0;
+}
+
+[[nodiscard]] int count_vowels(file_guard& fg) {
+    auto content = read_all(fg);
+    constexpr std::string_view vowels = "aeiouAEIOU";
+    return static_cast<int>(
+        std::ranges::count_if(content, [&](char c) {
+            return vowels.find(c) != std::string_view::npos;
+        })
+    );
+}
+
+[[nodiscard]] std::string read_first_line(file_guard& fg) {
+    auto lines = get_lines(fg);
+    return lines.empty() ? std::string{} : lines.front();
+}
+
+[[nodiscard]] std::string read_last_line(file_guard& fg) {
+    auto lines = get_lines(fg);
+    return lines.empty() ? std::string{} : lines.back();
+}
+
+[[nodiscard]] std::size_t longest_line_length(file_guard& fg) {
+    auto lines = get_lines(fg);
+    if (lines.empty()) return 0;
+    return std::ranges::max(lines | std::views::transform(&std::string::size));
+}
+
+[[nodiscard]] std::string transform_content(file_guard& fg, auto char_op) {
+    auto content = read_all(fg);
+    std::ranges::transform(content, content.begin(), char_op);
     return content;
 }
 
-// Longest line length
-std::size_t longest_line_length(file_guard& fg) {
-    rewind_file(fg);
-
-    std::size_t longest = 0;
-    std::string line;
-
-    while (std::getline(fg.get(), line)) {
-        longest = std::max(longest, line.size());
-    }
-
-    rewind_file(fg);
-    return longest;
+[[nodiscard]] std::string to_uppercase(file_guard& fg) {
+    return transform_content(fg, [](unsigned char c) {
+        return static_cast<char>(std::toupper(c));
+    });
 }
 
-// ======================================================
-// MAIN
-// ======================================================
+[[nodiscard]] std::string to_lowercase(file_guard& fg) {
+    return transform_content(fg, [](unsigned char c) {
+        return static_cast<char>(std::tolower(c));
+    });
+}
+
+void print_preview(file_guard& fg, std::size_t n) {
+    auto content = read_all(fg);
+    std::cout << std::string_view(content).substr(0, n) << '\n';
+}
+
+void print_numbered_lines(file_guard& fg) {
+    auto lines = get_lines(fg);
+    for (const auto& [i, line] : lines | std::views::enumerate)
+        std::cout << (i + 1) << ": " << line << '\n';
+}
+
+void append_to_file(const fs::path& path, std::string_view text) {
+    std::ofstream out(path, std::ios::app);
+    if (!out)
+        throw std::runtime_error("Failed to open for append: " + path.string());
+    out << text << '\n';
+}
 
 int main() {
-    const std::string filename = "example.txt";
+    const fs::path filepath = "example.txt";
 
-    if (!file_exists(filename)) {
-        std::cout << "File does not exist: " << filename << '\n';
-        return 0;
+    if (!fs::exists(filepath)) {
+        std::ofstream seed(filepath);
+        seed << "Hello world\n"
+             << "this is a test file\n"
+             << "test line three\n";
     }
 
     try {
-        file_guard fg(filename);
-
+        file_guard fg(filepath);
         std::cout << "File opened successfully.\n\n";
 
-        std::cout << "File contents:\n";
-        std::cout << read_all(fg) << '\n';
+        std::cout << "File contents:\n" << read_all(fg) << '\n';
+        std::cout << "Line count:      " << count_lines(fg)      << '\n';
+        std::cout << "Word count:      " << count_words(fg)      << '\n';
+        std::cout << "File size:       " << file_size(fg)        << " bytes\n";
+        std::cout << "Char count:      " << count_characters(fg) << '\n';
+        std::cout << "Empty?           " << (is_file_empty(fg) ? "Yes" : "No") << '\n';
+        std::cout << "First line:      " << read_first_line(fg)  << '\n';
+        std::cout << "Last line:       " << read_last_line(fg)   << '\n';
+        std::cout << "Contains 'test'? " << (contains_word(fg, "test") ? "Yes" : "No") << '\n';
+        std::cout << "Occurrences of 'test': " << count_occurrences(fg, "test") << '\n';
 
-        std::cout << "Line count: "
-                  << count_lines(fg) << '\n';
+        std::cout << "\nUppercase:\n"   << to_uppercase(fg) << '\n';
+        std::cout << "Lowercase:\n"    << to_lowercase(fg) << '\n';
+        std::cout << "Preview (30):\n"; print_preview(fg, 30);
 
-        std::cout << "Word count: "
-                  << count_words(fg) << '\n';
-
-        std::cout << "File size (bytes): "
-                  << file_size(fg) << '\n';
-
-        std::cout << "Character count: "
-                  << count_characters(fg) << '\n';
-
-        std::cout << "File empty? "
-                  << (is_file_empty(fg) ? "Yes\n" : "No\n");
-
-        std::cout << "First line: "
-                  << read_first_line(fg) << '\n';
-
-        std::cout << "Last line: "
-                  << read_last_line(fg) << '\n';
-
-        std::cout << "Contains word 'test'? "
-                  << (contains_word(fg, "test") ? "Yes\n" : "No\n");
-
-        std::cout << "Occurrences of 'test': "
-                  << count_occurrences(fg, "test") << '\n';
-
-        std::cout << "\nUppercase preview:\n";
-        std::cout << to_uppercase(fg) << '\n';
-
-        std::cout << "Preview (30 chars):\n";
-        print_preview(fg, 30);
-
-        append_with_status(filename, "Appended line.");
-
-        std::cout << "\nLine count after append (reopen to verify): "
-                  << count_lines(fg) << '\n';
-
-        // ==================================================
-        // EXTRA NEW FEATURE USAGE
-        // ==================================================
+        append_to_file(filepath, "Appended line.");
+        std::cout << "\nAppended successfully.\n";
 
         std::cout << "\n--- Extra File Analysis ---\n";
+        std::cout << "Vowel count:         " << count_vowels(fg)         << '\n';
+        std::cout << "Longest line length: " << longest_line_length(fg)  << '\n';
 
-        std::cout << "Vowel count: "
-                  << count_vowels(fg) << '\n';
-
-        std::cout << "Longest line length: "
-                  << longest_line_length(fg) << '\n';
-
-        std::cout << "\nLowercase version:\n";
-        std::cout << to_lowercase(fg) << '\n';
-
-        std::cout << "--- Numbered Lines ---\n";
+        std::cout << "\n--- Numbered Lines ---\n";
         print_numbered_lines(fg);
 
-        std::cout << "\n--- Lines Stored in Vector ---\n";
-
-        auto lines = get_lines(fg);
-
-        for (const auto& line : lines) {
+        std::cout << "\n--- Lines via get_lines() ---\n";
+        for (const auto& line : get_lines(fg))
             std::cout << line << '\n';
-        }
-
-        // ==================================================
 
     } catch (const std::exception& e) {
-        std::cout << "Error: " << e.what() << '\n';
+        std::cerr << "Error: " << e.what() << '\n';
+        return 1;
     }
 
     return 0;

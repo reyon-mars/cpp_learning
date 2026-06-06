@@ -1,281 +1,161 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 #include <algorithm>
-#include <utility>   // ✅ ADDED
-#include <cassert>   // ✅ ADDED
-#include <numeric>   // ✅ ADDED
-
-// ----------------------------------------------------
-// ORIGINAL STRUCT (LOGIC UNCHANGED)
-// ----------------------------------------------------
+#include <utility>
+#include <cassert>
+#include <numeric>
 
 struct User {
     std::string name;
-    int age;
+    int         age;
 };
 
-// ----------------------------------------------------
-// SMALL ADDED CODE (HELPERS ONLY)
-// ----------------------------------------------------
-
-// Print user safely
-void print_user(const std::unique_ptr<User>& user) {
-    if (user)
-        std::cout << user->name << " " << user->age << '\n';
-    else
-        std::cout << "User is nullptr\n";
-}
-
-// Increment age
-void birthday(User& user) {
-    ++user.age;
-}
-
-// Check adult status
-bool is_adult(const User& user) {
-    return user.age >= 18;
-}
-
-// Stream output helper
 std::ostream& operator<<(std::ostream& os, const User& u) {
     return os << u.name << " (" << u.age << ")";
 }
 
-// Take ownership example
+void print_user(const std::unique_ptr<User>& user) {
+    if (user) std::cout << *user << "\n";
+    else      std::cout << "nullptr\n";
+}
+
+void birthday(User& user) noexcept { ++user.age; }
+
+[[nodiscard]] bool is_adult(const User& user) noexcept { return user.age >= 18; }
+
 void take_ownership(std::unique_ptr<User> user) {
-    std::cout << "Ownership taken: " << *user << '\n';
+    std::cout << "Ownership taken: " << *user << "\n";
 }
 
-// -------- NEW ADDITIONS --------
-
-// Factory function
-std::unique_ptr<User> create_user(std::string name, int age) {
-    return std::make_unique<User>(User{name, age});
+[[nodiscard]] std::unique_ptr<User> create_user(std::string name, int age) {
+    return std::make_unique<User>(User{std::move(name), age});
 }
 
-// Safe check helper
-bool is_null(const std::unique_ptr<User>& u) {
-    return !u;
-}
+using UserVec = std::vector<std::unique_ptr<User>>;
 
-// 🔹 Find oldest user
-User* find_oldest(const std::vector<std::unique_ptr<User>>& users) {
+[[nodiscard]] User* find_oldest(const UserVec& users) {
     if (users.empty()) return nullptr;
-
-    return std::max_element(users.begin(), users.end(),
-        [](const auto& a, const auto& b) {
-            return a->age < b->age;
-        })->get();
+    return std::ranges::max_element(users, {},
+        [](const auto& u) { return u->age; })->get();
 }
 
-// 🔹 Count adults
-int count_adults(const std::vector<std::unique_ptr<User>>& users) {
-    return std::count_if(users.begin(), users.end(),
-        [](const auto& u) {
-            return u && u->age >= 18;
-        });
-}
-
-// 🔹 Print all users
-void print_all(const std::vector<std::unique_ptr<User>>& users) {
-    for (const auto& u : users) {
-        print_user(u);
-    }
-}
-
-// ✅ ADDED: find youngest user
-User* find_youngest(const std::vector<std::unique_ptr<User>>& users) {
+[[nodiscard]] User* find_youngest(const UserVec& users) {
     if (users.empty()) return nullptr;
-
-    return std::min_element(users.begin(), users.end(),
-        [](const auto& a, const auto& b) {
-            return a->age < b->age;
-        })->get();
+    return std::ranges::min_element(users, {},
+        [](const auto& u) { return u->age; })->get();
 }
 
-// ✅ ADDED: average age
-double average_age(const std::vector<std::unique_ptr<User>>& users) {
+[[nodiscard]] long count_adults(const UserVec& users) {
+    return std::ranges::count_if(users,
+        [](const auto& u) { return u && u->age >= 18; });
+}
+
+[[nodiscard]] double average_age(const UserVec& users) {
     if (users.empty()) return 0.0;
-
-    int total = std::accumulate(users.begin(), users.end(), 0,
-        [](int sum, const auto& u) {
-            return sum + (u ? u->age : 0);
-        });
-
-    return static_cast<double>(total) / users.size();
+    const int total = std::accumulate(users.begin(), users.end(), 0,
+        [](int sum, const auto& u) { return sum + (u ? u->age : 0); });
+    return static_cast<double>(total) / static_cast<double>(users.size());
 }
 
-// ✅ ADDED: search user by name
-User* find_user_by_name(
-    const std::vector<std::unique_ptr<User>>& users,
-    const std::string& target) {
-
-    auto it = std::find_if(users.begin(), users.end(),
-        [&](const auto& u) {
-            return u && u->name == target;
-        });
-
-    return (it != users.end()) ? it->get() : nullptr;
+[[nodiscard]] User* find_by_name(const UserVec& users, std::string_view target) {
+    auto it = std::ranges::find_if(users,
+        [target](const auto& u) { return u && u->name == target; });
+    return it != users.end() ? it->get() : nullptr;
 }
 
-// ✅ ADDED: sort users by age
-void sort_users_by_age(
-    std::vector<std::unique_ptr<User>>& users) {
-
-    std::sort(users.begin(), users.end(),
-        [](const auto& a, const auto& b) {
-            return a->age < b->age;
-        });
+void sort_by_age(UserVec& users) {
+    std::ranges::sort(users, {},
+        [](const auto& u) { return u->age; });
 }
 
-// --------------------------------
+void print_all(const UserVec& users) {
+    for (const auto& u : users) { print_user(u); }
+}
 
-// ----------------------------------------------------
-// MAIN
-// ----------------------------------------------------
-
-int main(void) {
-
-    // ---------- ORIGINAL CODE ----------
+int main() {
+    std::cout << "=== Basic unique_ptr ===\n";
     auto u = std::make_unique<User>(User{"Mars", 22});
-    std::cout << u->name << " " << u->age << '\n';
+    std::cout << *u << "\n";
 
-    std::unique_ptr<User> v;
-    v = std::move(u);
-
-    if (u == nullptr) {
-        std::cout << "U is nullptr\n";
-    }
-
-    // ---------- SMALL ADDITIONS ----------
-    assert(v);  // ✅ ADDED safety check
+    auto v = std::move(u);
+    std::cout << "u is null: " << std::boolalpha << (u == nullptr) << "\n";
+    assert(v != nullptr);
 
     birthday(*v);
     print_user(v);
+    std::cout << "operator<<: " << *v << "\n";
+    std::cout << "Adult: " << is_adult(*v) << "\n";
 
-    std::cout << "Printed via operator<<: "
-              << *v << std::endl;
-
-    std::cout << "Adult? "
-              << (is_adult(*v) ? "Yes\n" : "No\n");
-
-    User* raw = v.get();
-    if (raw)
-        std::cout << "Access via raw pointer: "
-                  << raw->name << '\n';
+    if (User* raw = v.get()) {
+        std::cout << "Raw pointer: " << raw->name << "\n";
+    }
 
     take_ownership(std::move(v));
-
-    if (!v)
-        std::cout << "v is now nullptr after move\n";
+    std::cout << "v after move: " << (v == nullptr) << "\n";
 
     v = std::make_unique<User>(User{"Nova", 17});
     print_user(v);
 
     User* released = v.release();
-    if (!v)
-        std::cout << "v released ownership\n";
-
+    std::cout << "v after release: " << (v == nullptr) << "\n";
     delete released;
 
-    // -------- NEW FEATURE USAGE --------
-
-    // reset (safe replacement)
+    std::cout << "\n=== reset / swap ===\n";
     v = create_user("Alex", 30);
     print_user(v);
 
     v.reset(new User{"ResetUser", 40});
     print_user(v);
 
-    // swap ownership
     auto v2 = create_user("SwapUser", 25);
     std::swap(v, v2);
-
     std::cout << "After swap:\n";
     print_user(v);
     print_user(v2);
 
-    // vector of unique_ptr
-    std::vector<std::unique_ptr<User>> users;
+    std::cout << "\n=== UserVec ===\n";
+    UserVec users;
+    users.reserve(4);
     users.push_back(create_user("A", 10));
     users.push_back(create_user("B", 20));
     users.push_back(create_user("C", 30));
-
-    std::cout << "Users in vector:\n";
-    for (const auto& user : users) {
-        print_user(user);
-    }
-
-    // null check helper
-    if (is_null(v2))
-        std::cout << "v2 is null\n";
-
-    // -------- EXTRA NEW USAGE --------
-
-    std::cout << "\n--- Advanced Utilities ---\n";
-
-    // Print all users
     print_all(users);
 
-    // Count adults
-    std::cout << "Adult count: "
-              << count_adults(users) << "\n";
+    std::cout << "\n=== Algorithms ===\n";
+    std::cout << "Adults: " << count_adults(users) << "\n";
 
-    // Find oldest user
-    if (auto oldest = find_oldest(users)) {
-        std::cout << "Oldest user: "
-                  << oldest->name << " ("
-                  << oldest->age << ")\n";
+    if (auto* oldest = find_oldest(users)) {
+        std::cout << "Oldest: " << *oldest << "\n";
     }
 
-    // const unique_ptr usage
-    const std::unique_ptr<User>& cref = users[0];
+    if (auto* youngest = find_youngest(users)) {
+        std::cout << "Youngest: " << *youngest << "\n";
+    }
+
+    std::cout << "Average age: " << average_age(users) << "\n";
+
+    if (auto* found = find_by_name(users, "B")) {
+        std::cout << "Found: " << *found << "\n";
+    }
+
+    sort_by_age(users);
+    std::cout << "Sorted:\n";
+    print_all(users);
+
+    users.push_back(create_user("D", 50));
+    std::cout << "After push_back D:\n";
+    print_all(users);
+
+    std::cout << "\n=== Lambda + const ref ===\n";
+    const auto& cref = users[0];
     std::cout << "Const access: " << *cref << "\n";
 
-    // Lambda with unique_ptr
-    std::for_each(users.begin(), users.end(),
-        [](const auto& u) {
-            if (u)
-                std::cout << "Lambda user: "
-                          << *u << "\n";
-        });
-
-    // -------- EXTRA SMALL ADDITIONS --------
-
-    std::cout << "\n--- Extra Features ---\n";
-
-    // Find youngest user
-    if (auto youngest = find_youngest(users)) {
-        std::cout << "Youngest user: "
-                  << youngest->name << " ("
-                  << youngest->age << ")\n";
-    }
-
-    // Average age
-    std::cout << "Average age: "
-              << average_age(users) << "\n";
-
-    // Search by name
-    if (auto found = find_user_by_name(users, "B")) {
-        std::cout << "Found user: "
-                  << found->name << "\n";
-    }
-
-    // Sort users
-    sort_users_by_age(users);
-
-    std::cout << "Sorted users by age:\n";
-    print_all(users);
-
-    // emplace_back usage
-    users.emplace_back(create_user("D", 50));
-
-    std::cout << "After emplace_back:\n";
-    print_all(users);
-
-    // ----------------------------------
+    std::ranges::for_each(users, [](const auto& u) {
+        if (u) std::cout << "Lambda: " << *u << "\n";
+    });
 
     return 0;
 }

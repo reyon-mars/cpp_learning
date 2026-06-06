@@ -1,235 +1,146 @@
 #include <iostream>
 #include <chrono>
 #include <string>
-#include <utility>     // ✅ ADDED (for std::move)
-#include <functional>  // ✅ ADDED (for callable templates)
-#include <thread>      // ✅ ADDED
-#include <vector>      // ✅ ADDED
-#include <numeric>     // ✅ ADDED
+#include <string_view>
+#include <utility>
+#include <thread>
+#include <vector>
+#include <numeric>
 
 class scoped_timer {
-    
-private:
-    std::chrono::steady_clock::time_point start;
-    std::string name;
-    bool stopped = false;   // ✅ added
-
 public:
-    explicit scoped_timer(std::string str)
-        : start(std::chrono::steady_clock::now()),
-          name(std::move(str)) {}
+    using Clock     = std::chrono::steady_clock;
+    using TimePoint = Clock::time_point;
 
-    // Prevent copying
-    scoped_timer(const scoped_timer&) = delete;
+    explicit scoped_timer(std::string name)
+        : start_{Clock::now()}, name_{std::move(name)} {}
+
+    scoped_timer(const scoped_timer&)            = delete;
     scoped_timer& operator=(const scoped_timer&) = delete;
 
-    // Allow moving
     scoped_timer(scoped_timer&& other) noexcept
-        : start(other.start),
-          name(std::move(other.name)),
-          stopped(other.stopped)   // ✅ added
-    {
-        other.stopped = true;      // ✅ avoid double print
-    }
+        : start_{other.start_},
+          name_{std::move(other.name_)},
+          stopped_{std::exchange(other.stopped_, true)} {}
 
-    // ✅ ADDED: move assignment
     scoped_timer& operator=(scoped_timer&& other) noexcept {
         if (this != &other) {
-            start = other.start;
-            name = std::move(other.name);
-            stopped = other.stopped;
-            other.stopped = true;
+            stop();
+            start_   = other.start_;
+            name_    = std::move(other.name_);
+            stopped_ = std::exchange(other.stopped_, true);
         }
         return *this;
     }
 
-    // Optional reset
-    void reset() {
-        start = std::chrono::steady_clock::now();
-        stopped = false;           // ✅ added
-    }
+    ~scoped_timer() { stop(); }
 
-    // -------- NEW ADDITIONS --------
-
-    // Manual stop
     void stop() {
-        if (!stopped) {
-            auto end = std::chrono::steady_clock::now();
-
-            auto us = std::chrono::duration_cast<std::chrono::microseconds>(
-                          end - start).count();
-
-            auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-                          end - start).count();
-
-            std::cout << name << ": "
-                      << us << " us (" << ms << " ms)\n";
-
-            stopped = true;
-        }
+        if (stopped_) return;
+        stopped_        = true;
+        const auto us   = to_us(Clock::now() - start_);
+        std::cout << name_ << ": " << us << " us (" << us / 1000 << " ms)\n";
     }
 
-    // Get elapsed time without stopping
-    long long elapsed_us() const {
-        auto now = std::chrono::steady_clock::now();
-        return std::chrono::duration_cast<std::chrono::microseconds>(
-                   now - start).count();
+    void reset() noexcept {
+        start_   = Clock::now();
+        stopped_ = false;
     }
 
-    // -------- EXTRA SMALL ADDITIONS --------
+    [[nodiscard]] long long elapsed_us() const noexcept { return to_us(Clock::now() - start_); }
+    [[nodiscard]] long long elapsed_ms() const noexcept { return elapsed_us() / 1000;           }
+    [[nodiscard]] bool      is_stopped() const noexcept { return stopped_;                       }
 
-    // Get elapsed time in milliseconds
-    long long elapsed_ms() const {
-        auto now = std::chrono::steady_clock::now();
-        return std::chrono::duration_cast<std::chrono::milliseconds>(
-                   now - start).count();
-    }
-
-    // Check if already stopped
-    bool is_stopped() const {
-        return stopped;
-    }
-
-    // ✅ ADDED: print elapsed without stopping
     void print_elapsed() const {
-        std::cout << "[Elapsed] "
-                  << elapsed_us() << " us\n";
+        std::cout << "[Elapsed] " << elapsed_us() << " us\n";
     }
 
-    // --------------------------------
+private:
+    TimePoint   start_;
+    std::string name_;
+    bool        stopped_ = false;
 
-    ~scoped_timer() {
-        stop();   // ✅ replaced direct print with safe stop
+    static long long to_us(Clock::duration d) noexcept {
+        return std::chrono::duration_cast<std::chrono::microseconds>(d).count();
     }
 };
 
-// -------- Helper function --------
 template<typename Func>
-void measure(const std::string& label, Func&& f) {
-    auto start = std::chrono::steady_clock::now();
-    f();
-    auto end = std::chrono::steady_clock::now();
-
-    std::cout << label << ": "
-              << std::chrono::duration_cast<std::chrono::microseconds>(
-                     end - start).count()
-              << " us\n";
+void measure(std::string_view label, Func&& f) {
+    using Clock = std::chrono::steady_clock;
+    const auto begin = Clock::now();
+    std::forward<Func>(f)();
+    const auto us = std::chrono::duration_cast<std::chrono::microseconds>(
+                        Clock::now() - begin).count();
+    std::cout << label << ": " << us << " us\n";
 }
 
-// -------- EXTRA HELPER --------
-
-// Returns measured time instead of printing
 template<typename Func>
-long long measure_return(Func&& f) {
-    auto start = std::chrono::steady_clock::now();
-    f();
-    auto end = std::chrono::steady_clock::now();
-
+[[nodiscard]] long long measure_return(Func&& f) {
+    using Clock = std::chrono::steady_clock;
+    const auto begin = Clock::now();
+    std::forward<Func>(f)();
     return std::chrono::duration_cast<std::chrono::microseconds>(
-               end - start).count();
+               Clock::now() - begin).count();
 }
 
-// ✅ ADDED: helper workload
 void heavy_task() {
-    std::vector<int> values(100000, 1);
-
-    volatile int sum =
-        std::accumulate(values.begin(),
-                        values.end(), 0);
-
-    (void)sum;
+    const std::vector<int> values(100'000, 1);
+    [[maybe_unused]] volatile int sum =
+        std::accumulate(values.cbegin(), values.cend(), 0);
 }
 
-// --------------------------------
+static void busy(long long n) {
+    for (volatile long long i = 0; i < n; ++i);
+}
 
-
-// ---------------- Example Usage ----------------
 int main() {
+    std::cout << "--- RAII blocks ---\n";
+    { scoped_timer timer{"Block 1"}; busy(1'000'000); }
+    { scoped_timer timer{"Block 2"}; busy(2'000'000); }
 
+    std::cout << "\n--- Manual stop + elapsed ---\n";
     {
-        scoped_timer timer("Block 1");
-        for (volatile int i = 0; i < 1000000; ++i);
-    }
-
-    {
-        scoped_timer timer("Block 2");
-        for (volatile int i = 0; i < 2000000; ++i);
-    }
-
-    // -------- NEW USAGE --------
-
-    {
-        scoped_timer timer("Manual stop demo");
-        for (volatile int i = 0; i < 500000; ++i);
-
-        std::cout << "Mid elapsed: "
-                  << timer.elapsed_us() << " us\n";
-
+        scoped_timer timer{"Manual stop"};
+        busy(500'000);
+        std::cout << "Mid elapsed=" << timer.elapsed_us() << " us\n";
         timer.print_elapsed();
-
-        timer.stop();   // stops early
+        timer.stop();
     }
 
-    measure("Quick measure", [] {
-        for (volatile int i = 0; i < 300000; ++i);
-    });
+    std::cout << "\n--- measure (free function) ---\n";
+    measure("Quick measure", [] { busy(300'000); });
 
-    // -------- EXTRA USAGE --------
-
+    std::cout << "\n--- is_stopped ---\n";
     {
-        scoped_timer timer("Check state");
-        for (volatile int i = 0; i < 100000; ++i);
-
-        std::cout << "Stopped? "
-                  << timer.is_stopped() << "\n";
+        scoped_timer timer{"Check state"};
+        busy(100'000);
+        std::cout << "is_stopped=" << std::boolalpha << timer.is_stopped() << "\n";
     }
 
-    auto t = measure_return([] {
-        for (volatile int i = 0; i < 150000; ++i);
-    });
+    std::cout << "\n--- measure_return ---\n";
+    const long long t = measure_return([] { busy(150'000); });
+    std::cout << "Returned=" << t << " us\n";
 
-    std::cout << "Returned time: "
-              << t << " us\n";
-
-    // -------- NEW SMALL ADDITIONS --------
-
+    std::cout << "\n--- reset ---\n";
     {
-        scoped_timer timer("Reset demo");
-
-        std::this_thread::sleep_for(
-            std::chrono::milliseconds(20));
-
-        std::cout << "Before reset: "
-                  << timer.elapsed_ms() << " ms\n";
-
+        scoped_timer timer{"Reset demo"};
+        std::this_thread::sleep_for(std::chrono::milliseconds{20});
+        std::cout << "Before reset=" << timer.elapsed_ms() << " ms\n";
         timer.reset();
-
-        std::this_thread::sleep_for(
-            std::chrono::milliseconds(10));
-
-        std::cout << "After reset: "
-                  << timer.elapsed_ms() << " ms\n";
+        std::this_thread::sleep_for(std::chrono::milliseconds{10});
+        std::cout << "After reset=" << timer.elapsed_ms() << " ms\n";
     }
 
-    std::cout << "\n--- Heavy Task Timing ---\n";
-
+    std::cout << "\n--- Heavy task ---\n";
     measure("Vector accumulate", heavy_task);
 
-    std::cout << "\n--- Move Assignment Demo ---\n";
-
-    scoped_timer t1("Timer A");
-
-    std::this_thread::sleep_for(
-        std::chrono::milliseconds(5));
-
-    scoped_timer t2("Timer B");
-
+    std::cout << "\n--- Move assignment ---\n";
+    scoped_timer t1{"Timer A"};
+    std::this_thread::sleep_for(std::chrono::milliseconds{5});
+    scoped_timer t2{"Timer B"};
     t2 = std::move(t1);
-
-    std::this_thread::sleep_for(
-        std::chrono::milliseconds(5));
-
-    // --------------------------------
+    std::this_thread::sleep_for(std::chrono::milliseconds{5});
 
     return 0;
 }

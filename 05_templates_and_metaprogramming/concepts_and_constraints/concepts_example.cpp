@@ -2,297 +2,161 @@
 #include <concepts>
 #include <vector>
 #include <list>
+#include <array>
+#include <string>
+#include <string_view>
 #include <type_traits>
-#include <cassert>   // ✅ ADDED
-#include <utility>   // ✅ ADDED
-#include <array>     // ✅ ADDED
-#include <string>    // ✅ ADDED
-#include <algorithm> // ✅ ADDED
+#include <algorithm>
+#include <numeric>
+#include <cassert>
+#include <utility>
 
-// -----------------------------
-// Numeric Concept
-// -----------------------------
 template<typename T>
-concept Numeric =
-    std::integral<T> ||
-    std::floating_point<T>;
+concept Numeric = std::integral<T> || std::floating_point<T>;
 
-template<Numeric T>
-T add(T a, T b) {
-    return a + b;
-}
-
-// Alternative requires syntax
-template<typename T>
-requires Numeric<T>
-T multiply(T a, T b) {
-    return a * b;
-}
-
-// ✅ ADDED: subtraction
-template<Numeric T>
-T subtract(T a, T b) {
-    return a - b;
-}
-
-// ✅ ADDED: division
-template<Numeric T>
-T divide(T a, T b) {
-    return a / b;
-}
-
-// -----------------------------
-// Container Concept
-// -----------------------------
 template<typename T>
 concept Container = requires(T t) {
-    { t.begin() };
-    { t.end() };
-    { t.size() }
-        -> std::convertible_to<std::size_t>;
+    { t.begin()  };
+    { t.end()    };
+    { t.size()   } -> std::convertible_to<std::size_t>;
+    typename T::value_type;
 };
 
-// -----------------------------
-// Printable Concept
-// -----------------------------
 template<typename T>
 concept Printable = requires(T t) {
-    { std::cout << t }
-        -> std::same_as<std::ostream&>;
+    { std::cout << t } -> std::same_as<std::ostream&>;
 };
 
-template<Container C>
-void print_container(const C& cont) {
-    std::cout << "Size: "
-              << cont.size() << "\n";
-}
+template<typename T>
+concept Comparable = requires(const T& a, const T& b) {
+    { a == b } -> std::convertible_to<bool>;
+    { a <  b } -> std::convertible_to<bool>;
+};
 
-// -----------------------------
-// Constrained Class Template
-// -----------------------------
+template<Numeric T>
+[[nodiscard]] constexpr T add(T a, T b)      noexcept { return a + b; }
+
+template<Numeric T>
+[[nodiscard]] constexpr T subtract(T a, T b) noexcept { return a - b; }
+
+template<Numeric T>
+[[nodiscard]] constexpr T multiply(T a, T b) noexcept { return a * b; }
+
+template<Numeric T>
+[[nodiscard]] constexpr T divide(T a, T b)            { return a / b; }
+
+template<Numeric T>
+constexpr void increment(T& value) noexcept { ++value; }
+
 template<Numeric T>
 class Calculator {
 public:
-    T square(T value) const {
-        return value * value;
-    }
-
-    // -------- SMALL ADDITIONS --------
-
-    T cube(T value) const {
-        return value * value * value;
-    }
-
-    bool is_positive(T value) const {
-        return value > 0;
-    }
-
-    // ✅ ADDED: absolute value
-    T absolute(T value) const {
-        return value < 0 ? -value : value;
-    }
-
-    // --------------------------------
+    [[nodiscard]] constexpr T square(T v)   const noexcept { return v * v;       }
+    [[nodiscard]] constexpr T cube(T v)     const noexcept { return v * v * v;   }
+    [[nodiscard]] constexpr T absolute(T v) const noexcept { return v < T{} ? -v : v; }
+    [[nodiscard]] constexpr bool is_positive(T v) const noexcept { return v > T{}; }
 };
 
-// -----------------------------
-// EXTRA UTILITIES (SMALL)
-// -----------------------------
-
-// Print only if Printable
 template<Printable T>
 void print_value(const T& value) {
-    std::cout << "Printable value: "
-              << value << "\n";
+    std::cout << "Printable: " << value << "\n";
 }
 
-// Sum all elements of a container
 template<Container C>
-auto sum_container(const C& cont) {
-    using T = typename C::value_type;
-
-    T sum{};
-
-    for (const auto& v : cont)
-        sum += v;
-
-    return sum;
+void print_container(const C& cont) {
+    std::cout << "size=" << cont.size() << "\n";
 }
 
-// ✅ ADDED: average of container
-template<Container C>
-auto average_container(const C& cont) {
-    return static_cast<double>(
-               sum_container(cont))
-           / cont.size();
-}
-
-// ✅ ADDED: print elements
 template<Container C>
 void print_elements(const C& cont) {
-    for (const auto& v : cont)
-        std::cout << v << " ";
-
+    for (const auto& v : cont) { std::cout << v << " "; }
     std::cout << "\n";
 }
 
-// ✅ ADDED: comparable concept
-template<typename T>
-concept Comparable = requires(T a, T b) {
-    { a == b } -> std::convertible_to<bool>;
-};
+template<Container C>
+[[nodiscard]] auto sum_container(const C& cont) {
+    using T = typename C::value_type;
+    return std::accumulate(cont.begin(), cont.end(), T{});
+}
 
-// ✅ ADDED: equality check
+template<Container C>
+[[nodiscard]] double average_container(const C& cont) {
+    return static_cast<double>(sum_container(cont))
+         / static_cast<double>(cont.size());
+}
+
 template<Comparable T>
-bool are_equal(const T& a, const T& b) {
-    return a == b;
-}
+[[nodiscard]] bool are_equal(const T& a, const T& b) { return a == b; }
 
-// ✅ ADDED: increment helper
-template<Numeric T>
-void increment(T& value) {
-    ++value;
-}
-
-// -----------------------------
-// Main
-// -----------------------------
 int main() {
-
-    std::cout << "Sum (int): "
-              << add(5, 3) << "\n";
-
-    std::cout << "Sum (double): "
-              << add(1.5, 2.5) << "\n";
-
-    std::cout << "Multiply (int): "
-              << multiply(4, 6) << "\n";
-
-    std::vector<int> vec = {1, 2, 3};
-
-    print_container(vec);
-
-    std::list<double> lst = {
-        1.1, 2.2, 3.3
-    };
-
-    print_container(lst);
-
-    Calculator<int> calc;
-
-    std::cout << "Square: "
-              << calc.square(7) << "\n";
-
-    // -------- ADDED USAGE --------
-
-    std::cout << "Cube: "
-              << calc.cube(3) << "\n";
-
-    std::cout << "Is positive? "
-              << (calc.is_positive(7)
-                      ? "Yes\n"
-                      : "No\n");
-
-    print_value(123);
-    print_value(3.14);
-
-    std::cout << "Sum of vector: "
-              << sum_container(vec)
-              << "\n";
-
-    std::cout << "Sum of list: "
-              << sum_container(lst)
-              << "\n";
-
-    // ✅ ADDED: compile-time validation
     static_assert(Numeric<int>);
     static_assert(Numeric<double>);
+    static_assert(!Numeric<std::string>);
+    static_assert(Printable<int>);
+    static_assert(Container<std::vector<int>>);
+    static_assert(Comparable<int>);
+    static_assert(Comparable<std::string>);
 
-    // ✅ ADDED: runtime validation
-    assert(sum_container(vec) == 6);
+    std::cout << "=== Arithmetic ===\n";
+    std::cout << "add(5,3)="        << add(5, 3)           << "\n"
+              << "add(1.5,2.5)="    << add(1.5, 2.5)       << "\n"
+              << "multiply(4,6)="   << multiply(4, 6)       << "\n"
+              << "subtract(10,3)="  << subtract(10, 3)      << "\n"
+              << "divide(20.0,4.0)=" << divide(20.0, 4.0)  << "\n";
 
-    // -------- NEW FEATURE USAGE --------
+    std::cout << "\n=== Calculator ===\n";
+    constexpr Calculator<int> calc;
+    std::cout << "square(7)="    << calc.square(7)    << "\n"
+              << "cube(3)="      << calc.cube(3)       << "\n"
+              << "absolute(-9)=" << calc.absolute(-9)  << "\n"
+              << "is_positive(7)=" << std::boolalpha << calc.is_positive(7) << "\n";
 
-    std::cout << "\n--- Arithmetic ---\n";
+    std::cout << "\n=== Container ===\n";
+    std::vector<int>    vec{1, 2, 3};
+    std::list<double>   lst{1.1, 2.2, 3.3};
+    std::array<int, 4>  arr{4, 5, 6, 7};
 
-    std::cout << "Subtract: "
-              << subtract(10, 3)
-              << "\n";
-
-    std::cout << "Divide: "
-              << divide(20.0, 4.0)
-              << "\n";
-
-    std::cout << "\n--- Absolute Value ---\n";
-
-    std::cout << "Absolute(-9): "
-              << calc.absolute(-9)
-              << "\n";
-
-    std::cout << "\n--- Average ---\n";
-
-    std::cout << "Average vector: "
-              << average_container(vec)
-              << "\n";
-
-    std::cout << "\n--- Print Elements ---\n";
-
-    print_elements(vec);
-
-    std::array<int, 4> arr = {
-        4, 5, 6, 7
-    };
-
+    print_container(vec);
+    print_container(lst);
     print_container(arr);
 
-    std::cout << "Array sum: "
-              << sum_container(arr)
-              << "\n";
+    std::cout << "sum vec="  << sum_container(vec) << "\n"
+              << "sum lst="  << sum_container(lst) << "\n"
+              << "sum arr="  << sum_container(arr) << "\n"
+              << "avg vec="  << average_container(vec) << "\n";
 
-    std::cout << "\n--- Comparable Demo ---\n";
+    assert(sum_container(vec) == 6);
 
-    std::cout << "10 == 10 ? "
-              << (are_equal(10, 10)
-                      ? "Yes\n"
-                      : "No\n");
-
-    std::cout << "Hello == World ? "
-              << (are_equal(
-                      std::string("Hello"),
-                      std::string("World"))
-                      ? "Yes\n"
-                      : "No\n");
-
-    std::cout << "\n--- Increment Demo ---\n";
-
-    int value = 5;
-
-    increment(value);
-
-    std::cout << "Incremented value: "
-              << value << "\n";
-
-    std::cout << "\n--- Lambda + Concepts ---\n";
-
-    auto printer = []<Printable T>(
-                       const T& value) {
-        std::cout << "Lambda print: "
-                  << value << "\n";
-    };
-
-    printer(999);
-    printer(std::string("Concepts"));
-
-    std::cout << "\n--- Sorting Vector ---\n";
-
-    std::sort(vec.begin(), vec.end(),
-        [](int a, int b) {
-            return a > b;
-        });
-
+    std::cout << "\n=== print_elements ===\n";
     print_elements(vec);
+    print_elements(arr);
 
-    // ----------------------------
+    std::cout << "\n=== Printable ===\n";
+    print_value(123);
+    print_value(3.14);
+    print_value(std::string_view{"concepts"});
+
+    std::cout << "\n=== Comparable ===\n";
+    std::cout << "are_equal(10,10)="
+              << are_equal(10, 10) << "\n"
+              << "are_equal(\"Hello\",\"World\")="
+              << are_equal(std::string{"Hello"}, std::string{"World"}) << "\n";
+
+    std::cout << "\n=== increment ===\n";
+    int val = 5;
+    increment(val);
+    std::cout << "incremented=" << val << "\n";
+
+    std::cout << "\n=== Constrained lambda ===\n";
+    auto printer = []<Printable T>(const T& v) {
+        std::cout << "Lambda: " << v << "\n";
+    };
+    printer(999);
+    printer(std::string{"Concepts"});
+
+    std::cout << "\n=== Sort descending ===\n";
+    std::ranges::sort(vec, std::greater<>{});
+    print_elements(vec);
 
     return 0;
 }

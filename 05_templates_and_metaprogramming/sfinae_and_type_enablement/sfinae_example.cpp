@@ -1,285 +1,194 @@
-// SFINAE and Type Enablement Exercise
-// Substitution Failure Is Not An Error
-
 #include <iostream>
 #include <type_traits>
 #include <vector>
-#include <string>   
-#include <iterator> 
-#include <list>      // 🔹 ADDED
-#include <map>       // 🔹 ADDED
-#include <cassert>   // 🔹 ADDED
-#include <utility>   // 🔹 ADDED
+#include <string>
+#include <string_view>
+#include <iterator>
+#include <list>
+#include <map>
+#include <cassert>
+#include <utility>
 
-// ----------------------------------
-// SFINAE via return type
-// ----------------------------------
-template<typename T>
-std::enable_if_t<std::is_integral_v<T>>
-process(T value) {
-    std::cout << "Processing integral: " << value << "\n";
-}
-
-template<typename T>
-std::enable_if_t<std::is_floating_point_v<T>>
-process(T value) {
-    std::cout << "Processing float: " << value << "\n";
-}
-
-// ----------------------------------
-// SFINAE via template parameter
-// ----------------------------------
-template<typename T,
-         typename = std::enable_if_t<std::is_pointer_v<T>>>
-void process_pointer(T value) {
-    std::cout << "Processing pointer: " << value << "\n";
-}
-
-// ----------------------------------
-// Detection Idiom (check for .size())
-// ----------------------------------
-template<typename, typename = std::void_t<>>
-struct has_size : std::false_type {};
-
-template<typename T>
-struct has_size<T, std::void_t<decltype(std::declval<T>().size())>>
-    : std::true_type {};
-
-template<typename T>
-std::enable_if_t<has_size<T>::value>
-process_container(const T& value) {
-    std::cout << "Container size: " << value.size() << "\n";
-}
-
-// ----------------------------------
-// C++20 Concept Alternative
-// ----------------------------------
 template<typename T>
 concept Arithmetic = std::is_arithmetic_v<T>;
 
+template<typename T>
+concept Iterable = requires(T t) {
+    { std::begin(t) };
+    { std::end(t)   };
+};
+
+template<typename T>
+concept Streamable = requires(std::ostream& os, T t) {
+    { os << t } -> std::same_as<std::ostream&>;
+};
+
+template<typename T>
+concept HasSize = requires(const T& t) {
+    { t.size() } -> std::convertible_to<std::size_t>;
+};
+
+template<typename T>
+concept HasPushBack = requires(T t, typename T::value_type v) {
+    { t.push_back(v) };
+};
+
+template<Arithmetic T>
+void process(T value) {
+    if constexpr (std::is_integral_v<T>)
+        std::cout << "Integral: " << value << "\n";
+    else
+        std::cout << "Float: " << value << "\n";
+}
+
+template<typename T>
+    requires std::is_pointer_v<T>
+void process_pointer(T value) {
+    std::cout << "Pointer: " << static_cast<const void*>(value) << "\n";
+}
+
+template<HasSize T>
+void process_container(const T& value) {
+    std::cout << "Container size=" << value.size() << "\n";
+}
+
 template<Arithmetic T>
 void process_v2(T value) {
-    std::cout << "Process v2: " << value << "\n";
+    std::cout << "process_v2: " << value << "\n";
 }
 
-// ---------------- SMALL ADDITIONS ----------------
+template<Iterable T>
+void process_iterable(const T& container) {
+    std::cout << "Iterable: ";
+    for (const auto& x : container) std::cout << x << " ";
+    std::cout << "\n";
+}
 
-template<typename T>
-std::enable_if_t<!std::is_arithmetic_v<T> && !std::is_pointer_v<T>>
-process_generic(const T&) {
-    std::cout << "Processing generic type\n";
+template<HasSize T>
+void process_requires(const T& value) {
+    std::cout << "process_requires size=" << value.size() << "\n";
+}
+
+template<Streamable T>
+void print_streamable(const T& value) {
+    std::cout << "Streamable: " << value << "\n";
 }
 
 template<typename T>
-void print_type_info() {
-    std::cout << "Is integral: " << std::is_integral_v<T> << "\n";
-    std::cout << "Is floating: " << std::is_floating_point_v<T> << "\n";
-    std::cout << "Is pointer: " << std::is_pointer_v<T> << "\n";
+void smart_process(const T& value) {
+    if constexpr (Iterable<T>)
+        process_iterable(value);
+    else if constexpr (Arithmetic<T>)
+        process_v2(value);
+    else
+        std::cout << "Unknown type\n";
 }
 
 template<typename T>
-void safe_process(T value) {
+void safe_process(const T& value) {
     if constexpr (std::is_integral_v<T>)
         process(value);
     else if constexpr (std::is_floating_point_v<T>)
         process(value);
     else
-        process_generic(value);
+        std::cout << "Processing generic type\n";
 }
 
-// ======================================================
-// 🔥 NEW ADDITIONS
-// ======================================================
-
-// 🔹 SFINAE via default template argument
-template<typename T, typename = void>
-struct is_streamable : std::false_type {};
-
 template<typename T>
-struct is_streamable<T,
-    std::void_t<
-        decltype(std::declval<std::ostream&>()
-                 << std::declval<T>())
-    >
-> : std::true_type {};
-
-// 🔹 Overload only if streamable
-template<typename T>
-std::enable_if_t<is_streamable<T>::value>
-print_streamable(const T& value) {
-    std::cout << "Streamable: " << value << "\n";
+void no_deduction(typename std::type_identity<T>::type value) {
+    std::cout << "type_identity: " << value << "\n";
 }
 
-// 🔹 Detect iterable
-template<typename, typename = std::void_t<>>
-struct is_iterable : std::false_type {};
-
 template<typename T>
-struct is_iterable<T,
-    std::void_t<
-        decltype(std::begin(std::declval<T>())),
-        decltype(std::end(std::declval<T>()))
-    >
-> : std::true_type {};
-
-// 🔹 Process iterable types
-template<typename T>
-std::enable_if_t<is_iterable<T>::value>
-process_iterable(const T& container) {
-    std::cout << "Iterable elements: ";
-
-    for (const auto& x : container)
-        std::cout << x << " ";
-
-    std::cout << "\n";
+void print_type_info() {
+    std::cout << "integral="  << std::boolalpha << std::is_integral_v<T>         << " "
+              << "floating="  << std::is_floating_point_v<T> << " "
+              << "pointer="   << std::is_pointer_v<T>        << "\n";
 }
 
-// 🔹 Hybrid: if constexpr + SFINAE
-template<typename T>
-void smart_process(const T& value) {
-
-    if constexpr (is_iterable<T>::value) {
-        process_iterable(value);
-    }
-    else if constexpr (std::is_arithmetic_v<T>) {
-        process_v2(value);
-    }
-    else {
-        std::cout << "Unknown type\n";
-    }
-}
-
-// 🔹 C++20 requires-expression version
-template<typename T>
-requires requires(T t) { t.size(); }
-void process_requires(const T& value) {
-    std::cout << "Requires size(): "
-              << value.size() << "\n";
-}
-
-// 🔹 type_identity trick
-template<typename T>
-void no_deduction(
-    typename std::type_identity<T>::type value) {
-
-    std::cout << "No deduction type used: "
-              << value << "\n";
-}
-
-// ======================================================
-// EXTRA SMALL ADDITIONS
-// ======================================================
-
-// Detect push_back support
-template<typename, typename = std::void_t<>>
-struct has_push_back : std::false_type {};
-
-template<typename T>
-struct has_push_back<T,
-    std::void_t<
-        decltype(
-            std::declval<T>().push_back(
-                std::declval<typename T::value_type>()
-            )
-        )
-    >
-> : std::true_type {};
-
-// Print whether container supports push_back
 template<typename T>
 void check_push_back_support() {
-
-    if constexpr (has_push_back<T>::value)
-        std::cout << "Supports push_back\n";
+    if constexpr (HasPushBack<T>)
+        std::cout << "supports push_back\n";
     else
-        std::cout << "Does NOT support push_back\n";
+        std::cout << "does NOT support push_back\n";
 }
 
-// Arithmetic-only sum
-template<typename T>
-std::enable_if_t<std::is_arithmetic_v<T>, T>
-add_values(T a, T b) {
-    return a + b;
-}
-
-// Pointer checker
 template<typename T>
 void check_pointer() {
-
     if constexpr (std::is_pointer_v<T>)
-        std::cout << "This is a pointer type\n";
+        std::cout << "pointer type\n";
     else
-        std::cout << "This is NOT a pointer type\n";
+        std::cout << "not a pointer type\n";
 }
 
-// ======================================================
-// Main
-// ======================================================
-int main() {
+template<Arithmetic T>
+[[nodiscard]] constexpr T add_values(T a, T b) noexcept { return a + b; }
 
+static_assert(add_values(2, 3) == 5);
+static_assert(add_values(1.5, 2.5) == 4.0);
+
+int main() {
+    std::cout << "=== process (integral / float) ===\n";
     process(42);
     process(3.14);
 
+    std::cout << "\n=== process_pointer ===\n";
     int x = 10;
     process_pointer(&x);
 
-    std::vector<int> vec = {1, 2, 3};
+    std::cout << "\n=== process_container ===\n";
+    const std::vector<int> vec{1, 2, 3};
     process_container(vec);
 
+    std::cout << "\n=== process_v2 ===\n";
     process_v2(100);
     process_v2(2.71);
 
-    std::cout << "\n--- Extra Tests ---\n";
-
+    std::cout << "\n=== safe_process ===\n";
     safe_process(50);
     safe_process(5.5);
-    safe_process(std::string("hello"));
+    safe_process(std::string{"hello"});
 
+    std::cout << "\n=== print_type_info ===\n";
     print_type_info<int>();
     print_type_info<double>();
     print_type_info<int*>();
 
-    // ======================================================
-    // 🔥 NEW USAGE
-    // ======================================================
-
-    std::cout << "\n--- Advanced SFINAE Tests ---\n";
-
+    std::cout << "\n=== print_streamable ===\n";
     print_streamable(123);
-    print_streamable(std::string("SFINAE"));
+    print_streamable(std::string{"SFINAE"});
 
+    std::cout << "\n=== process_iterable ===\n";
     process_iterable(vec);
 
+    std::cout << "\n=== smart_process ===\n";
     smart_process(42);
     smart_process(vec);
-    smart_process(std::string("Hi"));
+    smart_process(std::string{"Hi"});
 
+    std::cout << "\n=== process_requires ===\n";
     process_requires(vec);
 
+    std::cout << "\n=== no_deduction ===\n";
     no_deduction<int>(10);
 
-    // ======================================================
-    // EXTRA SMALL USAGE
-    // ======================================================
-
-    std::cout << "\n--- Extra Utilities ---\n";
-
+    std::cout << "\n=== check_push_back_support ===\n";
     check_push_back_support<std::vector<int>>();
     check_push_back_support<std::map<int, int>>();
 
-    std::cout << "Add values: "
-              << add_values(5, 7) << "\n";
+    std::cout << "\n=== add_values ===\n";
+    std::cout << "add_values(5,7)=" << add_values(5, 7) << "\n";
 
+    std::cout << "\n=== check_pointer ===\n";
     check_pointer<int>();
     check_pointer<int*>();
 
-    std::list<int> lst = {4, 5, 6};
+    std::cout << "\n=== smart_process (list) ===\n";
+    const std::list<int> lst{4, 5, 6};
     smart_process(lst);
 
-    // ✅ Runtime validation
     assert(add_values(2, 3) == 5);
-
-    // ======================================================
 
     return 0;
 }

@@ -1,275 +1,154 @@
-// Higher-Order Functions Exercise
-// Functions that work with other functions
-
 #include <iostream>
 #include <vector>
 #include <algorithm>
 #include <numeric>
 #include <functional>
-#include <cassert>   // 🔹 ADDED
-#include <utility>   // 🔹 ADDED
+#include <ranges>
+#include <span>
+#include <string_view>
+#include <cassert>
+#include <utility>
+#include <concepts>
+#include <stdexcept>
 
-int add(int a, int b) { return a + b; }
-int multiply(int a, int b) { return a * b; }
+[[nodiscard]] int add(int a, int b)      noexcept { return a + b;     }
+[[nodiscard]] int multiply(int a, int b) noexcept { return a * b;     }
 
-// ----------------------------------
-// Higher-order function: applies a binary operation
-// ----------------------------------
-template<typename BinOp>
-int reduce(const std::vector<int>& values, BinOp op) {
-    int result = values[0];
-    for (size_t i = 1; i < values.size(); ++i) {
-        result = op(result, values[i]);
-    }
-    return result;
+template<typename T, std::invocable<T, T> BinOp>
+[[nodiscard]] T reduce(std::span<const T> values, BinOp op, T init) {
+    return std::accumulate(values.begin(), values.end(), init, std::move(op));
 }
 
-// ----------------------------------
-// Generic reduce (type-independent)
-// ----------------------------------
-template<typename T, typename BinOp>
-T reduce_generic(const std::vector<T>& values, BinOp op) {
-    T result = values[0];
-    for (size_t i = 1; i < values.size(); ++i) {
-        result = op(result, values[i]);
-    }
-    return result;
-}
-
-// ----------------------------------
-// Function returning a function
-// ----------------------------------
-std::function<int(int)> make_multiplier(int factor) {
-    return [factor](int x) {
-        return x * factor;
-    };
-}
-
-// 🔹 NEW: Higher-order filter function
-template<typename Pred>
-std::vector<int> filter(const std::vector<int>& values, Pred p) {
-    std::vector<int> result;
-    for (int v : values) {
-        if (p(v)) result.push_back(v);
-    }
-    return result;
-}
-
-// 🔹 NEW: Apply function to each element
-template<typename Func>
-void for_each_apply(std::vector<int>& values, Func f) {
-    for (auto& v : values) {
-        v = f(v);
-    }
-}
-
-// ======================================================
-// 🔥 NEW ADDITIONS (ADVANCED BUT SMALL)
-// ======================================================
-
-// 🔹 map (functional transform)
-template<typename Func>
-std::vector<int> map(const std::vector<int>& values, Func f) {
-    std::vector<int> result(values.size());
-    std::transform(values.begin(), values.end(), result.begin(), f);
-    return result;
-}
-
-// 🔹 compose two functions: f(g(x))
-template<typename F, typename G>
-auto compose(F f, G g) {
-    return [=](auto x) {
-        return f(g(x));
-    };
-}
-
-// 🔹 pipeline-style chaining
-template<typename T, typename Func>
-auto pipe(T value, Func f) {
-    return f(value);
-}
-
-// 🔹 combine predicates (AND)
-template<typename P1, typename P2>
-auto and_predicate(P1 p1, P2 p2) {
-    return [=](int x) {
-        return p1(x) && p2(x);
-    };
-}
-
-// 🔹 safe reduce (handles empty vector)
-template<typename BinOp>
-int safe_reduce(const std::vector<int>& values, BinOp op, int init = 0) {
+template<typename T, std::invocable<T, T> BinOp>
+[[nodiscard]] T safe_reduce(std::span<const T> values, BinOp op, T init = T{}) {
     if (values.empty()) return init;
-    return reduce(values, op);
+    return reduce(values, std::move(op), init);
 }
 
-// ======================================================
-// 🔥 EXTRA SMALL ADDITIONS
-// ======================================================
+[[nodiscard]] auto make_multiplier(int factor) {
+    return [factor](int x) noexcept { return x * factor; };
+}
 
-// 🔹 negate transformation
-template<typename Func>
-std::vector<int> transform_values(const std::vector<int>& values, Func f) {
-    std::vector<int> result;
-    for (int v : values) {
-        result.push_back(f(v));
-    }
+template<typename T, std::invocable<T> Func>
+[[nodiscard]] std::vector<T> map(std::span<const T> values, Func f) {
+    std::vector<T> result(values.size());
+    std::ranges::transform(values, result.begin(), std::move(f));
     return result;
 }
 
-// 🔹 function repeater
-template<typename Func>
+template<typename T, std::predicate<T> Pred>
+[[nodiscard]] std::vector<T> filter(std::span<const T> values, Pred p) {
+    std::vector<T> result;
+    std::ranges::copy_if(values, std::back_inserter(result), std::move(p));
+    return result;
+}
+
+template<std::invocable<int> F, std::invocable<int> G>
+[[nodiscard]] auto compose(F f, G g) {
+    return [f = std::move(f), g = std::move(g)](auto x) {
+        return std::invoke(f, std::invoke(g, x));
+    };
+}
+
+template<typename T, std::invocable<T> Func>
+[[nodiscard]] auto pipe(T value, Func f) {
+    return std::invoke(std::move(f), std::move(value));
+}
+
+template<std::predicate<int> P1, std::predicate<int> P2>
+[[nodiscard]] auto and_predicate(P1 p1, P2 p2) {
+    return [p1 = std::move(p1), p2 = std::move(p2)](int x) {
+        return std::invoke(p1, x) && std::invoke(p2, x);
+    };
+}
+
+template<std::predicate<int> Pred>
+[[nodiscard]] bool any_match(std::span<const int> values, Pred p) {
+    return std::ranges::any_of(values, std::move(p));
+}
+
+template<std::invocable<int> Func>
 void repeat_action(int times, Func f) {
-    for (int i = 0; i < times; ++i) {
-        f(i);
-    }
+    for (int i = 0; i < times; ++i)
+        std::invoke(f, i);
 }
 
-// 🔹 generic printer
-void print_vector(const std::vector<int>& values,
-                  const std::string& label) {
+void print_vector(std::span<const int> values, std::string_view label) {
     std::cout << label;
-    for (int v : values)
-        std::cout << v << " ";
-    std::cout << "\n";
+    for (int v : values) std::cout << v << ' ';
+    std::cout << '\n';
 }
-
-// 🔹 higher-order checker
-template<typename Pred>
-bool any_match(const std::vector<int>& values, Pred p) {
-    for (int v : values) {
-        if (p(v))
-            return true;
-    }
-    return false;
-}
-
-// ======================================================
-// Main
-// ======================================================
 
 int main() {
+    const std::vector<int> values = {1, 2, 3, 4, 5};
 
-    std::vector<int> values = {1, 2, 3, 4, 5};
+    const int sum     = reduce<int>(values, add,      0);
+    const int product = reduce<int>(values, multiply, 1);
 
-    int sum = reduce(values, add);
-    int product = reduce(values, multiply);
+    std::cout << "Sum:     " << sum     << '\n';
+    std::cout << "Product: " << product << '\n';
 
-    std::cout << "Sum: " << sum << "\n";
-    std::cout << "Product: " << product << "\n";
+    const int max_val = reduce<int>(values,
+        [](int a, int b) noexcept { return std::max(a, b); }, values.front());
+    std::cout << "Max: " << max_val << '\n';
 
-    int max_val = reduce(values,
-        [](int a, int b) { return std::max(a, b); });
-
-    std::cout << "Max: " << max_val << "\n";
-
-    double avg = reduce_generic<double>(
-        {1.0, 2.0, 3.0},
-        [](double a, double b) { return a + b; }
-    ) / 3.0;
-
-    std::cout << "Average: " << avg << "\n";
-
-    int std_sum = std::accumulate(
-        values.begin(), values.end(), 0);
+    const std::vector<double> dbls = {1.0, 2.0, 3.0};
+    const double avg = reduce<double>(dbls,
+        [](double a, double b) noexcept { return a + b; }, 0.0) / 3.0;
+    std::cout << "Average: " << avg << '\n';
 
     std::cout << "std::accumulate sum: "
-              << std_sum << "\n";
+              << std::accumulate(values.begin(), values.end(), 0) << '\n';
 
-    std::vector<int> doubled(values.size());
-    std::transform(values.begin(),
-                   values.end(),
-                   doubled.begin(),
-                   make_multiplier(2));
+    const auto doubled = map<int>(values, make_multiplier(2));
+    print_vector(doubled, "Doubled: ");
 
-    std::cout << "Doubled values: ";
-    for (int v : doubled)
-        std::cout << v << " ";
-    std::cout << "\n";
+    const auto evens = filter<int>(values, [](int x) noexcept { return x % 2 == 0; });
+    print_vector(evens, "Evens: ");
 
-    auto evens = filter(values, [](int x) { return x % 2 == 0; });
-    std::cout << "Even values: ";
-    for (int v : evens)
-        std::cout << v << " ";
-    std::cout << "\n";
+    auto squared_vals = map<int>(values, [](int x) noexcept { return x * x; });
+    print_vector(squared_vals, "Squared: ");
 
-    for_each_apply(values, [](int x) { return x * x; });
-    std::cout << "Squared values: ";
-    for (int v : values)
-        std::cout << v << " ";
-    std::cout << "\n";
-
-    int custom = reduce(values, [](int a, int b) {
-        return a + b * 2;
-    });
-    std::cout << "Custom reduce result: " << custom << "\n";
-
-    // ======================================================
-    // 🔥 NEW USAGE
-    // ======================================================
+    const int custom = reduce<int>(values,
+        [](int a, int b) noexcept { return a + b * 2; }, 0);
+    std::cout << "Custom reduce: " << custom << '\n';
 
     std::cout << "\n--- Advanced Functional Patterns ---\n";
 
-    // map
-    auto tripled = map(values, [](int x) { return x * 3; });
-    std::cout << "Tripled: ";
-    for (int v : tripled) std::cout << v << " ";
-    std::cout << "\n";
+    const auto tripled = map<int>(values, [](int x) noexcept { return x * 3; });
+    print_vector(tripled, "Tripled: ");
 
-    // compose
-    auto square = [](int x) { return x * x; };
-    auto double_then_square = compose(square, make_multiplier(2));
+    const auto double_then_square = compose(
+        [](int x) noexcept { return x * x; },
+        make_multiplier(2));
+    std::cout << "compose(double->square)(5): " << double_then_square(5) << '\n';
 
-    std::cout << "compose(double->square)(5): "
-              << double_then_square(5) << "\n";
+    std::cout << "Pipe result: " << pipe(5, make_multiplier(3)) << '\n';
 
-    // pipeline
-    int piped = pipe(5, make_multiplier(3));
-    std::cout << "Pipe result: " << piped << "\n";
+    const auto even_and_gt10 = and_predicate(
+        [](int x) noexcept { return x % 2 == 0; },
+        [](int x) noexcept { return x > 10; });
+    print_vector(filter<int>(squared_vals, even_and_gt10), "Even and >10: ");
 
-    // combined predicate
-    auto even_and_gt10 = and_predicate(
-        [](int x){ return x % 2 == 0; },
-        [](int x){ return x > 10; }
-    );
-
-    auto filtered = filter(values, even_and_gt10);
-    std::cout << "Even and >10: ";
-    for (int v : filtered) std::cout << v << " ";
-    std::cout << "\n";
-
-    // safe reduce
-    std::vector<int> empty;
-    std::cout << "Safe reduce (empty): "
-              << safe_reduce(empty, add, 0) << "\n";
-
-    // ======================================================
-    // 🔥 EXTRA NEW USAGE
-    // ======================================================
+    const std::vector<int> empty;
+    std::cout << "Safe reduce (empty): " << safe_reduce<int>(empty, add) << '\n';
 
     std::cout << "\n--- Extra Higher-Order Tests ---\n";
 
-    auto negatives = transform_values(values,
-        [](int x) { return -x; });
+    print_vector(map<int>(values, [](int x) noexcept { return -x; }), "Negatives: ");
 
-    print_vector(negatives, "Negatives: ");
-
-    repeat_action(3, [](int i) {
-        std::cout << "Repeated call #" << i + 1 << "\n";
-    });
-
-    bool has_large = any_match(values,
-        [](int x) { return x > 20; });
+    repeat_action(3, [](int i) { std::cout << "Repeated call #" << (i + 1) << '\n'; });
 
     std::cout << "Any value > 20? "
-              << (has_large ? "Yes" : "No") << "\n";
+              << (any_match(squared_vals, [](int x) noexcept { return x > 20; }) ? "Yes" : "No")
+              << '\n';
 
-    // 🔹 validation
     assert(sum == 15);
     assert(product == 120);
+    assert(max_val == 5);
+    assert(safe_reduce<int>(empty, add) == 0);
+    assert(double_then_square(5) == 100);
 
-    // ======================================================
-
+    std::cout << "\nAll assertions passed.\n";
     return 0;
 }

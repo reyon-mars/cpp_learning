@@ -1,283 +1,269 @@
-// Atomics and Memory Ordering Exercise
-// Atomic operations and memory barriers
-
 #include <iostream>
+#include <future>
 #include <thread>
-#include <atomic>
-#include <vector>
 #include <chrono>
-#include <numeric>   // 🔹 ADDED
-#include <mutex>     // 🔹 ADDED
+#include <vector>
+#include <numeric>
+#include <functional>
+#include <mutex>
+#include <concepts>
+#include <format>
+#include <span>
+#include <ranges>
+#include <stop_token>
+#include <latch>
+#include <barrier>
+#include <semaphore>
+#include <atomic>
+#include <optional>
 
-std::atomic<int> counter(0);
-std::atomic<bool> ready(false);
-
-// Spinlock using atomic_flag
-std::atomic_flag lock_flag = ATOMIC_FLAG_INIT;
-
-void spinlock() {
-    while (lock_flag.test_and_set(std::memory_order_acquire)) {
-        std::this_thread::yield();
-    }
+[[nodiscard]] int heavy_computation(int n) noexcept {
+    return n * (n + 1) / 2;
 }
 
-void unlock() {
-    lock_flag.clear(std::memory_order_release);
+[[nodiscard]] int delayed_task(int n) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    return heavy_computation(n);
 }
 
-void worker() {
-    // Wait until main thread signals readiness
-    while (!ready.load(std::memory_order_acquire)) {
-        std::this_thread::yield();
-    }
-
-    for (int i = 0; i < 100; ++i) {
-        counter.fetch_add(1, std::memory_order_relaxed);
-    }
+[[nodiscard]] std::future<int> safe_async_call(int n) {
+    return std::async(std::launch::async, [n]() noexcept {
+        return heavy_computation(n);
+    });
 }
 
-void protected_increment() {
-    spinlock();
-    counter++;
-    unlock();
+[[nodiscard]] std::future<int> promise_example(int n) {
+    std::promise<int> prom;
+    auto fut = prom.get_future();
+
+    std::thread([n, p = std::move(prom)]() mutable {
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        p.set_value(heavy_computation(n));
+    }).detach();
+
+    return fut;
 }
 
-// ---------------- SMALL ADDITIONS ----------------
+void shared_future_demo() {
+    std::promise<int> prom;
+    std::shared_future<int> sf = prom.get_future().share();
 
-// Demonstrate sequential consistency
-void seq_cst_increment() {
-    counter.fetch_add(1, std::memory_order_seq_cst);
+    std::thread([p = std::move(prom)]() mutable {
+        p.set_value(123);
+    }).detach();
+
+    const auto val = sf.get();
+    std::cout << std::format("Shared future value 1: {}\n", val);
+    std::cout << std::format("Shared future value 2: {}\n", val);
 }
 
-// Demonstrate acquire-release pair
-std::atomic<int> shared_data(0);
-
-void producer() {
-    shared_data.store(42, std::memory_order_release);
-    ready.store(true, std::memory_order_release);
-}
-
-void consumer() {
-    while (!ready.load(std::memory_order_acquire)) {
-        std::this_thread::yield();
-    }
-    std::cout << "Consumer sees value: "
-              << shared_data.load(std::memory_order_acquire) << "\n";
-}
-
-// ---------------- EXTRA ADDITIONS ----------------
-
-// Relaxed load/store demo
-void relaxed_demo() {
-    std::atomic<int> x(0);
-
-    std::thread t1([&]() {
-        x.store(10, std::memory_order_relaxed);
+void timed_wait_demo() {
+    auto fut = std::async(std::launch::async, []() {
+        std::this_thread::sleep_for(std::chrono::milliseconds(150));
+        return 77;
     });
 
-    std::thread t2([&]() {
-        std::cout << "Relaxed read (may be 0 or 10): "
-                  << x.load(std::memory_order_relaxed) << "\n";
-    });
+    if (fut.wait_for(std::chrono::milliseconds(50)) == std::future_status::timeout)
+        std::cout << "Still waiting...\n";
 
-    t1.join();
-    t2.join();
+    std::cout << std::format("Timed wait result: {}\n", fut.get());
 }
 
-// compare_exchange_weak loop example
-void cas_loop_demo() {
-    int expected = counter.load();
-    while (!counter.compare_exchange_weak(expected, expected + 1)) {
-        // retry until success
+[[nodiscard]] int parallel_sum(std::span<const int> values) {
+    if (values.empty()) return 0;
+
+    const auto mid = values.size() / 2;
+
+    auto left  = std::async(std::launch::async, [=] {
+        return std::reduce(values.begin(), values.begin() + mid, 0);
+    });
+    auto right = std::async(std::launch::async, [=] {
+        return std::reduce(values.begin() + mid, values.end(), 0);
+    });
+
+    return left.get() + right.get();
+}
+
+[[nodiscard]] std::future<long long> async_factorial(int n) {
+    return std::async(std::launch::async, [n]() noexcept -> long long {
+        long long result = 1;
+        for (int i = 2; i <= n; ++i)
+            result *= i;
+        return result;
+    });
+}
+
+std::mutex cout_mutex;
+
+void safe_print(std::string_view msg) {
+    std::lock_guard lock(cout_mutex);
+    std::cout << std::format("{}\n", msg);
+}
+
+template <std::invocable<> Fn>
+[[nodiscard]] std::future<std::invoke_result_t<Fn>> async_guarded(Fn&& fn) {
+    return std::async(std::launch::async,
+        [f = std::forward<Fn>(fn)]() mutable -> std::invoke_result_t<Fn> {
+            try {
+                return std::invoke(f);
+            } catch (const std::exception& e) {
+                safe_print(std::format("Exception in async_guarded: {}", e.what()));
+                if constexpr (std::is_same_v<std::invoke_result_t<Fn>, int>)
+                    return -1;
+                else
+                    throw;
+            }
+        }
+    );
+}
+
+template <std::invocable<> Fn>
+[[nodiscard]] auto batch_async(std::span<Fn> fns) {
+    using R = std::invoke_result_t<Fn>;
+    std::vector<std::future<R>> futures;
+    futures.reserve(fns.size());
+    for (auto& fn : fns)
+        futures.emplace_back(std::async(std::launch::async, std::move(fn)));
+    return futures;
+}
+
+void latch_demo() {
+    constexpr int worker_count = 3;
+    std::latch ready(worker_count);
+    std::atomic<int> total{0};
+
+    std::vector<std::jthread> workers;
+    workers.reserve(worker_count);
+
+    for (int i = 1; i <= worker_count; ++i) {
+        workers.emplace_back([&, i] {
+            total.fetch_add(heavy_computation(i * 10), std::memory_order_relaxed);
+            ready.count_down();
+        });
     }
-    std::cout << "CAS loop increment done\n";
+
+    ready.wait();
+    std::cout << std::format("Latch demo total: {}\n", total.load());
 }
 
-// Memory fence example
-void fence_demo() {
-    std::atomic<int> a(0), b(0);
+void semaphore_demo() {
+    std::counting_semaphore<3> sem(3);
+    std::atomic<int> concurrent{0};
+    std::atomic<int> max_concurrent{0};
 
-    std::thread t1([&]() {
-        a.store(1, std::memory_order_relaxed);
-        std::atomic_thread_fence(std::memory_order_release);
-        b.store(1, std::memory_order_relaxed);
-    });
+    auto task = [&](int id) {
+        sem.acquire();
+        const int c = concurrent.fetch_add(1, std::memory_order_acq_rel) + 1;
+        int expected = max_concurrent.load(std::memory_order_relaxed);
+        while (c > expected &&
+               !max_concurrent.compare_exchange_weak(expected, c,
+                                                      std::memory_order_relaxed));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        concurrent.fetch_sub(1, std::memory_order_acq_rel);
+        sem.release();
+        safe_print(std::format("Semaphore task {} done", id));
+    };
 
-    std::thread t2([&]() {
-        while (b.load(std::memory_order_relaxed) == 0);
-        std::atomic_thread_fence(std::memory_order_acquire);
-        std::cout << "Fence ensures a = "
-                  << a.load(std::memory_order_relaxed) << "\n";
-    });
-
-    t1.join();
-    t2.join();
+    std::vector<std::jthread> threads;
+    threads.reserve(5);
+    for (int i = 1; i <= 5; ++i)
+        threads.emplace_back(task, i);
 }
-
-// ======================================================
-// 🔥 NEW SMALL ADDITIONS
-// ======================================================
-
-// Atomic countdown demo
-std::atomic<int> countdown(5);
-
-void countdown_worker() {
-    while (true) {
-        int old = countdown.fetch_sub(1, std::memory_order_acq_rel);
-
-        if (old <= 0)
-            break;
-
-        std::cout << "Countdown: " << old - 1 << "\n";
-    }
-}
-
-// Atomic boolean toggle
-std::atomic<bool> toggle_flag(false);
-
-void toggle_demo() {
-    bool old = toggle_flag.exchange(true, std::memory_order_acq_rel);
-
-    std::cout << "Old toggle value: "
-              << old << "\n";
-
-    std::cout << "New toggle value: "
-              << toggle_flag.load() << "\n";
-}
-
-// Atomic statistics collector
-std::atomic<int> stat_sum(0);
-
-void stats_worker(int value) {
-    stat_sum.fetch_add(value, std::memory_order_relaxed);
-}
-
-// ------------------------------------------------
-
-// ---------------- MAIN ----------------
 
 int main() {
+    auto future1 = std::async(std::launch::async, heavy_computation, 1000);
+    auto future2 = std::async(std::launch::async, heavy_computation, 2000);
 
-    std::thread t1(worker);
-    std::thread t2(worker);
+    std::cout << "Computations running asynchronously...\n";
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    if (future1.wait_for(std::chrono::milliseconds(10)) == std::future_status::timeout)
+        std::cout << "future1 still running...\n";
 
-    ready.store(true, std::memory_order_release);
+    std::cout << std::format("Result 1: {}\n", future1.get());
+    std::cout << std::format("Result 2: {}\n", future2.get());
 
-    t1.join();
-    t2.join();
-
-    std::cout << "Final counter (relaxed): "
-              << counter.load(std::memory_order_seq_cst) << "\n";
-
-
-    // ---------------- compare_exchange example ----------------
-
-    int expected = counter.load();
-    int desired = expected + 10;
-
-    if (counter.compare_exchange_strong(expected, desired)) {
-        std::cout << "compare_exchange succeeded\n";
-    } else {
-        std::cout << "compare_exchange failed\n";
+    std::cout << "\n--- packaged_task ---\n";
+    {
+        std::packaged_task<int(int)> task(heavy_computation);
+        auto future3 = task.get_future();
+        std::thread worker(std::move(task), 500);
+        std::cout << "Waiting for packaged_task result...\n";
+        std::cout << std::format("Packaged task result: {}\n", future3.get());
+        worker.join();
     }
 
-    std::cout << "Counter after CAS: " << counter.load() << "\n";
-
-
-    // ---------------- spinlock example ----------------
-
-    std::vector<std::thread> threads;
-
-    for (int i = 0; i < 5; ++i) {
-        threads.emplace_back(protected_increment);
+    std::cout << "\n--- lambda async ---\n";
+    {
+        auto future4 = std::async(std::launch::async, []() noexcept {
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+            return 42;
+        });
+        std::cout << std::format("Lambda async result: {}\n", future4.get());
     }
 
-    for (auto& t : threads) {
-        t.join();
+    std::cout << "\n--- delayed & safe async ---\n";
+    std::cout << std::format("Delayed task result: {}\n",
+                             std::async(std::launch::async, delayed_task, 300).get());
+    std::cout << std::format("Safe async result: {}\n", safe_async_call(400).get());
+
+    std::cout << "\n--- batch async ---\n";
+    {
+        std::vector<std::future<int>> futures;
+        futures.reserve(3);
+        for (int i : {100, 200, 300})
+            futures.emplace_back(std::async(std::launch::async, heavy_computation, i));
+
+        std::cout << "Batch async results: ";
+        for (auto& f : futures)
+            std::cout << std::format("{} ", f.get());
+        std::cout << '\n';
     }
-
-    std::cout << "Counter after spinlock increments: "
-              << counter.load() << "\n";
-
-
-    // ---------------- ADDED USAGE ----------------
-
-    // Sequential consistency demo
-    seq_cst_increment();
-    std::cout << "Counter after seq_cst increment: "
-              << counter.load() << "\n";
-
-    // Producer-consumer demo
-    ready.store(false);  // reset flag
-
-    std::thread prod(producer);
-    std::thread cons(consumer);
-
-    prod.join();
-    cons.join();
-
-    // ---------------- EXTRA USAGE ----------------
 
     std::cout << "\n--- Extra Tests ---\n";
 
-    // Relaxed ordering demo
-    relaxed_demo();
+    std::cout << std::format("Promise result: {}\n", promise_example(150).get());
+    shared_future_demo();
+    timed_wait_demo();
 
-    // CAS loop demo
-    cas_loop_demo();
-    std::cout << "Counter after CAS loop: "
-              << counter.load() << "\n";
+    std::cout << "\n--- Advanced Async Features ---\n";
 
-    // Memory fence demo
-    fence_demo();
+    const std::vector<int> nums = {1,2,3,4,5,6,7,8,9,10};
+    std::cout << std::format("Parallel sum result: {}\n", parallel_sum(nums));
 
-    // ------------------------------------------------
+    std::cout << std::format("Factorial async result: {}\n", async_factorial(5).get());
 
-    // ======================================================
-    // 🔥 NEW ADVANCED TESTS
-    // ======================================================
-
-    std::cout << "\n--- Advanced Atomic Features ---\n";
-
-    // Countdown demo
-    std::thread c1(countdown_worker);
-    std::thread c2(countdown_worker);
-
-    c1.join();
-    c2.join();
-
-    std::cout << "Final countdown value: "
-              << countdown.load() << "\n";
-
-    // Toggle demo
-    toggle_demo();
-
-    // Atomic statistics demo
-    std::vector<std::thread> stat_threads;
-
-    for (int i = 1; i <= 5; ++i) {
-        stat_threads.emplace_back(stats_worker, i * 10);
+    {
+        auto p1 = std::async(std::launch::async, [] { safe_print("Async printer 1 executed"); });
+        auto p2 = std::async(std::launch::async, [] { safe_print("Async printer 2 executed"); });
+        p1.wait();
+        p2.wait();
     }
 
-    for (auto& t : stat_threads) {
-        t.join();
+    {
+        auto chained = async_guarded([] { return heavy_computation(50) * 2; });
+        std::cout << std::format("Chained async result: {}\n", chained.get());
     }
 
-    std::cout << "Atomic stats sum: "
-              << stat_sum.load() << "\n";
+    std::cout << "\n--- C++20 Latch ---\n";
+    latch_demo();
 
-    // fetch_sub example
-    int previous = counter.fetch_sub(5, std::memory_order_seq_cst);
+    std::cout << "\n--- C++20 Semaphore ---\n";
+    semaphore_demo();
 
-    std::cout << "Counter before fetch_sub: "
-              << previous << "\n";
-
-    std::cout << "Counter after fetch_sub: "
-              << counter.load() << "\n";
-
-    // ======================================================
+    std::cout << "\n--- jthread with stop_token ---\n";
+    {
+        std::atomic<int> count{0};
+        std::jthread worker([&](std::stop_token st) {
+            while (!st.stop_requested()) {
+                count.fetch_add(1, std::memory_order_relaxed);
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            }
+        });
+        std::this_thread::sleep_for(std::chrono::milliseconds(55));
+        worker.request_stop();
+        worker.join();
+        std::cout << std::format("jthread incremented {} times before stop\n", count.load());
+    }
 
     return 0;
 }

@@ -1,49 +1,40 @@
-// Async Programming Exercise
-// std::async and packaged_task
-
 #include <iostream>
 #include <future>
 #include <thread>
 #include <chrono>
-#include <vector>      // ✅ ADDED
-#include <numeric>     // 🔹 ADDED
-#include <functional>  // 🔹 ADDED
-#include <mutex>       // 🔹 ADDED
+#include <vector>
+#include <numeric>
+#include <functional>
+#include <mutex>
+#include <concepts>
+#include <format>
+#include <span>
+#include <ranges>
+#include <stop_token>
+#include <latch>
+#include <barrier>
+#include <semaphore>
+#include <atomic>
+#include <optional>
 
-int heavy_computation(int n) {
-    int sum = 0;
-    for (int i = 0; i <= n; ++i) {
-        sum += i;
-    }
-    return sum;
+[[nodiscard]] int heavy_computation(int n) noexcept {
+    return n * (n + 1) / 2;
 }
 
-// ---------------- SMALL ADDITIONS ----------------
-
-// Delayed computation
-int delayed_task(int n) {
+[[nodiscard]] int delayed_task(int n) {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     return heavy_computation(n);
 }
 
-// Safe async wrapper
-std::future<int> safe_async_call(int n) {
-    return std::async(std::launch::async, [n]() {
-        try {
-            return heavy_computation(n);
-        } catch (...) {
-            std::cout << "Exception in async task\n";
-            return -1;
-        }
+[[nodiscard]] std::future<int> safe_async_call(int n) {
+    return std::async(std::launch::async, [n]() noexcept {
+        return heavy_computation(n);
     });
 }
 
-// ---------------- EXTRA ADDITIONS ----------------
-
-// Promise example
-std::future<int> promise_example(int n) {
+[[nodiscard]] std::future<int> promise_example(int n) {
     std::promise<int> prom;
-    std::future<int> fut = prom.get_future();
+    auto fut = prom.get_future();
 
     std::thread([n, p = std::move(prom)]() mutable {
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
@@ -53,7 +44,6 @@ std::future<int> promise_example(int n) {
     return fut;
 }
 
-// Shared future example
 void shared_future_demo() {
     std::promise<int> prom;
     std::shared_future<int> sf = prom.get_future().share();
@@ -62,193 +52,218 @@ void shared_future_demo() {
         p.set_value(123);
     }).detach();
 
-    std::cout << "Shared future value 1: " << sf.get() << "\n";
-    std::cout << "Shared future value 2: " << sf.get() << "\n";
+    const auto val = sf.get();
+    std::cout << std::format("Shared future value 1: {}\n", val);
+    std::cout << std::format("Shared future value 2: {}\n", val);
 }
 
-// Timed wait example
 void timed_wait_demo() {
     auto fut = std::async(std::launch::async, []() {
         std::this_thread::sleep_for(std::chrono::milliseconds(150));
         return 77;
     });
 
-    if (fut.wait_for(std::chrono::milliseconds(50)) == std::future_status::timeout) {
+    if (fut.wait_for(std::chrono::milliseconds(50)) == std::future_status::timeout)
         std::cout << "Still waiting...\n";
-    }
 
-    std::cout << "Timed wait result: " << fut.get() << "\n";
+    std::cout << std::format("Timed wait result: {}\n", fut.get());
 }
 
-// ======================================================
-// 🔥 NEW SMALL ADDITIONS
-// ======================================================
+[[nodiscard]] int parallel_sum(std::span<const int> values) {
+    if (values.empty()) return 0;
 
-// Parallel sum using async
-int parallel_sum(const std::vector<int>& values) {
+    const auto mid = values.size() / 2;
 
-    auto mid = values.size() / 2;
-
-    auto future_left = std::async(std::launch::async, [&]() {
-        return std::accumulate(values.begin(),
-                               values.begin() + mid,
-                               0);
+    auto left  = std::async(std::launch::async, [=] {
+        return std::reduce(values.begin(), values.begin() + mid, 0);
+    });
+    auto right = std::async(std::launch::async, [=] {
+        return std::reduce(values.begin() + mid, values.end(), 0);
     });
 
-    auto future_right = std::async(std::launch::async, [&]() {
-        return std::accumulate(values.begin() + mid,
-                               values.end(),
-                               0);
-    });
-
-    return future_left.get() + future_right.get();
+    return left.get() + right.get();
 }
 
-// Async factorial
-std::future<int> async_factorial(int n) {
-    return std::async(std::launch::async, [n]() {
-        int result = 1;
-        for (int i = 1; i <= n; ++i)
+[[nodiscard]] std::future<long long> async_factorial(int n) {
+    return std::async(std::launch::async, [n]() noexcept -> long long {
+        long long result = 1;
+        for (int i = 2; i <= n; ++i)
             result *= i;
         return result;
     });
 }
 
-// Mutex-protected async printing
 std::mutex cout_mutex;
 
-void safe_print(const std::string& msg) {
-    std::lock_guard<std::mutex> lock(cout_mutex);
-    std::cout << msg << "\n";
+void safe_print(std::string_view msg) {
+    std::lock_guard lock(cout_mutex);
+    std::cout << std::format("{}\n", msg);
 }
 
-// ------------------------------------------------
+template <std::invocable<> Fn>
+[[nodiscard]] std::future<std::invoke_result_t<Fn>> async_guarded(Fn&& fn) {
+    return std::async(std::launch::async,
+        [f = std::forward<Fn>(fn)]() mutable -> std::invoke_result_t<Fn> {
+            try {
+                return std::invoke(f);
+            } catch (const std::exception& e) {
+                safe_print(std::format("Exception in async_guarded: {}", e.what()));
+                if constexpr (std::is_same_v<std::invoke_result_t<Fn>, int>)
+                    return -1;
+                else
+                    throw;
+            }
+        }
+    );
+}
 
-// ---------------- MAIN ----------------
+template <std::invocable<> Fn>
+[[nodiscard]] auto batch_async(std::span<Fn> fns) {
+    using R = std::invoke_result_t<Fn>;
+    std::vector<std::future<R>> futures;
+    futures.reserve(fns.size());
+    for (auto& fn : fns)
+        futures.emplace_back(std::async(std::launch::async, std::move(fn)));
+    return futures;
+}
+
+void latch_demo() {
+    constexpr int worker_count = 3;
+    std::latch ready(worker_count);
+    std::atomic<int> total{0};
+
+    std::vector<std::jthread> workers;
+    workers.reserve(worker_count);
+
+    for (int i = 1; i <= worker_count; ++i) {
+        workers.emplace_back([&, i] {
+            total.fetch_add(heavy_computation(i * 10), std::memory_order_relaxed);
+            ready.count_down();
+        });
+    }
+
+    ready.wait();
+    std::cout << std::format("Latch demo total: {}\n", total.load());
+}
+
+void semaphore_demo() {
+    std::counting_semaphore<3> sem(3);
+    std::atomic<int> concurrent{0};
+    std::atomic<int> max_concurrent{0};
+
+    auto task = [&](int id) {
+        sem.acquire();
+        const int c = concurrent.fetch_add(1, std::memory_order_acq_rel) + 1;
+        int expected = max_concurrent.load(std::memory_order_relaxed);
+        while (c > expected &&
+               !max_concurrent.compare_exchange_weak(expected, c,
+                                                      std::memory_order_relaxed));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        concurrent.fetch_sub(1, std::memory_order_acq_rel);
+        sem.release();
+        safe_print(std::format("Semaphore task {} done", id));
+    };
+
+    std::vector<std::jthread> threads;
+    threads.reserve(5);
+    for (int i = 1; i <= 5; ++i)
+        threads.emplace_back(task, i);
+}
 
 int main() {
-
-    // Using std::async
     auto future1 = std::async(std::launch::async, heavy_computation, 1000);
     auto future2 = std::async(std::launch::async, heavy_computation, 2000);
 
     std::cout << "Computations running asynchronously...\n";
 
-    // Check status of future
-    if (future1.wait_for(std::chrono::milliseconds(10)) == std::future_status::timeout) {
+    if (future1.wait_for(std::chrono::milliseconds(10)) == std::future_status::timeout)
         std::cout << "future1 still running...\n";
+
+    std::cout << std::format("Result 1: {}\n", future1.get());
+    std::cout << std::format("Result 2: {}\n", future2.get());
+
+    std::cout << "\n--- packaged_task ---\n";
+    {
+        std::packaged_task<int(int)> task(heavy_computation);
+        auto future3 = task.get_future();
+        std::thread worker(std::move(task), 500);
+        std::cout << "Waiting for packaged_task result...\n";
+        std::cout << std::format("Packaged task result: {}\n", future3.get());
+        worker.join();
     }
 
-    int result1 = future1.get();
-    int result2 = future2.get();
-
-    std::cout << "Result 1: " << result1 << "\n";
-    std::cout << "Result 2: " << result2 << "\n";
-
-
-    // ---------------- packaged_task example ----------------
-
-    std::packaged_task<int(int)> task(heavy_computation);
-    std::future<int> future3 = task.get_future();
-
-    std::thread worker(std::move(task), 500);
-
-    std::cout << "Waiting for packaged_task result...\n";
-    future3.wait();
-
-    std::cout << "Packaged task result: " << future3.get() << "\n";
-
-    worker.join();
-
-
-    // ---------------- Lambda async example ----------------
-
-    auto future4 = std::async(std::launch::async, []() {
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
-        return 42;
-    });
-
-    std::cout << "Lambda async result: " << future4.get() << "\n";
-
-
-    // ---------------- ADDED USAGE ----------------
-
-    // Delayed async task
-    auto future5 = std::async(std::launch::async, delayed_task, 300);
-    std::cout << "Delayed task result: " << future5.get() << "\n";
-
-    // Safe async wrapper demo
-    auto future6 = safe_async_call(400);
-    std::cout << "Safe async result: " << future6.get() << "\n";
-
-    // Multiple async tasks in loop
-    std::vector<std::future<int>> futures;
-    for (int i = 1; i <= 3; ++i) {
-        futures.push_back(std::async(std::launch::async, heavy_computation, i * 100));
+    std::cout << "\n--- lambda async ---\n";
+    {
+        auto future4 = std::async(std::launch::async, []() noexcept {
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+            return 42;
+        });
+        std::cout << std::format("Lambda async result: {}\n", future4.get());
     }
 
-    std::cout << "Batch async results: ";
-    for (auto& f : futures) {
-        std::cout << f.get() << " ";
-    }
-    std::cout << "\n";
+    std::cout << "\n--- delayed & safe async ---\n";
+    std::cout << std::format("Delayed task result: {}\n",
+                             std::async(std::launch::async, delayed_task, 300).get());
+    std::cout << std::format("Safe async result: {}\n", safe_async_call(400).get());
 
-    // ---------------- EXTRA USAGE ----------------
+    std::cout << "\n--- batch async ---\n";
+    {
+        std::vector<std::future<int>> futures;
+        futures.reserve(3);
+        for (int i : {100, 200, 300})
+            futures.emplace_back(std::async(std::launch::async, heavy_computation, i));
+
+        std::cout << "Batch async results: ";
+        for (auto& f : futures)
+            std::cout << std::format("{} ", f.get());
+        std::cout << '\n';
+    }
 
     std::cout << "\n--- Extra Tests ---\n";
 
-    // Promise demo
-    auto fut_prom = promise_example(150);
-    std::cout << "Promise result: " << fut_prom.get() << "\n";
-
-    // Shared future demo
+    std::cout << std::format("Promise result: {}\n", promise_example(150).get());
     shared_future_demo();
-
-    // Timed wait demo
     timed_wait_demo();
-
-    // ------------------------------------------------
-
-    // ======================================================
-    // 🔥 NEW ADVANCED USAGE
-    // ======================================================
 
     std::cout << "\n--- Advanced Async Features ---\n";
 
-    // Parallel sum demo
-    std::vector<int> nums = {1,2,3,4,5,6,7,8,9,10};
+    const std::vector<int> nums = {1,2,3,4,5,6,7,8,9,10};
+    std::cout << std::format("Parallel sum result: {}\n", parallel_sum(nums));
 
-    std::cout << "Parallel sum result: "
-              << parallel_sum(nums) << "\n";
+    std::cout << std::format("Factorial async result: {}\n", async_factorial(5).get());
 
-    // Async factorial
-    auto factorial_future = async_factorial(5);
+    {
+        auto p1 = std::async(std::launch::async, [] { safe_print("Async printer 1 executed"); });
+        auto p2 = std::async(std::launch::async, [] { safe_print("Async printer 2 executed"); });
+        p1.wait();
+        p2.wait();
+    }
 
-    std::cout << "Factorial async result: "
-              << factorial_future.get() << "\n";
+    {
+        auto chained = async_guarded([] { return heavy_computation(50) * 2; });
+        std::cout << std::format("Chained async result: {}\n", chained.get());
+    }
 
-    // Async safe printing
-    auto printer1 = std::async(std::launch::async, []() {
-        safe_print("Async printer 1 executed");
-    });
+    std::cout << "\n--- C++20 Latch ---\n";
+    latch_demo();
 
-    auto printer2 = std::async(std::launch::async, []() {
-        safe_print("Async printer 2 executed");
-    });
+    std::cout << "\n--- C++20 Semaphore ---\n";
+    semaphore_demo();
 
-    printer1.wait();
-    printer2.wait();
-
-    // Chained async computation
-    auto chained = std::async(std::launch::async, []() {
-        int value = heavy_computation(50);
-        return value * 2;
-    });
-
-    std::cout << "Chained async result: "
-              << chained.get() << "\n";
-
-    // ======================================================
+    std::cout << "\n--- jthread with stop_token ---\n";
+    {
+        std::atomic<int> count{0};
+        std::jthread worker([&](std::stop_token st) {
+            while (!st.stop_requested()) {
+                count.fetch_add(1, std::memory_order_relaxed);
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            }
+        });
+        std::this_thread::sleep_for(std::chrono::milliseconds(55));
+        worker.request_stop();
+        worker.join();
+        std::cout << std::format("jthread incremented {} times before stop\n", count.load());
+    }
 
     return 0;
 }

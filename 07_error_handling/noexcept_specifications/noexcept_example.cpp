@@ -1,58 +1,59 @@
-// Noexcept Specifications Exercise
-// Move semantics and exception specifications
-
 #include <iostream>
 #include <vector>
 #include <type_traits>
 #include <stdexcept>
-#include <utility>     // 🔹 ADDED
-#include <cassert>     // 🔹 ADDED
-#include <functional>  // 🔹 ADDED
+#include <utility>
+#include <cassert>
+#include <functional>
+#include <concepts>
+#include <format>
+#include <span>
+#include <algorithm>
 
 class Widget {
-private:
-    int data;
+    int data_;
 
 public:
-    Widget(int d) : data(d) {}
+    explicit Widget(int d) noexcept : data_(d) {}
 
-    // Move constructor with noexcept
-    Widget(Widget&& other) noexcept : data(other.data) {
+    Widget(const Widget&) = default;
+    Widget& operator=(const Widget&) = default;
+
+    Widget(Widget&& other) noexcept : data_(std::exchange(other.data_, 0)) {
         std::cout << "Move constructor (noexcept)\n";
-        other.data = 0;
     }
 
-    // Move assignment with noexcept
     Widget& operator=(Widget&& other) noexcept {
         std::cout << "Move assignment (noexcept)\n";
-        data = other.data;
-        other.data = 0;
+        if (this != &other)
+            data_ = std::exchange(other.data_, 0);
         return *this;
     }
 
-    // noexcept(condition)
     void process(int value) noexcept(std::is_integral_v<decltype(value)>) {
-        data = value;
+        data_ = value;
     }
 
-    int get() const noexcept {
-        return data;
+    [[nodiscard]] int get() const noexcept { return data_; }
+
+    friend void swap(Widget& a, Widget& b) noexcept {
+        using std::swap;
+        swap(a.data_, b.data_);
     }
 };
 
-// Function that may throw
+static_assert(std::is_nothrow_move_constructible_v<Widget>);
+static_assert(std::is_nothrow_move_assignable_v<Widget>);
+static_assert(std::is_nothrow_swappable_v<Widget>);
+
 void throwing_function() {
     throw std::runtime_error("Error!");
 }
 
-// Function with noexcept(false) - may throw
 void maybe_throws() noexcept(false) {
     throwing_function();
 }
 
-// ---------------- SMALL ADDITIONS ----------------
-
-// Safe wrapper that never throws
 void safe_call() noexcept {
     try {
         maybe_throws();
@@ -61,202 +62,163 @@ void safe_call() noexcept {
     }
 }
 
-// Helper to test noexcept at compile-time
-template<typename T>
+template <typename T>
 void check_noexcept() {
-    std::cout << "Is T move construct noexcept? "
-              << std::is_nothrow_move_constructible_v<T>
-              << "\n";
+    std::cout << std::format("Is {} move construct noexcept? {}\n",
+                             typeid(T).name(),
+                             std::is_nothrow_move_constructible_v<T>);
 }
 
-// Simple factory function (may or may not throw)
-Widget create_widget(int val) noexcept {
+[[nodiscard]] Widget create_widget(int val) noexcept {
     return Widget(val);
 }
 
-// ---------------- EXTRA ADDITIONS ----------------
-
-// Check if a function is noexcept
-template<typename Func>
-void test_noexcept(Func f) {
-    std::cout << "Is callable noexcept? "
-              << noexcept(f()) << "\n";
+template <std::invocable Func>
+void test_noexcept(Func&& f) {
+    std::cout << std::format("Is callable noexcept? {}\n", noexcept(f()));
 }
 
-// Conditional noexcept example
-template<typename T>
+template <typename T>
 void conditional_noexcept(T value) noexcept(std::is_arithmetic_v<T>) {
-    std::cout << "Conditional noexcept executed with: "
-              << value << "\n";
+    std::cout << std::format("Conditional noexcept executed with: {}\n", value);
 }
 
-// Wrapper that propagates noexcept
-template<typename Func>
-auto forward_call(Func f) noexcept(noexcept(f())) {
-    return f();
+template <std::invocable Func>
+auto forward_call(Func&& f) noexcept(noexcept(std::invoke(std::forward<Func>(f)))) {
+    return std::invoke(std::forward<Func>(f));
 }
 
-// Demonstrate move_if_noexcept behavior
 void move_if_noexcept_demo() {
     std::vector<Widget> v;
-    v.reserve(1);
+    v.reserve(2);
 
     Widget w(10);
     v.push_back(std::move_if_noexcept(w));
-
     std::cout << "move_if_noexcept used\n";
 }
 
-// ======================================================
-// 🔥 NEW SMALL ADDITIONS
-// ======================================================
-
-// noexcept swap utility
 void safe_swap(Widget& a, Widget& b) noexcept {
-    Widget temp(std::move(a));
-    a = std::move(b);
-    b = std::move(temp);
+    using std::swap;
+    swap(a, b);
 }
 
-// compile-time noexcept checker
-template<typename Func>
-constexpr bool is_noexcept_callable(Func f) {
-    return noexcept(f());
+template <std::invocable Func>
+[[nodiscard]] consteval bool is_noexcept_callable_type() {
+    return noexcept(std::declval<Func>()());
 }
 
-// execute multiple callables safely
-void execute_all(const std::vector<std::function<void()>>& funcs) noexcept {
+void execute_all(std::span<const std::function<void()>> funcs) noexcept {
     for (const auto& fn : funcs) {
         try {
             fn();
+        } catch (const std::exception& e) {
+            std::cout << std::format("Exception caught during execute_all: {}\n", e.what());
         } catch (...) {
-            std::cout << "Exception caught during execute_all\n";
+            std::cout << "Unknown exception caught during execute_all\n";
         }
     }
 }
 
-// noexcept lambda demo
-auto safe_lambda = []() noexcept {
+constexpr auto safe_lambda = []() noexcept {
     std::cout << "Safe lambda executed\n";
 };
 
-// ------------------------------------------------
+template <std::invocable Func>
+[[nodiscard]] auto make_noexcept_guard(Func&& f) noexcept {
+    return [fn = std::forward<Func>(f)]() noexcept {
+        try {
+            std::invoke(fn);
+        } catch (...) {
+            std::cout << "Exception suppressed by noexcept guard\n";
+        }
+    };
+}
 
-// ---------------- MAIN ----------------
 int main() {
-
     std::vector<Widget> vec;
     vec.reserve(2);
 
     Widget w1(42);
     Widget w2(100);
 
-    vec.push_back(std::move(w1));  // Move constructor called
+    vec.push_back(std::move(w1));
     vec.push_back(std::move(w2));
 
-    std::cout << "Vector size: " << vec.size() << "\n";
+    std::cout << std::format("Vector size: {}\n", vec.size());
+    std::cout << std::format("Is Widget move constructor noexcept? {}\n",
+                             noexcept(Widget(std::move(w1))));
 
-    // Demonstrate noexcept operator
-    std::cout << "Is Widget move constructor noexcept? "
-              << noexcept(Widget(std::move(w1))) << "\n";
-
-    // ---------------- ADDED USAGE ----------------
-
-    // Check noexcept trait
     check_noexcept<Widget>();
 
-    // Using noexcept function
     Widget w3 = create_widget(77);
-    std::cout << "Created widget value: " << w3.get() << "\n";
+    std::cout << std::format("Created widget value: {}\n", w3.get());
 
-    // Safe wrapper demo
     safe_call();
 
-    // Test process()
     w3.process(999);
-    std::cout << "Processed value: " << w3.get() << "\n";
+    std::cout << std::format("Processed value: {}\n", w3.get());
 
-    // Exception example
     try {
         maybe_throws();
     } catch (const std::exception& e) {
-        std::cout << "Caught exception: " << e.what() << "\n";
+        std::cout << std::format("Caught exception: {}\n", e.what());
     }
-
-    // ---------------- EXTRA USAGE ----------------
 
     std::cout << "\n--- Extra Tests ---\n";
 
-    // Test callable noexcept
     test_noexcept([]() noexcept { return 1; });
     test_noexcept([]() { return 2; });
 
-    // Conditional noexcept demo
-    conditional_noexcept(10);     // noexcept
-    conditional_noexcept(3.14);   // noexcept
-    conditional_noexcept("test"); // may throw
+    conditional_noexcept(10);
+    conditional_noexcept(3.14);
+    conditional_noexcept(std::string_view{"test"});
 
-    // Forward call preserving noexcept
     auto result = forward_call([]() noexcept { return 123; });
-    std::cout << "Forward call result: " << result << "\n";
+    std::cout << std::format("Forward call result: {}\n", result);
 
-    // move_if_noexcept demo
     move_if_noexcept_demo();
-
-    // ------------------------------------------------
-
-    // ======================================================
-    // 🔥 NEW ADVANCED TESTS
-    // ======================================================
 
     std::cout << "\n--- Advanced Noexcept Tests ---\n";
 
     Widget wa(1);
     Widget wb(2);
 
-    std::cout << "Before swap: "
-              << wa.get() << ", "
-              << wb.get() << "\n";
-
+    std::cout << std::format("Before swap: {}, {}\n", wa.get(), wb.get());
     safe_swap(wa, wb);
+    std::cout << std::format("After swap: {}, {}\n", wa.get(), wb.get());
 
-    std::cout << "After swap: "
-              << wa.get() << ", "
-              << wb.get() << "\n";
-
-    // compile-time noexcept checks
-    static_assert(is_noexcept_callable([]() noexcept {}));
-    static_assert(!is_noexcept_callable([]() {}));
+    static_assert(noexcept(safe_lambda()));
+    static_assert(noexcept(create_widget(5)));
+    static_assert(noexcept(safe_swap(wa, wb)));
 
     std::cout << "Compile-time noexcept checks passed\n";
 
-    // execute multiple functions safely
     std::vector<std::function<void()>> tasks;
-
-    tasks.push_back([]() noexcept {
-        std::cout << "Task 1 completed\n";
-    });
-
-    tasks.push_back([]() {
-        throw std::runtime_error("Task failure");
-    });
-
-    tasks.push_back([]() noexcept {
-        std::cout << "Task 3 completed\n";
-    });
+    tasks.push_back([]() noexcept { std::cout << "Task 1 completed\n"; });
+    tasks.push_back([]() { throw std::runtime_error("Task failure"); });
+    tasks.push_back([]() noexcept { std::cout << "Task 3 completed\n"; });
 
     execute_all(tasks);
 
-    // safe lambda demo
     safe_lambda();
 
-    // assertion checks
+    std::cout << "\n--- noexcept guard ---\n";
+    auto guarded = make_noexcept_guard([] { throw std::runtime_error("guarded throw"); });
+    static_assert(noexcept(guarded()));
+    guarded();
+
+    std::cout << "\n--- noexcept propagation through std::ranges ---\n";
+    std::vector<Widget> widgets;
+    widgets.reserve(3);
+    for (int i : {10, 20, 30}) widgets.emplace_back(i);
+
+    std::ranges::for_each(widgets, [](const Widget& w) {
+        std::cout << std::format("Widget value: {}\n", w.get());
+    });
+
     assert(noexcept(safe_lambda()));
     assert(noexcept(create_widget(5)));
 
-    std::cout << "Assertions passed successfully\n";
-
-    // ======================================================
-
+    std::cout << "\nAssertions passed successfully\n";
     return 0;
 }

@@ -1,285 +1,177 @@
-// Exception Safety Exercise
-// No-throw guarantee, strong guarantee, basic guarantee
-
 #include <iostream>
 #include <vector>
 #include <stdexcept>
-#include <algorithm>   // 🔹 ADDED
-#include <cassert>     // 🔹 ADDED
-#include <numeric>     // 🔹 ADDED
+#include <algorithm>
+#include <numeric>
+#include <ranges>
+#include <span>
+#include <cassert>
+#include <optional>
 
 class SafeVector {
-private:
-    std::vector<int> data;
+    std::vector<int> data_;
+
+    [[nodiscard]] std::vector<int> copy_and_apply(auto op) const {
+        auto temp = data_;
+        op(temp);
+        return temp;
+    }
 
 public:
-    // Strong guarantee: either succeeds or has no effect
     void add_element_strong(int value) {
-        std::vector<int> temp = data;  // Copy
-        try {
-            temp.push_back(value);
-            data = std::move(temp);  // Commit
-        } catch (...) {
-            // Original data unchanged
-            throw;
-        }
+        auto temp = copy_and_apply([&](auto& v) { v.push_back(value); });
+        data_ = std::move(temp);
     }
 
-    // Basic guarantee: object remains valid but state may change
     void add_element_basic(int value) {
-        try {
-            data.push_back(value);
-        } catch (...) {
-            std::cout << "Exception occurred during push_back\n";
-        }
+        data_.push_back(value);
     }
 
-    // No-throw guarantee
-    void clear() noexcept {
-        data.clear();
+    void push_front_strong(int value) {
+        auto temp = copy_and_apply([&](auto& v) { v.insert(v.begin(), value); });
+        data_ = std::move(temp);
     }
 
-    // Reserve capacity (helps prevent reallocation exceptions)
-    void reserve(std::size_t n) {
-        data.reserve(n);
+    void replace_strong(std::size_t index, int value) {
+        if (index >= data_.size())
+            throw std::out_of_range("replace_strong: index out of range");
+        auto temp = copy_and_apply([&](auto& v) { v[index] = value; });
+        data_ = std::move(temp);
     }
 
-    std::size_t size() const noexcept {
-        return data.size();
+    void remove_value_strong(int value) {
+        auto temp = copy_and_apply([&](auto& v) {
+            if (auto it = std::ranges::find(v, value); it != v.end())
+                v.erase(it);
+        });
+        data_ = std::move(temp);
     }
+
+    void reverse_strong() {
+        auto temp = copy_and_apply([](auto& v) { std::ranges::reverse(v); });
+        data_ = std::move(temp);
+    }
+
+    void pop_back() noexcept {
+        if (!data_.empty()) data_.pop_back();
+    }
+
+    void swap(SafeVector& other) noexcept {
+        data_.swap(other.data_);
+    }
+
+    void clear() noexcept { data_.clear(); }
+
+    void reserve(std::size_t n) { data_.reserve(n); }
+
+    [[nodiscard]] int at(std::size_t index) const {
+        if (index >= data_.size())
+            throw std::out_of_range("at: index out of range");
+        return data_[index];
+    }
+
+    [[nodiscard]] std::optional<int> try_get(std::size_t index) const noexcept {
+        if (index >= data_.size()) return std::nullopt;
+        return data_[index];
+    }
+
+    [[nodiscard]] int front() const {
+        if (data_.empty())
+            throw std::runtime_error("front: vector is empty");
+        return data_.front();
+    }
+
+    [[nodiscard]] int sum()                    const noexcept { return std::accumulate(data_.begin(), data_.end(), 0); }
+    [[nodiscard]] bool contains(int value)     const noexcept { return std::ranges::contains(data_, value); }
+    [[nodiscard]] std::size_t size()           const noexcept { return data_.size(); }
+    [[nodiscard]] bool empty()                 const noexcept { return data_.empty(); }
 
     void print() const {
-        for (int v : data) {
-            std::cout << v << " ";
-        }
-        std::cout << "\n";
+        for (int v : data_) std::cout << v << ' ';
+        std::cout << '\n';
     }
-
-    // 🔹 NEW: safe access with exception
-    int at(std::size_t index) const {
-        if (index >= data.size()) {
-            throw std::out_of_range("Index out of range");
-        }
-        return data[index];
-    }
-
-    // 🔹 NEW: strong guarantee insert at front
-    void push_front_strong(int value) {
-        std::vector<int> temp = data;
-        try {
-            temp.insert(temp.begin(), value);
-            data = std::move(temp);
-        } catch (...) {
-            throw;
-        }
-    }
-
-    // 🔹 NEW: no-throw swap
-    void swap(SafeVector& other) noexcept {
-        data.swap(other.data);
-    }
-
-    // ---------------- EXTRA ADDITIONS ----------------
-
-    // 🔹 NEW: pop_back with basic guarantee
-    void pop_back_basic() {
-        if (!data.empty()) {
-            data.pop_back();
-        }
-    }
-
-    // 🔹 NEW: strong guarantee replace element
-    void replace_strong(std::size_t index, int value) {
-        if (index >= data.size()) {
-            throw std::out_of_range("Index out of range");
-        }
-
-        std::vector<int> temp = data;
-        temp[index] = value;
-        data = std::move(temp);
-    }
-
-    // 🔹 NEW: safe getter (no exception, returns optional-like behavior)
-    bool try_get(std::size_t index, int& out) const noexcept {
-        if (index >= data.size()) return false;
-        out = data[index];
-        return true;
-    }
-
-    // 🔹 NEW: check empty (noexcept)
-    bool empty() const noexcept {
-        return data.empty();
-    }
-
-    // =====================================================
-    // 🔥 NEW SMALL ADDITIONS
-    // =====================================================
-
-    // 🔹 remove last matching value (strong guarantee)
-    void remove_value_strong(int value) {
-        std::vector<int> temp = data;
-
-        auto it = std::find(temp.begin(), temp.end(), value);
-        if (it != temp.end()) {
-            temp.erase(it);
-        }
-
-        data = std::move(temp);
-    }
-
-    // 🔹 calculate sum safely
-    int sum() const noexcept {
-        return std::accumulate(data.begin(), data.end(), 0);
-    }
-
-    // 🔹 contains check
-    bool contains(int value) const noexcept {
-        return std::find(data.begin(), data.end(), value)
-               != data.end();
-    }
-
-    // 🔹 reverse with strong guarantee
-    void reverse_strong() {
-        std::vector<int> temp = data;
-        std::reverse(temp.begin(), temp.end());
-        data = std::move(temp);
-    }
-
-    // 🔹 get front safely
-    int front() const {
-        if (data.empty()) {
-            throw std::runtime_error("Vector is empty");
-        }
-        return data.front();
-    }
-
-    // =====================================================
 };
 
 int main() {
     SafeVector sv;
 
-    std::cout << "Adding elements with strong guarantee:\n";
+    std::cout << "--- Strong guarantee ---\n";
     sv.add_element_strong(1);
     sv.add_element_strong(2);
     sv.print();
 
-    std::cout << "Adding elements with basic guarantee:\n";
+    std::cout << "--- Basic guarantee ---\n";
     sv.add_element_basic(3);
     sv.add_element_basic(4);
     sv.print();
 
-    std::cout << "Vector size: " << sv.size() << "\n";
-
-    // 🔹 NEW: reserve demo
+    std::cout << "Size: " << sv.size() << '\n';
     sv.reserve(10);
-    std::cout << "Reserved capacity for 10 elements\n";
 
-    // 🔹 NEW: push front strong guarantee
     sv.push_front_strong(0);
     sv.print();
 
-    // 🔹 NEW: safe access demo
     try {
-        std::cout << "Element at index 2: " << sv.at(2) << "\n";
-        std::cout << "Access invalid index:\n";
-        std::cout << sv.at(100) << "\n";  // will throw
+        std::cout << "at(2): " << sv.at(2) << '\n';
+        std::cout << sv.at(100) << '\n';
     } catch (const std::exception& e) {
-        std::cout << "Caught exception: " << e.what() << "\n";
+        std::cout << "Caught: " << e.what() << '\n';
     }
 
-    std::cout << "Clearing vector (noexcept):\n";
     sv.clear();
-    sv.print();
+    std::cout << "After clear: "; sv.print();
 
-    // 🔹 NEW: swap demo
     SafeVector other;
     other.add_element_basic(99);
     sv.swap(other);
-
-    std::cout << "After swap, sv contains:\n";
-    sv.print();
-
-    // ---------------- EXTRA USAGE ----------------
+    std::cout << "After swap: "; sv.print();
 
     std::cout << "\n--- Extra Tests ---\n";
-
     sv.add_element_basic(10);
     sv.add_element_basic(20);
     sv.add_element_basic(30);
     sv.print();
 
-    // pop_back
-    sv.pop_back_basic();
-    std::cout << "After pop_back:\n";
-    sv.print();
+    sv.pop_back();
+    std::cout << "After pop_back: "; sv.print();
 
-    // strong replace
     sv.replace_strong(0, 999);
-    std::cout << "After replace:\n";
-    sv.print();
+    std::cout << "After replace:  "; sv.print();
 
-    // try_get
-    int value;
-    if (sv.try_get(1, value)) {
-        std::cout << "try_get success: " << value << "\n";
+    if (auto val = sv.try_get(1)) {
+        std::cout << "try_get(1): " << *val << '\n';
     } else {
         std::cout << "try_get failed\n";
     }
 
-    // empty check
-    std::cout << "Is empty? "
-              << (sv.empty() ? "Yes" : "No") << "\n";
+    std::cout << "Empty? " << (sv.empty() ? "Yes" : "No") << '\n';
 
-    // --------------------------------------------
+    std::cout << "\n--- Advanced Tests ---\n";
+    std::cout << "Contains 20? " << (sv.contains(20) ? "Yes" : "No") << '\n';
+    std::cout << "Sum: " << sv.sum() << '\n';
 
-    // =====================================================
-    // 🔥 NEW EXTRA TESTS
-    // =====================================================
-
-    std::cout << "\n--- Advanced Exception Safety Tests ---\n";
-
-    // contains
-    std::cout << "Contains 20? "
-              << (sv.contains(20) ? "Yes" : "No") << "\n";
-
-    // sum
-    std::cout << "Vector sum: "
-              << sv.sum() << "\n";
-
-    // reverse
     sv.reverse_strong();
-    std::cout << "After reverse:\n";
-    sv.print();
+    std::cout << "After reverse: "; sv.print();
 
-    // remove value
     sv.remove_value_strong(20);
-    std::cout << "After removing 20:\n";
-    sv.print();
+    std::cout << "After removing 20: "; sv.print();
 
-    // safe front access
     try {
-        std::cout << "Front element: "
-                  << sv.front() << "\n";
+        std::cout << "Front: " << sv.front() << '\n';
     } catch (const std::exception& e) {
-        std::cout << "Front access error: "
-                  << e.what() << "\n";
+        std::cout << "Front error: " << e.what() << '\n';
     }
 
-    // assertion checks
     assert(!sv.empty());
     assert(sv.size() > 0);
+    assert(sv.try_get(0).has_value());
+    assert(!sv.try_get(999).has_value());
 
-    // clear and verify
     sv.clear();
+    std::cout << "After final clear: "; sv.print();
+    std::cout << "Empty? " << (sv.empty() ? "Yes" : "No") << '\n';
 
-    std::cout << "After final clear:\n";
-    sv.print();
-
-    std::cout << "Empty now? "
-              << (sv.empty() ? "Yes" : "No") << "\n";
-
-    // =====================================================
-
+    assert(sv.empty());
+    std::cout << "\nAll assertions passed.\n";
     return 0;
 }

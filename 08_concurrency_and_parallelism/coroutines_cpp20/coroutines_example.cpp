@@ -1,290 +1,173 @@
-// Coroutines Exercise (C++20)
-// stackless coroutines and co_await
-
 #include <coroutine>
 #include <exception>
 #include <iostream>
-#include <vector>      // 🔹 ADDED
-#include <string>      // 🔹 ADDED
+#include <vector>
+#include <string_view>
+#include <utility>
 
-// Simplified coroutine example for C++20
-class SimpleCoroutine
-{
+class SimpleCoroutine {
 public:
-	struct promise_type
-	{
-		int value;
+    struct promise_type {
+        int value = 0;
 
-		SimpleCoroutine get_return_object()
-		{
-			return SimpleCoroutine(std::coroutine_handle<promise_type>::from_promise(*this));
-		}
+        SimpleCoroutine get_return_object() {
+            return SimpleCoroutine{Handle::from_promise(*this)};
+        }
 
-		std::suspend_never initial_suspend()
-		{
-			return {};
-		}
+        std::suspend_never  initial_suspend() noexcept { return {}; }
+        std::suspend_always final_suspend()   noexcept { return {}; }
 
-		std::suspend_never final_suspend() noexcept
-		{
-			return {};
-		}
+        void return_value(int v) noexcept { value = v; }
+        void unhandled_exception() noexcept { std::terminate(); }
+    };
 
-		void unhandled_exception()
-		{
-			std::terminate();
-		}
+    using Handle = std::coroutine_handle<promise_type>;
 
-		void return_value(int v)
-		{
-			value = v;
-		}
-	};
+    explicit SimpleCoroutine(Handle h) noexcept : handle_{h} {}
 
-	using Handle = std::coroutine_handle<promise_type>;
+    SimpleCoroutine(const SimpleCoroutine&)            = delete;
+    SimpleCoroutine& operator=(const SimpleCoroutine&) = delete;
 
-	Handle handle;
+    SimpleCoroutine(SimpleCoroutine&& other) noexcept
+        : handle_{std::exchange(other.handle_, {})} {}
 
-	SimpleCoroutine(std::coroutine_handle<promise_type> h) : handle(h)
-	{
-	}
+    SimpleCoroutine& operator=(SimpleCoroutine&& other) noexcept {
+        if (this != &other) {
+            if (handle_) handle_.destroy();
+            handle_ = std::exchange(other.handle_, {});
+        }
+        return *this;
+    }
 
-	~SimpleCoroutine()
-	{
-		if (handle)
-			handle.destroy();
-	}
+    ~SimpleCoroutine() { if (handle_) handle_.destroy(); }
 
-	int get() const
-	{
-		return handle.promise().value;
-	}
+    [[nodiscard]] int  get()  const noexcept { return handle_.promise().value; }
+    [[nodiscard]] bool done() const noexcept { return !handle_ || handle_.done(); }
 
-	void resume()
-	{
-		if (!handle.done())
-			handle.resume();
-	}
+    void resume() {
+        if (!done()) handle_.resume();
+        else         std::cout << "[already done]\n";
+    }
+
+private:
+    Handle handle_;
 };
 
-// Simple coroutine function
-SimpleCoroutine compute_value()
-{
-	std::cout << "Coroutine started\n";
-	co_return 42;
+void print_status(std::string_view name, const SimpleCoroutine& c) {
+    std::cout << name << " done=" << std::boolalpha << c.done() << "\n";
 }
 
-// Coroutine with suspension
-SimpleCoroutine suspended_example()
-{
-	std::cout << "Before suspension\n";
-	co_await std::suspend_always{};
-	std::cout << "After resume\n";
-	co_return 100;
+SimpleCoroutine compute_value() {
+    std::cout << "Coroutine started\n";
+    co_return 42;
 }
 
-// ---------------- SMALL ADDITIONS ----------------
-
-// Multiple suspension example
-SimpleCoroutine multi_suspend()
-{
-	std::cout << "Step 1\n";
-	co_await std::suspend_always{};
-
-	std::cout << "Step 2\n";
-	co_await std::suspend_always{};
-
-	std::cout << "Step 3\n";
-	co_return 300;
+SimpleCoroutine suspended_example() {
+    std::cout << "Before suspension\n";
+    co_await std::suspend_always{};
+    std::cout << "After resume\n";
+    co_return 100;
 }
 
-// Coroutine demonstrating immediate execution
-SimpleCoroutine quick_task()
-{
-	co_return 7 * 6;
+SimpleCoroutine multi_suspend() {
+    std::cout << "Step 1\n"; co_await std::suspend_always{};
+    std::cout << "Step 2\n"; co_await std::suspend_always{};
+    std::cout << "Step 3\n";
+    co_return 300;
 }
 
-// 🔹 NEW: Coroutine that resumes automatically
-SimpleCoroutine auto_resume_task()
-{
-	std::cout << "Auto task start\n";
-	co_return 555;
+SimpleCoroutine quick_task() {
+    co_return 7 * 6;
 }
 
-// 🔹 NEW: Helper to safely resume multiple times
-void safe_resume(SimpleCoroutine& coro)
-{
-	if (!coro.handle.done()) {
-		coro.resume();
-	} else {
-		std::cout << "Coroutine already finished\n";
-	}
+SimpleCoroutine auto_resume_task() {
+    std::cout << "Auto task start\n";
+    co_return 555;
 }
 
-// ======================================================
-// 🔥 EXTRA ADDITIONS
-// ======================================================
-
-// Coroutine with looped suspensions
-SimpleCoroutine counting_coroutine(int limit)
-{
-	for (int i = 1; i <= limit; ++i)
-	{
-		std::cout << "Counter: " << i << "\n";
-		co_await std::suspend_always{};
-	}
-
-	co_return limit;
+SimpleCoroutine counting_coroutine(int limit) {
+    for (int i = 1; i <= limit; ++i) {
+        std::cout << "Counter=" << i << "\n";
+        co_await std::suspend_always{};
+    }
+    co_return limit;
 }
 
-// Coroutine processing vector values
-SimpleCoroutine vector_sum_coroutine(const std::vector<int>& values)
-{
-	int total = 0;
-
-	for (int v : values)
-	{
-		total += v;
-		std::cout << "Adding: " << v << "\n";
-		co_await std::suspend_always{};
-	}
-
-	co_return total;
+SimpleCoroutine vector_sum_coroutine(const std::vector<int>& values) {
+    int total = 0;
+    for (int v : values) {
+        total += v;
+        std::cout << "Adding " << v << " running_total=" << total << "\n";
+        co_await std::suspend_always{};
+    }
+    co_return total;
 }
 
-// Coroutine returning calculated square
-SimpleCoroutine square_coroutine(int value)
-{
-	std::cout << "Calculating square of " << value << "\n";
-	co_return value * value;
+SimpleCoroutine square_coroutine(int value) {
+    std::cout << "Squaring " << value << "\n";
+    co_return value * value;
 }
 
-// Coroutine chain demo
-SimpleCoroutine chained_coroutine()
-{
-	std::cout << "Chain start\n";
-	co_await std::suspend_always{};
-
-	std::cout << "Chain continue\n";
-	co_return 999;
+SimpleCoroutine chained_coroutine() {
+    std::cout << "Chain start\n";
+    co_await std::suspend_always{};
+    std::cout << "Chain continue\n";
+    co_return 999;
 }
 
-// Helper: print coroutine status
-void print_status(const std::string& name, const SimpleCoroutine& coro)
-{
-	std::cout << name << " done? "
-			  << (coro.handle.done() ? "Yes" : "No")
-			  << "\n";
-}
+int main() {
+    std::cout << "=== compute_value ===\n";
+    auto c1 = compute_value();
+    std::cout << "Result=" << c1.get() << "\n";
 
-// ======================================================
+    std::cout << "\n=== suspended_example ===\n";
+    auto c2 = suspended_example();
+    print_status("c2", c2);
+    c2.resume();
+    std::cout << "Result=" << c2.get() << "\n";
+    print_status("c2", c2);
 
-// ---------------- MAIN ----------------
-int main()
-{
+    std::cout << "\n=== multi_suspend ===\n";
+    auto c3 = multi_suspend();
+    c3.resume();
+    c3.resume();
+    c3.resume();
+    std::cout << "Result=" << c3.get() << "\n";
+    c3.resume();
 
-	std::cout << "C++20 Coroutines support\n";
+    std::cout << "\n=== quick_task ===\n";
+    auto c4 = quick_task();
+    std::cout << "Result=" << c4.get() << "\n";
 
-	auto coro = compute_value();
-	std::cout << "Returned value: " << coro.get() << "\n";
+    std::cout << "\n=== auto_resume_task ===\n";
+    auto c5 = auto_resume_task();
+    std::cout << "Result=" << c5.get() << "\n";
 
-	std::cout << "\nSuspension demo\n";
+    std::cout << "\n=== counting_coroutine(3) ===\n";
+    auto counter = counting_coroutine(3);
+    print_status("counter", counter);
+    counter.resume();
+    counter.resume();
+    counter.resume();
+    std::cout << "Result=" << counter.get() << "\n";
+    print_status("counter", counter);
 
-	auto coro2 = suspended_example();
-	std::cout << "Resuming coroutine...\n";
-	coro2.resume();
+    std::cout << "\n=== vector_sum_coroutine ===\n";
+    const std::vector<int> nums{1, 2, 3, 4};
+    auto vsum = vector_sum_coroutine(nums);
+    for (std::size_t i = 0; i < nums.size(); ++i) vsum.resume();
+    std::cout << "Result=" << vsum.get() << "\n";
 
-	std::cout << "Returned value: " << coro2.get() << "\n";
+    std::cout << "\n=== square_coroutine(9) ===\n";
+    auto sq = square_coroutine(9);
+    std::cout << "Result=" << sq.get() << "\n";
 
+    std::cout << "\n=== chained_coroutine ===\n";
+    auto chain = chained_coroutine();
+    print_status("chain", chain);
+    chain.resume();
+    std::cout << "Result=" << chain.get() << "\n";
+    print_status("chain", chain);
 
-	// ---------------- ADDED USAGE ----------------
-
-	std::cout << "\nMultiple suspension demo\n";
-	auto coro3 = multi_suspend();
-
-	std::cout << "Resume 1\n";
-	coro3.resume();
-
-	std::cout << "Resume 2\n";
-	coro3.resume();
-
-	std::cout << "Resume 3\n";
-	coro3.resume();
-
-	std::cout << "Final value: " << coro3.get() << "\n";
-
-	// Quick coroutine
-	auto coro4 = quick_task();
-	std::cout << "Quick task result: " << coro4.get() << "\n";
-
-	// 🔹 NEW: auto resume task
-	auto coro5 = auto_resume_task();
-	std::cout << "Auto task result: " << coro5.get() << "\n";
-
-	// 🔹 NEW: safe resume demo
-	std::cout << "\nSafe resume demo\n";
-	safe_resume(coro3);  // already finished
-	safe_resume(coro2);  // already finished
-
-	// ======================================================
-	// 🔥 EXTRA USAGE
-	// ======================================================
-
-	std::cout << "\n--- Counting Coroutine ---\n";
-
-	auto counter_coro = counting_coroutine(3);
-
-	print_status("counter_coro", counter_coro);
-
-	counter_coro.resume();
-	counter_coro.resume();
-	counter_coro.resume();
-
-	std::cout << "Counting coroutine result: "
-			  << counter_coro.get() << "\n";
-
-	print_status("counter_coro", counter_coro);
-
-	// ------------------------------------------------------
-
-	std::cout << "\n--- Vector Sum Coroutine ---\n";
-
-	std::vector<int> nums = {1, 2, 3, 4};
-
-	auto sum_coro = vector_sum_coroutine(nums);
-
-	sum_coro.resume();
-	sum_coro.resume();
-	sum_coro.resume();
-	sum_coro.resume();
-
-	std::cout << "Vector sum result: "
-			  << sum_coro.get() << "\n";
-
-	// ------------------------------------------------------
-
-	std::cout << "\n--- Square Coroutine ---\n";
-
-	auto sq = square_coroutine(9);
-	std::cout << "Square result: "
-			  << sq.get() << "\n";
-
-	// ------------------------------------------------------
-
-	std::cout << "\n--- Chained Coroutine ---\n";
-
-	auto chain = chained_coroutine();
-
-	print_status("chain", chain);
-
-	chain.resume();
-
-	std::cout << "Chain result: "
-			  << chain.get() << "\n";
-
-	print_status("chain", chain);
-
-	// ======================================================
-
-	return 0;
+    return 0;
 }

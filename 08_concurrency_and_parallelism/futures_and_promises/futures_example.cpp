@@ -1,273 +1,151 @@
-// Futures and Promises Exercise
-// Asynchronous value passing
-
 #include <iostream>
 #include <thread>
 #include <future>
 #include <chrono>
 #include <stdexcept>
-#include <vector>     // 🔹 ADDED
-#include <numeric>    // 🔹 ADDED
+#include <vector>
+#include <numeric>
+#include <utility>
 
-// ---------------- ORIGINAL FUNCTION ----------------
+using namespace std::chrono_literals;
 
 int calculate_sum(int a, int b) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(100ms);
     return a + b;
 }
 
-// ---------------- SMALL ADDITIONS ----------------
-
-// Function that may throw
 int risky_division(int a, int b) {
-    if (b == 0)
-        throw std::runtime_error("Division by zero");
+    if (b == 0) throw std::runtime_error{"Division by zero"};
     return a / b;
 }
 
-// Helper to run async task with promise
-void async_task(std::promise<int> p, int a, int b) {
-    try {
-        p.set_value(calculate_sum(a, b));
-    } catch (...) {
-        p.set_exception(std::current_exception());
-    }
+void set_after(std::promise<int>& p, int value, std::chrono::milliseconds delay = 0ms) {
+    std::this_thread::sleep_for(delay);
+    p.set_value(value);
 }
 
-// 🔹 NEW: multiply task
-void async_multiply(std::promise<int> p, int a, int b) {
-    try {
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        p.set_value(a * b);
-    } catch (...) {
-        p.set_exception(std::current_exception());
-    }
+template<typename Future>
+void check_status(Future& fut, std::string_view label = "Future") {
+    auto status = fut.wait_for(10ms);
+    if (status == std::future_status::timeout)
+        std::cout << label << " still running\n";
+    else
+        std::cout << label << " ready\n";
 }
 
-// 🔹 NEW: future status checker
-void check_status(std::future<int>& fut) {
-    if (fut.wait_for(std::chrono::milliseconds(10)) == std::future_status::timeout) {
-        std::cout << "Future still running...\n";
-    } else {
-        std::cout << "Future ready!\n";
-    }
+[[nodiscard]] std::future<int> async_square(int n) {
+    return std::async(std::launch::async, [n] { return n * n; });
 }
 
-// ---------------- EXTRA ADDITIONS ----------------
-
-// 🔹 NEW: async subtraction task
-void async_subtract(std::promise<int> p, int a, int b) {
-    try {
-        std::this_thread::sleep_for(std::chrono::milliseconds(30));
-        p.set_value(a - b);
-    } catch (...) {
-        p.set_exception(std::current_exception());
-    }
-}
-
-// 🔹 NEW: batch async calculator
-std::future<int> async_square(int n) {
-    return std::async(std::launch::async, [n]() {
-        return n * n;
-    });
-}
-
-// 🔹 NEW: delayed future demo
-std::future<int> delayed_future(int value) {
-    return std::async(std::launch::async, [value]() {
-        std::this_thread::sleep_for(std::chrono::milliseconds(80));
+[[nodiscard]] std::future<int> delayed_future(int value, std::chrono::milliseconds delay = 80ms) {
+    return std::async(std::launch::async, [value, delay] {
+        std::this_thread::sleep_for(delay);
         return value;
     });
 }
 
-// 🔹 NEW: shared_future helper
 void shared_future_reader(std::shared_future<int> sf, int id) {
-    std::cout << "Reader " << id
-              << " received: " << sf.get() << "\n";
+    std::cout << "Reader " << id << " got=" << sf.get() << "\n";
 }
 
-// ---------------- MAIN ----------------
+template<typename Func>
+[[nodiscard]] std::pair<std::future<int>, std::thread>
+make_promised(Func fn) {
+    std::promise<int> p;
+    auto fut = p.get_future();
+    std::thread t{[p = std::move(p), fn = std::move(fn)]() mutable {
+        try { p.set_value(fn()); }
+        catch (...) { p.set_exception(std::current_exception()); }
+    }};
+    return {std::move(fut), std::move(t)};
+}
 
 int main() {
+    std::cout << "=== promise + future (manual thread) ===\n";
+    {
+        auto [fut, t] = make_promised([] { return calculate_sum(10, 20); });
+        std::cout << "Waiting...\n";
+        std::cout << "Result=" << fut.get() << "\n";
+        t.join();
+    }
 
-    // Using std::promise and std::future
-    std::promise<int> promise;
-    std::future<int> future = promise.get_future();
+    std::cout << "\n=== shared_future (one producer, two consumers) ===\n";
+    {
+        std::promise<int> p;
+        std::shared_future<int> sf = p.get_future().share();
 
-    std::thread t([&promise]() {
+        std::thread producer{[&p]{ std::this_thread::sleep_for(100ms); p.set_value(50); }};
+        std::thread c1{[sf]{ std::cout << "Consumer1 got=" << sf.get() << "\n"; }};
+        std::thread c2{[sf]{ std::cout << "Consumer2 got=" << sf.get() << "\n"; }};
+
+        producer.join(); c1.join(); c2.join();
+    }
+
+    std::cout << "\n=== exception propagation ===\n";
+    {
+        auto [fut, t] = make_promised([] { return risky_division(10, 0); });
         try {
-            int result = calculate_sum(10, 20);
-            promise.set_value(result);
-        } catch (...) {
-            promise.set_exception(std::current_exception());
+            std::cout << "Result=" << fut.get() << "\n";
+        } catch (const std::exception& e) {
+            std::cout << "Caught: " << e.what() << "\n";
         }
-    });
-
-    std::cout << "Waiting for result...\n";
-
-    future.wait(); // wait explicitly
-    int result = future.get();
-
-    std::cout << "Result: " << result << "\n";
-
-    t.join();
-
-
-    // -------- shared_future example --------
-
-    std::promise<int> promise2;
-    std::future<int> future2 = promise2.get_future();
-    std::shared_future<int> shared = future2.share();
-
-    std::thread producer([&promise2]() {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        promise2.set_value(50);
-    });
-
-    std::thread consumer1([shared]() {
-        std::cout << "Consumer 1 got: " << shared.get() << "\n";
-    });
-
-    std::thread consumer2([shared]() {
-        std::cout << "Consumer 2 got: " << shared.get() << "\n";
-    });
-
-    producer.join();
-    consumer1.join();
-    consumer2.join();
-
-
-    // ---------------- ADDED USAGE ----------------
-
-    // Using helper async_task
-    std::promise<int> promise3;
-    std::future<int> future3 = promise3.get_future();
-    std::thread t2(async_task, std::move(promise3), 5, 15);
-
-    std::cout << "Async task result: " << future3.get() << "\n";
-    t2.join();
-
-    // Exception propagation demo
-    std::promise<int> promise4;
-    std::future<int> future4 = promise4.get_future();
-
-    std::thread t3([&promise4]() {
-        try {
-            promise4.set_value(risky_division(10, 0));
-        } catch (...) {
-            promise4.set_exception(std::current_exception());
-        }
-    });
-
-    try {
-        std::cout << "Risky result: " << future4.get() << "\n";
-    } catch (const std::exception& e) {
-        std::cout << "Caught exception from thread: "
-                  << e.what() << "\n";
+        t.join();
     }
 
-    t3.join();
-
-    // 🔹 NEW: async multiply demo
-    std::promise<int> promise5;
-    std::future<int> future5 = promise5.get_future();
-    std::thread t4(async_multiply, std::move(promise5), 6, 7);
-
-    check_status(future5);
-    std::cout << "Multiply result: " << future5.get() << "\n";
-    t4.join();
-
-    // 🔹 NEW: chaining futures (manual)
-    std::promise<int> promise6;
-    std::future<int> future6 = promise6.get_future();
-
-    std::thread t5([&promise6]() {
-        try {
-            int val = calculate_sum(2, 3);
-            val *= 10; // chained logic
-            promise6.set_value(val);
-        } catch (...) {
-            promise6.set_exception(std::current_exception());
-        }
-    });
-
-    std::cout << "Chained result: " << future6.get() << "\n";
-    t5.join();
-
-    // ======================================================
-    // 🔥 EXTRA NEW ADDITIONS
-    // ======================================================
-
-    std::cout << "\n--- Extra Future Tests ---\n";
-
-    // 🔹 async subtraction
-    std::promise<int> promise7;
-    std::future<int> future7 = promise7.get_future();
-
-    std::thread t6(async_subtract, std::move(promise7), 20, 8);
-
-    std::cout << "Subtract result: "
-              << future7.get() << "\n";
-
-    t6.join();
-
-    // 🔹 async square batch
-    std::vector<std::future<int>> futures;
-
-    for (int i = 1; i <= 5; ++i) {
-        futures.push_back(async_square(i));
+    std::cout << "\n=== check_status before ready ===\n";
+    {
+        auto [fut, t] = make_promised([] {
+            std::this_thread::sleep_for(50ms);
+            return 6 * 7;
+        });
+        check_status(fut, "multiply");
+        std::cout << "Result=" << fut.get() << "\n";
+        t.join();
     }
 
-    std::cout << "Square results: ";
-    for (auto& f : futures) {
-        std::cout << f.get() << " ";
-    }
-    std::cout << "\n";
-
-    // 🔹 delayed future demo
-    auto delayed = delayed_future(999);
-
-    if (delayed.wait_for(std::chrono::milliseconds(20))
-        == std::future_status::timeout) {
-        std::cout << "Delayed future still running...\n";
+    std::cout << "\n=== chained computation ===\n";
+    {
+        auto [fut, t] = make_promised([] { return calculate_sum(2, 3) * 10; });
+        std::cout << "Chained=" << fut.get() << "\n";
+        t.join();
     }
 
-    std::cout << "Delayed future result: "
-              << delayed.get() << "\n";
+    std::cout << "\n=== async_square batch ===\n";
+    {
+        std::vector<std::future<int>> futures;
+        futures.reserve(5);
+        for (int i = 1; i <= 5; ++i) futures.push_back(async_square(i));
+        std::cout << "Squares: ";
+        for (auto& f : futures) std::cout << f.get() << " ";
+        std::cout << "\n";
+    }
 
-    // 🔹 shared_future with multiple readers
-    std::promise<int> promise8;
-    std::shared_future<int> shared2 =
-        promise8.get_future().share();
+    std::cout << "\n=== delayed_future ===\n";
+    {
+        auto fut = delayed_future(999, 80ms);
+        check_status(fut, "delayed");
+        std::cout << "Delayed=" << fut.get() << "\n";
+    }
 
-    std::thread writer([&promise8]() {
-        std::this_thread::sleep_for(
-            std::chrono::milliseconds(50));
-        promise8.set_value(777);
-    });
+    std::cout << "\n=== shared_future (three readers) ===\n";
+    {
+        std::promise<int> p;
+        std::shared_future<int> sf = p.get_future().share();
 
-    std::thread r1(shared_future_reader, shared2, 1);
-    std::thread r2(shared_future_reader, shared2, 2);
-    std::thread r3(shared_future_reader, shared2, 3);
+        std::thread writer{[&p]{ std::this_thread::sleep_for(50ms); p.set_value(777); }};
+        std::thread r1{shared_future_reader, sf, 1};
+        std::thread r2{shared_future_reader, sf, 2};
+        std::thread r3{shared_future_reader, sf, 3};
 
-    writer.join();
-    r1.join();
-    r2.join();
-    r3.join();
+        writer.join(); r1.join(); r2.join(); r3.join();
+    }
 
-    // 🔹 combine async results
-    auto f1 = std::async(std::launch::async,
-                         calculate_sum, 1, 2);
-
-    auto f2 = std::async(std::launch::async,
-                         calculate_sum, 3, 4);
-
-    int combined = f1.get() + f2.get();
-
-    std::cout << "Combined async total: "
-              << combined << "\n";
-
-    // ======================================================
+    std::cout << "\n=== combine two std::async results ===\n";
+    {
+        auto f1 = std::async(std::launch::async, calculate_sum, 1, 2);
+        auto f2 = std::async(std::launch::async, calculate_sum, 3, 4);
+        std::cout << "Combined=" << f1.get() + f2.get() << "\n";
+    }
 
     return 0;
 }

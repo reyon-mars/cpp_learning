@@ -1,219 +1,171 @@
 #include <iostream>
 #include <utility>
-#include <vector>      // 🔹 ADDED
-#include <numeric>     // 🔹 ADDED
-#include <algorithm>   // 🔹 ADDED
+#include <vector>
+#include <numeric>
+#include <algorithm>
+#include <cstdlib>
+#include <stdexcept>
+#include <span>
 
-// ======================================================
-// ORIGINAL CLASS (LOGIC UNCHANGED)
-// ======================================================
-
-class counter {
-private:
-    int value = 0;
+class Counter {
+    int value_{0};
 
 public:
-    int increment(int amount) {
-        return std::exchange(value, value + amount);
+    explicit Counter(int initial = 0) noexcept : value_{initial} {}
+
+    [[nodiscard]] int current() const noexcept { return value_; }
+    [[nodiscard]] bool is_zero()     const noexcept { return value_ == 0; }
+    [[nodiscard]] bool is_positive() const noexcept { return value_ >  0; }
+    [[nodiscard]] bool equals(int other) const noexcept { return value_ == other; }
+
+    int increment(int amount) noexcept {
+        return std::exchange(value_, value_ + amount);
     }
 
-    int reset() {
-        return std::exchange(value, 0);
+    int decrement(int amount) noexcept {
+        return std::exchange(value_, value_ - amount);
     }
 
-    // ---- small added helpers ----
-    int current() const { return value; }
-    bool is_zero() const { return value == 0; }
-
-    void print() const {
-        std::cout << "Counter value: " << value << std::endl;
+    int reset() noexcept {
+        return std::exchange(value_, 0);
     }
 
-    // NEW: decrement helper
-    int decrement(int amount) {
-        return std::exchange(value, value - amount);
+    void set(int v) noexcept { value_ = v; }
+
+    void add(int amount) noexcept { value_ += amount; }
+
+    void add_multiple(int times, int amount) noexcept {
+        value_ += times * amount;
     }
 
-    // NEW: add multiple values
-    void add_multiple(int times, int amount) {
-        for (int i = 0; i < times; ++i) {
-            value += amount;
-        }
-    }
+    void multiply(int factor) noexcept { value_ *= factor; }
 
-    // NEW: check if positive
-    bool is_positive() const {
-        return value > 0;
-    }
-
-    // 🔹 NEW: set value directly
-    void set(int v) {
-        value = v;
-    }
-
-    // 🔹 NEW: multiply value
-    void multiply(int factor) {
-        value *= factor;
-    }
-
-    // 🔹 NEW: simple add wrapper
-    void add(int amount) {
-        value += amount;
-    }
-
-    // ==================================================
-    // 🔥 EXTRA SMALL ADDITIONS
-    // ==================================================
-
-    // 🔹 NEW: divide safely
-    bool divide(int divisor) {
-        if (divisor == 0) {
-            return false;
-        }
-
-        value /= divisor;
+    [[nodiscard]] bool divide(int divisor) noexcept {
+        if (divisor == 0) return false;
+        value_ /= divisor;
         return true;
     }
 
-    // 🔹 NEW: absolute value
-    void make_positive() {
-        value = std::abs(value);
+    void make_positive() noexcept { value_ = std::abs(value_); }
+
+    void increment_loop(int times) noexcept {
+        value_ += times;
     }
 
-    // 🔹 NEW: compare values
-    bool equals(int other) const {
-        return value == other;
+    void max_with(int other) noexcept {
+        value_ = std::max(value_, other);
     }
 
-    // 🔹 NEW: increment repeatedly
-    void increment_loop(int times) {
-        for (int i = 0; i < times; ++i) {
-            ++value;
-        }
+    void min_with(int other) noexcept {
+        value_ = std::min(value_, other);
     }
 
-    // 🔹 NEW: maximum assignment
-    void max_with(int other) {
-        value = std::max(value, other);
+    void clamp(int lo, int hi) {
+        if (lo > hi) throw std::invalid_argument("clamp: lo must be <= hi");
+        value_ = std::clamp(value_, lo, hi);
     }
 
-    // --------------------------------------------------
+    void apply(std::span<const int> deltas) noexcept {
+        value_ = std::accumulate(deltas.begin(), deltas.end(), value_);
+    }
+
+    void print() const {
+        std::cout << "Counter value: " << value_ << '\n';
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const Counter& c) {
+        return os << c.value_;
+    }
+
+    auto operator<=>(const Counter&) const = default;
 };
 
-// ======================================================
-// MAIN
-// ======================================================
+int main() {
+    Counter c;
 
-int main(void) {
-
-    counter countr;
-
-    for (int i = 1; i < 100; i++) {
-        std::cout << countr.increment(i) << " ";
+    for (int i = 1; i < 100; ++i) {
+        std::cout << c.increment(i) << ' ';
     }
+    std::cout << c.reset() << '\n';
 
-    std::cout << countr.reset() << std::endl;
+    std::cout << "Current value: " << c.current() << '\n';
+    std::cout << "Is counter zero? " << (c.is_zero() ? "Yes" : "No") << '\n';
 
-    // ---- very small added code ----
+    c.increment(10);
+    c.print();
 
-    std::cout << "Current value: "
-              << countr.current() << std::endl;
+    c.reset();
+    c.print();
 
-    std::cout << "Is counter zero? "
-              << (countr.is_zero() ? "Yes" : "No")
-              << std::endl;
+    c.increment(20);
+    c.decrement(5);
+    c.print();
 
-    // Additional small tests
-    countr.increment(10);
-    countr.print();
+    c.add_multiple(3, 2);
+    c.print();
 
-    countr.reset();
-    countr.print();
+    std::cout << "Is positive? " << (c.is_positive() ? "Yes" : "No") << '\n';
 
-    // ---------------- NEW SMALL TESTS ----------------
+    c.set(10);
+    c.print();
 
-    countr.increment(20);
-    countr.decrement(5);
-    countr.print();
+    c.multiply(3);
+    c.print();
 
-    countr.add_multiple(3, 2); // adds 2 three times
-    countr.print();
-
-    std::cout << "Is positive? "
-              << (countr.is_positive() ? "Yes" : "No")
-              << std::endl;
-
-    // 🔹 NEW TESTS
-
-    countr.set(10);
-    countr.print();
-
-    countr.multiply(3);
-    countr.print();
-
-    countr.add(7);
-    countr.print();
-
-    // ==================================================
-    // 🔥 EXTRA TESTS
-    // ==================================================
+    c.add(7);
+    c.print();
 
     std::cout << "\n--- Extra Counter Operations ---\n";
 
-    // divide demo
-    if (countr.divide(2)) {
+    if (c.divide(2)) {
         std::cout << "Division successful\n";
     }
+    c.print();
 
-    countr.print();
-
-    // divide by zero protection
-    if (!countr.divide(0)) {
+    if (!c.divide(0)) {
         std::cout << "Division by zero prevented\n";
     }
 
-    // negative to positive
-    countr.set(-50);
-    countr.print();
+    c.set(-50);
+    c.print();
 
-    countr.make_positive();
-    countr.print();
+    c.make_positive();
+    c.print();
 
-    // equality check
-    std::cout << "Equals 50? "
-              << (countr.equals(50) ? "Yes" : "No")
-              << std::endl;
+    std::cout << "Equals 50? " << (c.equals(50) ? "Yes" : "No") << '\n';
 
-    // repeated increment
-    countr.increment_loop(5);
-    countr.print();
+    c.increment_loop(5);
+    c.print();
 
-    // max comparison
-    countr.max_with(100);
-    countr.print();
+    c.max_with(100);
+    c.print();
 
-    // 🔹 vector utility demo
-    std::vector<int> nums = {1, 2, 3, 4, 5};
+    constexpr std::array nums{1, 2, 3, 4, 5};
 
-    int total = std::accumulate(
-        nums.begin(),
-        nums.end(),
-        0
-    );
+    const int total = std::accumulate(nums.begin(), nums.end(), 0);
+    std::cout << "Accumulated total: " << total << '\n';
 
-    std::cout << "Accumulated vector total: "
-              << total << std::endl;
+    const auto max_it = std::max_element(nums.begin(), nums.end());
+    std::cout << "Largest element: " << *max_it << '\n';
 
-    // 🔹 algorithm demo
-    auto max_it = std::max_element(
-        nums.begin(),
-        nums.end()
-    );
+    std::cout << "\n--- New Operations Demo ---\n";
 
-    std::cout << "Largest vector element: "
-              << *max_it << std::endl;
+    c.set(200);
+    c.min_with(150);
+    c.print();
 
-    // -------------------------------------------------
+    c.set(30);
+    c.clamp(50, 100);
+    c.print();
+
+    const std::array deltas{5, -3, 10, 2};
+    c.apply(deltas);
+    c.print();
+
+    std::cout << "Counter via stream: " << c << '\n';
+
+    Counter a{10}, b{20};
+    std::cout << "a < b? " << (a < b ? "Yes" : "No") << '\n';
 
     return 0;
 }

@@ -1,208 +1,112 @@
-// Numeric Algorithms Exercise
-// accumulate, inner_product, adjacent_difference, partial_sum
-
 #include <iostream>
 #include <vector>
 #include <numeric>
 #include <algorithm>
-#include <functional> // 🔹 ADDED
+#include <functional>
+#include <span>
+#include <ranges>
+#include <cmath>
+
+template <std::ranges::input_range R>
+void print_range(std::string_view label, const R& range) {
+    std::cout << label << ": ";
+    for (const auto& v : range) std::cout << v << ' ';
+    std::cout << '\n';
+}
 
 int main() {
-    std::vector<int> vec = {1, 2, 3, 4, 5};
-    
-    // accumulate (sum)
-    int sum = std::accumulate(vec.begin(), vec.end(), 0);
-    std::cout << "Sum: " << sum << "\n";
-    
-    // accumulate with custom operation
-    int product = std::accumulate(vec.begin(), vec.end(), 1,
-                                  [](int a, int b) { return a * b; });
-    std::cout << "Product: " << product << "\n";
-    
-    // inner_product
-    std::vector<int> vec2 = {2, 3, 4, 5, 6};
-    int dot_product = std::inner_product(vec.begin(), vec.end(), 
-                                         vec2.begin(), 0);
-    std::cout << "Dot product: " << dot_product << "\n";
+    constexpr std::array vec  {1, 2, 3, 4, 5};
+    constexpr std::array vec2 {2, 3, 4, 5, 6};
 
-    // partial_sum
+    std::cout << "Sum: "
+              << std::accumulate(vec.begin(), vec.end(), 0) << '\n';
+
+    std::cout << "Product: "
+              << std::accumulate(vec.begin(), vec.end(), 1, std::multiplies<>{}) << '\n';
+
+    std::cout << "Dot product: "
+              << std::inner_product(vec.begin(), vec.end(), vec2.begin(), 0) << '\n';
+
     std::vector<int> partial(vec.size());
     std::partial_sum(vec.begin(), vec.end(), partial.begin());
-    std::cout << "Partial sums: ";
-    for (int v : partial) {
-        std::cout << v << " ";
-    }
-    std::cout << "\n";
+    print_range("Partial sums", partial);
 
-    // adjacent_difference
     std::vector<int> diff(vec.size());
     std::adjacent_difference(vec.begin(), vec.end(), diff.begin());
-    std::cout << "Adjacent differences: ";
-    for (int v : diff) {
-        std::cout << v << " ";
-    }
-    std::cout << "\n";
+    print_range("Adjacent differences", diff);
 
-    // ---------------- SMALL ADDITIONS ----------------
+    std::cout << "Subtraction result: "
+              << std::accumulate(vec.begin(), vec.end(), 0, std::minus<>{}) << '\n';
 
-    // accumulate with subtraction
-    int subtract_all = std::accumulate(vec.begin(), vec.end(), 0,
-                                       [](int a, int b) { return a - b; });
-    std::cout << "Subtraction result: " << subtract_all << "\n";
+    std::cout << "Custom inner product: "
+              << std::inner_product(
+                     vec.begin(), vec.end(), vec2.begin(), 0,
+                     std::plus<>{},
+                     [](int a, int b) { return a * b + 1; })
+              << '\n';
 
-    // inner_product with custom operations
-    int custom_inner = std::inner_product(
-        vec.begin(), vec.end(), vec2.begin(), 0,
-        std::plus<>(),
-        [](int a, int b) { return a * b + 1; }
-    );
-    std::cout << "Custom inner product: " << custom_inner << "\n";
-
-    // partial_sum with multiplication
     std::vector<int> partial_product(vec.size());
-    std::partial_sum(vec.begin(), vec.end(), partial_product.begin(),
-                     [](int a, int b) { return a * b; });
+    std::partial_sum(vec.begin(), vec.end(), partial_product.begin(), std::multiplies<>{});
+    print_range("Partial products", partial_product);
 
-    std::cout << "Partial products: ";
-    for (int v : partial_product) {
-        std::cout << v << " ";
-    }
-    std::cout << "\n";
-
-    // adjacent_difference with multiplication
     std::vector<int> diff_product(vec.size());
-    std::adjacent_difference(vec.begin(), vec.end(), diff_product.begin(),
-                             [](int a, int b) { return a * b; });
+    std::adjacent_difference(vec.begin(), vec.end(), diff_product.begin(), std::multiplies<>{});
+    print_range("Adjacent products", diff_product);
 
-    std::cout << "Adjacent products: ";
-    for (int v : diff_product) {
-        std::cout << v << " ";
-    }
-    std::cout << "\n";
-
-    // prefix max using partial_sum
     std::vector<int> prefix_max(vec.size());
     std::partial_sum(vec.begin(), vec.end(), prefix_max.begin(),
                      [](int a, int b) { return std::max(a, b); });
+    print_range("Prefix max", prefix_max);
 
-    std::cout << "Prefix max: ";
-    for (int v : prefix_max) {
-        std::cout << v << " ";
-    }
-    std::cout << "\n";
+    std::cout << "Reduce sum: "
+              << std::reduce(vec.begin(), vec.end(), 0) << '\n';
 
-    // 🔹 NEW: std::reduce (C++17)
-    int reduce_sum = std::reduce(vec.begin(), vec.end(), 0);
-    std::cout << "Reduce sum: " << reduce_sum << "\n";
-
-    // 🔹 NEW: inclusive_scan (like partial_sum)
     std::vector<int> inclusive(vec.size());
     std::inclusive_scan(vec.begin(), vec.end(), inclusive.begin());
+    print_range("Inclusive scan", inclusive);
 
-    std::cout << "Inclusive scan: ";
-    for (int v : inclusive) {
-        std::cout << v << " ";
-    }
-    std::cout << "\n";
-
-    // 🔹 NEW: exclusive_scan
     std::vector<int> exclusive(vec.size());
     std::exclusive_scan(vec.begin(), vec.end(), exclusive.begin(), 0);
+    print_range("Exclusive scan", exclusive);
 
-    std::cout << "Exclusive scan: ";
-    for (int v : exclusive) {
-        std::cout << v << " ";
-    }
-    std::cout << "\n";
-
-    // 🔹 NEW: running average
     std::vector<double> running_avg(vec.size());
-    std::partial_sum(vec.begin(), vec.end(), running_avg.begin(),
-                     [](double a, double b) { return a + b; });
-
-    for (size_t i = 0; i < running_avg.size(); ++i) {
-        running_avg[i] /= (i + 1);
-    }
-
-    std::cout << "Running average: ";
-    for (double v : running_avg) {
-        std::cout << v << " ";
-    }
-    std::cout << "\n";
-
-    // ---------------- EXTRA ADDITIONS ----------------
-
-    // 🔹 NEW: transform_reduce
-    int transform_reduce_result = std::transform_reduce(
-        vec.begin(), vec.end(),
-        vec2.begin(),
-        0
-    );
+    std::inclusive_scan(vec.begin(), vec.end(), running_avg.begin(), std::plus<double>{});
+    for (std::size_t i = 0; i < running_avg.size(); ++i) running_avg[i] /= static_cast<double>(i + 1);
+    print_range("Running average", running_avg);
 
     std::cout << "Transform reduce result: "
-              << transform_reduce_result << "\n";
-
-    // 🔹 NEW: gcd accumulation
-    int gcd_result = std::accumulate(
-        vec.begin(), vec.end(),
-        vec[0],
-        [](int a, int b) {
-            return std::gcd(a, b);
-        }
-    );
+              << std::transform_reduce(vec.begin(), vec.end(), vec2.begin(), 0) << '\n';
 
     std::cout << "GCD of all elements: "
-              << gcd_result << "\n";
-
-    // 🔹 NEW: lcm accumulation
-    int lcm_result = std::accumulate(
-        vec.begin(), vec.end(),
-        1,
-        [](int a, int b) {
-            return std::lcm(a, b);
-        }
-    );
+              << std::accumulate(vec.begin(), vec.end(), vec.front(),
+                                 [](int a, int b) { return std::gcd(a, b); }) << '\n';
 
     std::cout << "LCM of all elements: "
-              << lcm_result << "\n";
+              << std::accumulate(vec.begin(), vec.end(), 1,
+                                 [](int a, int b) { return std::lcm(a, b); }) << '\n';
 
-    // 🔹 NEW: adjacent difference with subtraction check
     std::vector<int> custom_diff(vec.size());
+    std::adjacent_difference(vec.begin(), vec.end(), custom_diff.begin(), std::minus<>{});
+    print_range("Custom adjacent differences", custom_diff);
 
-    std::adjacent_difference(
-        vec.begin(),
-        vec.end(),
-        custom_diff.begin(),
-        [](int a, int b) {
-            return a - b;
-        }
-    );
-
-    std::cout << "Custom adjacent differences: ";
-    for (int v : custom_diff) {
-        std::cout << v << " ";
-    }
-    std::cout << "\n";
-
-    // 🔹 NEW: cumulative minimum
     std::vector<int> cumulative_min(vec.size());
+    std::partial_sum(vec.begin(), vec.end(), cumulative_min.begin(),
+                     [](int a, int b) { return std::min(a, b); });
+    print_range("Cumulative minimums", cumulative_min);
 
-    std::partial_sum(
-        vec.begin(),
-        vec.end(),
-        cumulative_min.begin(),
-        [](int a, int b) {
-            return std::min(a, b);
-        }
-    );
+    std::vector<int> exclusive_product(vec.size());
+    std::exclusive_scan(vec.begin(), vec.end(), exclusive_product.begin(), 1, std::multiplies<>{});
+    print_range("Exclusive product scan", exclusive_product);
 
-    std::cout << "Cumulative minimums: ";
-    for (int v : cumulative_min) {
-        std::cout << v << " ";
-    }
-    std::cout << "\n";
+    std::cout << "Sum of squares: "
+              << std::transform_reduce(vec.begin(), vec.end(), 0, std::plus<>{},
+                                       [](int x) { return x * x; }) << '\n';
 
-    // ------------------------------------------------
+    std::cout << "L2 norm: "
+              << std::sqrt(static_cast<double>(
+                     std::transform_reduce(vec.begin(), vec.end(), 0, std::plus<>{},
+                                           [](int x) { return x * x; })))
+              << '\n';
 
     return 0;
 }

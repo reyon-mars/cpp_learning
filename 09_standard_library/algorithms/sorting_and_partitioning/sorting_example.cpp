@@ -1,171 +1,111 @@
-// Sorting and Partitioning Exercise
-// sort, stable_sort, nth_element, partition
-
 #include <iostream>
 #include <vector>
 #include <algorithm>
-#include <functional> // 🔹 NEW
+#include <functional>
+#include <ranges>
+#include <span>
+
+template <std::ranges::input_range R>
+void print_range(std::string_view label, const R& range) {
+    std::cout << label << ": ";
+    for (const auto& v : range) std::cout << v << ' ';
+    std::cout << '\n';
+}
+
+template <std::ranges::random_access_range R>
+std::ptrdiff_t iter_index(const R& range, std::ranges::iterator_t<const R> it) {
+    return std::ranges::distance(std::ranges::begin(range), it);
+}
 
 int main() {
-    // sort
-    std::vector<int> data = {5, 2, 8, 1, 9, 3};
-    std::sort(data.begin(), data.end());
-    
-    std::cout << "Sorted: ";
-    for (int v : data) std::cout << v << " ";
-    std::cout << "\n";
-    
-    // stable_sort
+    std::vector data {5, 2, 8, 1, 9, 3};
+
+    std::ranges::sort(data);
+    print_range("Sorted", data);
+
     data = {5, 2, 8, 1, 9, 3};
-    std::stable_sort(data.begin(), data.end());
+    std::ranges::stable_sort(data);
+    print_range("Stable sorted", data);
 
-    std::cout << "Stable sorted: ";
-    for (int v : data) std::cout << v << " ";
-    std::cout << "\n";
-    
-    // nth_element
     data = {5, 2, 8, 1, 9, 3};
-    std::nth_element(data.begin(), data.begin() + 2, data.end());
-    std::cout << "Element at position 2: " << data[2] << "\n";
-    
-    // partition
+    std::ranges::nth_element(data, data.begin() + 2);
+    std::cout << "Element at position 2: " << data[2] << '\n';
+
     data = {5, 2, 8, 1, 9, 3};
-    auto pivot = std::partition(data.begin(), data.end(), 
-                               [](int x) { return x < 5; });
+    auto pivot = std::ranges::partition(data, [](int x) { return x < 5; });
+    std::cout << "Partition index: " << iter_index(data, pivot.begin()) << '\n';
+    print_range("After partition", data);
 
-    std::cout << "Partition index: "
-              << std::distance(data.begin(), pivot) << "\n";
+    std::cout << "Is data sorted? "
+              << (std::ranges::is_sorted(data) ? "Yes" : "No") << '\n';
 
-    std::cout << "After partition: ";
-    for (int v : data) std::cout << v << " ";
-    std::cout << "\n";
+    std::ranges::reverse(data);
+    print_range("Reversed data", data);
 
-    // ---- additional small examples ----
+    auto point = std::ranges::partition_point(data, [](int x) { return x < 5; });
+    std::cout << "Partition point index: " << iter_index(data, point) << '\n';
 
-    // check if sorted
-    bool sorted = std::is_sorted(data.begin(), data.end());
-    std::cout << "Is data sorted? " << (sorted ? "Yes" : "No") << "\n";
+    std::ranges::sort(data);
 
-    // reverse the data
-    std::reverse(data.begin(), data.end());
-    std::cout << "Reversed data: ";
-    for (int v : data) std::cout << v << " ";
-    std::cout << "\n";
-
-    // partition_point (works after partition)
-    auto point = std::partition_point(data.begin(), data.end(),
-                                     [](int x) { return x < 5; });
-
-    std::cout << "Partition point index: "
-              << std::distance(data.begin(), point) << "\n";
-
-    // ---------------- NEW SMALL ADDITIONS ----------------
-
-    // binary_search (requires sorted data)
-    std::sort(data.begin(), data.end());
-
-    bool found = std::binary_search(data.begin(), data.end(), 5);
     std::cout << "Binary search for 5: "
-              << (found ? "Found" : "Not Found") << "\n";
+              << (std::ranges::binary_search(data, 5) ? "Found" : "Not found") << '\n';
 
-    // lower_bound & upper_bound
-    auto lb = std::lower_bound(data.begin(), data.end(), 5);
-    auto ub = std::upper_bound(data.begin(), data.end(), 5);
+    auto lb = std::ranges::lower_bound(data, 5);
+    auto ub = std::ranges::upper_bound(data, 5);
+    std::cout << "Lower bound index of 5: " << iter_index(data, lb) << '\n';
+    std::cout << "Upper bound index of 5: " << iter_index(data, ub) << '\n';
 
-    std::cout << "Lower bound index of 5: "
-              << std::distance(data.begin(), lb) << "\n";
-
-    std::cout << "Upper bound index of 5: "
-              << std::distance(data.begin(), ub) << "\n";
-
-    // equal_range
-    auto range = std::equal_range(data.begin(), data.end(), 5);
-
+    auto [first, last] = std::ranges::equal_range(data, 5);
     std::cout << "Equal range for 5: ["
-              << std::distance(data.begin(), range.first) << ", "
-              << std::distance(data.begin(), range.second) << ")\n";
+              << iter_index(data, first) << ", "
+              << iter_index(data, last) << ")\n";
 
-    // partial_sort (top 3 smallest elements sorted)
     data = {5, 2, 8, 1, 9, 3};
+    std::ranges::partial_sort(data, data.begin() + 3);
+    print_range("Partial sort (first 3 smallest)", data);
 
-    std::partial_sort(data.begin(), data.begin() + 3, data.end());
-
-    std::cout << "Partial sort (first 3 smallest): ";
-    for (int v : data) std::cout << v << " ";
-    std::cout << "\n";
-
-    // is_partitioned check
     data = {1, 2, 3, 6, 7, 8};
-
-    bool is_part = std::is_partitioned(data.begin(), data.end(),
-                                       [](int x) { return x < 5; });
-
     std::cout << "Is partitioned (<5)? "
-              << (is_part ? "Yes" : "No") << "\n";
+              << (std::ranges::is_partitioned(data, [](int x) { return x < 5; }) ? "Yes" : "No")
+              << '\n';
 
-    // ---------------- EXTRA ADDITIONS ----------------
-
-    // sort in descending order
     data = {5, 2, 8, 1, 9, 3};
+    std::ranges::sort(data, std::greater<>{});
+    print_range("Descending sort", data);
 
-    std::sort(data.begin(), data.end(), std::greater<int>());
-
-    std::cout << "Descending sort: ";
-    for (int v : data) std::cout << v << " ";
-    std::cout << "\n";
-
-    // stable_partition
     data = {1, 2, 3, 4, 5, 6};
+    std::ranges::stable_partition(data, [](int x) { return x % 2 == 0; });
+    print_range("Stable partition (evens first)", data);
 
-    std::stable_partition(data.begin(), data.end(),
-                          [](int x) { return x % 2 == 0; });
+    std::vector merged {1, 3, 5, 2, 4, 6};
+    std::inplace_merge(merged.begin(), merged.begin() + 3, merged.end());
+    print_range("Inplace merged", merged);
 
-    std::cout << "Stable partition (evens first): ";
-    for (int v : data) std::cout << v << " ";
-    std::cout << "\n";
+    std::vector perm {1, 2, 3};
+    std::ranges::next_permutation(perm);
+    print_range("Next permutation", perm);
 
-    // inplace_merge
-    std::vector<int> merged = {1, 3, 5, 2, 4, 6};
+    std::ranges::prev_permutation(perm);
+    print_range("Previous permutation", perm);
 
-    std::inplace_merge(merged.begin(),
-                       merged.begin() + 3,
-                       merged.end());
+    std::vector heap_data {4, 1, 7, 3, 8, 5};
+    std::ranges::make_heap(heap_data);
+    std::cout << "Heap front element: " << heap_data.front() << '\n';
 
-    std::cout << "Inplace merged data: ";
-    for (int v : merged) std::cout << v << " ";
-    std::cout << "\n";
+    std::ranges::pop_heap(heap_data);
+    print_range("After pop_heap", heap_data);
 
-    // next_permutation
-    std::vector<int> perm = {1, 2, 3};
+    std::ranges::push_heap(heap_data);
+    std::ranges::sort_heap(heap_data);
+    print_range("Heap sort result", heap_data);
 
-    std::next_permutation(perm.begin(), perm.end());
+    data = {5, 2, 8, 1, 9, 3};
+    auto [min_it, max_it] = std::ranges::minmax_element(data);
+    std::cout << "Min: " << *min_it << "  Max: " << *max_it << '\n';
 
-    std::cout << "Next permutation: ";
-    for (int v : perm) std::cout << v << " ";
-    std::cout << "\n";
-
-    // prev_permutation
-    std::prev_permutation(perm.begin(), perm.end());
-
-    std::cout << "Previous permutation: ";
-    for (int v : perm) std::cout << v << " ";
-    std::cout << "\n";
-
-    // heap operations
-    std::vector<int> heap_data = {4, 1, 7, 3, 8, 5};
-
-    std::make_heap(heap_data.begin(), heap_data.end());
-
-    std::cout << "Heap front element: "
-              << heap_data.front() << "\n";
-
-    std::pop_heap(heap_data.begin(), heap_data.end());
-
-    std::cout << "After pop_heap: ";
-    for (int v : heap_data) std::cout << v << " ";
-    std::cout << "\n";
-
-    // ----------------------------------------------------
+    std::vector<int> sorted_copy(data.size());
+    std::ranges::partial_sort_copy(data, sorted_copy);
+    print_range("Partial sort copy", sorted_copy);
 
     return 0;
 }

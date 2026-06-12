@@ -1,363 +1,164 @@
-// Algorithms Exercise
-// Non-modifying algorithms (find, count, search, etc.)
-
 #include <iostream>
 #include <vector>
 #include <algorithm>
 #include <numeric>
-#include <iterator>   // 🔹 ADDED
+#include <iterator>
+#include <ranges>
+#include <format>
+#include <cassert>
+#include <functional>
+#include <span>
+
+template <std::ranges::input_range R>
+void print_range(std::string_view label, R&& r) {
+    std::cout << std::format("{}: ", label);
+    for (const auto& v : r)
+        std::cout << std::format("{} ", v);
+    std::cout << '\n';
+}
 
 int main() {
-
-    std::vector<int> vec = {
-        1, 2, 3, 4, 5, 3, 2, 1
-    };
+    std::vector<int> vec = {1, 2, 3, 4, 5, 3, 2, 1};
 
     // find
-    auto it = std::find(
-        vec.begin(),
-        vec.end(),
-        3
-    );
-
-    if (it != vec.end()) {
-
-        std::cout
-            << "Found 3 at index: "
-            << std::distance(vec.begin(), it)
-            << "\n";
-    }
+    if (auto it = std::ranges::find(vec, 3); it != vec.end())
+        std::cout << std::format("Found 3 at index: {}\n",
+                                 std::ranges::distance(vec.begin(), it));
 
     // count
-    int count = std::count(
-        vec.begin(),
-        vec.end(),
-        3
-    );
-
-    std::cout
-        << "Count of 3: "
-        << count
-        << "\n";
+    std::cout << std::format("Count of 3: {}\n", std::ranges::count(vec, 3));
 
     // find_if
-    auto even = std::find_if(
-        vec.begin(),
-        vec.end(),
-        [](int x) {
-            return x % 2 == 0;
-        }
-    );
+    if (auto it = std::ranges::find_if(vec, [](int x) { return x % 2 == 0; });
+        it != vec.end())
+        std::cout << std::format("First even: {}\n", *it);
 
-    if (even != vec.end()) {
+    // search (subsequence)
+    const std::vector<int> pattern = {3, 2};
+    if (auto sub = std::ranges::search(vec, pattern); !sub.empty())
+        std::cout << std::format("Subsequence {{3,2}} found at index: {}\n",
+                                 std::ranges::distance(vec.begin(), sub.begin()));
 
-        std::cout
-            << "First even: "
-            << *even
-            << "\n";
-    }
-
-    // search (find a subsequence)
-    std::vector<int> pattern = {3, 2};
-
-    auto pos = std::search(
-        vec.begin(),
-        vec.end(),
-        pattern.begin(),
-        pattern.end()
-    );
-
-    if (pos != vec.end()) {
-
-        std::cout
-            << "Subsequence {3,2} found at index: "
-            << std::distance(vec.begin(), pos)
-            << "\n";
-    }
-
-    // all_of
-    bool allPositive = std::all_of(
-        vec.begin(),
-        vec.end(),
-        [](int x) {
-            return x > 0;
-        }
-    );
-
-    std::cout
-        << "All numbers are positive: "
-        << (allPositive ? "Yes" : "No")
-        << "\n";
-
-    // any_of
-    bool anyGreaterThanFour = std::any_of(
-        vec.begin(),
-        vec.end(),
-        [](int x) {
-            return x > 4;
-        }
-    );
-
-    std::cout
-        << "Any number greater than 4: "
-        << (anyGreaterThanFour ? "Yes" : "No")
-        << "\n";
-
-    // none_of
-    bool noneNegative = std::none_of(
-        vec.begin(),
-        vec.end(),
-        [](int x) {
-            return x < 0;
-        }
-    );
-
-    std::cout
-        << "No negative numbers: "
-        << (noneNegative ? "Yes" : "No")
-        << "\n";
-
-    // ---------------- SMALL ADDITIONS ----------------
+    // all_of / any_of / none_of
+    std::cout << std::format("All positive:        {}\n",
+                             std::ranges::all_of(vec,  [](int x) { return x > 0; }) ? "Yes" : "No");
+    std::cout << std::format("Any greater than 4:  {}\n",
+                             std::ranges::any_of(vec,  [](int x) { return x > 4; }) ? "Yes" : "No");
+    std::cout << std::format("No negative numbers: {}\n",
+                             std::ranges::none_of(vec, [](int x) { return x < 0; }) ? "Yes" : "No");
 
     // count_if
-    int even_count = std::count_if(
-        vec.begin(),
-        vec.end(),
-        [](int x) {
-            return x % 2 == 0;
-        }
-    );
-
-    std::cout
-        << "Even numbers count: "
-        << even_count
-        << "\n";
+    std::cout << std::format("Even count: {}\n",
+                             std::ranges::count_if(vec, [](int x) { return x % 2 == 0; }));
 
     // find_if_not
-    auto not_positive = std::find_if_not(
-        vec.begin(),
-        vec.end(),
-        [](int x) {
-            return x > 0;
-        }
-    );
+    if (std::ranges::find_if_not(vec, [](int x) { return x > 0; }) == vec.end())
+        std::cout << "All elements are positive (find_if_not check)\n";
 
-    if (not_positive == vec.end()) {
-
-        std::cout
-            << "All elements are positive "
-            << "(find_if_not check)\n";
-    }
-
-    // equal
+    // equal / mismatch
     std::vector<int> vec2 = vec;
+    std::cout << std::format("vec and vec2 are equal: {}\n",
+                             std::ranges::equal(vec, vec2) ? "Yes" : "No");
 
-    bool is_equal = std::equal(
-        vec.begin(),
-        vec.end(),
-        vec2.begin()
-    );
-
-    std::cout
-        << "vec and vec2 are equal: "
-        << (is_equal ? "Yes" : "No")
-        << "\n";
-
-    // mismatch
     vec2[0] = 99;
+    if (auto [a, b] = std::ranges::mismatch(vec, vec2); a != vec.end())
+        std::cout << std::format("Mismatch: {} vs {}\n", *a, *b);
 
-    auto mismatch_pair = std::mismatch(
-        vec.begin(),
-        vec.end(),
-        vec2.begin()
-    );
+    // reduce (prefer over accumulate for parallelism-readiness)
+    std::cout << std::format("Sum of elements: {}\n",
+                             std::reduce(vec.begin(), vec.end(), 0));
 
-    if (mismatch_pair.first != vec.end()) {
+    // find_end
+    if (auto sub = std::ranges::find_end(vec, pattern); !sub.empty())
+        std::cout << std::format("Last {{3,2}} at index: {}\n",
+                                 std::ranges::distance(vec.begin(), sub.begin()));
 
-        std::cout
-            << "Mismatch at value: "
-            << *mismatch_pair.first
-            << " vs "
-            << *mismatch_pair.second
-            << "\n";
-    }
+    // adjacent_find
+    if (auto it = std::ranges::adjacent_find(vec); it != vec.end())
+        std::cout << std::format("First adjacent duplicate: {}\n", *it);
+    else
+        std::cout << "No adjacent duplicates found\n";
 
-    // accumulate
-    int total = std::accumulate(
-        vec.begin(),
-        vec.end(),
-        0
-    );
+    // search_n
+    if (auto sub = std::ranges::search_n(vec, 2, 3); !sub.empty())
+        std::cout << std::format("Two consecutive 3s at index: {}\n",
+                                 std::ranges::distance(vec.begin(), sub.begin()));
+    else
+        std::cout << "No consecutive 3s found\n";
 
-    std::cout
-        << "Sum of elements: "
-        << total
-        << "\n";
+    // min / max element
+    std::cout << std::format("Min: {}\n", *std::ranges::min_element(vec));
+    std::cout << std::format("Max: {}\n", *std::ranges::max_element(vec));
 
-    // 🔹 NEW: find_end
-    auto last_pos = std::find_end(
-        vec.begin(),
-        vec.end(),
-        pattern.begin(),
-        pattern.end()
-    );
+    // minmax_element (single-pass)
+    auto [mn, mx] = std::ranges::minmax_element(vec);
+    std::cout << std::format("minmax_element: min={}, max={}\n", *mn, *mx);
 
-    if (last_pos != vec.end()) {
-
-        std::cout
-            << "Last occurrence of {3,2} at index: "
-            << std::distance(vec.begin(), last_pos)
-            << "\n";
-    }
-
-    // 🔹 NEW: adjacent_find
-    auto adj = std::adjacent_find(
-        vec.begin(),
-        vec.end()
-    );
-
-    if (adj != vec.end()) {
-
-        std::cout
-            << "First adjacent duplicate: "
-            << *adj
-            << "\n";
-
-    } else {
-
-        std::cout
-            << "No adjacent duplicates found\n";
-    }
-
-    // 🔹 NEW: search_n
-    auto repeated = std::search_n(
-        vec.begin(),
-        vec.end(),
-        2,
-        3
-    );
-
-    if (repeated != vec.end()) {
-
-        std::cout
-            << "Two consecutive 3s found at index: "
-            << std::distance(vec.begin(), repeated)
-            << "\n";
-
-    } else {
-
-        std::cout
-            << "No consecutive 3s found\n";
-    }
-
-    // 🔹 NEW: min and max elements
-    auto min_it = std::min_element(
-        vec.begin(),
-        vec.end()
-    );
-
-    auto max_it = std::max_element(
-        vec.begin(),
-        vec.end()
-    );
-
-    std::cout
-        << "Min element: "
-        << *min_it
-        << "\n";
-
-    std::cout
-        << "Max element: "
-        << *max_it
-        << "\n";
-
-    // ---------------- EXTRA ADDITIONS ----------------
-
-    // 🔹 NEW: binary_search
+    // binary_search / lower_bound / upper_bound / equal_range
     std::vector<int> sorted_vec = vec;
+    std::ranges::sort(sorted_vec);
 
-    std::sort(
-        sorted_vec.begin(),
-        sorted_vec.end()
-    );
+    std::cout << std::format("Binary search for 4: {}\n",
+                             std::ranges::binary_search(sorted_vec, 4) ? "Found" : "Not found");
 
-    bool found = std::binary_search(
-        sorted_vec.begin(),
-        sorted_vec.end(),
-        4
-    );
+    std::cout << std::format("Lower bound of 3 at index: {}\n",
+                             std::ranges::distance(sorted_vec.begin(),
+                                                   std::ranges::lower_bound(sorted_vec, 3)));
 
-    std::cout
-        << "Binary search for 4: "
-        << (found ? "Found" : "Not Found")
-        << "\n";
+    std::cout << std::format("Upper bound of 3 at index: {}\n",
+                             std::ranges::distance(sorted_vec.begin(),
+                                                   std::ranges::upper_bound(sorted_vec, 3)));
 
-    // 🔹 NEW: lower_bound
-    auto lb = std::lower_bound(
-        sorted_vec.begin(),
-        sorted_vec.end(),
-        3
-    );
+    auto [lo, hi] = std::ranges::equal_range(sorted_vec, 2);
+    std::cout << std::format("Equal range for 2: {} to {}\n",
+                             std::ranges::distance(sorted_vec.begin(), lo),
+                             std::ranges::distance(sorted_vec.begin(), hi));
 
-    std::cout
-        << "Lower bound of 3 at index: "
-        << std::distance(sorted_vec.begin(), lb)
-        << "\n";
+    std::cout << std::format("sorted_vec is sorted: {}\n",
+                             std::ranges::is_sorted(sorted_vec) ? "Yes" : "No");
 
-    // 🔹 NEW: upper_bound
-    auto ub = std::upper_bound(
-        sorted_vec.begin(),
-        sorted_vec.end(),
-        3
-    );
-
-    std::cout
-        << "Upper bound of 3 at index: "
-        << std::distance(sorted_vec.begin(), ub)
-        << "\n";
-
-    // 🔹 NEW: equal_range
-    auto range = std::equal_range(
-        sorted_vec.begin(),
-        sorted_vec.end(),
-        2
-    );
-
-    std::cout
-        << "Equal range for 2: "
-        << std::distance(sorted_vec.begin(),
-                         range.first)
-        << " to "
-        << std::distance(sorted_vec.begin(),
-                         range.second)
-        << "\n";
-
-    // 🔹 NEW: is_sorted
-    std::cout
-        << "sorted_vec is sorted: "
-        << (std::is_sorted(
-                sorted_vec.begin(),
-                sorted_vec.end()
-            ) ? "Yes" : "No")
-        << "\n";
-
-    // 🔹 NEW: partial_sum
+    // partial_sum
     std::vector<int> partial(vec.size());
+    std::partial_sum(vec.begin(), vec.end(), partial.begin());
+    print_range("Partial sums", partial);
 
-    std::partial_sum(
-        vec.begin(),
-        vec.end(),
-        partial.begin()
-    );
+    // inclusive_scan (C++17 parallel-ready replacement for partial_sum)
+    std::vector<int> inc(vec.size());
+    std::inclusive_scan(vec.begin(), vec.end(), inc.begin());
+    assert(inc == partial);
+    std::cout << "inclusive_scan matches partial_sum\n";
 
-    std::cout
-        << "Partial sums: ";
+    // exclusive_scan
+    std::vector<int> exc(vec.size());
+    std::exclusive_scan(vec.begin(), vec.end(), exc.begin(), 0);
+    print_range("Exclusive scan", exc);
 
-    for (int n : partial) {
-        std::cout << n << " ";
-    }
+    // inner_product
+    const int dot = std::inner_product(vec.begin(), vec.end(), vec.begin(), 0);
+    std::cout << std::format("Inner product (dot with self): {}\n", dot);
 
-    std::cout << "\n";
+    // ranges views pipeline: filter evens, transform to squares, take first 3
+    auto pipeline = vec
+        | std::views::filter([](int x) { return x % 2 == 0; })
+        | std::views::transform([](int x) { return x * x; })
+        | std::views::take(3);
+    print_range("Even squares (first 3)", pipeline);
+
+    // is_partitioned / partition_point
+    const bool part = std::ranges::is_partitioned(sorted_vec, [](int x) { return x <= 3; });
+    std::cout << std::format("sorted_vec partitioned at <=3: {}\n", part ? "Yes" : "No");
+
+    auto pp = std::ranges::partition_point(sorted_vec, [](int x) { return x <= 3; });
+    std::cout << std::format("Partition point index: {}\n",
+                             std::ranges::distance(sorted_vec.begin(), pp));
+
+    // iota + ranges
+    std::vector<int> iota_vec(5);
+    std::iota(iota_vec.begin(), iota_vec.end(), 1);
+    print_range("iota [1..5]", iota_vec);
+
+    // views::iota (lazy, no allocation)
+    print_range("views::iota [1..5]", std::views::iota(1, 6));
 
     return 0;
 }

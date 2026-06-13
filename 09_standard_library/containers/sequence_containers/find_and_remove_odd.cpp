@@ -1,320 +1,172 @@
 #include <forward_list>
 #include <iostream>
-#include <algorithm>   // 🔹 NEW
+#include <algorithm>
+#include <numeric>
+#include <optional>
+#include <string_view>
+#include <cstddef>
 
-// ======================================================
-// ORIGINAL CODE (LOGIC UNCHANGED)
-// ======================================================
+void print_list(const std::forward_list<int>& lst, std::string_view label = "") {
+    if (!label.empty()) std::cout << label << ": ";
+    for (int v : lst) std::cout << "[" << v << "]->";
+    std::cout << "null\n";
+}
+
+void print_first_n(const std::forward_list<int>& lst, int n) {
+    int i = 0;
+    for (int v : lst) {
+        if (i++ >= n) break;
+        std::cout << v << " ";
+    }
+    std::cout << "\n";
+}
+
+[[nodiscard]] std::size_t count_elements(const std::forward_list<int>& lst) noexcept {
+    return static_cast<std::size_t>(std::ranges::distance(lst));
+}
+
+[[nodiscard]] int  sum_elements     (const std::forward_list<int>& lst) noexcept {
+    return std::accumulate(lst.cbegin(), lst.cend(), 0);
+}
+
+[[nodiscard]] int  multiply_elements(const std::forward_list<int>& lst) noexcept {
+    return lst.empty() ? 0
+                       : std::accumulate(lst.cbegin(), lst.cend(), 1, std::multiplies<>{});
+}
+
+[[nodiscard]] std::optional<double> average_elements(const std::forward_list<int>& lst) {
+    auto n = count_elements(lst);
+    if (n == 0) return std::nullopt;
+    return static_cast<double>(sum_elements(lst)) / static_cast<double>(n);
+}
+
+[[nodiscard]] std::optional<int> max_element_safe(const std::forward_list<int>& lst) {
+    if (lst.empty()) return std::nullopt;
+    return *std::ranges::max_element(lst);
+}
+
+[[nodiscard]] std::optional<int> min_element_safe(const std::forward_list<int>& lst) {
+    if (lst.empty()) return std::nullopt;
+    return *std::ranges::min_element(lst);
+}
+
+[[nodiscard]] std::optional<int> last_element(const std::forward_list<int>& lst) {
+    if (lst.empty()) return std::nullopt;
+    auto it = lst.begin();
+    while (std::next(it) != lst.end()) ++it;
+    return *it;
+}
+
+[[nodiscard]] bool contains     (const std::forward_list<int>& lst, int v) {
+    return std::ranges::find(lst, v) != lst.end();
+}
+
+[[nodiscard]] bool all_even     (const std::forward_list<int>& lst) {
+    return std::ranges::all_of(lst, [](int v){ return v % 2 == 0; });
+}
+
+[[nodiscard]] long count_odds   (const std::forward_list<int>& lst) {
+    return std::ranges::count_if(lst, [](int v){ return v % 2 != 0; });
+}
+
+[[nodiscard]] long count_evens  (const std::forward_list<int>& lst) {
+    return std::ranges::count_if(lst, [](int v){ return v % 2 == 0; });
+}
+
+[[nodiscard]] bool is_sorted_list(const std::forward_list<int>& lst) {
+    return std::ranges::is_sorted(lst);
+}
 
 void find_and_remove_odd(std::forward_list<int>& lst) {
     auto prev = lst.before_begin();
     auto curr = lst.begin();
-
     while (curr != lst.end()) {
-        if (*curr % 2 != 0) {
+        if (*curr % 2 != 0)
             curr = lst.erase_after(prev);
-        } else {
+        else {
             prev = curr;
             ++curr;
         }
     }
 }
 
-void print_list(const std::forward_list<int>& lst) {
-    for (int elem : lst) {
-        std::cout << "[" << elem << "]->";
-    }
-    std::cout << "null\n";
-}
-
-// ======================================================
-// SMALL ADDITION (HELPER FUNCTIONS ONLY)
-// ======================================================
-
-int count_elements(const std::forward_list<int>& lst) {
-    int count = 0;
-    for (int _ : lst) {
-        (void)_;
-        ++count;
-    }
-    return count;
-}
-
-bool is_empty(const std::forward_list<int>& lst) {
-    return lst.begin() == lst.end();
-}
-
-int sum_elements(const std::forward_list<int>& lst) {
-    int sum = 0;
-    for (int v : lst)
-        sum += v;
-    return sum;
-}
-
-// Return last element safely (returns 0 if empty)
-int last_element(const std::forward_list<int>& lst) {
-    int last = 0;
-    for (int v : lst)
-        last = v;
-    return last;
-}
-
-// Check if all elements are even
-bool all_even(const std::forward_list<int>& lst) {
-    for (int v : lst)
-        if (v % 2 != 0)
-            return false;
-    return true;
-}
-
-// Check if list contains a value
-bool contains(const std::forward_list<int>& lst, int value) {
-    for (int v : lst)
-        if (v == value)
-            return true;
-    return false;
-}
-
-// Get maximum element safely (returns 0 if empty)
-int max_element_safe(const std::forward_list<int>& lst) {
-    if (is_empty(lst)) return 0;
-
-    auto it = lst.begin();
-    int maxVal = *it;
-    ++it;
-
-    for (; it != lst.end(); ++it)
-        if (*it > maxVal)
-            maxVal = *it;
-
-    return maxVal;
-}
-
-// ---- VERY SMALL EXTRA ADDITION ----
-
-// Average of elements (returns 0 if empty)
-double average_elements(const std::forward_list<int>& lst) {
-    int count = count_elements(lst);
-    if (count == 0) return 0.0;
-    return static_cast<double>(sum_elements(lst)) / count;
-}
-
-// Find minimum element safely
-int min_element_safe(const std::forward_list<int>& lst) {
-    if (is_empty(lst)) return 0;
-
-    auto it = lst.begin();
-    int minVal = *it;
-    ++it;
-
-    for (; it != lst.end(); ++it)
-        if (*it < minVal)
-            minVal = *it;
-
-    return minVal;
-}
-
-// Count odd numbers (after removal check)
-int count_odds(const std::forward_list<int>& lst) {
-    int count = 0;
-    for (int v : lst)
-        if (v % 2 != 0)
-            ++count;
-    return count;
-}
-
-// Print divider
-void print_divider() {
-    std::cout << "-----------------------------\n";
-}
-
-// 🔹 NEW: Count even numbers
-int count_evens(const std::forward_list<int>& lst) {
-    int count = 0;
-    for (int v : lst)
-        if (v % 2 == 0)
-            ++count;
-
-    return count;
-}
-
-// 🔹 NEW: Multiply all elements
-int multiply_elements(const std::forward_list<int>& lst) {
-    int product = 1;
-
-    if (is_empty(lst))
-        return 0;
-
-    for (int v : lst)
-        product *= v;
-
-    return product;
-}
-
-// 🔹 NEW: Print first N elements
-void print_first_n(const std::forward_list<int>& lst, int n) {
-    int count = 0;
-
-    for (int v : lst) {
-        if (count++ >= n)
-            break;
-
-        std::cout << v << " ";
-    }
-
-    std::cout << "\n";
-}
-
-// 🔹 NEW: Check if sorted
-bool is_sorted_list(const std::forward_list<int>& lst) {
-    return std::is_sorted(lst.begin(), lst.end());
-}
-
-// ======================================================
-// MAIN
-// ======================================================
-
 int main() {
-    std::forward_list<int> fl1 = {1, 2, 3, 4, 5, 6, 7, 8};
-    std::cout << "Original list 1: ";
-    print_list(fl1);
-
+    std::cout << "=== fl1: mixed (remove odds) ===\n";
+    std::forward_list<int> fl1{1, 2, 3, 4, 5, 6, 7, 8};
+    print_list(fl1, "Original");
     find_and_remove_odd(fl1);
-    std::cout << "After removing odd numbers: ";
-    print_list(fl1);
+    print_list(fl1, "After remove_odd");
+    std::cout << "count=" << count_elements(fl1) << "\n"
+              << "sum="   << sum_elements(fl1)   << "\n";
+    if (auto a = average_elements(fl1))   std::cout << "avg=" << *a << "\n";
+    if (auto m = max_element_safe(fl1))   std::cout << "max=" << *m << "\n";
+    if (auto m = min_element_safe(fl1))   std::cout << "min=" << *m << "\n";
+    if (auto l = last_element(fl1))       std::cout << "last=" << *l << "\n";
+    std::cout << "front=" << fl1.front() << "\n"
+              << std::boolalpha
+              << "contains(6)=" << contains(fl1, 6) << "\n"
+              << "all_even="    << all_even(fl1)     << "\n";
 
-    std::cout << "Count: " << count_elements(fl1) << "\n";
-    std::cout << "Sum: " << sum_elements(fl1) << "\n";
-    std::cout << "Average: " << average_elements(fl1) << "\n";
-
-    if (!is_empty(fl1)) {
-        std::cout << "First element: " << fl1.front() << "\n";
-        std::cout << "Last element: " << last_element(fl1) << "\n";
-        std::cout << "Max element: " << max_element_safe(fl1) << "\n";
-        std::cout << "Min element: " << min_element_safe(fl1) << "\n";
-        std::cout << "Contains 6? "
-                  << (contains(fl1, 6) ? "Yes\n" : "No\n");
-        std::cout << "All even? "
-                  << (all_even(fl1) ? "Yes\n" : "No\n");
-    }
-    print_divider();
-
-    std::forward_list<int> fl2 = {1, 3, 5, 7, 9};
-    std::cout << "Original list 2: ";
-    print_list(fl2);
-
+    std::cout << "\n=== fl2: all odds → empty ===\n";
+    std::forward_list<int> fl2{1, 3, 5, 7, 9};
+    print_list(fl2, "Original");
     find_and_remove_odd(fl2);
-    std::cout << "After removing odd numbers: ";
-    print_list(fl2);
+    print_list(fl2, "After remove_odd");
+    std::cout << "count=" << count_elements(fl2) << " empty=" << fl2.empty() << "\n";
 
-    std::cout << "Count: " << count_elements(fl2)
-              << (is_empty(fl2) ? " (empty)\n" : "\n");
-    print_divider();
-
-    std::forward_list<int> fl3 = {2, 4, 6, 8, 10};
-    std::cout << "Original list 3: ";
-    print_list(fl3);
-
+    std::cout << "\n=== fl3: all evens (no change) ===\n";
+    std::forward_list<int> fl3{2, 4, 6, 8, 10};
+    print_list(fl3, "Original");
     find_and_remove_odd(fl3);
-    std::cout << "After removing odd numbers: ";
-    print_list(fl3);
-
-    std::cout << "Count: " << count_elements(fl3) << "\n";
-    std::cout << "Sum: " << sum_elements(fl3) << "\n";
-    std::cout << "Average: " << average_elements(fl3) << "\n";
-    std::cout << "Odd count: " << count_odds(fl3) << "\n";
-    print_divider();
-
-    std::forward_list<int> fl4;
-    std::cout << "Original list 4 (empty): ";
-    print_list(fl4);
-
-    find_and_remove_odd(fl4);
-    std::cout << "After removing odd numbers: ";
-    print_list(fl4);
-
-    std::cout << "Count: " << count_elements(fl4)
-              << (is_empty(fl4) ? " (empty)\n" : "\n");
-
+    print_list(fl3, "After remove_odd");
+    std::cout << "count=" << count_elements(fl3) << " sum=" << sum_elements(fl3) << "\n";
+    if (auto a = average_elements(fl3)) std::cout << "avg=" << *a << "\n";
+    std::cout << "odds=" << count_odds(fl3) << "\n";
     fl3.clear();
-    std::cout << "\nAfter clearing list 3, is empty? "
-              << (is_empty(fl3) ? "Yes\n" : "No\n");
+    std::cout << "Cleared fl3 empty=" << fl3.empty() << "\n";
 
-    // --------------------------------------
-    // EXTRA SMALL ADDITIONS
-    // --------------------------------------
+    std::cout << "\n=== fl4: empty list ===\n";
+    std::forward_list<int> fl4;
+    print_list(fl4, "Original");
+    find_and_remove_odd(fl4);
+    print_list(fl4, "After remove_odd");
+    std::cout << "empty=" << fl4.empty() << "\n";
 
-    // push_front example
+    std::cout << "\n=== fl1 manipulations ===\n";
     fl1.push_front(100);
-    std::cout << "After push_front (fl1): ";
-    print_list(fl1);
-
-    // pop_front example
+    print_list(fl1, "push_front(100)");
     fl1.pop_front();
-    std::cout << "After pop_front (fl1): ";
-    print_list(fl1);
-
-    // reverse list
+    print_list(fl1, "pop_front");
     fl1.reverse();
-    std::cout << "Reversed fl1: ";
-    print_list(fl1);
-
-    // sort list
+    print_list(fl1, "reverse");
     fl1.sort();
-    std::cout << "Sorted fl1: ";
-    print_list(fl1);
-
-    // remove specific value
+    print_list(fl1, "sort");
     fl1.remove(4);
-    std::cout << "After removing 4: ";
-    print_list(fl1);
+    print_list(fl1, "remove(4)");
 
-    // unique (remove consecutive duplicates)
-    fl1.push_front(2);
-    fl1.push_front(2);
+    fl1.push_front(2); fl1.push_front(2);
     fl1.unique();
-    std::cout << "After unique(): ";
-    print_list(fl1);
+    print_list(fl1, "unique");
 
-    // ---------------- NEW SMALL ADDITIONS ----------------
+    std::cout << "evens="    << count_evens(fl1)     << "\n"
+              << "product="  << multiply_elements(fl1) << "\n"
+              << "sorted="   << is_sorted_list(fl1)   << "\n";
 
-    // count evens
-    std::cout << "Even count: "
-              << count_evens(fl1) << "\n";
-
-    // multiply elements
-    std::cout << "Product of elements: "
-              << multiply_elements(fl1) << "\n";
-
-    // print first 3 elements
-    std::cout << "First 3 elements: ";
+    std::cout << "First 3: ";
     print_first_n(fl1, 3);
 
-    // check sorted state
-    std::cout << "Is fl1 sorted? "
-              << (is_sorted_list(fl1) ? "Yes" : "No") << "\n";
-
-    // emplace_front example
     fl1.emplace_front(500);
-    std::cout << "After emplace_front: ";
-    print_list(fl1);
-
-    // resize example
+    print_list(fl1, "emplace_front(500)");
     fl1.resize(4);
-    std::cout << "After resize(4): ";
-    print_list(fl1);
+    print_list(fl1, "resize(4)");
 
-    // splice_after example
-    std::forward_list<int> extra = {50, 60};
+    std::forward_list<int> extra{50, 60};
     fl1.splice_after(fl1.before_begin(), extra);
+    print_list(fl1, "splice_after");
+    std::cout << "extra empty=" << extra.empty() << "\n";
 
-    std::cout << "After splice_after: ";
-    print_list(fl1);
-
-    // clear example
     fl2.clear();
-    std::cout << "After clearing fl2, empty? "
-              << (is_empty(fl2) ? "Yes" : "No") << "\n";
+    std::cout << "fl2 after clear empty=" << fl2.empty() << "\n";
 
     return 0;
 }

@@ -1,201 +1,125 @@
 #include <list>
 #include <iostream>
 #include <algorithm>
-#include <numeric>   // tiny addition for accumulate
-#include <iterator>  // 🔹 NEW
+#include <numeric>
+#include <string_view>
+#include <optional>
 
-// ---------------- ORIGINAL LOGIC ----------------
-
-void process_original_list() {
-    std::list<int> lst = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-    auto iter = lst.begin();
-
-    while (iter != lst.end()) {
-        if (*iter % 2) {                    // odd
-            iter = lst.insert(iter, *iter); // duplicate odd
-            std::advance(iter, 2);
-        } else {                            // even
-            iter = lst.erase(iter);         // remove even
-        }
-    }
-
-    std::cout << "Original processed list: ";
-    for (auto item : lst) {
-        std::cout << item << " ";
-    }
-    std::cout << "\n";
-
-    // ---- small additions ----
-    std::cout << "Final size: " << lst.size() << "\n";
-    std::cout << "First element: " << lst.front() << "\n";
-    std::cout << "Last element: " << lst.back() << "\n";
-}
-
-// ---------------- SMALL EXTRA HELPERS ----------------
-
-// Print list
-void print_list(const std::list<int>& L) {
-    for (int v : L)
-        std::cout << v << " ";
+void print_list(const std::list<int>& L, std::string_view label = "") {
+    if (!label.empty()) std::cout << label << ": ";
+    for (int v : L) std::cout << v << " ";
     std::cout << "\n";
 }
 
-// Count odd numbers
-std::size_t count_odds(const std::list<int>& L) {
-    std::size_t count = 0;
-    for (int v : L)
-        if (v % 2) ++count;
-    return count;
+void print_reverse(const std::list<int>& L) {
+    for (auto it = L.rbegin(); it != L.rend(); ++it) std::cout << *it << " ";
+    std::cout << "\n";
 }
 
-// Count even numbers
-std::size_t count_evens(const std::list<int>& L) {
+[[nodiscard]] std::size_t count_odds (const std::list<int>& L) {
+    return static_cast<std::size_t>(std::ranges::count_if(L, [](int v){ return v % 2 != 0; }));
+}
+
+[[nodiscard]] std::size_t count_evens(const std::list<int>& L) {
     return L.size() - count_odds(L);
 }
 
-// ---- VERY SMALL EXTRA HELPERS ----
-
-// Sum of elements
-int sum_list(const std::list<int>& L) {
-    return std::accumulate(L.begin(), L.end(), 0);
+[[nodiscard]] int sum_list(const std::list<int>& L) noexcept {
+    return std::accumulate(L.cbegin(), L.cend(), 0);
 }
 
-// Max element (safe)
-int max_list(const std::list<int>& L) {
-    return L.empty() ? 0 : *std::max_element(L.begin(), L.end());
+[[nodiscard]] std::optional<int> max_list(const std::list<int>& L) {
+    if (L.empty()) return std::nullopt;
+    return *std::ranges::max_element(L);
 }
 
-// Divider
-void print_divider() {
-    std::cout << "----------------------\n";
+[[nodiscard]] std::optional<int> min_list(const std::list<int>& L) {
+    if (L.empty()) return std::nullopt;
+    return *std::ranges::min_element(L);
 }
 
-// 🔹 NEW: minimum element
-int min_list(const std::list<int>& L) {
-    return L.empty() ? 0 : *std::min_element(L.begin(), L.end());
+[[nodiscard]] std::optional<double> average_list(const std::list<int>& L) {
+    if (L.empty()) return std::nullopt;
+    return static_cast<double>(sum_list(L)) / static_cast<double>(L.size());
 }
 
-// 🔹 NEW: average of elements
-double average_list(const std::list<int>& L) {
-    if (L.empty()) return 0.0;
-    return static_cast<double>(sum_list(L)) / L.size();
-}
-
-// 🔹 NEW: print list in reverse
-void print_reverse(const std::list<int>& L) {
-    for (auto it = L.rbegin(); it != L.rend(); ++it) {
-        std::cout << *it << " ";
+void process_list() {
+    std::list<int> lst{1, 2, 3, 4, 5, 6, 7, 8, 9};
+    auto it = lst.begin();
+    while (it != lst.end()) {
+        if (*it % 2) {
+            it = lst.insert(it, *it);
+            std::advance(it, 2);
+        } else {
+            it = lst.erase(it);
+        }
     }
-    std::cout << "\n";
+    print_list(lst, "Processed");
+    std::cout << "size=" << lst.size()
+              << " front=" << lst.front()
+              << " back="  << lst.back() << "\n";
 }
 
-// ---------------- MAIN ----------------
+int main() {
+    std::cout << "=== process_list (duplicate odds, erase evens) ===\n";
+    process_list();
 
-int main(void) {
+    std::cout << "\n=== demo list ===\n";
+    std::list<int> demo{2, 4, 6, 8};
+    print_list(demo, "Initial");
+    std::cout << "size="      << demo.size()          << "\n"
+              << "empty="     << std::boolalpha << demo.empty() << "\n"
+              << "odds="      << count_odds(demo)      << "\n"
+              << "evens="     << count_evens(demo)     << "\n"
+              << "sum="       << sum_list(demo)        << "\n";
+    if (auto m = max_list(demo)) std::cout << "max=" << *m << "\n";
+    if (auto m = min_list(demo)) std::cout << "min=" << *m << "\n";
+    if (auto a = average_list(demo)) std::cout << "avg=" << *a << "\n";
 
-    // ---------- ORIGINAL BEHAVIOR ----------
-    process_original_list();
-
-    print_divider();
-
-    // ---------- SMALL EXTRA DEMO ----------
-    std::list<int> demo = { 2, 4, 6, 8 };
-
-    std::cout << "Demo list: ";
-    print_list(demo);
-
-    std::cout << "Demo list size: " << demo.size() << "\n";
-    std::cout << (demo.empty() ? "Demo list is empty\n"
-                               : "Demo list is not empty\n");
-
-    std::cout << "Odd count: " << count_odds(demo) << "\n";
-    std::cout << "Even count: " << count_evens(demo) << "\n";
-
-    // ---- tiny extra usage ----
-    std::cout << "Sum of demo list: " << sum_list(demo) << "\n";
-    std::cout << "Max value in demo list: " << max_list(demo) << "\n";
-
-    // --------------------------------------
-    // EXTRA SMALL ADDITIONS
-    // --------------------------------------
-
-    // reverse list
+    std::cout << "\n=== reverse / sort ===\n";
     demo.reverse();
-    std::cout << "Reversed demo list: ";
-    print_list(demo);
-
-    // sort list
+    print_list(demo, "Reversed");
     demo.sort();
-    std::cout << "Sorted demo list: ";
-    print_list(demo);
+    print_list(demo, "Sorted");
 
-    // remove specific value
+    std::cout << "\n=== remove / unique ===\n";
     demo.remove(4);
-    std::cout << "After removing 4: ";
-    print_list(demo);
+    print_list(demo, "After remove(4)");
 
-    // unique (remove duplicates)
-    demo.push_back(6);
-    demo.push_back(6);
+    demo.push_back(6); demo.push_back(6);
     demo.unique();
-    std::cout << "After unique(): ";
-    print_list(demo);
+    print_list(demo, "After unique");
 
-    // merge two lists
-    std::list<int> another = {1, 3, 5};
-    another.sort();
-    demo.merge(another);
-    std::cout << "After merge: ";
-    print_list(demo);
+    std::cout << "\n=== merge ===\n";
+    std::list<int> other{1, 3, 5};
+    other.sort();
+    demo.merge(other);
+    print_list(demo, "After merge");
 
-    // ---------------- NEW SMALL ADDITIONS ----------------
-
-    // splice example (move elements from one list to another)
-    std::list<int> extra = {100, 200};
+    std::cout << "\n=== splice ===\n";
+    std::list<int> extra{100, 200};
     demo.splice(demo.begin(), extra);
-    std::cout << "After splice at beginning: ";
-    print_list(demo);
+    print_list(demo, "After splice");
+    std::cout << "extra empty=" << extra.empty() << "\n";
 
-    // remove_if (remove odd numbers)
-    demo.remove_if([](int x) { return x % 2 != 0; });
-    std::cout << "After remove_if (remove odd): ";
-    print_list(demo);
+    std::cout << "\n=== remove_if (odd) ===\n";
+    demo.remove_if([](int x){ return x % 2 != 0; });
+    print_list(demo, "After remove_if");
+    std::cout << "empty=" << demo.empty() << "\n";
+    if (auto m = min_list(demo)) std::cout << "min=" << *m << "\n";
+    if (auto a = average_list(demo)) std::cout << "avg=" << *a << "\n";
 
-    // check if list is empty after operations
-    std::cout << "Is demo empty? "
-              << (demo.empty() ? "Yes" : "No") << "\n";
-
-    // 🔹 NEW TESTS
-
-    // minimum element
-    std::cout << "Minimum value: "
-              << min_list(demo) << "\n";
-
-    // average value
-    std::cout << "Average value: "
-              << average_list(demo) << "\n";
-
-    // reverse iterator print
-    std::cout << "Reverse print: ";
+    std::cout << "\n=== reverse print ===\n";
     print_reverse(demo);
 
-    // insert at front and back
+    std::cout << "\n=== push_front / push_back / resize / clear ===\n";
     demo.push_front(500);
     demo.push_back(900);
-
-    std::cout << "After push_front and push_back: ";
-    print_list(demo);
-
-    // resize list
+    print_list(demo, "After push");
     demo.resize(5);
-    std::cout << "After resize(5): ";
-    print_list(demo);
-
-    // clear list
+    print_list(demo, "After resize(5)");
     demo.clear();
-    std::cout << "After clear, size: " << demo.size() << "\n";
-
-    // ----------------------------------------------------
+    std::cout << "After clear size=" << demo.size() << "\n";
 
     return 0;
 }

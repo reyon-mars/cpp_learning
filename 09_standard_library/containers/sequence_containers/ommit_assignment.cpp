@@ -1,218 +1,97 @@
 #include <iostream>
 #include <list>
-#include <numeric>     // tiny addition
-#include <algorithm>   // tiny addition
-#include <iterator>    // NEW small addition
+#include <numeric>
+#include <algorithm>
+#include <optional>
+#include <string_view>
 
-// -------------------------------------------------------
-// SMALL ADDITION (FORWARD DECLARATION ONLY)
-// -------------------------------------------------------
-void print_list(const std::list<int>& lst);
+void print_list(const std::list<int>& lst, std::string_view label = "") {
+    if (!label.empty()) std::cout << label << ": ";
+    for (int x : lst) std::cout << x << " ";
+    std::cout << "\n";
+}
 
-// ---- very tiny extra forward declarations ----
-int sum_list(const std::list<int>& lst);
-int max_list_safe(const std::list<int>& lst);
-void print_divider();
+[[nodiscard]] int  sum_list(const std::list<int>& lst) noexcept {
+    return std::accumulate(lst.cbegin(), lst.cend(), 0);
+}
 
-// ---- additional tiny helpers ----
-int min_list_safe(const std::list<int>& lst);
-double average_list(const std::list<int>& lst);
+[[nodiscard]] std::optional<int> max_list(const std::list<int>& lst) {
+    if (lst.empty()) return std::nullopt;
+    return *std::ranges::max_element(lst);
+}
 
-// ---- extra tiny helpers ----
-bool contains_value(const std::list<int>& lst, int value);
-int count_value(const std::list<int>& lst, int value);
+[[nodiscard]] std::optional<int> min_list(const std::list<int>& lst) {
+    if (lst.empty()) return std::nullopt;
+    return *std::ranges::min_element(lst);
+}
 
-// ---- NEW small helpers ----
-void print_front_back(const std::list<int>& lst);
-bool all_positive(const std::list<int>& lst);
+[[nodiscard]] std::optional<double> average_list(const std::list<int>& lst) {
+    if (lst.empty()) return std::nullopt;
+    return static_cast<double>(sum_list(lst)) / static_cast<double>(lst.size());
+}
 
-// ---------------- ORIGINAL CODE (UNCHANGED) ----------------
+[[nodiscard]] bool contains_value(const std::list<int>& lst, int value) {
+    return std::ranges::find(lst, value) != lst.end();
+}
 
-int main(void)
-{
-    std::list<int> v = {1, 2, 3};
-    auto begin = v.begin();
+[[nodiscard]] long count_value(const std::list<int>& lst, int value) {
+    return std::ranges::count(lst, value);
+}
 
-    while (begin != v.end())
-    {
-        ++begin;             // move to next
-        v.insert(begin, 42); // insert before it
-        ++begin;             // move past the element
+[[nodiscard]] bool all_positive(const std::list<int>& lst) {
+    return std::ranges::all_of(lst, [](int v){ return v > 0; });
+}
+
+int main() {
+    std::list<int> v{1, 2, 3};
+
+    auto it = v.begin();
+    while (it != v.end()) {
+        ++it;
+        it = v.insert(it, 42);
+        ++it;
     }
 
-    for (int n : v)
-        std::cout << n << " ";
+    print_list(v, "After insert");
+    std::cout << "size="   << v.size()  << "\n"
+              << "empty="  << std::boolalpha << v.empty() << "\n"
+              << "sum="    << sum_list(v) << "\n";
 
-    std::cout << std::endl;
+    if (auto m = max_list(v))     std::cout << "max="  << *m << "\n";
+    if (auto m = min_list(v))     std::cout << "min="  << *m << "\n";
+    if (auto a = average_list(v)) std::cout << "avg="  << *a << "\n";
 
-    // -------- SMALL ADDITIONS --------
-    print_list(v);
-    std::cout << "List size: " << v.size() << std::endl;
-    std::cout << (v.empty() ? "List is empty\n"
-                            : "List is not empty\n");
+    std::cout << "contains(42)=" << contains_value(v, 42) << "\n"
+              << "count(42)="    << count_value(v, 42)    << "\n";
 
-    // ---- very tiny extra usage ----
-    std::cout << "Sum: " << sum_list(v) << std::endl;
-    std::cout << "Max: " << max_list_safe(v) << std::endl;
-
-    // ---- additional tiny usage ----
-    std::cout << "Min: " << min_list_safe(v) << std::endl;
-    std::cout << "Average: " << average_list(v) << std::endl;
-
-    // ---- extra tiny usage ----
-    std::cout << "Contains 42? "
-              << (contains_value(v, 42) ? "Yes" : "No") << std::endl;
-
-    std::cout << "Count of 42: "
-              << count_value(v, 42) << std::endl;
-
-    print_divider();
-
-    // ---- extra small operations ----
-
-    // reverse list
+    std::cout << "\n=== reverse / sort / remove / unique ===\n";
     v.reverse();
-    std::cout << "Reversed list: ";
-    print_list(v);
-
-    // sort list
+    print_list(v, "Reversed");
     v.sort();
-    std::cout << "Sorted list: ";
-    print_list(v);
-
-    // remove value
+    print_list(v, "Sorted");
     v.remove(42);
-    std::cout << "After removing 42: ";
-    print_list(v);
-
-    // unique (remove consecutive duplicates)
-    v.push_back(1);
-    v.push_back(1);
+    print_list(v, "After remove(42)");
+    v.push_back(1); v.push_back(1);
     v.unique();
-    std::cout << "After unique(): ";
-    print_list(v);
+    print_list(v, "After unique");
 
-    // ---------------- NEW SMALL ADDITIONS ----------------
-
-    // push_front and push_back
+    std::cout << "\n=== push/pop / front / back ===\n";
     v.push_front(100);
     v.push_back(200);
-
-    std::cout << "After push_front/back: ";
-    print_list(v);
-
-    // front and back values
-    print_front_back(v);
-
-    // pop operations
+    print_list(v, "After push_front/back");
+    std::cout << "front=" << v.front() << " back=" << v.back() << "\n";
     v.pop_front();
     v.pop_back();
+    print_list(v, "After pop_front/back");
+    std::cout << "all_positive=" << all_positive(v) << "\n";
 
-    std::cout << "After pop_front/back: ";
-    print_list(v);
-
-    // check positivity
-    std::cout << "All positive? "
-              << (all_positive(v) ? "Yes" : "No") << std::endl;
-
-    // resize list
+    std::cout << "\n=== resize / clear ===\n";
     v.resize(6, 9);
-    std::cout << "After resize: ";
-    print_list(v);
+    print_list(v, "After resize(6,9)");
 
-    // clear list
     std::list<int> temp = v;
     temp.clear();
-    std::cout << "Temp list cleared. Size: "
-              << temp.size() << std::endl;
-
-    // -----------------------------------------------------
+    std::cout << "temp after clear: size=" << temp.size() << " empty=" << temp.empty() << "\n";
 
     return 0;
-}
-
-// -------------------------------------------------------
-// SMALL EXTRA CODE (HELPER ONLY)
-// -------------------------------------------------------
-
-void print_list(const std::list<int>& lst)
-{
-    std::cout << "[Extra] List contents: ";
-    for (int x : lst)
-        std::cout << x << " ";
-    std::cout << std::endl;
-}
-
-// ---- VERY SMALL EXTRA HELPERS ----
-
-// Sum elements
-int sum_list(const std::list<int>& lst)
-{
-    return std::accumulate(lst.begin(), lst.end(), 0);
-}
-
-// Safe max finder
-int max_list_safe(const std::list<int>& lst)
-{
-    if (lst.empty()) return 0;
-    return *std::max_element(lst.begin(), lst.end());
-}
-
-// ---- NEW SMALL HELPERS ----
-
-// Safe min finder
-int min_list_safe(const std::list<int>& lst)
-{
-    if (lst.empty()) return 0;
-    return *std::min_element(lst.begin(), lst.end());
-}
-
-// Average calculation
-double average_list(const std::list<int>& lst)
-{
-    if (lst.empty()) return 0.0;
-    return static_cast<double>(sum_list(lst)) / lst.size();
-}
-
-// Check if value exists
-bool contains_value(const std::list<int>& lst, int value)
-{
-    for (int v : lst)
-        if (v == value)
-            return true;
-    return false;
-}
-
-// Count occurrences of a value
-int count_value(const std::list<int>& lst, int value)
-{
-    int count = 0;
-    for (int v : lst)
-        if (v == value)
-            ++count;
-    return count;
-}
-
-// Print front and back safely
-void print_front_back(const std::list<int>& lst)
-{
-    if (!lst.empty()) {
-        std::cout << "Front: " << lst.front() << std::endl;
-        std::cout << "Back: " << lst.back() << std::endl;
-    }
-}
-
-// Check if all elements are positive
-bool all_positive(const std::list<int>& lst)
-{
-    for (int v : lst)
-        if (v <= 0)
-            return false;
-    return true;
-}
-
-// Tiny divider
-void print_divider()
-{
-    std::cout << "----------------------" << std::endl;
 }

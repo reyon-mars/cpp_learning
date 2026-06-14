@@ -1,162 +1,90 @@
-// Filesystem Exercise
-// File and directory operations
-
 #include <iostream>
 #include <filesystem>
-#include <vector>      // 🔹 added
-#include <algorithm>   // 🔹 added
+#include <vector>
+#include <algorithm>
+#include <string_view>
 
 namespace fs = std::filesystem;
 
-// ---------------- SMALL EXTRA HELPERS ----------------
-
-// Print divider
-void print_divider() {
-    std::cout << "-----------------------------\n";
+void print_path_info(const fs::path& p, std::string_view label = "") {
+    if (!label.empty()) std::cout << label << "\n";
+    std::cout << "  full="      << p                   << "\n"
+              << "  filename="  << p.filename()         << "\n"
+              << "  stem="      << p.stem()             << "\n"
+              << "  extension=" << p.extension()        << "\n"
+              << "  parent="    << p.parent_path()      << "\n"
+              << "  root="      << p.root_path()        << "\n"
+              << "  relative="  << p.relative_path()    << "\n"
+              << "  absolute="  << fs::absolute(p)      << "\n"
+              << "  is_absolute=" << std::boolalpha << p.is_absolute() << "\n"
+              << "  empty="       << p.empty()          << "\n";
 }
 
-// Check if file has extension
-bool has_txt_extension(const fs::path& p) {
-    return p.extension() == ".txt";
-}
-
-// Print path components
 void print_components(const fs::path& p) {
-    std::cout << "Path components:\n";
-    for (const auto& part : p) {
-        std::cout << part << "\n";
-    }
+    std::cout << "Components of " << p << ":\n";
+    for (const auto& part : p) std::cout << "  " << part << "\n";
 }
 
-// =====================================================
+[[nodiscard]] bool has_extension(const fs::path& p, std::string_view ext) {
+    return p.extension() == ext;
+}
+
+void print_file_status(const fs::path& p) {
+    if (!fs::exists(p)) { std::cout << p << " does not exist\n"; return; }
+    std::cout << p << ":\n"
+              << "  is_regular_file=" << fs::is_regular_file(p) << "\n"
+              << "  is_directory="    << fs::is_directory(p)    << "\n";
+    if (fs::is_regular_file(p))
+        std::cout << "  size=" << fs::file_size(p) << " bytes\n";
+}
 
 int main() {
-    // Create path
-    fs::path file_path = "/tmp/test.txt";
-    
-    // Get file information
-    std::cout << "Path: " << file_path << "\n";
-    std::cout << "Filename: " << file_path.filename() << "\n";
-    std::cout << "Extension: " << file_path.extension() << "\n";
-    
-    // Check if path exists
-    if (fs::exists(file_path)) {
-        std::cout << "File exists\n";
-        std::cout << "Is regular file: " << fs::is_regular_file(file_path) << "\n";
-        std::cout << "Size: " << fs::file_size(file_path) << " bytes\n";
+    const fs::path file_path{"/tmp/test.txt"};
+    const fs::path dir_path{"/tmp"};
+
+    std::cout << "=== Path decomposition ===\n";
+    print_path_info(file_path, "file_path");
+
+    std::cout << "\n=== File status ===\n";
+    print_file_status(file_path);
+
+    std::cout << "\n=== Directory ===\n";
+    std::cout << "cwd=" << fs::current_path() << "\n"
+              << "tmp=" << fs::temp_directory_path() << "\n";
+
+    if (fs::exists(dir_path) && fs::is_directory(dir_path)) {
+        std::cout << "\nListing /tmp:\n";
+        for (const auto& entry : fs::directory_iterator{dir_path})
+            std::cout << "  " << entry.path() << "\n";
     }
 
-    // ---- Additional small examples ----
-
-    // current working directory
-    std::cout << "Current path: " << fs::current_path() << "\n";
-
-    // parent directory
-    std::cout << "Parent path: " << file_path.parent_path() << "\n";
-
-    // check if directory
-    fs::path dir = "/tmp";
-    if (fs::exists(dir) && fs::is_directory(dir)) {
-        std::cout << "Listing files in /tmp:\n";
-        for (const auto& entry : fs::directory_iterator(dir)) {
-            std::cout << entry.path() << "\n";
-        }
-    }
-
-    // ---- VERY SMALL EXTRA ADDITIONS ----
-
-    // absolute path
-    std::cout << "Absolute path: " << fs::absolute(file_path) << "\n";
-
-    // file stem (name without extension)
-    std::cout << "Stem: " << file_path.stem() << "\n";
-
-    // check empty path
-    std::cout << "Is path empty? "
-              << (file_path.empty() ? "Yes" : "No") << "\n";
-
-    // temp directory path
-    std::cout << "Temp directory: " << fs::temp_directory_path() << "\n";
-
-    // compare paths
-    fs::path another = "/tmp/test.txt";
-    std::cout << "Paths equal? "
-              << (file_path == another ? "Yes" : "No") << "\n";
-
-    // -----------------------------------
-    // EXTRA SMALL ADDITIONS (NO CHANGE TO ORIGINAL LOGIC)
-    // -----------------------------------
-
-    // Check if path is absolute or relative
-    std::cout << "Is absolute? "
-              << (file_path.is_absolute() ? "Yes" : "No") << "\n";
-
-    // Replace filename (no actual file change, just path object)
+    std::cout << "\n=== Path manipulation ===\n";
     fs::path modified = file_path;
     modified.replace_filename("new_test.txt");
-    std::cout << "Modified filename path: " << modified << "\n";
-
-    // Replace extension
+    std::cout << "replace_filename: " << modified << "\n";
     modified.replace_extension(".log");
-    std::cout << "After changing extension: " << modified << "\n";
+    std::cout << "replace_extension: " << modified << "\n";
 
-    // Check if two paths are equivalent (only if both exist)
-    if (fs::exists(file_path) && fs::exists(another)) {
-        std::cout << "Equivalent paths? "
-                  << (fs::equivalent(file_path, another) ? "Yes" : "No") << "\n";
-    }
+    const fs::path messy{"/tmp/../tmp/test.txt"};
+    std::cout << "lexically_normal: " << messy.lexically_normal() << "\n";
 
-    // File status check
-    std::cout << "Exists (again check): "
-              << (fs::exists(file_path) ? "Yes" : "No") << "\n";
+    std::cout << "\n=== Path comparison ===\n";
+    const fs::path other{"/tmp/test.txt"};
+    std::cout << "file_path == other: " << (file_path == other) << "\n";
+    if (fs::exists(file_path) && fs::exists(other))
+        std::cout << "equivalent: " << fs::equivalent(file_path, other) << "\n";
 
-    // ==================================================
-    // 🔹 NEW SMALL ADDITIONS
-    // ==================================================
+    std::cout << "\n=== Extension helper ===\n";
+    std::cout << "has .txt: " << has_extension(file_path, ".txt") << "\n"
+              << "has .log: " << has_extension(modified, ".log")  << "\n";
 
-    print_divider();
-
-    // Check root path
-    std::cout << "Root path: "
-              << file_path.root_path() << "\n";
-
-    // Relative path
-    std::cout << "Relative path: "
-              << file_path.relative_path() << "\n";
-
-    // Check extension helper
-    std::cout << "Has .txt extension? "
-              << (has_txt_extension(file_path) ? "Yes" : "No") << "\n";
-
-    // Print path components
+    std::cout << "\n=== Components ===\n";
     print_components(file_path);
 
-    // Lexically normal path
-    fs::path messy = "/tmp/../tmp/test.txt";
-    std::cout << "Normalized path: "
-              << messy.lexically_normal() << "\n";
-
-    // Copy path into vector
-    std::vector<fs::path> paths = {
-        file_path,
-        modified,
-        messy
-    };
-
-    std::cout << "Stored paths:\n";
-    for (const auto& p : paths) {
-        std::cout << p << "\n";
-    }
-
-    // Sort paths alphabetically
-    std::sort(paths.begin(), paths.end());
-
-    std::cout << "Sorted paths:\n";
-    for (const auto& p : paths) {
-        std::cout << p << "\n";
-    }
-
-    // ==================================================
+    std::cout << "\n=== Vector of paths ===\n";
+    std::vector<fs::path> paths{file_path, modified, messy};
+    std::ranges::sort(paths);
+    for (const auto& p : paths) std::cout << "  " << p << "\n";
 
     return 0;
 }

@@ -1,149 +1,83 @@
-// Unordered Containers Exercise
-// unordered_map, unordered_set
-
 #include <iostream>
 #include <unordered_map>
 #include <unordered_set>
-#include <algorithm>   // tiny addition
-#include <vector>      // 🔹 NEW
-#include <numeric>     // 🔹 NEW
+#include <vector>
+#include <numeric>
+#include <string>
+#include <string_view>
+
+void print_map(const std::unordered_map<std::string, int>& m, std::string_view label = "") {
+    if (!label.empty()) std::cout << label << ":\n";
+    for (const auto& [k, v] : m) std::cout << "  " << k << "=" << v << "\n";
+}
+
+void print_set(const std::unordered_set<int>& s, std::string_view label = "") {
+    if (!label.empty()) std::cout << label << ": ";
+    for (int n : s) std::cout << n << " ";
+    std::cout << "\n";
+}
 
 int main() {
+    std::cout << "=== unordered_map<string,int> ===\n";
     std::unordered_map<std::string, int> counts;
-    counts["apple"]++;
-    counts["banana"]++;
-    counts["apple"]++;
-    
-    for (const auto& [key, val] : counts) {
-        std::cout << key << ": " << val << "\n";
-    }
-    
-    std::unordered_set<int> unique_nums = {1, 2, 3, 2, 1};
-    std::cout << "Unique count: " << unique_nums.size() << "\n";
+    counts["apple"]  += 2;
+    counts["banana"] += 1;
+    print_map(counts, "Initial");
 
-    // ---- small additions ----
+    std::cout << std::boolalpha
+              << "contains(apple)="  << counts.contains("apple")  << "\n"
+              << "contains(cherry)=" << counts.contains("cherry") << "\n";
 
-    // Check if key exists
-    std::cout << "Contains 'apple'? "
-              << (counts.find("apple") != counts.end() ? "Yes" : "No") << "\n";
+    if (auto it = counts.find("banana"); it != counts.end())
+        std::cout << "banana (via iterator)=" << it->second << "\n";
 
-    // Access with at()
-    if (counts.find("banana") != counts.end()) {
-        std::cout << "Banana count (using at): "
-                  << counts.at("banana") << "\n";
-    }
-
-    // Iterate only keys
     std::cout << "Keys: ";
-    for (const auto& [key, _] : counts) {
-        std::cout << key << " ";
-    }
+    for (const auto& [k, _] : counts) std::cout << k << " ";
     std::cout << "\n";
 
-    // unordered_set contains check
-    std::cout << "Set contains 2? "
-              << (unique_nums.count(2) ? "Yes" : "No") << "\n";
-
-    // Insert new value
-    unique_nums.insert(10);
-
-    // Print set
-    std::cout << "Set elements: ";
-    for (int n : unique_nums) {
-        std::cout << n << " ";
-    }
-    std::cout << "\n";
-
-    // Erase element
-    unique_nums.erase(1);
-    std::cout << "After erasing 1, size: "
-              << unique_nums.size() << "\n";
-
-    // ------------------------
-    // EXTRA SMALL ADDITIONS
-    // ------------------------
-
-    // Use iterator (avoid double lookup)
-    auto it = counts.find("apple");
-    if (it != counts.end()) {
-        std::cout << "Iterator access -> apple: "
-                  << it->second << "\n";
-    }
-
-    // Bucket information
-    std::cout << "Bucket count: "
-              << counts.bucket_count() << "\n";
-
-    // Load factor
-    std::cout << "Load factor: "
-              << counts.load_factor() << "\n";
-
-    // Insert without overwrite
     counts.insert({"orange", 1});
-    std::cout << "After inserting orange:\n";
-    for (const auto& [key, val] : counts) {
-        std::cout << key << ": " << val << "\n";
-    }
+    print_map(counts, "After insert(orange)");
 
-    // Clear set demo
-    std::unordered_set<int> temp_set = unique_nums;
-    temp_set.clear();
-    std::cout << "Temp set cleared, size: "
-              << temp_set.size() << "\n";
-
-    // ---------------- NEW SMALL ADDITIONS ----------------
-
-    // emplace example
     counts.emplace("grape", 4);
+    print_map(counts, "After emplace(grape,4)");
 
-    std::cout << "After emplace:\n";
-    for (const auto& [key, val] : counts) {
-        std::cout << key << ": " << val << "\n";
-    }
+    const int total = std::accumulate(counts.begin(), counts.end(), 0,
+        [](int acc, const auto& kv){ return acc + kv.second; });
+    std::cout << "total=" << total << "\n";
 
-    // Count total values in map
-    int total = 0;
-    for (const auto& [key, val] : counts) {
-        total += val;
-    }
+    std::cout << "bucket_count=" << counts.bucket_count()
+              << " load_factor=" << counts.load_factor() << "\n";
 
-    std::cout << "Total stored counts: "
-              << total << "\n";
-
-    // Rehash demo
     counts.rehash(20);
+    std::cout << "bucket_count after rehash=" << counts.bucket_count() << "\n";
 
-    std::cout << "Bucket count after rehash: "
-              << counts.bucket_count() << "\n";
+    std::cout << "\n=== unordered_set<int> ===\n";
+    std::unordered_set<int> nums{1, 2, 3, 2, 1};
+    std::cout << "Unique count=" << nums.size() << "\n"
+              << "contains(2)=" << nums.contains(2) << "\n";
 
-    // Swap unordered sets
-    std::unordered_set<int> another_set = {50, 60};
+    nums.insert(10);
+    print_set(nums, "After insert(10)");
 
-    unique_nums.swap(another_set);
+    nums.erase(1);
+    std::cout << "size after erase(1)=" << nums.size() << "\n";
 
-    std::cout << "unique_nums after swap: ";
-    for (int n : unique_nums) {
-        std::cout << n << " ";
-    }
-    std::cout << "\n";
+    std::unordered_set<int> other{50, 60};
+    nums.swap(other);
+    print_set(nums, "After swap");
+    print_set(other, "other after swap");
 
-    // Find specific element in set
-    auto set_it = unique_nums.find(50);
+    if (auto it = nums.find(50); it != nums.end())
+        std::cout << "found 50 in nums\n";
 
-    if (set_it != unique_nums.end()) {
-        std::cout << "Found value in set: "
-                  << *set_it << "\n";
-    }
+    std::cout << "\n=== vector → unordered_set ===\n";
+    const std::vector<int> raw{7, 7, 8, 9, 9};
+    const std::unordered_set<int> from_vec{raw.begin(), raw.end()};
+    std::cout << "converted size=" << from_vec.size() << "\n";
 
-    // Vector to unordered_set conversion
-    std::vector<int> values = {7, 7, 8, 9, 9};
-
-    std::unordered_set<int> converted(values.begin(), values.end());
-
-    std::cout << "Converted set size: "
-              << converted.size() << "\n";
-
-    // ----------------------------------------------------
+    std::unordered_set<int> temp = nums;
+    temp.clear();
+    std::cout << "temp after clear: size=" << temp.size() << " empty=" << temp.empty() << "\n";
 
     return 0;
 }

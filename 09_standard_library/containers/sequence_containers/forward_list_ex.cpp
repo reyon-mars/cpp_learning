@@ -1,207 +1,91 @@
 #include <forward_list>
 #include <iostream>
-#include <algorithm>   // 🔹 NEW
+#include <algorithm>
+#include <numeric>
+#include <optional>
 
-// ======================================================
-// ORIGINAL CODE (LOGIC UNCHANGED)
-// ======================================================
+void print(const std::forward_list<int>& lst, const char* label = nullptr) {
+    if (label) std::cout << label << ": ";
+    for (int v : lst) std::cout << v << " ";
+    std::cout << "\n";
+}
 
-int main(void) {
+[[nodiscard]] std::optional<int> first_greater_than(const std::forward_list<int>& lst, int n) {
+    auto it = std::ranges::find_if(lst, [n](int v){ return v > n; });
+    return it != lst.end() ? std::optional{*it} : std::nullopt;
+}
 
-    std::forward_list<int> f_lst = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-    auto prev = f_lst.before_begin();
-    auto curr = f_lst.begin();
+int main() {
+    std::forward_list<int> lst{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
-    while (curr != f_lst.end()) {
-        if (*curr % 2) {                 // odd → remove
-            curr = f_lst.erase_after(prev);
-        } else {                         // even → keep
+    auto prev = lst.before_begin();
+    auto curr = lst.begin();
+    while (curr != lst.end()) {
+        if (*curr % 2)
+            curr = lst.erase_after(prev);
+        else {
             prev = curr;
             ++curr;
         }
     }
 
-    // Print remaining elements (even numbers)
-    std::cout << "Even elements: ";
-    for (int elem : f_lst) {
-        std::cout << elem << " ";
-    }
-    std::cout << "\n";
+    print(lst, "Evens");
 
-    // ==================================================
-    // SMALL ADDITION ONLY
-    // ==================================================
+    const auto n    = static_cast<int>(std::ranges::distance(lst));
+    const int  sum  = std::accumulate(lst.cbegin(), lst.cend(), 0);
+    const int  prod = lst.empty() ? 0
+                                  : std::accumulate(lst.cbegin(), lst.cend(), 1, std::multiplies<>{});
 
-    int count = 0;
-    int sum = 0;
-    int last = 0;
+    std::cout << "count="   << n    << "\n"
+              << "sum="     << sum  << "\n"
+              << "product=" << prod << "\n";
 
-    for (int v : f_lst) {
-        ++count;
-        sum += v;
-        last = v;
-    }
+    if (!lst.empty()) {
+        auto tail = lst.begin();
+        while (std::next(tail) != lst.end()) ++tail;
 
-    std::cout << "Count: " << count << "\n";
-    std::cout << "Sum: " << sum << "\n";
-
-    if (!f_lst.empty())
-        std::cout << "Last element: " << last << "\n";
-    else
+        std::cout << "front=" << lst.front() << "\n"
+                  << "last="  << *tail       << "\n"
+                  << "max="   << *std::ranges::max_element(lst) << "\n"
+                  << "min="   << *std::ranges::min_element(lst) << "\n"
+                  << "avg="   << static_cast<double>(sum) / n   << "\n";
+    } else {
         std::cout << "List is empty\n";
-
-    // ---- additional small additions ----
-
-    // Check if all elements are even (should be true)
-    bool all_even = true;
-    for (int v : f_lst) {
-        if (v % 2 != 0) {
-            all_even = false;
-            break;
-        }
-    }
-    std::cout << "All elements even? "
-              << (all_even ? "Yes" : "No") << "\n";
-
-    // Find first element greater than 4
-    for (int v : f_lst) {
-        if (v > 4) {
-            std::cout << "First element > 4: " << v << "\n";
-            break;
-        }
     }
 
-    // Print size info message
-    std::cout << "List is "
-              << (count == 0 ? "empty" : "not empty")
-              << "\n";
+    std::cout << std::boolalpha
+              << "all_even="    << std::ranges::all_of(lst, [](int v){ return v % 2 == 0; }) << "\n"
+              << "contains(6)=" << (std::ranges::find(lst, 6) != lst.end())                   << "\n"
+              << "even_count="  << std::ranges::count_if(lst, [](int v){ return v % 2 == 0; }) << "\n"
+              << "sorted="      << std::ranges::is_sorted(lst)                                 << "\n";
 
-    // ---------------- EXTRA SMALL ADDITIONS ----------------
+    if (auto v = first_greater_than(lst, 4))
+        std::cout << "first>4=" << *v << "\n";
 
-    // Find minimum and maximum
-    int min_val = 0, max_val = 0;
-    if (!f_lst.empty()) {
-        auto it = f_lst.begin();
-        min_val = max_val = *it;
-        for (; it != f_lst.end(); ++it) {
-            if (*it < min_val) min_val = *it;
-            if (*it > max_val) max_val = *it;
-        }
-        std::cout << "Min: " << min_val << "\n";
-        std::cout << "Max: " << max_val << "\n";
-    }
+    lst.reverse();
+    print(lst, "Reversed");
 
-    // Average
-    double avg = (count == 0) ? 0.0 : static_cast<double>(sum) / count;
-    std::cout << "Average: " << avg << "\n";
+    lst.sort();
+    print(lst, "Sorted");
 
-    // Check if value exists
-    int target = 6;
-    bool found = false;
-    for (int v : f_lst) {
-        if (v == target) {
-            found = true;
-            break;
-        }
-    }
-    std::cout << "Contains 6? "
-              << (found ? "Yes" : "No") << "\n";
+    lst.push_front(100);
+    print(lst, "push_front(100)");
 
-    // Reverse list
-    f_lst.reverse();
-    std::cout << "Reversed list: ";
-    for (int v : f_lst) {
-        std::cout << v << " ";
-    }
-    std::cout << "\n";
+    lst.pop_front();
+    print(lst, "pop_front");
 
-    // Sort list (safe even if already sorted)
-    f_lst.sort();
-    std::cout << "Sorted list: ";
-    for (int v : f_lst) {
-        std::cout << v << " ";
-    }
-    std::cout << "\n";
+    lst.remove(4);
+    print(lst, "remove(4)");
 
-    // ---------------- NEW SMALL ADDITIONS ----------------
+    lst.push_front(2); lst.push_front(2);
+    lst.unique();
+    print(lst, "unique");
 
-    // Count even numbers
-    int even_count = 0;
-    for (int v : f_lst) {
-        if (v % 2 == 0)
-            ++even_count;
-    }
+    lst.resize(4);
+    print(lst, "resize(4)");
 
-    std::cout << "Even count: "
-              << even_count << "\n";
-
-    // Product of all elements
-    int product = 1;
-
-    if (!f_lst.empty()) {
-        for (int v : f_lst) {
-            product *= v;
-        }
-        std::cout << "Product: "
-                  << product << "\n";
-    }
-
-    // Push front
-    f_lst.push_front(100);
-    std::cout << "After push_front: ";
-    for (int v : f_lst) {
-        std::cout << v << " ";
-    }
-    std::cout << "\n";
-
-    // Pop front
-    f_lst.pop_front();
-    std::cout << "After pop_front: ";
-    for (int v : f_lst) {
-        std::cout << v << " ";
-    }
-    std::cout << "\n";
-
-    // Remove a specific value
-    f_lst.remove(4);
-    std::cout << "After removing 4: ";
-    for (int v : f_lst) {
-        std::cout << v << " ";
-    }
-    std::cout << "\n";
-
-    // Unique example
-    f_lst.push_front(2);
-    f_lst.push_front(2);
-    f_lst.unique();
-
-    std::cout << "After unique(): ";
-    for (int v : f_lst) {
-        std::cout << v << " ";
-    }
-    std::cout << "\n";
-
-    // Check if sorted
-    std::cout << "Is sorted? "
-              << (std::is_sorted(f_lst.begin(), f_lst.end())
-                  ? "Yes" : "No")
-              << "\n";
-
-    // Resize example
-    f_lst.resize(4);
-    std::cout << "After resize(4): ";
-    for (int v : f_lst) {
-        std::cout << v << " ";
-    }
-    std::cout << "\n";
-
-    // Clear list
-    f_lst.clear();
-    std::cout << "After clear, empty? "
-              << (f_lst.empty() ? "Yes" : "No")
-              << "\n";
-
-    // ------------------------------------------------------
+    lst.clear();
+    std::cout << "clear empty=" << lst.empty() << "\n";
 
     return 0;
 }

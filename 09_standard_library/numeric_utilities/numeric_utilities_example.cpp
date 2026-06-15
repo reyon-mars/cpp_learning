@@ -1,134 +1,74 @@
-// Numeric Utilities Exercise
-// std::complex, std::ratio, std::gcd, std::lcm
-
 #include <iostream>
 #include <complex>
 #include <numeric>
 #include <ratio>
 #include <vector>
-#include <algorithm>
+#include <string_view>
 
-// ---------------- SMALL EXTRA HELPERS ----------------
-
-// print complex number details
-void print_complex_info(const std::complex<double>& z) {
-    std::cout << "Value: " << z << "\n";
-    std::cout << "Magnitude: " << std::abs(z) << "\n";
-    std::cout << "Phase: " << std::arg(z) << "\n";
+void print_complex(const std::complex<double>& z, std::string_view label = "") {
+    if (!label.empty()) std::cout << label << ":\n";
+    std::cout << "  value="  << z            << "\n"
+              << "  real="   << z.real()      << "\n"
+              << "  imag="   << z.imag()      << "\n"
+              << "  abs="    << std::abs(z)   << "\n"
+              << "  arg="    << std::arg(z)   << "\n"
+              << "  norm="   << std::norm(z)  << "\n"
+              << "  conj="   << std::conj(z)  << "\n";
 }
 
-// check if number is coprime
-bool are_coprime(int a, int b) {
+template<typename R>
+void print_ratio(std::string_view label) {
+    std::cout << label << "=" << R::num << "/" << R::den << "\n";
+}
+
+[[nodiscard]] bool are_coprime(int a, int b) noexcept {
     return std::gcd(a, b) == 1;
 }
 
-// ---------------- MAIN ----------------
-
 int main() {
-    // Complex numbers
-    std::complex<double> z1(3.0, 4.0);
-    std::complex<double> z2(1.0, 2.0);
-    
-    std::cout << "z1: " << z1 << "\n";
-    std::cout << "z1 + z2: " << (z1 + z2) << "\n";
-    std::cout << "z1 * z2: " << (z1 * z2) << "\n";
+    std::cout << "=== Complex numbers ===\n";
+    const std::complex<double> z1{3.0, 4.0};
+    const std::complex<double> z2{1.0, 2.0};
 
-    // ---- Additional complex utilities ----
-    std::cout << "Magnitude of z1: " << std::abs(z1) << "\n";
-    std::cout << "Phase of z1: " << std::arg(z1) << "\n";
-    // --------------------------------------
+    print_complex(z1, "z1");
+    print_complex(z2, "z2");
 
-    // GCD and LCM
-    int a = 48, b = 18;
-    std::cout << "GCD(48, 18): " << std::gcd(a, b) << "\n";
-    std::cout << "LCM(48, 18): " << std::lcm(a, b) << "\n";
+    std::cout << "z1+z2="     << z1 + z2                << "\n"
+              << "z1*z2="     << z1 * z2                << "\n"
+              << "z1^2="      << std::pow(z1, 2)        << "\n"
+              << "polar(5,0.5)=" << std::polar(5.0, 0.5) << "\n";
 
-    // ---- std::ratio example ----
-    using half = std::ratio<1, 2>;
+    std::cout << "\n=== GCD / LCM ===\n";
+    std::cout << std::boolalpha
+              << "gcd(48,18)="  << std::gcd(48, 18)   << "\n"
+              << "lcm(48,18)="  << std::lcm(48, 18)   << "\n"
+              << "gcd(21,6)="   << std::gcd(21,  6)   << "\n"
+              << "lcm(21,6)="   << std::lcm(21,  6)   << "\n"
+              << "coprime(35,64)=" << are_coprime(35, 64) << "\n";
+
+    std::cout << "\n=== GCD / LCM over vector ===\n";
+    const std::vector<int> nums{12, 18, 24};
+    const int gcd_all = std::accumulate(nums.begin(), nums.end(), nums.front(), std::gcd<int, int>);
+    const int lcm_all = std::accumulate(nums.begin(), nums.end(), nums.front(), std::lcm<int, int>);
+    std::cout << "gcd(12,18,24)=" << gcd_all << "\n"
+              << "lcm(12,18,24)=" << lcm_all << "\n";
+
+    std::cout << "\n=== std::ratio ===\n";
+    using half    = std::ratio<1, 2>;
     using quarter = std::ratio<1, 4>;
+    using two_thirds = std::ratio<2, 3>;
 
-    std::cout << "Half ratio: " << half::num << "/" << half::den << "\n";
-    std::cout << "Quarter ratio: " << quarter::num << "/" << quarter::den << "\n";
+    print_ratio<half>("half");
+    print_ratio<quarter>("quarter");
+    print_ratio<std::ratio<2, 4>>("2/4 (auto-simplified)");
+    print_ratio<std::ratio_add<half, quarter>>("half+quarter");
+    print_ratio<std::ratio_subtract<half, quarter>>("half-quarter");
+    print_ratio<std::ratio_multiply<half, quarter>>("half*quarter");
+    print_ratio<std::ratio_divide<half, quarter>>("half/quarter");
+    print_ratio<two_thirds>("two_thirds");
 
-    // ratio addition
-    using sum_ratio = std::ratio_add<half, quarter>;
-    std::cout << "Half + Quarter = "
-              << sum_ratio::num << "/" << sum_ratio::den << "\n";
-    // --------------------------------
-
-    // --------------------------------
-    // EXTRA SMALL ADDITIONS (NEW)
-    // --------------------------------
-
-    // Complex conjugate
-    std::cout << "Conjugate of z1: " << std::conj(z1) << "\n";
-
-    // Real and imaginary parts
-    std::cout << "Real part of z1: " << z1.real() << "\n";
-    std::cout << "Imaginary part of z1: " << z1.imag() << "\n";
-
-    // Power of complex number
-    std::cout << "z1 squared: " << std::pow(z1, 2) << "\n";
-
-    // Additional GCD/LCM example
-    int x = 21, y = 6;
-    std::cout << "GCD(21, 6): " << std::gcd(x, y) << "\n";
-    std::cout << "LCM(21, 6): " << std::lcm(x, y) << "\n";
-
-    // ratio multiplication
-    using mul_ratio = std::ratio_multiply<half, quarter>;
-    std::cout << "Half * Quarter = "
-              << mul_ratio::num << "/" << mul_ratio::den << "\n";
-
-    // ratio simplification example
-    using simplified = std::ratio<2, 4>;
-    std::cout << "Simplified ratio of 2/4 = "
-              << simplified::num << "/" << simplified::den << "\n";
-
-    // --------------------------------
-    // ADDITIONAL SMALL CODE
-    // --------------------------------
-
-    // print helper demo
-    std::cout << "\nComplex info for z2:\n";
-    print_complex_info(z2);
-
-    // polar form
-    std::complex<double> polar_z = std::polar(5.0, 0.5);
-    std::cout << "Polar complex number: " << polar_z << "\n";
-
-    // norm of complex number
-    std::cout << "Norm of z1: " << std::norm(z1) << "\n";
-
-    // coprime check
-    std::cout << "Are 35 and 64 coprime? "
-              << (are_coprime(35, 64) ? "Yes" : "No") << "\n";
-
-    // ratio subtraction
-    using sub_ratio = std::ratio_subtract<half, quarter>;
-    std::cout << "Half - Quarter = "
-              << sub_ratio::num << "/" << sub_ratio::den << "\n";
-
-    // ratio division
-    using div_ratio = std::ratio_divide<half, quarter>;
-    std::cout << "Half / Quarter = "
-              << div_ratio::num << "/" << div_ratio::den << "\n";
-
-    // gcd/lcm for vector values
-    std::vector<int> nums = {12, 18, 24};
-
-    int gcd_all = nums[0];
-    int lcm_all = nums[0];
-
-    for (size_t i = 1; i < nums.size(); ++i) {
-        gcd_all = std::gcd(gcd_all, nums[i]);
-        lcm_all = std::lcm(lcm_all, nums[i]);
-    }
-
-    std::cout << "GCD of vector values: " << gcd_all << "\n";
-    std::cout << "LCM of vector values: " << lcm_all << "\n";
-
-    // --------------------------------
+    static_assert(std::ratio_equal_v<std::ratio<2, 4>, std::ratio<1, 2>>);
+    static_assert(std::ratio_less_v<quarter, half>);
 
     return 0;
 }

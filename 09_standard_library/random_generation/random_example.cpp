@@ -1,151 +1,88 @@
-// Random Number Generation Exercise
-// std::random_device, engines, distributions
-
 #include <iostream>
 #include <random>
 #include <vector>
 #include <algorithm>
-#include <numeric> // tiny addition
+#include <numeric>
+#include <span>
+
+void print_vec(std::span<const int> v, const char* label = nullptr) {
+    if (label) std::cout << label << ": ";
+    for (int n : v) std::cout << n << " ";
+    std::cout << "\n";
+}
+
+void print_stats(std::span<const int> v) {
+    if (v.empty()) return;
+    const int   sum  = std::accumulate(v.begin(), v.end(), 0);
+    const auto [lo, hi] = std::ranges::minmax(v);
+    const double avg    = static_cast<double>(sum) / static_cast<double>(v.size());
+    const long evens    = std::ranges::count_if(v, [](int x){ return x % 2 == 0; });
+    std::cout << "sum=" << sum << " min=" << lo << " max=" << hi
+              << " avg=" << avg << " evens=" << evens << "\n";
+}
 
 int main() {
-    // Random engine
-    std::mt19937 rng(std::random_device{}());
-    
-    // Uniform distribution
-    std::uniform_int_distribution<int> dist_int(1, 10);
-    std::uniform_real_distribution<double> dist_real(0.0, 1.0);
-    
-    std::cout << "Random integers: ";
-    for (int i = 0; i < 5; ++i) {
-        std::cout << dist_int(rng) << " ";
-    }
-    std::cout << "\n";
-    
-    std::cout << "Random doubles: ";
-    for (int i = 0; i < 5; ++i) {
-        std::cout << dist_real(rng) << " ";
-    }
-    std::cout << "\n";
-    
-    // Normal distribution
-    std::normal_distribution<double> dist_normal(0.0, 1.0);
-    std::cout << "Normal distribution: " << dist_normal(rng) << "\n";
+    std::mt19937 rng{std::random_device{}()};
 
-    // ---- Additional small examples ----
+    std::uniform_int_distribution<int>    dist_int {1,    10};
+    std::uniform_real_distribution<double> dist_real{0.0,  1.0};
+    std::normal_distribution<double>       dist_norm{0.0,  1.0};
+    std::bernoulli_distribution            coin     {0.5};
+    std::discrete_distribution<int>        discrete {{1, 2, 3}};
+    std::uniform_int_distribution<int>    char_dist{65,   90};
+    std::uniform_real_distribution<double> dist_real2{10.0, 20.0};
 
-    // Bernoulli distribution (true/false)
-    std::bernoulli_distribution coin(0.5);
-    std::cout << "Coin toss: " << (coin(rng) ? "Heads" : "Tails") << "\n";
-
-    // Generate random vector
-    std::vector<int> numbers(5);
-    for (auto& n : numbers) {
-        n = dist_int(rng);
-    }
-
-    std::cout << "Random vector: ";
-    for (int n : numbers) {
-        std::cout << n << " ";
-    }
+    std::cout << "=== Uniform int [1,10] ===\n";
+    std::cout << "Samples: ";
+    for (int i = 0; i < 5; ++i) std::cout << dist_int(rng) << " ";
     std::cout << "\n";
 
-    // Shuffle the vector
-    std::shuffle(numbers.begin(), numbers.end(), rng);
-    std::cout << "Shuffled vector: ";
-    for (int n : numbers) {
-        std::cout << n << " ";
-    }
+    std::cout << "\n=== Uniform real [0,1] ===\n";
+    std::cout << "Samples: ";
+    for (int i = 0; i < 5; ++i) std::cout << dist_real(rng) << " ";
     std::cout << "\n";
 
-    // ---- VERY SMALL EXTRA ADDITIONS ----
+    std::cout << "\n=== Normal (mean=0, sd=1) ===\n";
+    std::cout << "Sample=" << dist_norm(rng) << "\n";
 
-    // Find min and max in random vector
-    auto [min_it, max_it] = std::minmax_element(numbers.begin(), numbers.end());
-    std::cout << "Min: " << *min_it << ", Max: " << *max_it << "\n";
-
-    // Sum of elements
-    int sum = std::accumulate(numbers.begin(), numbers.end(), 0);
-    std::cout << "Sum of vector: " << sum << "\n";
-
-    // Generate one random boolean sequence
-    std::cout << "Random bools: ";
-    for (int i = 0; i < 5; ++i) {
-        std::cout << coin(rng) << " ";
-    }
+    std::cout << "\n=== Bernoulli (coin) ===\n";
+    std::cout << "Toss=" << (coin(rng) ? "Heads" : "Tails") << "\n";
+    std::cout << "Bools: ";
+    for (int i = 0; i < 5; ++i) std::cout << std::boolalpha << coin(rng) << " ";
     std::cout << "\n";
 
-    // Reseed example (deterministic behavior)
-    rng.seed(42);
-    std::cout << "After reseed (42): " << dist_int(rng) << "\n";
+    std::cout << "\n=== Discrete {weights 1,2,3} ===\n";
+    std::cout << "Sample=" << discrete(rng) << "\n";
 
-    // -----------------------------------
-    // EXTRA SMALL ADDITIONS (NEW)
-    // -----------------------------------
+    std::cout << "\n=== Uniform real [10,20] ===\n";
+    std::cout << "Sample=" << dist_real2(rng) << "\n";
 
-    // Generate numbers using generate()
-    std::vector<int> generated(5);
-    std::generate(generated.begin(), generated.end(),
-                  [&]() { return dist_int(rng); });
-
-    std::cout << "Generated vector: ";
-    for (int n : generated) std::cout << n << " ";
-    std::cout << "\n";
-
-    // Discrete distribution
-    std::discrete_distribution<int> discrete({1, 2, 3});
-    std::cout << "Discrete distribution sample: "
-              << discrete(rng) << "\n";
-
-    // Uniform real in different range
-    std::uniform_real_distribution<double> dist_real2(10.0, 20.0);
-    std::cout << "Random [10,20]: " << dist_real2(rng) << "\n";
-
-    // Check average of generated vector
-    double avg = generated.empty() ? 0.0 :
-        static_cast<double>(std::accumulate(generated.begin(), generated.end(), 0)) / generated.size();
-
-    std::cout << "Average of generated vector: " << avg << "\n";
-
-    // -----------------------------------
-    // EXTRA SMALL ADDITIONS (MORE)
-    // -----------------------------------
-
-    // Count even numbers in generated vector
-    int even_count = std::count_if(generated.begin(), generated.end(),
-                                   [](int x) { return x % 2 == 0; });
-
-    std::cout << "Even numbers count: "
-              << even_count << "\n";
-
-    // Sort generated vector
-    std::sort(generated.begin(), generated.end());
-
-    std::cout << "Sorted generated vector: ";
-    for (int n : generated)
-        std::cout << n << " ";
-    std::cout << "\n";
-
-    // Reverse generated vector
-    std::reverse(generated.begin(), generated.end());
-
-    std::cout << "Reversed generated vector: ";
-    for (int n : generated)
-        std::cout << n << " ";
-    std::cout << "\n";
-
-    // Random character generation
-    std::uniform_int_distribution<int> char_dist(65, 90);
-
-    std::cout << "Random uppercase letters: ";
-    for (int i = 0; i < 5; ++i) {
+    std::cout << "\n=== Random uppercase chars ===\n";
+    for (int i = 0; i < 5; ++i)
         std::cout << static_cast<char>(char_dist(rng)) << " ";
-    }
     std::cout << "\n";
 
-    // Check if vector is empty
-    std::cout << "Generated vector is "
-              << (generated.empty() ? "empty" : "not empty")
-              << "\n";
+    std::cout << "\n=== Random vector + shuffle ===\n";
+    std::vector<int> numbers(5);
+    std::ranges::generate(numbers, [&]{ return dist_int(rng); });
+    print_vec(numbers, "Generated");
+    print_stats(numbers);
+
+    std::ranges::shuffle(numbers, rng);
+    print_vec(numbers, "Shuffled");
+
+    std::ranges::sort(numbers);
+    print_vec(numbers, "Sorted");
+
+    std::ranges::reverse(numbers);
+    print_vec(numbers, "Reversed");
+
+    std::cout << "\n=== Reseed (deterministic) ===\n";
+    rng.seed(42);
+    std::vector<int> seeded(5);
+    std::ranges::generate(seeded, [&]{ return dist_int(rng); });
+    print_vec(seeded, "After seed(42)");
+    print_stats(seeded);
 
     return 0;
 }

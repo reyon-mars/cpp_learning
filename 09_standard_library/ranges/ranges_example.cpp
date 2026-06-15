@@ -1,178 +1,68 @@
-// Ranges Exercise (C++20)
-// Range-based algorithms and views
-
 #include <iostream>
 #include <vector>
 #include <ranges>
-#include <numeric>   // added
-#include <algorithm> // added
-#include <iterator>  // tiny addition
+#include <numeric>
+#include <algorithm>
+#include <string_view>
 
-// ---- SMALL EXTRA HELPERS ----
-
-// print any range
-template <typename Range>
-void print_range(const Range& r, const std::string& label) {
-    std::cout << label;
-    for (auto v : r)
-        std::cout << v << " ";
+template<std::ranges::input_range Range>
+void print_range(Range&& r, std::string_view label = "") {
+    if (!label.empty()) std::cout << label << ": ";
+    for (auto v : r) std::cout << v << " ";
     std::cout << "\n";
 }
 
-// sum helper
-int range_sum(const std::vector<int>& v) {
-    return std::accumulate(v.begin(), v.end(), 0);
+template<std::ranges::input_range Range>
+[[nodiscard]] auto range_sum(Range&& r) {
+    using T = std::ranges::range_value_t<std::remove_cvref_t<Range>>;
+    return std::accumulate(std::ranges::begin(r), std::ranges::end(r), T{});
 }
-
-// ======================================================
-// MAIN
-// ======================================================
 
 int main() {
-    std::vector<int> vec = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-    
-    // Range-based sort
-    auto evens = vec | std::views::filter([](int x) { return x % 2 == 0; });
-    
-    std::cout << "Even numbers: ";
-    for (int v : evens) {
-        std::cout << v << " ";
-    }
-    std::cout << "\n";
-    
-    // Range-based transform
-    auto doubled = vec | std::views::transform([](int x) { return x * 2; });
-    
-    std::cout << "Doubled: ";
-    for (int v : doubled) {
-        std::cout << v << " ";
-    }
-    std::cout << "\n";
+    const std::vector<int> vec{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
-    // ---- Additional small examples ----
+    std::cout << "=== Filter / transform ===\n";
+    print_range(vec | std::views::filter([](int x){ return x % 2 == 0; }), "evens");
+    print_range(vec | std::views::filter([](int x){ return x % 2 != 0; }), "odds");
+    print_range(vec | std::views::transform([](int x){ return x * 2;     }), "doubled");
+    print_range(vec | std::views::transform([](int x){ return x * x * x; }), "cubed");
 
-    // take first 5 elements
-    auto first_five = vec | std::views::take(5);
-    std::cout << "First five: ";
-    for (int v : first_five) {
-        std::cout << v << " ";
-    }
-    std::cout << "\n";
+    std::cout << "\n=== Slicing ===\n";
+    print_range(vec | std::views::take(5),    "first 5");
+    print_range(vec | std::views::drop(5),    "after 5");
+    print_range(vec | std::views::reverse,    "reversed");
+    print_range(vec | std::views::reverse | std::views::take(3), "last 3 reversed");
 
-    // drop first 5 elements
-    auto after_five = vec | std::views::drop(5);
-    std::cout << "After five: ";
-    for (int v : after_five) {
-        std::cout << v << " ";
-    }
-    std::cout << "\n";
+    std::cout << "\n=== Chained views ===\n";
+    print_range(
+        vec | std::views::filter([](int x){ return x % 2 == 0; })
+            | std::views::transform([](int x){ return x * x; }),
+        "even squared");
+    print_range(
+        vec | std::views::filter([](int x){ return x > 5; }),
+        "greater than 5");
 
-    // reverse view
-    auto reversed = vec | std::views::reverse;
-    std::cout << "Reversed: ";
-    for (int v : reversed) {
-        std::cout << v << " ";
-    }
-    std::cout << "\n";
+    std::cout << "\n=== Algorithms ===\n";
+    std::cout << std::boolalpha
+              << "size="        << std::ranges::distance(vec)                                   << "\n"
+              << "sum="         << range_sum(vec)                                               << "\n"
+              << "all_positive="<< std::ranges::all_of(vec, [](int x){ return x > 0; })         << "\n"
+              << "is_sorted="   << std::ranges::is_sorted(vec)                                  << "\n"
+              << "count_even="  << std::ranges::count_if(vec, [](int x){ return x % 2 == 0; }) << "\n"
+              << "count_odd="   << std::ranges::count_if(vec, [](int x){ return x % 2 != 0; }) << "\n";
 
-    // -----------------------------------
+    const auto [lo, hi] = std::ranges::minmax(vec);
+    std::cout << "min=" << lo << " max=" << hi << "\n";
 
-    // ===== SMALL ADDITIONS ONLY =====
+    if (auto it = std::ranges::find_if(vec, [](int x){ return x > 5; }); it != vec.end())
+        std::cout << "first>5=" << *it << "\n";
 
-    // Count elements using ranges
-    auto count_all = std::ranges::distance(vec);
-    std::cout << "Total elements: " << count_all << "\n";
-
-    // Sum using accumulate
-    int sum = std::accumulate(vec.begin(), vec.end(), 0);
-    std::cout << "Sum of elements: " << sum << "\n";
-
-    // Check if all elements are positive
-    bool all_positive = std::ranges::all_of(vec, [](int x){ return x > 0; });
-    std::cout << "All positive? " << (all_positive ? "Yes" : "No") << "\n";
-
-    // Find first element > 5
-    auto it = std::ranges::find_if(vec, [](int x){ return x > 5; });
-    if (it != vec.end())
-        std::cout << "First element > 5: " << *it << "\n";
-
-    // Chained view (filter + transform)
-    auto even_squared = vec
-        | std::views::filter([](int x){ return x % 2 == 0; })
-        | std::views::transform([](int x){ return x * x; });
-
-    std::cout << "Even squared: ";
-    for (int v : even_squared)
-        std::cout << v << " ";
-    std::cout << "\n";
-
-    // ---- EXTRA SMALL ADDITIONS ----
-
-    // Find max and min
-    auto [min_it, max_it] = std::minmax_element(vec.begin(), vec.end());
-    std::cout << "Min: " << *min_it << ", Max: " << *max_it << "\n";
-
-    // Check if sorted
-    bool sorted = std::ranges::is_sorted(vec);
-    std::cout << "Is sorted? " << (sorted ? "Yes" : "No") << "\n";
-
-    // Copy filtered results into a vector
+    std::cout << "\n=== Materialise view into vector ===\n";
+    auto evens_view = vec | std::views::filter([](int x){ return x % 2 == 0; });
     std::vector<int> even_vec;
-    std::ranges::copy(evens, std::back_inserter(even_vec));
-
-    std::cout << "Copied evens: ";
-    for (int v : even_vec)
-        std::cout << v << " ";
-    std::cout << "\n";
-
-    // Count even numbers
-    auto even_count = std::ranges::count_if(vec, [](int x){ return x % 2 == 0; });
-    std::cout << "Even count: " << even_count << "\n";
-
-    // =================================
-    // NEW SMALL ADDITIONS
-    // =================================
-
-    // Odd numbers view
-    auto odds = vec | std::views::filter([](int x) {
-        return x % 2 != 0;
-    });
-
-    print_range(odds, "Odd numbers: ");
-
-    // Cubed values
-    auto cubed = vec | std::views::transform([](int x) {
-        return x * x * x;
-    });
-
-    print_range(cubed, "Cubed values: ");
-
-    // Numbers greater than 5
-    auto greater_than_five = vec | std::views::filter([](int x) {
-        return x > 5;
-    });
-
-    print_range(greater_than_five, "Greater than 5: ");
-
-    // Reverse + take
-    auto reverse_take = vec
-        | std::views::reverse
-        | std::views::take(3);
-
-    print_range(reverse_take, "Last three reversed: ");
-
-    // Sum helper usage
-    std::cout << "Range sum helper: "
-              << range_sum(vec) << "\n";
-
-    // Count odd numbers
-    auto odd_count = std::ranges::count_if(vec,
-        [](int x){ return x % 2 != 0; });
-
-    std::cout << "Odd count: "
-              << odd_count << "\n";
-
-    // =================================
+    std::ranges::copy(evens_view, std::back_inserter(even_vec));
+    print_range(even_vec, "copied evens");
+    std::cout << "sum of evens=" << range_sum(even_vec) << "\n";
 
     return 0;
 }

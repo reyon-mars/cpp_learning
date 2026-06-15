@@ -1,260 +1,133 @@
 #include <iostream>
-
-// ---------------- ORIGINAL CODE (UNCHANGED) ----------------
+#include <numeric>
+#include <algorithm>
+#include <iterator>
+#include <optional>
+#include <ranges>
 
 class int_range {
-private:
-    int start;
-    int end_value;   // renamed to avoid conflict with end()
-
 public:
     class Iterator {
+    public:
+        using iterator_category = std::forward_iterator_tag;
+        using value_type        = int;
+        using difference_type   = std::ptrdiff_t;
+        using pointer           = const int*;
+        using reference         = const int&;
+
+        explicit Iterator(int v) noexcept : current_{v} {}
+
+        [[nodiscard]] int operator*()  const noexcept { return current_; }
+        [[nodiscard]] bool operator==(const Iterator&) const noexcept = default;
+
+        Iterator& operator++()    noexcept { ++current_; return *this; }
+        Iterator  operator++(int) noexcept { auto tmp = *this; ++current_; return tmp; }
+
     private:
         int current_;
-
-    public:
-        explicit Iterator(int current) : current_(current) {}
-
-        int operator*() const { return current_; }
-
-        Iterator& operator++() {
-            ++current_;
-            return *this;
-        }
-
-        bool operator!=(const Iterator& other) const {
-            return current_ != other.current_;
-        }
-
-        // 🔹 NEW: equality operator
-        bool operator==(const Iterator& other) const {
-            return current_ == other.current_;
-        }
     };
 
-    explicit int_range(int s, int e) : start(s), end_value(e) {}
+    explicit int_range(int first, int last) noexcept : start_{first}, end_{last} {}
 
-    Iterator begin() { return Iterator(start); }
-    Iterator end()   { return Iterator(end_value); }
+    [[nodiscard]] Iterator begin() const noexcept { return Iterator{start_}; }
+    [[nodiscard]] Iterator end()   const noexcept { return Iterator{end_};   }
+    [[nodiscard]] bool     empty() const noexcept { return start_ >= end_;   }
+    [[nodiscard]] int      size()  const noexcept { return end_ - start_;    }
 
-    Iterator begin() const { return Iterator(start); }
-    Iterator end()   const { return Iterator(end_value); }
+private:
+    int start_;
+    int end_;
 };
 
-// ---------------- SMALL ADDITIONS ----------------
-
-// check if value exists
-bool contains(const int_range& r, int value) {
-    for (int v : r)
-        if (v == value)
-            return true;
-    return false;
+[[nodiscard]] bool contains(const int_range& r, int v) {
+    return std::ranges::find(r, v) != r.end();
 }
 
-// count elements
-int range_size(const int_range& r) {
-    int count = 0;
-    for (int _ : r) {
-        (void)_;
-        ++count;
-    }
-    return count;
+[[nodiscard]] int range_sum(const int_range& r) noexcept {
+    return std::accumulate(r.begin(), r.end(), 0);
 }
 
-// sum of elements
-int range_sum(const int_range& r) {
-    int sum = 0;
-    for (int v : r)
-        sum += v;
-    return sum;
+[[nodiscard]] std::optional<double> range_average(const int_range& r) {
+    if (r.empty()) return std::nullopt;
+    return static_cast<double>(range_sum(r)) / r.size();
 }
 
-// ---- VERY SMALL EXTRA ----
-
-// average of range
-double range_average(const int_range& r) {
-    int sz = range_size(r);
-    return sz ? static_cast<double>(range_sum(r)) / sz : 0.0;
+[[nodiscard]] std::optional<int> range_min(const int_range& r) {
+    if (r.empty()) return std::nullopt;
+    return *std::ranges::min_element(r);
 }
 
-// find min value
-int range_min(const int_range& r) {
-    int min = *r.begin();
-    for (int v : r)
-        if (v < min)
-            min = v;
-    return min;
+[[nodiscard]] std::optional<int> range_max(const int_range& r) {
+    if (r.empty()) return std::nullopt;
+    return *std::ranges::max_element(r);
 }
 
-// find max value
-int range_max(const int_range& r) {
-    int max = *r.begin();
-    for (int v : r)
-        if (v > max)
-            max = v;
-    return max;
+[[nodiscard]] bool all_positive(const int_range& r) {
+    return std::ranges::all_of(r, [](int v){ return v > 0; });
 }
 
-// print reversed view (no modification)
-void print_reverse(const int_range& r) {
-    int last = 0;
-    for (int v : r) last = v;
+[[nodiscard]] long count_even(const int_range& r) {
+    return std::ranges::count_if(r, [](int v){ return v % 2 == 0; });
+}
 
-    for (int i = last; contains(r, i); --i)
-        std::cout << i << " ";
+[[nodiscard]] long count_odd(const int_range& r) {
+    return std::ranges::count_if(r, [](int v){ return v % 2 != 0; });
+}
 
+[[nodiscard]] long count_multiples(const int_range& r, int divisor) {
+    return std::ranges::count_if(r, [divisor](int v){ return v % divisor == 0; });
+}
+
+void print_transformed(const int_range& r, auto fn, const char* label) {
+    std::cout << label << ": ";
+    for (int v : r) std::cout << fn(v) << " ";
     std::cout << "\n";
 }
 
-// ---- ADDITIONAL TINY HELPERS ----
-
-// check if range is empty
-bool is_empty(const int_range& r) {
-    return r.begin() == r.end();
-}
-
-// get first element
-int first_element(const int_range& r) {
-    return *r.begin();
-}
-
-// get last element
-int last_element(const int_range& r) {
-    int last = 0;
-    for (int v : r)
-        last = v;
-    return last;
-}
-
-// -----------------------------------
-// EXTRA SMALL ADDITIONS (NEW)
-// -----------------------------------
-
-// count even numbers
-int count_even(const int_range& r) {
-    int count = 0;
-    for (int v : r)
-        if (v % 2 == 0)
-            ++count;
-    return count;
-}
-
-// count odd numbers
-int count_odd(const int_range& r) {
-    int count = 0;
-    for (int v : r)
-        if (v % 2 != 0)
-            ++count;
-    return count;
-}
-
-// check if all values are positive
-bool all_positive(const int_range& r) {
-    for (int v : r)
-        if (v <= 0)
-            return false;
-    return true;
-}
-
-// print squared values
-void print_squares(const int_range& r) {
-    for (int v : r)
-        std::cout << v * v << " ";
+void print_filtered(const int_range& r, auto pred, const char* label) {
+    std::cout << label << ": ";
+    for (int v : r) if (pred(v)) std::cout << v << " ";
     std::cout << "\n";
 }
 
-// 🔹 NEW: print cubes
-void print_cubes(const int_range& r) {
-    for (int v : r)
-        std::cout << v * v * v << " ";
+int main() {
+    const int_range r{1, 6};
+
+    std::cout << "=== Range [1,6) ===\n";
+    std::cout << "Values: ";
+    for (int v : r) std::cout << v << " ";
     std::cout << "\n";
-}
 
-// 🔹 NEW: count multiples of a number
-int count_multiples(const int_range& r, int divisor) {
-    int count = 0;
+    std::cout << "size="  << r.size()  << "\n"
+              << "empty=" << std::boolalpha << r.empty() << "\n";
 
-    for (int v : r)
-        if (v % divisor == 0)
-            ++count;
+    if (auto first = r.begin(); first != r.end())
+        std::cout << "first=" << *first << "\n";
 
-    return count;
-}
+    std::cout << "sum="   << range_sum(r) << "\n";
+    if (auto a = range_average(r)) std::cout << "avg=" << *a << "\n";
+    if (auto m = range_min(r))     std::cout << "min=" << *m << "\n";
+    if (auto m = range_max(r))     std::cout << "max=" << *m << "\n";
 
-// 🔹 NEW: print only even values
-void print_even_values(const int_range& r) {
-    for (int v : r)
-        if (v % 2 == 0)
-            std::cout << v << " ";
+    std::cout << "contains(3)=" << contains(r, 3) << "\n"
+              << "all_positive=" << all_positive(r)  << "\n"
+              << "count_even="   << count_even(r)    << "\n"
+              << "count_odd="    << count_odd(r)     << "\n"
+              << "multiples(2)=" << count_multiples(r, 2) << "\n";
 
-    std::cout << "\n";
-}
-
-// 🔹 NEW: print only odd values
-void print_odd_values(const int_range& r) {
-    for (int v : r)
-        if (v % 2 != 0)
-            std::cout << v << " ";
-
-    std::cout << "\n";
-}
-
-// ---------------- MAIN ----------------
-
-int main(void) {
-    int_range r(1, 6);
-
-    std::cout << "Range values: ";
-    for (int v : r)
+    std::cout << "\n=== Reverse view (std::views::reverse) ===\n";
+    std::cout << "Reversed: ";
+    for (int v : std::views::reverse(r | std::ranges::to<std::vector>()))
         std::cout << v << " ";
     std::cout << "\n";
 
-    std::cout << "Contains 3? "
-              << (contains(r, 3) ? "Yes" : "No") << "\n";
+    std::cout << "\n=== Transformations ===\n";
+    print_transformed(r, [](int v){ return v * v;     }, "squares");
+    print_transformed(r, [](int v){ return v * v * v; }, "cubes");
 
-    std::cout << "Range size: " << range_size(r) << "\n";
-    std::cout << "Range sum: " << range_sum(r) << "\n";
-    std::cout << "Range average: " << range_average(r) << "\n";
-
-    std::cout << "Range min: " << range_min(r) << "\n";
-    std::cout << "Range max: " << range_max(r) << "\n";
-
-    std::cout << "Reversed view: ";
-    print_reverse(r);
-
-    // ---- tiny extra usage ----
-    std::cout << "Is empty? "
-              << (is_empty(r) ? "Yes" : "No") << "\n";
-
-    std::cout << "First element: " << first_element(r) << "\n";
-    std::cout << "Last element: " << last_element(r) << "\n";
-
-    // -----------------------------------
-    // EXTRA USAGE (NEW)
-    // -----------------------------------
-
-    std::cout << "Even count: " << count_even(r) << "\n";
-    std::cout << "Odd count: " << count_odd(r) << "\n";
-
-    std::cout << "All positive? "
-              << (all_positive(r) ? "Yes" : "No") << "\n";
-
-    std::cout << "Squared values: ";
-    print_squares(r);
-
-    // 🔹 NEW TESTS
-
-    std::cout << "Cubed values: ";
-    print_cubes(r);
-
-    std::cout << "Multiples of 2: "
-              << count_multiples(r, 2) << "\n";
-
-    std::cout << "Even values: ";
-    print_even_values(r);
-
-    std::cout << "Odd values: ";
-    print_odd_values(r);
+    std::cout << "\n=== Filtered ===\n";
+    print_filtered(r, [](int v){ return v % 2 == 0; }, "even values");
+    print_filtered(r, [](int v){ return v % 2 != 0; }, "odd values");
 
     return 0;
 }

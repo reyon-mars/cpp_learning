@@ -1,186 +1,112 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <string_view>
 #include <algorithm>
 #include <cctype>
-#include <numeric>   // added
+#include <numeric>
+#include <span>
+#include <ranges>
 
-// ==================================================
-// SMALL EXTRA HELPERS
-// ==================================================
-
-// print vector characters
-void print_chars(const std::vector<char>& v) {
-    for (char c : v)
-        std::cout << c;
-    std::cout << std::endl;
+[[nodiscard]] bool is_vowel(char c) noexcept {
+    c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    return c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u';
 }
 
-// count vowels
-int count_vowels(const std::vector<char>& v) {
-    return std::count_if(v.begin(), v.end(),
-        [](char c) {
-            char lower = std::tolower(static_cast<unsigned char>(c));
-            return lower == 'a' || lower == 'e' ||
-                   lower == 'i' || lower == 'o' ||
-                   lower == 'u';
-        });
+void print_chars(std::span<const char> v, std::string_view label = "") {
+    if (!label.empty()) std::cout << label << ": ";
+    for (char c : v) std::cout << c;
+    std::cout << "\n";
 }
 
-// ==================================================
-// ORIGINAL CODE (LOGIC UNCHANGED)
-// ==================================================
+[[nodiscard]] long count_vowels(std::span<const char> v) {
+    return std::ranges::count_if(v, is_vowel);
+}
 
-int main(void) {
+[[nodiscard]] long count_alpha(std::span<const char> v) {
+    return std::ranges::count_if(v, [](char c){
+        return std::isalpha(static_cast<unsigned char>(c)) != 0;
+    });
+}
+
+[[nodiscard]] int ascii_sum(std::span<const char> v) noexcept {
+    return std::accumulate(v.begin(), v.end(), 0,
+        [](int s, char c){ return s + static_cast<int>(c); });
+}
+
+[[nodiscard]] bool all_printable(std::span<const char> v) noexcept {
+    return std::ranges::all_of(v, [](char c){
+        return std::isprint(static_cast<unsigned char>(c)) != 0;
+    });
+}
+
+[[nodiscard]] bool is_palindrome(std::span<const char> v) noexcept {
+    return std::equal(v.begin(), v.begin() + v.size() / 2, v.rbegin());
+}
+
+[[nodiscard]] std::string to_string(std::span<const char> v) {
+    return {v.begin(), v.end()};
+}
+
+int main() {
     std::vector<char> v;
-
-    // --- small extra (capacity hint) ---
     v.reserve(10);
-    // ----------------------------------
-
-    // --- original additions ---
     v.push_back('H');
     v.push_back('i');
     v.push_back('!');
-    // --------------------------
 
-    std::string str_v(v.begin(), v.end());
-    std::string str;
+    const std::string str = to_string(v);
+    std::cout << "String: " << str << "\n"
+              << "size="     << v.size()     << "\n"
+              << "capacity=" << v.capacity() << "\n";
 
-    for (auto c : v)
-        str += c;
+    if (!v.empty())
+        std::cout << "front=" << v.front() << " back=" << v.back() << "\n";
 
-    std::cout << str << std::endl;
+    std::cout << std::boolalpha
+              << "ASCII(front)="   << static_cast<int>(v.front())                        << "\n"
+              << "contains('!')="  << (std::ranges::find(v, '!') != v.end())            << "\n"
+              << "count('i')="     << std::ranges::count(v, 'i')                         << "\n"
+              << "count_vowels="   << count_vowels(v)                                    << "\n"
+              << "count_alpha="    << count_alpha(v)                                     << "\n"
+              << "ascii_sum="      << ascii_sum(v)                                       << "\n"
+              << "all_printable="  << all_printable(v)                                   << "\n"
+              << "is_palindrome="  << is_palindrome(v)                                   << "\n";
 
-    // --- small added code ---
-    std::cout << "Vector size: " << v.size() << std::endl;
-    std::cout << "Vector capacity: " << v.capacity() << std::endl;
+    std::cout << "\n=== Views (no copy) ===\n";
+    std::cout << "Reversed: ";
+    for (char c : v | std::views::reverse) std::cout << c;
+    std::cout << "\n";
 
-    if (!v.empty()) {
-        std::cout << "First character: " << v.front() << std::endl;
-        std::cout << "Last character: " << v.back() << std::endl;
-    }
-    // -----------------------
-
-    std::cout << "String created using constructor: "
-              << str_v << std::endl;
-
-    // ===== VERY SMALL NEW ADDITIONS =====
-
-    // Print ASCII of first element
-    std::cout << "ASCII of first char: "
-              << static_cast<int>(v.front()) << std::endl;
-
-    // Check if '!' exists
-    std::cout << "Contains '!': "
-              << (std::find(v.begin(), v.end(), '!') != v.end()
-                  ? "Yes" : "No") << std::endl;
-
-    // Print reversed view (no modification)
-    std::cout << "Reversed view: ";
-    for (auto it = v.rbegin(); it != v.rend(); ++it)
-        std::cout << *it;
-    std::cout << std::endl;
-
-    // ===== ADDITIONAL SMALL EXAMPLES =====
-
-    // Count occurrences of 'i'
-    std::cout << "Count of 'i': "
-              << std::count(v.begin(), v.end(), 'i') << std::endl;
-
-    // Uppercase view (without modifying original vector)
-    std::cout << "Uppercase view: ";
-    for (char c : v)
-        std::cout << static_cast<char>(std::toupper(c));
-    std::cout << std::endl;
-
-    // ===================================
-
-    // ===== EXTRA SMALL ADDITIONS (NEW) =====
-
-    // Sort characters (copy, original unchanged)
-    std::vector<char> sorted_v = v;
-    std::sort(sorted_v.begin(), sorted_v.end());
-    std::cout << "Sorted copy: ";
-    for (char c : sorted_v)
+    std::cout << "Uppercase: ";
+    for (char c : v | std::views::transform([](char c){
+            return static_cast<char>(std::toupper(static_cast<unsigned char>(c))); }))
         std::cout << c;
-    std::cout << std::endl;
+    std::cout << "\n";
 
-    // Count total ASCII sum
-    int ascii_sum = std::accumulate(v.begin(), v.end(), 0,
-        [](int sum, char c) { return sum + static_cast<int>(c); });
-    std::cout << "ASCII sum: " << ascii_sum << std::endl;
+    std::cout << "\n=== Copies + mutations ===\n";
+    auto sorted_v = v;
+    std::ranges::sort(sorted_v);
+    print_chars(sorted_v, "sorted");
 
-    // Check if all characters are printable
-    bool all_printable = std::all_of(v.begin(), v.end(),
-        [](char c) { return std::isprint(static_cast<unsigned char>(c)); });
-    std::cout << "All printable? "
-              << (all_printable ? "Yes" : "No") << std::endl;
+    auto reversed_v = v;
+    std::ranges::reverse(reversed_v);
+    print_chars(reversed_v, "reversed copy");
 
-    // ======================================
-
-    // ===== FINAL TINY ADDITIONS =====
-
-    // Convert vector to lowercase string (copy)
-    std::string lower = str;
-    std::transform(lower.begin(), lower.end(), lower.begin(),
-                   [](char c){ return std::tolower(static_cast<unsigned char>(c)); });
-    std::cout << "Lowercase string: " << lower << std::endl;
-
-    // Check if vector is palindrome (simple check)
-    bool is_palindrome = std::equal(v.begin(), v.begin() + v.size()/2, v.rbegin());
-    std::cout << "Is palindrome? "
-              << (is_palindrome ? "Yes" : "No") << std::endl;
-
-    // Append more characters safely
-    v.push_back('?');
-    std::cout << "After adding '?': ";
-    for (char c : v) std::cout << c;
-    std::cout << std::endl;
-
-    // ======================================
-
-    // ===== NEW SMALL ADDITIONS =====
-
-    // Print using helper
-    std::cout << "Printed using helper: ";
-    print_chars(v);
-
-    // Count vowels
-    std::cout << "Vowel count: "
-              << count_vowels(v) << std::endl;
-
-    // Remove punctuation in copy
     std::vector<char> letters_only;
-    std::copy_if(v.begin(), v.end(),
-                 std::back_inserter(letters_only),
-                 [](char c) {
-                     return std::isalpha(
-                         static_cast<unsigned char>(c));
-                 });
+    std::ranges::copy_if(v, std::back_inserter(letters_only), [](char c){
+        return std::isalpha(static_cast<unsigned char>(c)) != 0;
+    });
+    print_chars(letters_only, "letters only");
 
-    std::cout << "Letters only: ";
-    print_chars(letters_only);
+    std::string lower = str;
+    std::ranges::transform(lower, lower.begin(), [](char c){
+        return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    });
+    std::cout << "lowercase=" << lower << "\n";
 
-    // Check if all alphabetic
-    bool all_alpha = std::all_of(v.begin(), v.end(),
-        [](char c) {
-            return std::isalpha(
-                static_cast<unsigned char>(c));
-        });
-
-    std::cout << "All alphabetic? "
-              << (all_alpha ? "Yes" : "No")
-              << std::endl;
-
-    // Reverse actual vector copy
-    std::vector<char> reversed_copy = v;
-    std::reverse(reversed_copy.begin(), reversed_copy.end());
-
-    std::cout << "Reversed copy: ";
-    print_chars(reversed_copy);
-
-    // ======================================
+    v.push_back('?');
+    print_chars(v, "after push_back('?')");
 
     return 0;
 }

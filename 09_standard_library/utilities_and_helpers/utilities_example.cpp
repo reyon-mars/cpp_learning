@@ -1,177 +1,123 @@
-// Utilities and Helpers Exercise
-// std::pair, std::tuple, std::optional, std::variant, std::any
-
 #include <iostream>
 #include <tuple>
 #include <optional>
 #include <variant>
 #include <any>
 #include <string>
-#include <vector>      // added
-#include <algorithm>   // added
-#include <numeric>     // added
+#include <string_view>
+#include <vector>
+#include <algorithm>
+#include <numeric>
+#include <ranges>
+#include <format>
+#include <type_traits>
+
+template <typename... Ts>
+struct overload : Ts... { using Ts::operator()...; };
 
 int main() {
-    // std::pair
-    std::pair<int, std::string> p(42, "answer");
-    std::cout << "Pair: " << p.first << ", " << p.second << "\n";
-    
-    // std::tuple
-    auto t = std::make_tuple(1, "hello", 3.14);
-    std::cout << "Tuple: " << std::get<0>(t) << ", " 
-              << std::get<1>(t) << ", " << std::get<2>(t) << "\n";
-    
-    // std::optional
-    std::optional<int> opt_val = 10;
-    if (opt_val) {
-        std::cout << "Optional value: " << opt_val.value() << "\n";
-    }
-    
-    // std::variant
-    std::variant<int, std::string> v = "hello";
-    if (std::holds_alternative<std::string>(v)) {
-        std::cout << "Variant string: " << std::get<std::string>(v) << "\n";
-    }
-    
-    // std::any
-    std::any a = 42;
-    std::cout << "Any value: " << std::any_cast<int>(a) << "\n";
+    auto p = std::make_pair(42, std::string{"answer"});
+    std::cout << std::format("Pair: {}, {}\n", p.first, p.second);
 
-    // ---- Additional small examples ----
+    auto t = std::make_tuple(1, std::string_view{"hello"}, 3.14);
+    auto& [ti, ts, td] = t;
+    std::cout << std::format("Tuple: {}, {}, {}\n", ti, ts, td);
 
-    // pair using make_pair
-    auto p2 = std::make_pair(7, "days");
-    std::cout << "Pair2: " << p2.first << ", " << p2.second << "\n";
+    std::optional<int> opt{10};
+    std::cout << std::format("Optional value: {}\n", opt.value());
 
-    // tuple size
-    std::cout << "Tuple size: " 
-              << std::tuple_size<decltype(t)>::value << "\n";
-
-    // optional reset
-    opt_val.reset();
-    std::cout << "Optional has value? "
-              << (opt_val.has_value() ? "Yes" : "No") << "\n";
-
-    // change variant value
-    v = 100;
-    if (std::holds_alternative<int>(v)) {
-        std::cout << "Variant int: " << std::get<int>(v) << "\n";
-    }
-
-    // change any type
-    a = std::string("stored string");
-    if (a.type() == typeid(std::string)) {
-        std::cout << "Any string: " 
-                  << std::any_cast<std::string>(a) << "\n";
-    }
-
-    // -----------------------------------
-
-    // ===== VERY SMALL NEW ADDITIONS =====
-
-    // structured binding (pair)
-    auto [num, text] = p;
-    std::cout << "Structured binding: " << num << ", " << text << "\n";
-
-    // tie unpacking (tuple)
-    int i; std::string s; double d;
-    std::tie(i, s, d) = t;
-    std::cout << "Unpacked tuple: " << i << ", " << s << ", " << d << "\n";
-
-    // optional with value_or
-    std::optional<int> empty_opt;
-    std::cout << "Optional value_or: "
-              << empty_opt.value_or(999) << "\n";
-
-    // variant index
-    std::cout << "Variant index: " << v.index() << "\n";
-
-    // safe any access
-    if (a.has_value()) {
-        std::cout << "Any has value\n";
-    }
-
-    // ---- EXTRA SMALL ADDITIONS ----
-
-    // swap pairs
-    std::pair<int, std::string> p3(1, "one");
-    std::swap(p, p3);
-    std::cout << "After swap, p: " << p.first << ", " << p.second << "\n";
-
-    // get tuple element count via sizeof...
-    std::cout << "Tuple element count (sizeof...): "
-              << std::tuple_size<decltype(t)>::value << "\n";
-
-    // optional emplace
-    opt_val.emplace(55);
-    std::cout << "Optional after emplace: "
-              << opt_val.value() << "\n";
-
-    // visit variant
-    std::visit([](auto&& arg) {
-        std::cout << "Visited variant value: " << arg << "\n";
+    std::variant<int, std::string> v{std::string{"hello"}};
+    std::visit(overload{
+        [](int n)               { std::cout << std::format("Variant int: {}\n", n);    },
+        [](const std::string& s){ std::cout << std::format("Variant string: {}\n", s); },
     }, v);
 
-    // reset any
+    std::any a{42};
+    std::cout << std::format("Any value: {}\n", std::any_cast<int>(a));
+
+    auto p2 = std::make_pair(7, std::string_view{"days"});
+    std::cout << std::format("Pair2: {}, {}\n", p2.first, p2.second);
+
+    std::cout << std::format("Tuple size: {}\n",
+                             std::tuple_size_v<decltype(t)>);
+
+    opt.reset();
+    std::cout << std::format("Optional has value? {}\n", opt.has_value() ? "Yes" : "No");
+
+    v = 100;
+    std::visit(overload{
+        [](int n)               { std::cout << std::format("Variant int: {}\n", n);    },
+        [](const std::string& s){ std::cout << std::format("Variant string: {}\n", s); },
+    }, v);
+
+    a = std::string{"stored string"};
+    if (a.type() == typeid(std::string))
+        std::cout << std::format("Any string: {}\n", std::any_cast<const std::string&>(a));
+
+    auto [num, text] = p;
+    std::cout << std::format("Structured binding: {}, {}\n", num, text);
+
+    std::optional<int> empty_opt;
+    std::cout << std::format("Optional value_or: {}\n", empty_opt.value_or(999));
+
+    std::cout << std::format("Variant index: {}\n", v.index());
+
+    std::cout << std::format("Any has value: {}\n", a.has_value() ? "Yes" : "No");
+
+    auto p3 = std::make_pair(1, std::string{"one"});
+    std::swap(p, p3);
+    std::cout << std::format("After swap, p: {}, {}\n", p.first, p.second);
+
+    opt.emplace(55);
+    std::cout << std::format("Optional after emplace: {}\n", opt.value());
+
+    v = std::string{"new variant text"};
+    std::visit(overload{
+        [](int n)               { std::cout << std::format("Variant: {}\n", n);    },
+        [](const std::string& s){ std::cout << std::format("Variant: {}\n", s); },
+    }, v);
+
     a.reset();
-    std::cout << "Any after reset has value? "
-              << (a.has_value() ? "Yes" : "No") << "\n";
+    std::cout << std::format("Any after reset has value? {}\n", a.has_value() ? "Yes" : "No");
 
-    // --------------------------------
-    // FINAL SMALL ADDITIONS
-    // --------------------------------
-
-    // vector of pairs
-    std::vector<std::pair<int, std::string>> vp = {
-        {1, "one"},
-        {2, "two"},
-        {3, "three"}
+    const std::vector<std::pair<int, std::string>> vp{
+        {1, "one"}, {2, "two"}, {3, "three"}
     };
 
     std::cout << "Vector of pairs:\n";
-    for (const auto& [id, word] : vp) {
-        std::cout << id << " -> " << word << "\n";
-    }
+    for (const auto& [id, word] : vp)
+        std::cout << std::format("  {} -> {}\n", id, word);
 
-    // accumulate values from vector
-    std::vector<int> nums = {1, 2, 3, 4, 5};
-    int total = std::accumulate(nums.begin(), nums.end(), 0);
+    constexpr std::array nums{1, 2, 3, 4, 5};
 
-    std::cout << "Accumulated sum: " << total << "\n";
+    std::cout << std::format("Accumulated sum: {}\n",
+                             std::reduce(nums.begin(), nums.end(), 0));
 
-    // count even numbers
-    int even_count = std::count_if(nums.begin(), nums.end(),
-        [](int x) { return x % 2 == 0; });
+    std::cout << std::format("Even count: {}\n",
+                             std::ranges::count_if(nums, [](int x){ return x % 2 == 0; }));
 
-    std::cout << "Even count: " << even_count << "\n";
+    const auto [min_it, max_it] = std::ranges::minmax_element(nums);
+    std::cout << std::format("Min: {}  Max: {}\n", *min_it, *max_it);
 
-    // find maximum value
-    auto max_it = std::max_element(nums.begin(), nums.end());
-    if (max_it != nums.end()) {
-        std::cout << "Max value: " << *max_it << "\n";
-    }
+    std::optional<int> opt_a{5}, opt_b{10};
+    std::cout << std::format("opt_a < opt_b? {}\n", opt_a < opt_b ? "Yes" : "No");
 
-    // optional comparison
-    std::optional<int> opt_a = 5;
-    std::optional<int> opt_b = 10;
-
-    std::cout << "opt_a < opt_b ? "
-              << ((*opt_a < *opt_b) ? "Yes" : "No") << "\n";
-
-    // variant reassignment
-    v = std::string("new variant text");
-    std::visit([](auto&& arg) {
-        std::cout << "Updated variant: " << arg << "\n";
-    }, v);
-
-    // any with double
     a = 3.1415;
-    if (a.type() == typeid(double)) {
-        std::cout << "Any double: "
-                  << std::any_cast<double>(a) << "\n";
-    }
+    if (a.type() == typeid(double))
+        std::cout << std::format("Any double: {}\n", std::any_cast<double>(a));
 
-    // --------------------------------
+    std::vector<std::optional<int>> sparse{1, std::nullopt, 3, std::nullopt, 5};
+    const auto present_sum = std::accumulate(sparse.begin(), sparse.end(), 0,
+        [](int acc, const std::optional<int>& o){ return acc + o.value_or(0); });
+    std::cout << std::format("Sum of present optionals: {}\n", present_sum);
+
+    using Record = std::tuple<int, std::string, double>;
+    const std::vector<Record> records{
+        {1, "alpha", 1.1}, {2, "beta", 2.2}, {3, "gamma", 3.3}
+    };
+    std::cout << "Records:\n";
+    for (const auto& [id, name, score] : records)
+        std::cout << std::format("  id={} name={} score={}\n", id, name, score);
 
     return 0;
 }

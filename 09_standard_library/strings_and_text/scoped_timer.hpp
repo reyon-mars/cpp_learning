@@ -2,233 +2,170 @@
 #include <chrono>
 #include <string>
 #include <thread>
-#include <ctime>
-#include <numeric>   // added
-#include <vector>    // tiny addition
-#include <algorithm> // tiny addition
+#include <numeric>
+#include <vector>
+#include <algorithm>
+#include <format>
+#include <ranges>
+#include <span>
+#include <cassert>
+#include <functional>
+#include <concepts>
 
-// ======================================================
-// ORIGINAL CODE (UNCHANGED LOGIC)
-// ======================================================
+using Clock     = std::chrono::steady_clock;
+using TimePoint = Clock::time_point;
+using us        = std::chrono::microseconds;
+using ms        = std::chrono::milliseconds;
+using sec       = std::chrono::seconds;
 
-class scoped_timer {
-
-private:
-    std::chrono::steady_clock::time_point start;
-    std::string name;
+class ScopedTimer {
+    TimePoint   start_;
+    std::string name_;
 
 public:
-    explicit scoped_timer(std::string str)
-        : start(std::chrono::steady_clock::now()),
-          name(std::move(str)) {}
+    explicit ScopedTimer(std::string name)
+        : start_(Clock::now()), name_(std::move(name)) {}
 
-    ~scoped_timer() {
-        auto end = std::chrono::steady_clock::now();
-
-        auto us = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
-        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-        auto sec = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
-
-        std::cout << name << ": "
-                  << us << " us"
-                  << " (" << ms << " ms"
-                  << ", " << sec << " s)"
-                  << "\n";
+    ~ScopedTimer() {
+        const auto elapsed = Clock::now() - start_;
+        std::cout << std::format("{}: {} us ({} ms, {} s)\n",
+                                 name_,
+                                 duration_cast<us>(elapsed).count(),
+                                 duration_cast<ms>(elapsed).count(),
+                                 duration_cast<sec>(elapsed).count());
     }
+
+    ScopedTimer(const ScopedTimer&)            = delete;
+    ScopedTimer& operator=(const ScopedTimer&) = delete;
 };
 
-// Simple workload
-void busy_work(int n) {
+[[nodiscard]] auto elapsed_us(TimePoint start) noexcept {
+    return std::chrono::duration_cast<us>(Clock::now() - start).count();
+}
+
+void busy_work(int n) noexcept {
     volatile int x = 0;
     for (int i = 0; i < n; ++i)
         x += i;
 }
 
-// ======================================================
-// SMALL ADDITION ONLY
-// ======================================================
-
-void timed_work(const std::string& label, int n) {
-    scoped_timer t(label);
-    busy_work(n);
+template <std::invocable Fn>
+long long measure_us(Fn&& fn) {
+    const auto start = Clock::now();
+    std::invoke(std::forward<Fn>(fn));
+    return elapsed_us(start);
 }
 
-void counted_work(const std::string& label, int n, int& counter) {
-    scoped_timer t(label);
-    busy_work(n);
-    ++counter;
+template <std::invocable Fn>
+void timed(std::string_view label, Fn&& fn) {
+    ScopedTimer t{std::string(label)};
+    std::invoke(std::forward<Fn>(fn));
 }
 
-// ===== VERY SMALL EXTRA HELPERS =====
-
-void repeat_work(const std::string& label, int n, int times) {
-    scoped_timer t(label);
-    for (int i = 0; i < times; ++i)
-        busy_work(n);
+void timed_sleep(std::string_view label, int ms_count) {
+    timed(label, [ms_count] {
+        std::this_thread::sleep_for(ms(ms_count));
+    });
 }
 
-void print_status(const std::string& msg) {
-    std::cout << "[Status] " << msg << std::endl;
-}
-
-// --- Small new helper: simulate delay ---
-void timed_sleep(const std::string& label, int ms) {
-    scoped_timer t(label);
-    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
-}
-
-// --- Small new helper: print current time ---
 void print_current_time() {
-    auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-    std::cout << "[Current time] " << std::ctime(&now);
+    const auto now  = std::chrono::system_clock::now();
+    const auto time = std::chrono::system_clock::to_time_t(now);
+    std::cout << std::format("[Current time] {}", std::ctime(&time));
 }
 
-// ===== EXTRA SMALL HELPERS =====
+struct TimingStats {
+    long long min{}, max{}, total{};
+    double    mean{};
+    std::size_t count{};
+};
 
-// Find average from timings
-double average_time(const std::vector<long long>& times) {
-    if (times.empty()) return 0.0;
-
-    long long total =
-        std::accumulate(times.begin(), times.end(), 0LL);
-
-    return static_cast<double>(total) / times.size();
+[[nodiscard]] TimingStats compute_stats(std::span<const long long> times) noexcept {
+    if (times.empty()) return {};
+    auto [mn, mx] = std::ranges::minmax(times);
+    const long long sum = std::reduce(times.begin(), times.end(), 0LL);
+    return {mn, mx, sum, static_cast<double>(sum) / static_cast<double>(times.size()), times.size()};
 }
 
-// Print vector helper
-void print_times(const std::vector<long long>& times) {
-    for (long long t : times)
-        std::cout << t << " ";
-    std::cout << "\n";
+void print_stats(const TimingStats& s) {
+    std::cout << std::format("  count={}, min={} us, max={} us, mean={:.1f} us, total={} us\n",
+                             s.count, s.min, s.max, s.mean, s.total);
 }
 
-// ---------------------------------------------------------
-// MAIN
-// ---------------------------------------------------------
+void print_times(std::span<const long long> times, std::string_view label = "times") {
+    std::cout << std::format("{}: ", label);
+    for (long long t : times) std::cout << std::format("{} ", t);
+    std::cout << '\n';
+}
 
 int main() {
     std::cout << "--- Scoped Timer Demo ---\n";
-
-    print_status("Program started");
     print_current_time();
 
-    int timerRuns = 0;
+    ScopedTimer total{"total program time"};
 
-    scoped_timer total("total program time"); ++timerRuns;
+    timed("main workload",   [] { busy_work(300'000); });
+    timed("inner workload",  [] { busy_work(150'000); });
+    timed("helper workload", [] { busy_work(200'000); });
 
-    {
-        scoped_timer t("main workload"); ++timerRuns;
-        busy_work(300'000);
+    int work_count = 0;
+    for (std::string_view label : {"counted workload 1", "counted workload 2"}) {
+        timed(label, [&] { busy_work(100'000); ++work_count; });
     }
 
-    {
-        scoped_timer inner("inner block workload"); ++timerRuns;
-        busy_work(150'000);
+    timed("repeat workload x3", [] {
+        for ([[maybe_unused]] int i : std::views::iota(0, 3))
+            busy_work(80'000);
+    });
+
+    timed_sleep("sleep test (200ms)", 200);
+
+    std::cout << std::format("Work functions executed: {}\n", work_count);
+    std::cout << std::format("Clock is steady: {}\n",
+                             Clock::is_steady ? "Yes" : "No");
+
+    std::cout << "\n--- Loop workloads ---\n";
+    for (int i : std::views::iota(1, 4)) {
+        timed(std::format("loop workload {}", i),
+              [i] { busy_work(30'000 * i); });
     }
 
-    timed_work("helper function workload", 200'000); ++timerRuns;
+    std::cout << "\n--- Comparison workloads ---\n";
+    timed("workload A", [] { busy_work( 60'000); });
+    timed("workload B", [] { busy_work(120'000); });
 
-    int workCount = 0;
-    counted_work("counted workload 1", 100'000, workCount); ++timerRuns;
-    counted_work("counted workload 2", 120'000, workCount); ++timerRuns;
+    std::cout << "\n--- Throughput ---\n";
+    constexpr int ops = 100'000;
+    const long long dur = measure_us([] { busy_work(ops); });
+    std::cout << std::format("Duration: {} us | Throughput: {} ops/us\n",
+                             dur, ops / std::max(dur, 1LL));
 
-    repeat_work("repeat workload x3", 80'000, 3); ++timerRuns;
+    std::cout << "\n--- Timing Statistics ---\n";
+    std::vector<long long> sample_times;
+    sample_times.reserve(8);
+    for (int n : {50'000, 100'000, 75'000, 90'000, 60'000, 110'000, 80'000, 95'000})
+        sample_times.push_back(measure_us([n] { busy_work(n); }));
 
-    // small demo of timed sleep
-    timed_sleep("sleep test (200ms)", 200); ++timerRuns;
+    print_times(sample_times, "raw sample times (us)");
+    print_stats(compute_stats(sample_times));
 
-    std::cout << "Work functions executed: " << workCount << std::endl;
-    std::cout << "Total timed sections: " << timerRuns << std::endl;
+    std::ranges::sort(sample_times);
+    print_times(sample_times, "sorted sample times (us)");
 
-    print_status("Program ending");
-    std::cout << "--- Program Finished ---\n";
+    const long long median = sample_times[sample_times.size() / 2];
+    std::cout << std::format("Median: {} us\n", median);
 
-    // ===== EXTRA SMALL ADDITIONS (NEW) =====
+    std::cout << "\n--- quick_inline block ---\n";
+    timed("quick inline block", [] { busy_work(50'000); });
 
-    // Measure quick inline block
-    {
-        scoped_timer t("quick inline block");
-        busy_work(50'000);
-    }
-
-    // Average time simulation (manual)
-    std::vector<long long> sample_times = {100, 200, 150, 175};
-    long long total_time = std::accumulate(sample_times.begin(), sample_times.end(), 0LL);
-    std::cout << "Average sample time: "
-              << (total_time / sample_times.size()) << " us\n";
-
-    // Check duration type
-    auto now = std::chrono::steady_clock::now();
-    std::cout << "Clock is steady? "
-              << (std::chrono::steady_clock::is_steady ? "Yes" : "No") << "\n";
-
-    // ===== FINAL TINY ADDITIONS =====
-
-    // Run multiple timed blocks in loop
-    for (int i = 1; i <= 3; ++i) {
-        scoped_timer t("loop workload " + std::to_string(i));
-        busy_work(30'000 * i);
-    }
-
-    // Compare two workloads
-    {
-        scoped_timer t("comparison workload A");
-        busy_work(60'000);
-    }
-    {
-        scoped_timer t("comparison workload B");
-        busy_work(120'000);
-    }
-
-    // Simple throughput estimate
-    int ops = 100000;
-    auto start = std::chrono::steady_clock::now();
-    busy_work(ops);
-    auto end = std::chrono::steady_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
-
-    std::cout << "Throughput: "
-              << ops / (duration ? duration : 1)
-              << " ops/us\n";
-
-    // ======================================
-    // NEW SMALL ADDITIONS
-    // ======================================
-
-    // Print stored sample times
-    std::cout << "Sample times: ";
-    print_times(sample_times);
-
-    // Average using helper
-    std::cout << "Average using helper: "
-              << average_time(sample_times)
-              << " us\n";
-
-    // Find minimum and maximum timing
-    auto [min_it, max_it] =
-        std::minmax_element(sample_times.begin(),
-                            sample_times.end());
-
-    std::cout << "Minimum sample time: "
-              << *min_it << " us\n";
-
-    std::cout << "Maximum sample time: "
-              << *max_it << " us\n";
-
-    // Sort timing values
-    std::sort(sample_times.begin(), sample_times.end());
-
-    std::cout << "Sorted sample times: ";
-    print_times(sample_times);
-
-    // Small sleep demo
     timed_sleep("tiny sleep (50ms)", 50);
 
-    // Count total samples
-    std::cout << "Number of samples: "
-              << sample_times.size() << "\n";
+    std::cout << std::format("Number of samples: {}\n", sample_times.size());
 
-    // ======================================
+    assert(Clock::is_steady);
+    assert(!sample_times.empty());
+    assert(std::ranges::is_sorted(sample_times));
 
+    std::cout << "\nAll assertions passed.\n--- Program Finished ---\n";
     return 0;
 }

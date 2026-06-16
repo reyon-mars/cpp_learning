@@ -3,254 +3,180 @@
 #include <iostream>
 #include <chrono>
 #include <ctime>
-#include <numeric>   // added
-#include <vector>    // tiny addition
-#include <algorithm> // tiny addition
+#include <numeric>
+#include <vector>
+#include <algorithm>
+#include <ranges>
+#include <format>
+#include <concepts>
+#include <functional>
+#include <span>
+#include <cassert>
 #include "scoped_timer.hpp"
 
-// ======================================================
-// ORIGINAL CODE (UNCHANGED LOGIC)
-// ======================================================
+constexpr std::string_view DEFAULT_TAG   = "Default";
+constexpr bool             ENABLE_LOGGING = true;
 
-void log_msg(std::string_view tag, std::string_view msg)
-{
-    std::cout << '[' << tag << ']' << msg << '\n';
+void log_msg(std::string_view tag, std::string_view msg) {
+    std::cout << std::format("[{}]{}\n", tag, msg);
 }
 
-void log_msg_(std::string tag, std::string msg)
-{
-    std::cout << '[' << tag << ']' << msg << '\n';
+void log_msg_copy(std::string tag, std::string msg) {
+    std::cout << std::format("[{}]{}\n", tag, msg);
 }
 
-// ======================================================
-// SMALL ADDITION ONLY
-// ======================================================
-
-// inline logger to avoid function call overhead
-inline void log_msg_inline(std::string_view tag, std::string_view msg)
-{
-    std::cout << '[' << tag << ']' << msg << '\n';
+void log_msg_inline(std::string_view tag, std::string_view msg) {
+    std::cout << std::format("[{}]{}\n", tag, msg);
 }
 
-// very small helper
-void print_header(const std::string& title)
-{
-    std::cout << "\n--- " << title << " ---\n";
-}
-
-// ===== VERY SMALL EXTRA HELPERS =====
-
-constexpr std::string_view DEFAULT_TAG = "Default";
-
-// toggle logging (compile-time)
-constexpr bool ENABLE_LOGGING = true;
-
-// conditional logger (tiny wrapper)
-inline void log_if_enabled(std::string_view tag, std::string_view msg)
-{
+void log_if_enabled(std::string_view tag, std::string_view msg) {
     if constexpr (ENABLE_LOGGING)
         log_msg(tag, msg);
 }
 
-// tiny counter printer
-void print_counter(const std::string& label, int value)
-{
-    std::cout << label << ": " << value << '\n';
-}
-
-// warmup logger (helps realistic benchmarking)
-void warmup_logger()
-{
-    log_msg(DEFAULT_TAG, "Warmup");
-}
-
-// force flush helper
-void flush_output()
-{
-    std::cout << std::flush;
-}
-
-// ===== NEW VERY SMALL ADDITIONS =====
-
-// print separator line
-void print_separator()
-{
-    std::cout << "---------------------------------\n";
-}
-
-// print current timestamp
-void print_timestamp()
-{
-    auto now = std::chrono::system_clock::to_time_t(
-        std::chrono::system_clock::now());
-    std::cout << "[Time] " << std::ctime(&now);
-}
-
-// ===== EXTRA SMALL HELPERS =====
-
-// simple logger with newline spacing
-void spaced_log(std::string_view tag, std::string_view msg)
-{
+void spaced_log(std::string_view tag, std::string_view msg) {
     std::cout << '\n';
     log_msg(tag, msg);
 }
 
-// check if message is empty
-bool is_empty_message(std::string_view msg)
-{
+template <std::invocable<std::string_view, std::string_view> Logger>
+long long benchmark_logger(Logger&& fn, std::string_view tag,
+                           std::string_view msg, int iterations) {
+    return measure_us([&] {
+        for ([[maybe_unused]] int i : std::views::iota(0, iterations))
+            std::invoke(fn, tag, msg);
+    });
+}
+
+[[nodiscard]] constexpr bool is_empty_message(std::string_view msg) noexcept {
     return msg.empty();
 }
 
-// count total characters in vector of messages
-std::size_t total_characters(const std::vector<std::string>& msgs)
-{
-    std::size_t total = 0;
-    for (const auto& s : msgs)
-        total += s.size();
-    return total;
+[[nodiscard]] std::size_t total_characters(std::span<const std::string> msgs) noexcept {
+    return std::transform_reduce(msgs.begin(), msgs.end(),
+                                 std::size_t{0}, std::plus<>{},
+                                 [](const std::string& s) { return s.size(); });
 }
 
-// print simple benchmark note
-void print_note(const std::string& text)
-{
-    std::cout << "[Note] " << text << '\n';
+void print_header(std::string_view title) {
+    std::cout << std::format("\n--- {} ---\n", title);
 }
 
-// ======================================================
-// MAIN
-// ======================================================
+void print_separator() {
+    std::cout << "---------------------------------\n";
+}
 
-int main(void)
-{
+void print_timestamp() {
+    const auto now  = std::chrono::system_clock::now();
+    const auto time = std::chrono::system_clock::to_time_t(now);
+    std::cout << std::format("[Time] {}", std::ctime(&time));
+}
+
+void print_note(std::string_view text) {
+    std::cout << std::format("[Note] {}\n", text);
+}
+
+struct BenchmarkResult {
+    std::string_view name;
+    long long        elapsed_us;
+};
+
+void print_results(std::span<const BenchmarkResult> results) {
+    std::cout << "\n--- Benchmark Summary ---\n";
+    for (const auto& [name, us] : results)
+        std::cout << std::format("  {:32s} {:>10} us\n", name, us);
+
+    const auto fastest = std::ranges::min(results, {}, &BenchmarkResult::elapsed_us);
+    std::cout << std::format("Fastest: {} ({} us)\n", fastest.name, fastest.elapsed_us);
+}
+
+int main() {
     std::ios::sync_with_stdio(false);
     std::cin.tie(nullptr);
 
-    const int iterations = 1'000'000;
-    std::string test_tag = "Tag";
-    std::string test_msg = "Message";
-
-    int call_count = 0;
+    constexpr int        iterations = 1'000'000;
+    const std::string    test_tag   = "Tag";
+    const std::string    test_msg   = "Message";
 
     print_timestamp();
-    warmup_logger();
+    log_msg(DEFAULT_TAG, "Warmup");
 
-    // Benchmark log_msg (std::string_view)
+    std::vector<BenchmarkResult> results;
+    results.reserve(3);
+
     print_header("String View Logger");
     {
-        scoped_timer timer_sv("String View (Total)");
-        for (int i = 0; i < iterations; ++i) {
-            log_if_enabled(test_tag, test_msg);
-            ++call_count;
-        }
+        ScopedTimer t{"String View (Total)"};
+        results.push_back({"log_msg (string_view)",
+                           benchmark_logger(log_msg, test_tag, test_msg, iterations)});
     }
-
     print_separator();
 
-    // reset counter for clarity
-    call_count = 0;
-
-    // Benchmark log_msg_ (std::string copy)
     print_header("String Copy Logger");
     {
-        scoped_timer timer_str("Normal String (Total)");
-        for (int i = 0; i < iterations; ++i) {
-            log_msg_(test_tag, test_msg);
-            ++call_count;
-        }
+        ScopedTimer t{"Normal String (Total)"};
+        results.push_back({"log_msg_copy (string)",
+                           benchmark_logger(log_msg_copy, test_tag, test_msg, iterations)});
     }
-
     print_separator();
 
-    // Inline logger benchmark
     print_header("Inline Logger");
     {
-        scoped_timer timer_inline("Inline Logger (Total)");
-        for (int i = 0; i < iterations; ++i) {
-            log_msg_inline(test_tag, test_msg);
-            ++call_count;
-        }
+        ScopedTimer t{"Inline Logger (Total)"};
+        results.push_back({"log_msg_inline",
+                           benchmark_logger(log_msg_inline, test_tag, test_msg, iterations)});
     }
 
-    flush_output();
+    std::cout.flush();
 
-    std::cout << "\nTotal log calls executed: "
-              << call_count << '\n';
+    const int total_calls = static_cast<int>(results.size()) * iterations;
+    std::cout << std::format("\nTotal log calls executed: {}\n", total_calls);
+    std::cout << std::format("Average logs per test:    {}\n", total_calls / static_cast<int>(results.size()));
 
-    print_counter("Final Call Count", call_count);
+    print_results(results);
 
-    // tiny derived metric
-    std::cout << "Average logs per test: "
-              << (call_count / 3) << '\n';
-
-    // ===== EXTRA SMALL ADDITIONS (NEW) =====
-
-    // Measure small sample block
+    std::cout << "\n--- Mini sample block ---\n";
     {
-        scoped_timer t("Mini sample block");
+        ScopedTimer t{"Mini sample block"};
         log_msg("Test", "Sample log");
     }
 
-    // Simple stats example
-    std::vector<int> samples = {10, 20, 30};
-    int total = std::accumulate(samples.begin(), samples.end(), 0);
-    std::cout << "Sample average: "
-              << (total / samples.size()) << '\n';
+    const std::vector<int> samples = {10, 20, 30};
+    const auto [mn, mx] = std::ranges::minmax(samples);
+    const int  avg      = std::reduce(samples.begin(), samples.end(), 0)
+                          / static_cast<int>(samples.size());
 
-    // Check if logging is enabled
-    std::cout << "Logging enabled? "
-              << (ENABLE_LOGGING ? "Yes" : "No") << '\n';
+    std::cout << std::format("Sample average: {}\n", avg);
+    std::cout << std::format("Min sample: {}, Max sample: {}\n", mn, mx);
+    std::cout << std::format("Count of 20: {}\n", std::ranges::count(samples, 20));
+    std::cout << std::format("Logging enabled: {}\n", ENABLE_LOGGING ? "Yes" : "No");
 
-    // ===== FINAL TINY ADDITIONS =====
+    const long long throughput_us = measure_us([] {
+        for ([[maybe_unused]] int i : std::views::iota(0, 1000))
+            log_msg_inline("T", "X");
+    });
+    std::cout << std::format("Throughput test (1000 logs): {} us\n", throughput_us);
 
-    // Find max and min sample
-    auto [min_it, max_it] = std::minmax_element(samples.begin(), samples.end());
-    std::cout << "Min sample: " << *min_it
-              << ", Max sample: " << *max_it << '\n';
+    std::cout << std::format("Empty message check: {}\n",
+                             is_empty_message("") ? "Yes" : "No");
 
-    // Count occurrences of a value
-    int count_20 = std::count(samples.begin(), samples.end(), 20);
-    std::cout << "Count of 20: " << count_20 << '\n';
-
-    // Simple throughput estimate
-    auto start = std::chrono::steady_clock::now();
-    for (int i = 0; i < 1000; ++i)
-        log_msg_inline("T", "X");
-    auto end = std::chrono::steady_clock::now();
-
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
-    std::cout << "Throughput test (1000 logs): "
-              << duration << " us\n";
-
-    // ======================================
-    // NEW SMALL ADDITIONS ONLY
-    // ======================================
-
-    // test empty message helper
-    std::cout << "Empty message check: "
-              << (is_empty_message("") ? "Yes" : "No") << '\n';
-
-    // spaced log example
     spaced_log("Extra", "Spaced logger example");
 
-    // total characters example
-    std::vector<std::string> msg_list = {
-        "Hello",
-        "Logging",
-        "Benchmark"
-    };
+    const std::vector<std::string> msg_list = {"Hello", "Logging", "Benchmark"};
+    std::cout << std::format("Total characters in messages: {}\n",
+                             total_characters(msg_list));
 
-    std::cout << "Total characters in messages: "
-              << total_characters(msg_list) << '\n';
-
-    // print note
     print_note("Benchmark completed successfully");
 
-    // small loop logging demo
-    for (int i = 1; i <= 3; ++i) {
-        log_msg_inline("Loop", "Iteration");
-    }
+    for (int i : std::views::iota(1, 4))
+        log_msg_inline("Loop", std::format("Iteration {}", i));
 
-    // ======================================
+    assert(!is_empty_message("hello"));
+    assert(is_empty_message(""));
+    assert(total_characters(msg_list) == 5 + 7 + 9);
+    assert(std::ranges::is_sorted(results, {}, &BenchmarkResult::elapsed_us) ||
+           !results.empty());
 
+    std::cout << "\nAll assertions passed.\n";
     return 0;
 }

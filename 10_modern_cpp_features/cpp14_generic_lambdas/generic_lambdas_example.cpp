@@ -1,175 +1,110 @@
-// Generic Lambdas (C++14) Exercise
-// Type-deducing lambda parameters
-
 #include <iostream>
 #include <vector>
 #include <algorithm>
-#include <numeric>   // small addition
-#include <string>    // tiny addition
+#include <numeric>
+#include <string>
+#include <ranges>
+#include <format>
+#include <concepts>
+#include <cstdlib>
+
+template <std::ranges::input_range R>
+void print_range(std::string_view label, const R& range) {
+    std::cout << label << ": ";
+    for (const auto& v : range) std::cout << v << ' ';
+    std::cout << '\n';
+}
 
 int main() {
-    std::vector<int> ints = {1, 2, 3, 4, 5};
-    std::vector<double> doubles = {1.1, 2.2, 3.3};
-    
-    // Generic lambda with auto parameter
-    auto print_double = [](auto x) {
-        std::cout << (x * 2) << " ";
-    };
-    
+    const std::vector ints    {1, 2, 3, 4, 5};
+    const std::vector doubles {1.1, 2.2, 3.3};
+
+    auto print_doubled = [](auto x) { std::cout << (x * 2) << ' '; };
+
     std::cout << "Doubled ints: ";
-    std::for_each(ints.begin(), ints.end(), print_double);
-    std::cout << "\n";
-    
+    std::ranges::for_each(ints, print_doubled);
+    std::cout << '\n';
+
     std::cout << "Doubled doubles: ";
-    std::for_each(doubles.begin(), doubles.end(), print_double);
-    std::cout << "\n";
+    std::ranges::for_each(doubles, print_doubled);
+    std::cout << '\n';
 
-    // ---- Additional small generic lambda examples ----
+    auto add = []<typename T>(T a, T b) -> T { return a + b; };
 
-    // Generic sum lambda
-    auto add = [](auto a, auto b) {
-        return a + b;
+    std::cout << std::format("Sum (int):    {}\n", add(5, 3));
+    std::cout << std::format("Sum (double): {}\n", add(2.5, 4.1));
+
+    auto is_greater = []<typename T>(T a, T b) -> bool { return a > b; };
+    std::cout << std::format("Is 10 > 5? {}\n", is_greater(10, 5) ? "Yes" : "No");
+
+    auto print_container = [](const std::ranges::input_range auto& r) {
+        for (const auto& v : r) std::cout << v << ' ';
+        std::cout << '\n';
     };
 
-    std::cout << "Sum (int): " << add(5, 3) << "\n";
-    std::cout << "Sum (double): " << add(2.5, 4.1) << "\n";
+    std::cout << "Ints: ";    print_container(ints);
+    std::cout << "Doubles: "; print_container(doubles);
 
-    // Generic comparison lambda
-    auto is_greater = [](auto a, auto b) {
-        return a > b;
+    auto square = []<typename T>(T x) -> T { return x * x; };
+    std::cout << std::format("Square of 4:   {}\n", square(4));
+    std::cout << std::format("Square of 2.5: {}\n", square(2.5));
+
+    constexpr int factor = 3;
+    auto scale = [factor]<typename T>(T x) -> T {
+        return x * static_cast<T>(factor);
     };
+    std::cout << std::format("5 scaled by {}: {}\n", factor, scale(5));
 
-    std::cout << "Is 10 > 5? "
-              << (is_greater(10, 5) ? "Yes" : "No") << "\n";
-
-    // Generic container printer
-    auto print_container = [](const auto& container) {
-        for (const auto& item : container)
-            std::cout << item << " ";
-        std::cout << "\n";
-    };
-
-    std::cout << "Ints: ";
-    print_container(ints);
-
-    std::cout << "Doubles: ";
-    print_container(doubles);
-
-    // --------------------------------------------------
-
-    // ===== VERY SMALL NEW ADDITIONS =====
-
-    // Generic lambda for squaring values
-    auto square = [](auto x) {
-        return x * x;
-    };
-
-    std::cout << "Square of 4: " << square(4) << "\n";
-    std::cout << "Square of 2.5: " << square(2.5) << "\n";
-
-    // Generic lambda with capture
-    int factor = 3;
-    auto multiply_by_factor = [factor](auto x) {
-        return x * factor;
-    };
-
-    std::cout << "Multiply 5 by factor: "
-              << multiply_by_factor(5) << "\n";
-
-    // Use generic lambda with transform
     std::vector<int> squared(ints.size());
-    std::transform(ints.begin(), ints.end(), squared.begin(), square);
+    std::ranges::transform(ints, squared.begin(), square);
+    print_range("Squared ints", squared);
 
-    std::cout << "Squared ints: ";
-    print_container(squared);
-
-    // Generic predicate lambda
-    auto is_even = [](auto x) {
-        return x % 2 == 0;
-    };
+    auto is_even = [](std::integral auto x) { return x % 2 == 0; };
+    auto is_odd  = [](std::integral auto x) { return x % 2 != 0; };
 
     std::cout << "Even numbers: ";
-    for (auto x : ints)
-        if (is_even(x))
-            std::cout << x << " ";
-    std::cout << "\n";
+    for (auto x : ints | std::views::filter(is_even)) std::cout << x << ' ';
+    std::cout << '\n';
 
-    // ===================================
+    std::cout << std::format("Odd count: {}\n",
+                             std::ranges::count_if(ints, is_odd));
 
-    // ===== EXTRA SMALL ADDITIONS =====
+    auto minimum = []<typename T>(T a, T b) -> T { return std::min(a, b); };
+    std::cout << std::format("Minimum of 8 and 3: {}\n", minimum(8, 3));
 
-    // Generic minimum lambda
-    auto minimum = [](auto a, auto b) {
-        return (a < b) ? a : b;
-    };
+    auto join = []<typename T>(const T& a, const T& b) { return a + b; };
+    std::cout << std::format("Joined: {}\n", join(std::string{"Hello "}, std::string{"World"}));
 
-    std::cout << "Minimum of 8 and 3: "
-              << minimum(8, 3) << "\n";
+    std::cout << std::format("Sum of ints: {}\n",
+                             std::reduce(ints.begin(), ints.end(), 0));
 
-    // Generic string join lambda
-    auto join_text = [](auto a, auto b) {
-        return a + b;
-    };
+    auto absolute = []<typename T>(T x) -> T { return x < T{} ? -x : x; };
+    std::cout << std::format("Absolute of -9:  {}\n", absolute(-9));
+    std::cout << std::format("Absolute of -3.7: {}\n", absolute(-3.7));
 
-    std::cout << "Joined string: "
-              << join_text(std::string("Hello "), std::string("World"))
-              << "\n";
+    auto multiply = []<typename T>(T a, T b) -> T { return a * b; };
+    std::cout << std::format("Multiply: {}\n", multiply(2.5, 4.0));
 
-    // Count odd numbers using generic lambda
-    auto is_odd = [](auto x) {
-        return x % 2 != 0;
-    };
-
-    int odd_count = std::count_if(ints.begin(), ints.end(), is_odd);
-
-    std::cout << "Odd count: "
-              << odd_count << "\n";
-
-    // Sum all integers
-    int total = std::accumulate(ints.begin(), ints.end(), 0);
-
-    std::cout << "Sum of ints: "
-              << total << "\n";
-
-    // =================================
-
-    // ===== FINAL TINY ADDITIONS =====
-
-    // Generic absolute value lambda
-    auto absolute = [](auto x) {
-        return (x < 0) ? -x : x;
-    };
-
-    std::cout << "Absolute of -9: "
-              << absolute(-9) << "\n";
-
-    // Multiply doubles using generic lambda
-    auto multiply = [](auto a, auto b) {
-        return a * b;
-    };
-
-    std::cout << "Multiply doubles: "
-              << multiply(2.5, 4.0) << "\n";
-
-    // Find max element
-    auto max_it = std::max_element(ints.begin(), ints.end());
-
-    if (max_it != ints.end())
-        std::cout << "Max int: "
-                  << *max_it << "\n";
-
-    // Reverse print using generic lambda
-    auto reverse_print = [](const auto& container) {
-        for (auto it = container.rbegin();
-             it != container.rend(); ++it)
-            std::cout << *it << " ";
-        std::cout << "\n";
-    };
+    const auto [min_it, max_it] = std::ranges::minmax_element(ints);
+    std::cout << std::format("Min int: {}  Max int: {}\n", *min_it, *max_it);
 
     std::cout << "Reverse ints: ";
-    reverse_print(ints);
+    for (const auto v : ints | std::views::reverse) std::cout << v << ' ';
+    std::cout << '\n';
 
-    // =================================
+    std::cout << "Evens squared: ";
+    for (const auto v : ints | std::views::filter(is_even)
+                              | std::views::transform(square))
+        std::cout << v << ' ';
+    std::cout << '\n';
+
+    auto clamp_to = [](std::integral auto lo, std::integral auto hi) {
+        return [lo, hi](std::integral auto x) { return std::clamp(x, lo, hi); };
+    };
+    const auto clamp_1_3 = clamp_to(1, 3);
+    std::vector<int> clamped(ints.size());
+    std::ranges::transform(ints, clamped.begin(), clamp_1_3);
+    print_range("Clamped [1,3]", clamped);
 
     return 0;
 }

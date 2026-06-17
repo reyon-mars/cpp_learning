@@ -1,159 +1,135 @@
-// Structured Bindings, Optional, Variant (C++17) Exercise
-// Modern ways to work with data
-
 #include <iostream>
 #include <tuple>
 #include <optional>
 #include <variant>
 #include <string>
-
-// ---- tiny addition ----
+#include <string_view>
 #include <vector>
 #include <numeric>
-#include <algorithm> // added
-// -----------------------
+#include <algorithm>
+#include <ranges>
+#include <format>
+#include <concepts>
 
-std::optional<int> safe_divide(int a, int b) {
+template <std::ranges::input_range R>
+void print_range(std::string_view label, const R& range) {
+    std::cout << label << ": ";
+    for (const auto& v : range) std::cout << v << ' ';
+    std::cout << '\n';
+}
+
+template <typename... Ts>
+struct overload : Ts... { using Ts::operator()...; };
+
+[[nodiscard]] std::optional<int> safe_divide(int a, int b) noexcept {
     if (b == 0) return std::nullopt;
     return a / b;
 }
 
-// ---- VERY SMALL EXTRA HELPERS ----
-
-// check if optional has value
-bool has_value(const std::optional<int>& opt) {
-    return opt.has_value();
+[[nodiscard]] std::optional<double> safe_sqrt(double x) noexcept {
+    if (x < 0.0) return std::nullopt;
+    return std::sqrt(x);
 }
 
-// sum vector helper
-int sum_vector(const std::vector<int>& v) {
-    return std::accumulate(v.begin(), v.end(), 0);
+template <std::ranges::input_range R>
+    requires std::integral<std::ranges::range_value_t<R>>
+[[nodiscard]] double average(const R& range) noexcept {
+    const auto n = static_cast<double>(std::ranges::distance(range));
+    return n == 0.0 ? 0.0
+                    : std::reduce(std::ranges::begin(range),
+                                  std::ranges::end(range), 0.0) / n;
 }
-
-// print divider
-void print_divider() {
-    std::cout << "----------------------\n";
-}
-
-// ----------------------------------
-
-// ===== EXTRA SMALL HELPERS =====
-
-// average helper
-double average_vector(const std::vector<int>& v) {
-    if (v.empty()) return 0.0;
-    return static_cast<double>(sum_vector(v)) / v.size();
-}
-
-// check if vector contains value
-bool contains_value(const std::vector<int>& v, int value) {
-    return std::find(v.begin(), v.end(), value) != v.end();
-}
-
-// print vector
-void print_vector(const std::vector<int>& v) {
-    for (int n : v)
-        std::cout << n << " ";
-    std::cout << "\n";
-}
-
-// =================================
 
 int main() {
-    // Structured bindings
     auto [x, y] = std::make_tuple(10, 20);
-    std::cout << "x: " << x << ", y: " << y << "\n";
-    
-    // Optional
-    if (auto result = safe_divide(10, 2)) {
-        std::cout << "Result: " << result.value() << "\n";
-    }
-    
-    if (auto result = safe_divide(10, 0)) {
-        std::cout << "Result: " << result.value() << "\n";
-    } else {
+    std::cout << std::format("x: {}, y: {}\n", x, y);
+
+    if (const auto result = safe_divide(10, 2))
+        std::cout << std::format("Result: {}\n", *result);
+
+    if (const auto result = safe_divide(10, 0))
+        std::cout << std::format("Result: {}\n", *result);
+    else
         std::cout << "Division by zero\n";
-    }
-    
-    // Variant
-    std::variant<int, std::string> v = "hello";
-    if (std::holds_alternative<std::string>(v)) {
-        std::cout << "String: " << std::get<std::string>(v) << "\n";
-    }
 
-    // ---- Additional small examples ----
-
-    // Another structured binding example
-    std::pair<int, int> p{5, 7};
-    auto [a, b] = p;
-    std::cout << "Pair values: " << a << ", " << b << "\n";
-
-    // Optional with fallback value
-    auto val = safe_divide(20, 4).value_or(0);
-    std::cout << "Safe result with fallback: " << val << "\n";
-
-    // Change variant type
-    v = 42;
-    if (std::holds_alternative<int>(v)) {
-        std::cout << "Variant int: " << std::get<int>(v) << "\n";
-    }
-
-    // Visit variant (modern approach)
-    v = std::string("C++17");
-    std::visit([](auto&& arg) {
-        std::cout << "Visited variant: " << arg << "\n";
+    std::variant<int, std::string> v{std::string{"hello"}};
+    std::visit(overload{
+        [](int n)               { std::cout << std::format("Variant int: {}\n", n);    },
+        [](const std::string& s){ std::cout << std::format("Variant string: {}\n", s); },
     }, v);
 
-    // -----------------------------------
+    const auto [a, b] = std::pair{5, 7};
+    std::cout << std::format("Pair values: {}, {}\n", a, b);
 
-    // ===== EXTRA SMALL ADDITIONS =====
+    std::cout << std::format("Safe result with fallback: {}\n",
+                             safe_divide(20, 4).value_or(0));
 
-    print_divider();
+    v = 42;
+    std::visit(overload{
+        [](int n)               { std::cout << std::format("Variant int: {}\n", n);    },
+        [](const std::string& s){ std::cout << std::format("Variant string: {}\n", s); },
+    }, v);
 
-    // optional check helper
-    auto test_opt = safe_divide(5, 1);
-    std::cout << "Optional has value? "
-              << (has_value(test_opt) ? "Yes" : "No") << "\n";
+    v = std::string{"C++17"};
+    std::visit(overload{
+        [](int n)               { std::cout << std::format("Variant: {}\n", n);    },
+        [](const std::string& s){ std::cout << std::format("Variant: {}\n", s); },
+    }, v);
 
-    // vector + accumulate demo
-    std::vector<int> nums = {1, 2, 3, 4};
-    std::cout << "Sum of nums: " << sum_vector(nums) << "\n";
+    std::cout << "----------------------\n";
 
-    // variant index info
-    std::cout << "Variant index: " << v.index() << "\n";
+    std::cout << std::format("Optional has value? {}\n",
+                             safe_divide(5, 1).has_value() ? "Yes" : "No");
 
-    // ==================================
+    const std::vector nums {1, 2, 3, 4};
 
-    // ===== FINAL TINY ADDITIONS =====
+    std::cout << std::format("Sum:     {}\n",
+                             std::reduce(nums.begin(), nums.end(), 0));
+    std::cout << std::format("Average: {}\n", average(nums));
+    std::cout << std::format("Variant index: {}\n", v.index());
 
-    // print vector contents
-    std::cout << "Vector contents: ";
-    print_vector(nums);
+    print_range("Vector contents", nums);
 
-    // average calculation
-    std::cout << "Average of nums: "
-              << average_vector(nums) << "\n";
+    const auto [min_it, max_it] = std::ranges::minmax_element(nums);
+    std::cout << std::format("Min: {}, Max: {}\n", *min_it, *max_it);
 
-    // min and max element
-    auto [min_it, max_it] =
-        std::minmax_element(nums.begin(), nums.end());
+    std::cout << std::format("Contains 3? {}\n",
+                             std::ranges::contains(nums, 3) ? "Yes" : "No");
 
-    std::cout << "Min: " << *min_it
-              << ", Max: " << *max_it << "\n";
+    print_range("Reversed", nums | std::views::reverse);
 
-    // contains value check
-    std::cout << "Contains 3? "
-              << (contains_value(nums, 3) ? "Yes" : "No")
-              << "\n";
+    std::cout << std::format("Evens: ");
+    for (const auto v : nums | std::views::filter([](int x){ return x % 2 == 0; }))
+        std::cout << v << ' ';
+    std::cout << '\n';
 
-    // reverse vector copy
-    std::vector<int> reversed = nums;
-    std::reverse(reversed.begin(), reversed.end());
+    const std::vector<std::optional<int>> sparse {1, std::nullopt, 3, std::nullopt, 5};
+    const auto present_sum = std::transform_reduce(
+        sparse.begin(), sparse.end(),
+        0, std::plus<>{},
+        [](const std::optional<int>& o) { return o.value_or(0); });
+    std::cout << std::format("Sparse sum (nullopt=0): {}\n", present_sum);
 
-    std::cout << "Reversed nums: ";
-    print_vector(reversed);
+    using Record = std::tuple<std::string_view, int, double>;
+    const std::vector<Record> records {
+        {"alice", 90, 4.0}, {"bob", 75, 3.2}, {"carol", 88, 3.8}
+    };
+    std::cout << "Records:\n";
+    for (const auto& [name, score, gpa] : records)
+        std::cout << std::format("  {} score={} gpa={}\n", name, score, gpa);
 
-    // ==================================
+    using Result = std::variant<double, std::string>;
+    const auto compute = [](double x) -> Result {
+        if (const auto r = safe_sqrt(x)) return *r;
+        return std::format("sqrt undefined for {}", x);
+    };
+
+    for (const double val : {4.0, -1.0, 9.0}) {
+        std::visit(overload{
+            [&](double r)           { std::cout << std::format("sqrt({}) = {}\n", val, r);    },
+            [&](const std::string& e){ std::cout << std::format("Error: {}\n", e); },
+        }, compute(val));
+    }
 
     return 0;
 }

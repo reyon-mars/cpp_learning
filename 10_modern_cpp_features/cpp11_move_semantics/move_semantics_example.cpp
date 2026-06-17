@@ -1,187 +1,154 @@
-// Move Semantics (C++11) Exercise
-// Efficient resource transfer
-
 #include <iostream>
 #include <utility>
-#include <algorithm> // tiny addition
-#include <numeric>   // tiny addition
+#include <algorithm>
+#include <numeric>
+#include <span>
+#include <format>
+#include <stdexcept>
+#include <cassert>
 
 class Vector {
-private:
-    int* data;
-    size_t size;
-    
+    std::size_t size_{};
+    int*        data_{};
+
 public:
-    Vector(size_t s) : size(s), data(new int[s]) {
-        std::cout << "Constructor\n";
-    }
-    
-    Vector(const Vector&) = delete;  // Disable copy
-    
-    Vector(Vector&& other) noexcept : size(other.size), data(other.data) {
-        other.data = nullptr;
-        other.size = 0;
-        std::cout << "Move constructor\n";
+    explicit Vector(std::size_t s)
+        : size_{s}, data_{new int[s]{}} {
+        std::cout << std::format("Constructed (size={})\n", size_);
     }
 
-    // ---- small added helper ----
+    Vector(const Vector&)            = delete;
+    Vector& operator=(const Vector&) = delete;
+
+    Vector(Vector&& other) noexcept
+        : size_{std::exchange(other.size_, 0)}
+        , data_{std::exchange(other.data_, nullptr)} {
+        std::cout << std::format("Move constructed (size={})\n", size_);
+    }
+
     Vector& operator=(Vector&& other) noexcept {
         if (this != &other) {
-            delete[] data;
-            data = other.data;
-            size = other.size;
-
-            other.data = nullptr;
-            other.size = 0;
-            std::cout << "Move assignment\n";
+            delete[] data_;
+            size_ = std::exchange(other.size_, 0);
+            data_ = std::exchange(other.data_, nullptr);
+            std::cout << std::format("Move assigned (size={})\n", size_);
         }
         return *this;
     }
-    // ----------------------------
 
-    // small utility functions
-    size_t get_size() const { return size; }
+    ~Vector() {
+        delete[] data_;
+    }
 
-    bool is_empty() const { return data == nullptr; }
+    [[nodiscard]] std::size_t size()     const noexcept { return size_; }
+    [[nodiscard]] bool        empty()    const noexcept { return data_ == nullptr; }
+    [[nodiscard]] bool        valid()    const noexcept { return data_ != nullptr; }
+
+    [[nodiscard]] std::span<int>       as_span()       noexcept { return {data_, size_}; }
+    [[nodiscard]] std::span<const int> as_span() const noexcept { return {data_, size_}; }
+
+    int& operator[](std::size_t i) {
+        assert(i < size_ && "index out of bounds");
+        return data_[i];
+    }
+
+    const int& operator[](std::size_t i) const {
+        assert(i < size_ && "index out of bounds");
+        return data_[i];
+    }
+
+    [[nodiscard]] int*       begin()       noexcept { return data_; }
+    [[nodiscard]] int*       end()         noexcept { return data_ + size_; }
+    [[nodiscard]] const int* begin() const noexcept { return data_; }
+    [[nodiscard]] const int* end()   const noexcept { return data_ + size_; }
+
+    void fill(int value) noexcept {
+        std::fill(begin(), end(), value);
+    }
+
+    void iota(int start = 0) noexcept {
+        std::iota(begin(), end(), start);
+    }
+
+    [[nodiscard]] int sum() const noexcept {
+        return std::reduce(begin(), end(), 0);
+    }
+
+    [[nodiscard]] double average() const noexcept {
+        return size_ == 0 ? 0.0
+                          : static_cast<double>(sum()) / static_cast<double>(size_);
+    }
+
+    [[nodiscard]] std::pair<int,int> minmax() const noexcept {
+        if (size_ == 0) return {0, 0};
+        const auto [lo, hi] = std::minmax_element(begin(), end());
+        return {*lo, *hi};
+    }
+
+    void print_values() const {
+        for (const int v : *this) std::cout << v << ' ';
+        std::cout << '\n';
+    }
 
     void print_state() const {
-        std::cout << "Vector size: " << size
-                  << ", data pointer: " << data << "\n";
+        std::cout << std::format("  size={} data={}\n",
+                                 size_, static_cast<const void*>(data_));
     }
-
-    // ===== VERY SMALL NEW ADDITIONS =====
-
-    // access element safely
-    int& operator[](size_t index) {
-        return data[index];
-    }
-
-    // const version
-    const int& operator[](size_t index) const {
-        return data[index];
-    }
-
-    // fill with values
-    void fill(int value) {
-        for (size_t i = 0; i < size; ++i)
-            data[i] = value;
-    }
-
-    // ===================================
-
-    // ===== EXTRA SMALL ADDITIONS =====
-
-    // print vector values
-    void print_values() const {
-        for (size_t i = 0; i < size; ++i)
-            std::cout << data[i] << " ";
-        std::cout << "\n";
-    }
-
-    // calculate sum
-    int sum() const {
-        return std::accumulate(data, data + size, 0);
-    }
-
-    // find max value
-    int max_value() const {
-        if (size == 0) return 0;
-        return *std::max_element(data, data + size);
-    }
-
-    // find min value
-    int min_value() const {
-        if (size == 0) return 0;
-        return *std::min_element(data, data + size);
-    }
-
-    // ==================================
-
-    ~Vector() { delete[] data; }
 };
 
 int main() {
-    Vector v1(100);
-    Vector v2 = std::move(v1);  // Move semantics
+    Vector v1{100};
+    Vector v2 = std::move(v1);
 
-    // ---- small added usage ----
     v2.print_state();
-    std::cout << "v1 moved-from state: "
-              << (v1.is_empty() ? "empty" : "not empty") << "\n";
+    std::cout << std::format("v1 after move: {}\n", v1.empty() ? "empty" : "not empty");
 
-    Vector v3(50);
-    v3 = std::move(v2); // move assignment
-
+    Vector v3{50};
+    v3 = std::move(v2);
     v3.print_state();
-    // ----------------------------
 
-    // ===== VERY SMALL NEW ADDITIONS =====
-
-    // fill and access demo
     v3.fill(5);
-    std::cout << "First element of v3: " << v3[0] << "\n";
+    std::cout << std::format("v3[0]: {}\n", v3[0]);
+    std::cout << std::format("v2 size after move: {}\n", v2.size());
+    std::cout << std::format("v3 empty? {}\n", v3.empty() ? "Yes" : "No");
 
-    // check sizes after moves
-    std::cout << "v2 size after move: " << v2.get_size() << "\n";
-
-    // ---- EXTRA SMALL ADDITIONS ----
-
-    // check if v3 is empty
-    std::cout << "v3 is empty? "
-              << (v3.is_empty() ? "Yes" : "No") << "\n";
-
-    // modify element
     v3[0] = 99;
-    std::cout << "Modified first element of v3: " << v3[0] << "\n";
-
-    // print state again
+    std::cout << std::format("v3[0] after modify: {}\n", v3[0]);
     v3.print_state();
 
-    // create another vector and move into it
-    Vector v4(10);
+    Vector v4{10};
     v4 = std::move(v3);
-
     std::cout << "After moving v3 to v4:\n";
     v4.print_state();
-    std::cout << "v3 size: " << v3.get_size() << "\n";
+    std::cout << std::format("v3 size: {}\n", v3.size());
 
-    // -----------------------------------
-
-    // ===== FINAL SMALL ADDITIONS =====
-
-    // fill v4 with a new value
     v4.fill(7);
-
     std::cout << "v4 values: ";
     v4.print_values();
 
-    // vector statistics
-    std::cout << "Sum of v4: "
-              << v4.sum() << "\n";
+    const auto [lo, hi] = v4.minmax();
+    std::cout << std::format("sum={}  min={}  max={}  avg={}\n",
+                             v4.sum(), lo, hi, v4.average());
 
-    std::cout << "Max value in v4: "
-              << v4.max_value() << "\n";
-
-    std::cout << "Min value in v4: "
-              << v4.min_value() << "\n";
-
-    // average value
-    double avg = v4.get_size() == 0
-        ? 0.0
-        : static_cast<double>(v4.sum()) / v4.get_size();
-
-    std::cout << "Average value in v4: "
-              << avg << "\n";
-
-    // swap first and last element
-    if (v4.get_size() > 1) {
-        std::swap(v4[0], v4[v4.get_size() - 1]);
-    }
-
+    if (v4.size() > 1)
+        std::swap(v4[0], v4[v4.size() - 1]);
     std::cout << "After swapping first/last: ";
     v4.print_values();
 
-    // ===================================
+    Vector v5{8};
+    v5.iota(1);
+    std::cout << "v5 (iota from 1): ";
+    v5.print_values();
+    std::cout << std::format("v5 sum={} avg={}\n", v5.sum(), v5.average());
+
+    Vector v6{std::move(v5)};
+    std::cout << std::format("v5 valid after move? {}\n", v5.valid() ? "Yes" : "No");
+    std::cout << std::format("v6 valid? {}\n", v6.valid() ? "Yes" : "No");
+
+    auto sp = v6.as_span();
+    std::for_each(sp.begin(), sp.end(), [](int& x){ x *= 2; });
+    std::cout << "v6 doubled via span: ";
+    v6.print_values();
 
     return 0;
 }

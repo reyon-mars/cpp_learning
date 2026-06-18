@@ -1,130 +1,91 @@
-// Behavioral Patterns Exercise
-// Observer, Strategy, Command, State
-
 #include <iostream>
 #include <vector>
 #include <memory>
 #include <string>
-#include <algorithm> // tiny addition
-#include <numeric>   // tiny addition
-
-// ---------------- Observer ----------------
+#include <string_view>
+#include <algorithm>
+#include <numeric>
+#include <ranges>
+#include <span>
+#include <concepts>
+#include <functional>
+#include <optional>
 
 class Observer {
 public:
     virtual ~Observer() = default;
-    virtual void update(const std::string& msg) = 0;
+    virtual void update(std::string_view msg) = 0;
 };
 
 class ConcreteObserver : public Observer {
-private:
-    std::string name;
-    
+    std::string name_;
 public:
-    ConcreteObserver(const std::string& n) : name(n) {}
-    
-    void update(const std::string& msg) override {
-        std::cout << name << " received: " << msg << "\n";
+    explicit ConcreteObserver(std::string name) : name_(std::move(name)) {}
+
+    void update(std::string_view msg) override {
+        std::cout << name_ << " received: " << msg << '\n';
     }
 
-    // ---- tiny addition ----
-    const std::string& get_name() const {
-        return name;
-    }
+    [[nodiscard]] const std::string& name() const noexcept { return name_; }
 };
 
 class Subject {
-private:
-    std::vector<std::shared_ptr<Observer>> observers;
-    
+    std::vector<std::shared_ptr<Observer>> observers_;
+
 public:
     void attach(std::shared_ptr<Observer> obs) {
-        observers.push_back(obs);
+        observers_.push_back(std::move(obs));
     }
 
-    // ---- small addition ----
-    void detach_all() {
-        observers.clear();
+    void detach(const std::shared_ptr<Observer>& obs) {
+        std::erase(observers_, obs);
     }
 
-    std::size_t observer_count() const {
-        return observers.size();
+    void detach_all() noexcept { observers_.clear(); }
+
+    void notify(std::string_view msg) const {
+        std::ranges::for_each(observers_, [&](const auto& obs) { obs->update(msg); });
     }
 
-    // ---- VERY SMALL NEW ADDITION ----
-    void detach_one(const std::shared_ptr<Observer>& obs) {
-        observers.erase(
-            std::remove(observers.begin(), observers.end(), obs),
-            observers.end()
-        );
-    }
-    // --------------------------------
-    
-    void notify(const std::string& msg) {
-        for (auto& obs : observers) {
-            obs->update(msg);
-        }
-    }
-
-    // ---- EXTRA SMALL ADDITION ----
-    bool empty() const {
-        return observers.empty();
-    }
+    [[nodiscard]] std::size_t observer_count() const noexcept { return observers_.size(); }
+    [[nodiscard]] bool empty()                 const noexcept { return observers_.empty(); }
 };
-
-// ---------------- Strategy ----------------
 
 class Strategy {
 public:
     virtual ~Strategy() = default;
-    virtual int execute(int a, int b) = 0;
+    [[nodiscard]] virtual int execute(int a, int b) const = 0;
 };
 
 class AddStrategy : public Strategy {
 public:
-    int execute(int a, int b) override { return a + b; }
+    [[nodiscard]] int execute(int a, int b) const override { return a + b; }
 };
 
 class MultiplyStrategy : public Strategy {
 public:
-    int execute(int a, int b) override { return a * b; }
+    [[nodiscard]] int execute(int a, int b) const override { return a * b; }
 };
 
-// ---- tiny addition ----
 class SubtractStrategy : public Strategy {
 public:
-    int execute(int a, int b) override { return a - b; }
+    [[nodiscard]] int execute(int a, int b) const override { return a - b; }
 };
 
-// Context for Strategy
 class Calculator {
-private:
-    std::shared_ptr<Strategy> strategy;
+    std::shared_ptr<Strategy> strategy_;
 
 public:
-    void set_strategy(std::shared_ptr<Strategy> s) {
-        strategy = s;
+    void set_strategy(std::shared_ptr<Strategy> s) noexcept { strategy_ = std::move(s); }
+    void clear_strategy() noexcept { strategy_.reset(); }
+
+    [[nodiscard]] std::optional<int> compute(int a, int b) const {
+        if (!strategy_) return std::nullopt;
+        return strategy_->execute(a, b);
     }
 
-    int compute(int a, int b) {
-        if (strategy)
-            return strategy->execute(a, b);
-        return 0;
-    }
-
-    // ---- small addition ----
-    bool has_strategy() const {
-        return strategy != nullptr;
-    }
-
-    // ---- VERY SMALL NEW ADDITION ----
-    void clear_strategy() {
-        strategy.reset();
-    }
-    // --------------------------------
+    [[nodiscard]] bool has_strategy() const noexcept { return strategy_ != nullptr; }
 };
-
-// ---------------- Command ----------------
 
 class Command {
 public:
@@ -133,116 +94,77 @@ public:
 };
 
 class PrintCommand : public Command {
-private:
-    std::string message;
-
+    std::string message_;
 public:
-    PrintCommand(const std::string& msg) : message(msg) {}
+    explicit PrintCommand(std::string msg) : message_(std::move(msg)) {}
 
     void execute() override {
-        std::cout << "Command executed: " << message << "\n";
+        std::cout << "Command executed: " << message_ << '\n';
     }
 };
 
-// ---- small addition ----
 class CommandInvoker {
-private:
-    std::vector<std::shared_ptr<Command>> history;
+    std::vector<std::shared_ptr<Command>> history_;
 
 public:
     void run(const std::shared_ptr<Command>& cmd) {
         cmd->execute();
-        history.push_back(cmd);
+        history_.push_back(cmd);
     }
+
+    void clear_history() noexcept { history_.clear(); }
 
     void print_history() const {
-        std::cout << "Commands executed: " << history.size() << "\n";
+        std::cout << "Commands executed: " << history_.size() << '\n';
     }
 
-    // ---- VERY SMALL NEW ADDITION ----
-    void clear_history() {
-        history.clear();
-    }
-
-    // ---- EXTRA SMALL ADDITION ----
-    std::size_t history_size() const {
-        return history.size();
-    }
+    [[nodiscard]] std::size_t history_size() const noexcept { return history_.size(); }
 };
-// ------------------------
-
-// ---------------- State ----------------
 
 class State {
 public:
     virtual ~State() = default;
-    virtual void handle() = 0;
+    virtual void handle() const = 0;
 };
 
 class IdleState : public State {
 public:
-    void handle() override {
-        std::cout << "System is idle\n";
-    }
+    void handle() const override { std::cout << "System is idle\n"; }
 };
 
 class WorkingState : public State {
 public:
-    void handle() override {
-        std::cout << "System is working\n";
-    }
+    void handle() const override { std::cout << "System is working\n"; }
 };
 
-// ---- tiny addition ----
 class ErrorState : public State {
 public:
-    void handle() override {
-        std::cout << "System error state\n";
-    }
+    void handle() const override { std::cout << "System error state\n"; }
 };
 
 class Context {
-private:
-    std::shared_ptr<State> state;
+    std::shared_ptr<State> state_;
 
 public:
-    void set_state(std::shared_ptr<State> s) {
-        state = s;
+    void set_state(std::shared_ptr<State> s) noexcept { state_ = std::move(s); }
+    void clear_state() noexcept { state_.reset(); }
+
+    void request() const {
+        if (state_) state_->handle();
     }
 
-    void request() {
-        if (state)
-            state->handle();
-    }
-
-    // ---- small addition ----
-    bool has_state() const {
-        return state != nullptr;
-    }
-
-    // ---- VERY SMALL NEW ADDITION ----
-    void clear_state() {
-        state.reset();
-    }
-    // --------------------------------
+    [[nodiscard]] bool has_state() const noexcept { return state_ != nullptr; }
 };
-
-// ---------------- Helper (tiny addition) ----------------
 
 void print_divider() {
     std::cout << "------------------------\n";
 }
 
-// ---- EXTRA SMALL HELPER ----
-void print_title(const std::string& title) {
+void print_title(std::string_view title) {
     std::cout << "\n=== " << title << " ===\n";
 }
 
-// ---------------- Main ----------------
-
 int main() {
-
-    // Observer demo
     print_title("Observer Pattern");
 
     Subject subject;
@@ -253,60 +175,47 @@ int main() {
     subject.attach(obs2);
     subject.notify("Event occurred");
 
-    // small extra usage
-    std::cout << "Observer count: " << subject.observer_count() << "\n";
+    std::cout << "Observer count: " << subject.observer_count() << '\n';
 
-    // ---- tiny new usage ----
-    subject.detach_one(obs1);
+    subject.detach(obs1);
     subject.notify("After removing one observer");
 
     print_divider();
 
-    // Strategy demo
     print_title("Strategy Pattern");
 
     Calculator calc;
     calc.set_strategy(std::make_shared<AddStrategy>());
-    std::cout << "Add result: " << calc.compute(3, 4) << "\n";
+    std::cout << "Add result: " << calc.compute(3, 4).value_or(0) << '\n';
 
     calc.set_strategy(std::make_shared<MultiplyStrategy>());
-    std::cout << "Multiply result: " << calc.compute(3, 4) << "\n";
+    std::cout << "Multiply result: " << calc.compute(3, 4).value_or(0) << '\n';
 
-    // ---- EXTRA SMALL USAGE ----
     calc.set_strategy(std::make_shared<SubtractStrategy>());
-    std::cout << "Subtract result: " << calc.compute(10, 4) << "\n";
+    std::cout << "Subtract result: " << calc.compute(10, 4).value_or(0) << '\n';
 
-    std::cout << "Has strategy? "
-              << (calc.has_strategy() ? "Yes" : "No") << "\n";
+    std::cout << "Has strategy? " << (calc.has_strategy() ? "Yes" : "No") << '\n';
 
-    // ---- tiny new usage ----
     calc.clear_strategy();
-    std::cout << "After clear strategy? "
-              << (calc.has_strategy() ? "Yes" : "No") << "\n";
+    std::cout << "After clear strategy? " << (calc.has_strategy() ? "Yes" : "No") << '\n';
 
     print_divider();
 
-    // Command demo
     print_title("Command Pattern");
 
     CommandInvoker invoker;
-    std::shared_ptr<Command> cmd =
-        std::make_shared<PrintCommand>("Hello from command pattern");
+    auto cmd = std::make_shared<PrintCommand>("Hello from command pattern");
 
     invoker.run(cmd);
     invoker.print_history();
 
-    // ---- EXTRA SMALL USAGE ----
-    std::cout << "History size: "
-              << invoker.history_size() << "\n";
+    std::cout << "History size: " << invoker.history_size() << '\n';
 
-    // ---- tiny new usage ----
     invoker.clear_history();
     invoker.print_history();
 
     print_divider();
 
-    // State demo
     print_title("State Pattern");
 
     Context context;
@@ -316,42 +225,24 @@ int main() {
     context.set_state(std::make_shared<WorkingState>());
     context.request();
 
-    // ---- EXTRA SMALL USAGE ----
     context.set_state(std::make_shared<ErrorState>());
     context.request();
 
-    std::cout << "Has state? "
-              << (context.has_state() ? "Yes" : "No") << "\n";
+    std::cout << "Has state? " << (context.has_state() ? "Yes" : "No") << '\n';
 
-    // ---- tiny new usage ----
     context.clear_state();
-    std::cout << "After clear state? "
-              << (context.has_state() ? "Yes" : "No") << "\n";
+    std::cout << "After clear state? " << (context.has_state() ? "Yes" : "No") << '\n';
 
     print_divider();
 
-    // extra: detach observers
     subject.detach_all();
-    std::cout << "Observers after clear: "
-              << subject.observer_count() << "\n";
+    std::cout << "Observers after clear: " << subject.observer_count() << '\n';
 
-    // ---- FINAL TINY ADDITIONS ----
-
-    std::vector<int> demo_values = {1, 2, 3, 4};
-
-    int total = std::accumulate(
-        demo_values.begin(),
-        demo_values.end(),
-        0
-    );
-
+    const std::vector<int> demo_values = {1, 2, 3, 4};
     std::cout << "Accumulated value: "
-              << total << "\n";
+              << std::accumulate(demo_values.begin(), demo_values.end(), 0) << '\n';
 
-    std::cout << "Subject empty? "
-              << (subject.empty() ? "Yes" : "No") << "\n";
-
-    // --------------------------------
+    std::cout << "Subject empty? " << (subject.empty() ? "Yes" : "No") << '\n';
 
     return 0;
 }

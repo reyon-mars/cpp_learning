@@ -1,215 +1,125 @@
-// Architectural Patterns Exercise
-// MVC, Layers, Repository Pattern
-
 #include <iostream>
 #include <vector>
 #include <memory>
 #include <string>
-#include <algorithm> // tiny addition
-#include <numeric>   // tiny addition
+#include <string_view>
+#include <algorithm>
+#include <numeric>
+#include <ranges>
+#include <optional>
 
-// Model
 class User {
+    int id_;
+    std::string name_;
+
 public:
-    int id;
-    std::string name;
-    
-    User(int id, const std::string& name) : id(id), name(name) {}
+    User(int id, std::string name) noexcept(false) : id_(id), name_(std::move(name)) {}
+
+    [[nodiscard]] int id()                const noexcept { return id_;   }
+    [[nodiscard]] const std::string& name() const noexcept { return name_; }
 };
 
-// Repository
 class UserRepository {
-private:
-    std::vector<User> users;
-    
+    std::vector<User> users_;
+
 public:
-    void add(const User& user) {
-        users.push_back(user);
-    }
-    
-    User* find_by_id(int id) {
-        for (auto& user : users) {
-            if (user.id == id) return &user;
-        }
-        return nullptr;
-    }
-    
-    const std::vector<User>& get_all() const {
-        return users;
+    void add(User user) {
+        users_.push_back(std::move(user));
     }
 
-    // ---- small addition ----
+    [[nodiscard]] User* find_by_id(int id) noexcept {
+        auto it = std::ranges::find_if(users_, [id](const User& u) { return u.id() == id; });
+        return it != users_.end() ? &*it : nullptr;
+    }
+
+    [[nodiscard]] User* find_by_name(std::string_view name) noexcept {
+        auto it = std::ranges::find_if(users_, [name](const User& u) { return u.name() == name; });
+        return it != users_.end() ? &*it : nullptr;
+    }
+
     bool remove_by_id(int id) {
-        for (auto it = users.begin(); it != users.end(); ++it) {
-            if (it->id == id) {
-                users.erase(it);
-                return true;
-            }
-        }
-        return false;
+        auto it = std::ranges::find_if(users_, [id](const User& u) { return u.id() == id; });
+        if (it == users_.end()) return false;
+        users_.erase(it);
+        return true;
     }
 
-    // ---- VERY SMALL EXTRA ADDITIONS ----
-
-    std::size_t count() const {
-        return users.size();
+    [[nodiscard]] bool exists(int id) const noexcept {
+        return std::ranges::any_of(users_, [id](const User& u) { return u.id() == id; });
     }
 
-    bool exists(int id) const {
-        for (const auto& user : users)
-            if (user.id == id)
-                return true;
-        return false;
+    [[nodiscard]] int total_ids() const noexcept {
+        return std::accumulate(users_.begin(), users_.end(), 0,
+            [](int sum, const User& u) { return sum + u.id(); });
     }
 
-    void clear() {
-        users.clear();
-    }
+    void clear() noexcept { users_.clear(); }
 
-    // --- tiny new helper ---
-    User* find_by_name(const std::string& name) {
-        for (auto& user : users) {
-            if (user.name == name) return &user;
-        }
-        return nullptr;
-    }
-
-    // ===== FINAL TINY ADDITIONS =====
-
-    int total_ids() const {
-        int sum = 0;
-        for (const auto& user : users)
-            sum += user.id;
-        return sum;
-    }
-
-    bool empty() const {
-        return users.empty();
-    }
-
-    // =================================
+    [[nodiscard]] std::size_t count() const noexcept { return users_.size(); }
+    [[nodiscard]] bool empty()        const noexcept { return users_.empty(); }
+    [[nodiscard]] const std::vector<User>& all() const noexcept { return users_; }
 };
 
-// View
 class UserView {
 public:
-    void display_user(const User& user) {
-        std::cout << "User: " << user.name << " (ID: " << user.id << ")\n";
+    void display_user(const User& user) const {
+        std::cout << "User: " << user.name() << " (ID: " << user.id() << ")\n";
     }
 
-    // ---- small addition ----
-    void display_all(const std::vector<User>& users) {
+    void display_all(std::span<const User> users) const {
         std::cout << "--- User List ---\n";
-        for (const auto& user : users) {
-            display_user(user);
-        }
+        for (const auto& user : users) display_user(user);
     }
 
-    void show_message(const std::string& msg) {
-        std::cout << msg << "\n";
-    }
-
-    // ---- VERY SMALL EXTRA ADDITIONS ----
-
-    void show_count(std::size_t count) {
-        std::cout << "Total users: " << count << "\n";
-    }
-
-    void print_divider() {
-        std::cout << "----------------------\n";
-    }
-
-    // --- tiny new helper ---
-    void show_not_found(const std::string& type) {
-        std::cout << type << " not found\n";
-    }
-
-    // ===== FINAL TINY ADDITIONS =====
-
-    void show_total_ids(int sum) {
-        std::cout << "Sum of user IDs: " << sum << "\n";
-    }
-
-    void show_empty(bool value) {
-        std::cout << "Repository empty? "
-                  << (value ? "Yes" : "No") << "\n";
-    }
-
-    // =================================
+    void show_message(std::string_view msg)        const { std::cout << msg << '\n'; }
+    void show_count(std::size_t count)              const { std::cout << "Total users: " << count << '\n'; }
+    void show_not_found(std::string_view what)      const { std::cout << what << " not found\n"; }
+    void show_total_ids(int sum)                    const { std::cout << "Sum of user IDs: " << sum << '\n'; }
+    void show_empty(bool value)                     const { std::cout << "Repository empty? " << (value ? "Yes" : "No") << '\n'; }
+    void print_divider()                            const { std::cout << "----------------------\n"; }
 };
 
-// Controller
 class UserController {
-private:
-    UserRepository repository;
-    UserView view;
-    
+    UserRepository repository_;
+    UserView       view_;
+
 public:
-    void add_user(int id, const std::string& name) {
-        repository.add(User(id, name));
-    }
-    
-    void display_user(int id) {
-        if (auto user = repository.find_by_id(id)) {
-            view.display_user(*user);
-        } else {
-            view.show_not_found("User");
-        }
+    void add_user(int id, std::string name) {
+        repository_.add(User(id, std::move(name)));
     }
 
-    // ---- small additions ----
-    void list_users() {
-        view.display_all(repository.get_all());
+    void display_user(int id) {
+        if (auto* user = repository_.find_by_id(id))
+            view_.display_user(*user);
+        else
+            view_.show_not_found("User");
     }
+
+    void find_user_by_name(std::string_view name) {
+        if (auto* user = repository_.find_by_name(name))
+            view_.display_user(*user);
+        else
+            view_.show_not_found("User");
+    }
+
+    void list_users()         const { view_.display_all(repository_.all()); }
+    void show_user_count()    const { view_.show_count(repository_.count()); }
+    void show_total_ids()     const { view_.show_total_ids(repository_.total_ids()); }
+    void show_if_empty()      const { view_.show_empty(repository_.empty()); }
+    void divider()            const { view_.print_divider(); }
 
     void remove_user(int id) {
-        if (repository.remove_by_id(id))
-            view.show_message("User removed");
-        else
-            view.show_message("User not found");
+        view_.show_message(repository_.remove_by_id(id) ? "User removed" : "User not found");
     }
 
-    // ---- VERY SMALL EXTRA ADDITIONS ----
-
-    void show_user_count() {
-        view.show_count(repository.count());
-    }
-
-    void check_user(int id) {
-        view.show_message(
-            repository.exists(id) ? "User exists" : "User does not exist"
-        );
+    void check_user(int id) const {
+        view_.show_message(repository_.exists(id) ? "User exists" : "User does not exist");
     }
 
     void clear_users() {
-        repository.clear();
-        view.show_message("All users cleared");
+        repository_.clear();
+        view_.show_message("All users cleared");
     }
-
-    void divider() {
-        view.print_divider();
-    }
-
-    // --- tiny new feature ---
-    void find_user_by_name(const std::string& name) {
-        if (auto user = repository.find_by_name(name)) {
-            view.display_user(*user);
-        } else {
-            view.show_not_found("User");
-        }
-    }
-
-    // ===== FINAL TINY ADDITIONS =====
-
-    void show_total_ids() {
-        view.show_total_ids(repository.total_ids());
-    }
-
-    void show_if_empty() {
-        view.show_empty(repository.empty());
-    }
-
-    // =================================
 };
 
 int main() {
@@ -220,37 +130,27 @@ int main() {
 
     controller.display_user(1);
 
-    // small extra usage
     controller.list_users();
     controller.remove_user(2);
     controller.list_users();
 
-    // ---- VERY SMALL EXTRA USAGE ----
     controller.divider();
 
     controller.show_user_count();
     controller.check_user(1);
     controller.check_user(2);
 
-    // --- tiny new usage ---
     controller.find_user_by_name("Alice");
     controller.find_user_by_name("Charlie");
-
-    // ===== FINAL TINY USAGE =====
 
     controller.show_total_ids();
     controller.show_if_empty();
 
     controller.divider();
 
-    // =================================
-
     controller.clear_users();
     controller.show_user_count();
-
-    // ---- extra final check ----
     controller.show_if_empty();
-    // ---------------------------
 
     return 0;
 }

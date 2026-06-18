@@ -1,328 +1,278 @@
 #include <iostream>
-#include <memory>
-#include <string>
-#include <mutex>
 #include <thread>
+#include <mutex>
+#include <queue>
+#include <shared_mutex>
 #include <vector>
-#include <algorithm> // tiny addition
-#include <numeric>   // tiny addition
+#include <chrono>
+#include <numeric>
+#include <atomic>
+#include <ranges>
+#include <format>
+#include <condition_variable>
+#include <semaphore>
+#include <latch>
+#include <stop_token>
+#include <cassert>
+#include <string_view>
+#include <functional>
+#include <memory>
+#include <optional>
 
-// ---------------- Singleton ----------------
+std::mutex cout_mtx;
 
-class Database {
-private:
-    static Database* instance;
-    Database() { std::cout << "DB initialized\n"; }
-    
-public:
-    static Database* get_instance() {
-        if (!instance) {
-            instance = new Database();
-        }
-        return instance;
-    }
-
-    // Thread-safe access
-    static Database* get_thread_safe_instance() {
-        static std::mutex mtx;
-        std::lock_guard<std::mutex> lock(mtx);
-        if (!instance) {
-            instance = new Database();
-        }
-        return instance;
-    }
-
-    // ---- VERY SMALL ADDITION ----
-    static bool is_initialized() {
-        return instance != nullptr;
-    }
-    // --------------------------------
-
-    // ---- EXTRA SMALL ADDITIONS ----
-    static void print_status() {
-        std::cout << "Database status: "
-                  << (instance ? "Active" : "Not initialized") << "\n";
-    }
-
-    void ping() {
-        std::cout << "Database ping successful\n";
-    }
-    // --------------------------------
-    
-    void query(const std::string& q) {
-        std::cout << "Executing: " << q << "\n";
-    }
-};
-
-Database* Database::instance = nullptr;
-
-// ---------------- Factory ----------------
-
-class Animal {
-public:
-    virtual ~Animal() = default;
-    virtual void speak() = 0;
-};
-
-class Dog : public Animal {
-public:
-    void speak() override { std::cout << "Woof!\n"; }
-};
-
-class Cat : public Animal {
-public:
-    void speak() override { std::cout << "Meow!\n"; }
-};
-
-class Cow : public Animal {
-public:
-    void speak() override { std::cout << "Moo!\n"; }
-};
-
-class AnimalFactory {
-public:
-    static std::unique_ptr<Animal> create(const std::string& type) {
-        if (type == "dog") return std::make_unique<Dog>();
-        if (type == "cat") return std::make_unique<Cat>();
-        if (type == "cow") return std::make_unique<Cow>();
-        return nullptr;
-    }
-
-    // ---- EXTRA SMALL ADDITION ----
-    static bool is_supported(const std::string& type) {
-        return type == "dog" ||
-               type == "cat" ||
-               type == "cow";
-    }
-    // --------------------------------
-};
-
-// ---------------- Builder ----------------
-
-class Computer {
-public:
-    std::string cpu;
-    std::string ram;
-    std::string storage;
-
-    void show() const {
-        std::cout << "Computer specs:\n";
-        std::cout << "CPU: " << cpu << "\n";
-        std::cout << "RAM: " << ram << "\n";
-        std::cout << "Storage: " << storage << "\n";
-    }
-
-    // ---- VERY SMALL ADDITION ----
-    bool is_complete() const {
-        return !cpu.empty() && !ram.empty() && !storage.empty();
-    }
-    // --------------------------------
-
-    // ---- EXTRA SMALL ADDITION ----
-    void summary() const {
-        std::cout << cpu << " | "
-                  << ram << " | "
-                  << storage << "\n";
-    }
-    // --------------------------------
-};
-
-class ComputerBuilder {
-private:
-    Computer computer;
-
-public:
-    ComputerBuilder& set_cpu(const std::string& c) {
-        computer.cpu = c;
-        return *this;
-    }
-
-    ComputerBuilder& set_ram(const std::string& r) {
-        computer.ram = r;
-        return *this;
-    }
-
-    ComputerBuilder& set_storage(const std::string& s) {
-        computer.storage = s;
-        return *this;
-    }
-
-    ComputerBuilder& gaming_pc() {
-        computer.cpu = "Ryzen 9";
-        computer.ram = "32GB";
-        computer.storage = "2TB NVMe";
-        return *this;
-    }
-
-    bool is_valid() const {
-        return !computer.cpu.empty() &&
-               !computer.ram.empty() &&
-               !computer.storage.empty();
-    }
-
-    Computer build() {
-        if (!is_valid()) {
-            std::cout << "Warning: Incomplete build\n";
-        }
-        return computer;
-    }
-};
-
-// ---------------- Helper Functions ----------------
-
-// Thread function for singleton demo
-void thread_task(int id) {
-    Database* db = Database::get_thread_safe_instance();
-    db->query("Thread " + std::to_string(id) + " query");
+void safe_print(std::string_view msg) {
+    std::lock_guard lock(cout_mtx);
+    std::cout << std::format("{}\n", msg);
 }
 
-// Factory bulk test
-void test_factory() {
-    std::vector<std::string> types = {"dog", "cat", "cow", "unknown"};
+class Singleton {
+    Singleton() = default;
+public:
+    Singleton(const Singleton&)            = delete;
+    Singleton& operator=(const Singleton&) = delete;
 
-    for (const auto& t : types) {
-        auto animal = AnimalFactory::create(t);
-        if (animal) {
-            animal->speak();
-        } else {
-            std::cout << "Unknown animal type: " << t << "\n";
-        }
+    [[nodiscard]] static Singleton& instance() noexcept {
+        static Singleton inst;
+        return inst;
     }
-}
 
-// ---- VERY SMALL ADDITION ----
-void print_divider() {
-    std::cout << "-----------------------------\n";
-}
-// --------------------------------
+    void say_hello() const { safe_print("Singleton says hello"); }
 
-// ---- EXTRA SMALL HELPERS ----
+    void print_address() const {
+        std::cout << std::format("Singleton address: {}\n",
+                                 static_cast<const void*>(this));
+    }
+};
 
-// count supported animals
-int count_supported(const std::vector<std::string>& types) {
-    return std::count_if(types.begin(), types.end(),
-        [](const std::string& t) {
-            return AnimalFactory::is_supported(t);
+template <typename T>
+class BoundedQueue {
+    std::queue<T>           data_;
+    mutable std::mutex      mtx_;
+    std::condition_variable not_empty_;
+    std::condition_variable not_full_;
+    const std::size_t       capacity_;
+    std::atomic<bool>       closed_{false};
+
+public:
+    explicit BoundedQueue(std::size_t cap = 64) : capacity_(cap) {}
+
+    void push(T value) {
+        std::unique_lock lock(mtx_);
+        not_full_.wait(lock, [&] {
+            return data_.size() < capacity_ || closed_.load(std::memory_order_acquire);
         });
+        if (closed_.load(std::memory_order_acquire)) return;
+        data_.push(std::move(value));
+        not_empty_.notify_one();
+    }
+
+    [[nodiscard]] bool try_pop(T& out) {
+        std::lock_guard lock(mtx_);
+        if (data_.empty()) return false;
+        out = std::move(data_.front());
+        data_.pop();
+        not_full_.notify_one();
+        return true;
+    }
+
+    [[nodiscard]] std::optional<T> pop_wait(std::chrono::milliseconds timeout) {
+        std::unique_lock lock(mtx_);
+        if (!not_empty_.wait_for(lock, timeout, [&] {
+                return !data_.empty() || closed_.load(std::memory_order_acquire);
+            }))
+            return std::nullopt;
+        if (data_.empty()) return std::nullopt;
+        T val = std::move(data_.front());
+        data_.pop();
+        not_full_.notify_one();
+        return val;
+    }
+
+    void close() {
+        closed_.store(true, std::memory_order_release);
+        not_empty_.notify_all();
+        not_full_.notify_all();
+    }
+
+    [[nodiscard]] std::size_t size() const {
+        std::lock_guard lock(mtx_);
+        return data_.size();
+    }
+
+    [[nodiscard]] bool empty() const {
+        std::lock_guard lock(mtx_);
+        return data_.empty();
+    }
+
+    void clear() {
+        std::lock_guard lock(mtx_);
+        std::queue<T>{}.swap(data_);
+        not_full_.notify_all();
+    }
+};
+
+class SharedData {
+    int                  value_{0};
+    mutable std::shared_mutex rw_;
+
+public:
+    void write(int v) {
+        std::unique_lock lock(rw_);
+        value_ = v;
+        safe_print(std::format("Writer updated value to {}", v));
+    }
+
+    void read() const {
+        std::shared_lock lock(rw_);
+        safe_print(std::format("Reader saw value {}", value_));
+    }
+
+    [[nodiscard]] int get() const {
+        std::shared_lock lock(rw_);
+        return value_;
+    }
+};
+
+void producer(BoundedQueue<int>& q, int count) {
+    for (int i = 1; i <= count; ++i) {
+        q.push(i);
+        safe_print(std::format("Produced: {}", i));
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
 }
 
-// print simple title
-void print_title(const std::string& title) {
-    std::cout << "\n=== " << title << " ===\n";
+void consumer(BoundedQueue<int>& q, int count) {
+    for (int i = 0; i < count; ++i) {
+        int value;
+        while (!q.try_pop(value))
+            std::this_thread::yield();
+        safe_print(std::format("Consumed: {}", value));
+    }
 }
 
-// --------------------------------
-
-// ---------------- Main ----------------
+void timed_consumer(BoundedQueue<int>& q, int count) {
+    for (int i = 0; i < count; ++i) {
+        if (auto val = q.pop_wait(std::chrono::milliseconds(200)))
+            safe_print(std::format("Timed consumer got: {}", *val));
+        else
+            safe_print("Timed consumer: timeout");
+    }
+}
 
 int main() {
+    std::cout << "--- Singleton ---\n";
+    Singleton::instance().say_hello();
+    Singleton::instance().print_address();
 
-    // Singleton usage
-    Database::get_instance()->query("SELECT * FROM users");
+    {
+        std::latch ready(2);
+        auto singleton_task = [&] {
+            ready.count_down();
+            Singleton::instance().say_hello();
+            safe_print("Singleton accessed from thread");
+        };
+        std::jthread s1(singleton_task);
+        std::jthread s2(singleton_task);
+    }
 
-    // Check initialization
-    std::cout << "DB initialized? "
-              << (Database::is_initialized() ? "Yes" : "No") << "\n";
+    std::cout << "\n--- Producer-Consumer ---\n";
+    {
+        BoundedQueue<int> q(8);
+        std::jthread p([&] { producer(q, 5); });
+        std::jthread c([&] { consumer(q, 5); });
+    }
 
-    // Thread-safe singleton usage
-    Database::get_thread_safe_instance()->query("SELECT * FROM products");
+    std::cout << "\n--- Timed Consumer ---\n";
+    {
+        BoundedQueue<int> q(8);
+        std::jthread p([&] { producer(q, 5); });
+        std::jthread tc([&] { timed_consumer(q, 5); });
+    }
 
-    // ---- EXTRA SMALL USAGE ----
-    Database::print_status();
-    Database::get_instance()->ping();
-    // --------------------------------
+    std::cout << "\n--- Read-Write Lock ---\n";
+    {
+        SharedData data;
+        std::jthread writer([&] { data.write(10); });
+        std::jthread r1([&] { data.read(); });
+        std::jthread r2([&] { data.read(); });
+    }
 
-    print_divider();
+    std::cout << "\n--- Read-heavy workload ---\n";
+    {
+        SharedData data;
+        std::vector<std::jthread> readers;
+        readers.reserve(5);
+        for (int i = 0; i < 5; ++i)
+            readers.emplace_back([&] { data.read(); });
+        std::jthread writer([&] { data.write(20); });
+        readers.clear();
+        std::cout << std::format("Final value: {}\n", data.get());
+    }
 
-    std::cout << "\n--- Singleton Threads ---\n";
+    std::cout << "\n--- Worker threads ---\n";
+    {
+        std::latch done(4);
+        for (int id : std::views::iota(1, 5)) {
+            std::jthread([id, &done] {
+                safe_print(std::format("Worker thread {} running", id));
+                done.count_down();
+            }).detach();
+        }
+        done.wait();
+    }
 
-    std::thread t1(thread_task, 1);
-    std::thread t2(thread_task, 2);
-    std::thread t3(thread_task, 3);
+    std::cout << "\n--- Atomic counter ---\n";
+    {
+        std::atomic<int> counter{0};
+        auto inc = [&] {
+            for ([[maybe_unused]] int i : std::views::iota(0, 1000))
+                counter.fetch_add(1, std::memory_order_relaxed);
+        };
+        std::jthread t1(inc);
+        std::jthread t2(inc);
+        t1.join();
+        t2.join();
+        std::cout << std::format("Atomic counter: {}\n", counter.load());
+        assert(counter.load() == 2000);
+    }
 
-    t1.join();
-    t2.join();
-    t3.join();
+    std::cout << "\n--- Semaphore rate-limiter ---\n";
+    {
+        std::counting_semaphore<3> sem(3);
+        std::atomic<int>           active{0};
+        std::latch                 complete(6);
+        std::vector<std::jthread>  workers;
+        workers.reserve(6);
 
-    print_divider();
+        for (int i : std::views::iota(0, 6)) {
+            workers.emplace_back([&, i] {
+                sem.acquire();
+                const int n = active.fetch_add(1, std::memory_order_acq_rel) + 1;
+                safe_print(std::format("Worker {} active (concurrent: {})", i, n));
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                active.fetch_sub(1, std::memory_order_acq_rel);
+                sem.release();
+                complete.count_down();
+            });
+        }
+        complete.wait();
+    }
 
-    // Factory usage
-    auto dog = AnimalFactory::create("dog");
-    auto cat = AnimalFactory::create("cat");
-    auto cow = AnimalFactory::create("cow");
+    std::cout << "\n--- Queue operations ---\n";
+    {
+        BoundedQueue<int> q(8);
+        for (int v : {1, 2, 3, 4, 5}) q.push(v);
+        std::cout << std::format("Queue size: {}\n", q.size());
+        q.clear();
+        std::cout << std::format("Empty after clear: {}\n", q.empty() ? "Yes" : "No");
+        assert(q.empty());
+    }
 
-    if (dog) dog->speak();
-    if (cat) cat->speak();
-    if (cow) cow->speak();
+    const std::vector<int> nums = {1, 2, 3, 4, 5};
+    std::cout << std::format("Accumulated sum: {}\n",
+                             std::reduce(nums.begin(), nums.end(), 0));
 
-    std::cout << "\n--- Factory Bulk Test ---\n";
-    test_factory();
-
-    // ---- EXTRA SMALL USAGE ----
-    std::vector<std::string> animals =
-        {"dog", "cat", "cow", "bird"};
-
-    std::cout << "Supported animal types: "
-              << count_supported(animals) << "\n";
-    // --------------------------------
-
-    print_divider();
-
-    // Builder usage
-    Computer pc = ComputerBuilder()
-                    .set_cpu("Intel i7")
-                    .set_ram("16GB")
-                    .set_storage("1TB SSD")
-                    .build();
-
-    pc.show();
-    std::cout << "Complete? " << (pc.is_complete() ? "Yes" : "No") << "\n";
-
-    // ---- EXTRA SMALL USAGE ----
-    pc.summary();
-    // --------------------------------
-
-    print_divider();
-
-    // Using preset builder
-    Computer gaming = ComputerBuilder()
-                        .gaming_pc()
-                        .build();
-
-    gaming.show();
-
-    print_divider();
-
-    std::cout << "\n--- Invalid Build Demo ---\n";
-
-    Computer incomplete = ComputerBuilder()
-                            .set_cpu("Only CPU")
-                            .build();
-
-    incomplete.show();
-    std::cout << "Complete? "
-              << (incomplete.is_complete() ? "Yes" : "No") << "\n";
-
-    // ===== FINAL SMALL ADDITIONS =====
-
-    print_title("Numeric Demo");
-
-    std::vector<int> nums = {1, 2, 3, 4, 5};
-
-    int total = std::accumulate(nums.begin(), nums.end(), 0);
-
-    std::cout << "Accumulated sum: "
-              << total << "\n";
-
-    std::cout << "Max value: "
-              << *std::max_element(nums.begin(), nums.end())
-              << "\n";
-
-    std::cout << "Min value: "
-              << *std::min_element(nums.begin(), nums.end())
-              << "\n";
-
-    // =================================
-
+    std::cout << "\nAll assertions passed.\n";
     return 0;
 }

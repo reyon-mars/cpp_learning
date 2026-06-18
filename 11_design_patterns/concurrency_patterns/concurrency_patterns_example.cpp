@@ -1,6 +1,3 @@
-// Concurrency Patterns Exercise
-// Thread-safe singleton, producer-consumer, read-write lock
-
 #include <iostream>
 #include <thread>
 #include <mutex>
@@ -8,305 +5,274 @@
 #include <shared_mutex>
 #include <vector>
 #include <chrono>
-#include <numeric>   // tiny addition
-#include <atomic>    // tiny addition
+#include <numeric>
+#include <atomic>
+#include <ranges>
+#include <format>
+#include <condition_variable>
+#include <semaphore>
+#include <latch>
+#include <stop_token>
+#include <cassert>
+#include <string_view>
+#include <functional>
+#include <memory>
+#include <optional>
 
-// ---------------- Thread-safe singleton ----------------
+std::mutex cout_mtx;
 
-class ThreadSafeSingleton {
-private:
-    static std::mutex mutex;
-    static ThreadSafeSingleton* instance;
-    
-    ThreadSafeSingleton() {}
-    
+void safe_print(std::string_view msg) {
+    std::lock_guard lock(cout_mtx);
+    std::cout << std::format("{}\n", msg);
+}
+
+class Singleton {
+    Singleton() = default;
 public:
-    static ThreadSafeSingleton* get_instance() {
-        std::lock_guard<std::mutex> lock(mutex);
-        if (!instance) {
-            instance = new ThreadSafeSingleton();
-        }
-        return instance;
+    Singleton(const Singleton&)            = delete;
+    Singleton& operator=(const Singleton&) = delete;
+
+    [[nodiscard]] static Singleton& instance() noexcept {
+        static Singleton inst;
+        return inst;
     }
 
-    // ---- VERY SMALL ADDITION ----
-    void say_hello() {
-        std::cout << "Singleton says hello\n";
-    }
-    // -----------------------------
+    void say_hello() const { safe_print("Singleton says hello"); }
 
-    // ---- EXTRA SMALL ADDITION ----
-    void print_address() {
-        std::cout << "Singleton address: " << this << "\n";
+    void print_address() const {
+        std::cout << std::format("Singleton address: {}\n",
+                                 static_cast<const void*>(this));
     }
-    // --------------------------------
 };
 
-std::mutex ThreadSafeSingleton::mutex;
-ThreadSafeSingleton* ThreadSafeSingleton::instance = nullptr;
+template <typename T>
+class BoundedQueue {
+    std::queue<T>           data_;
+    mutable std::mutex      mtx_;
+    std::condition_variable not_empty_;
+    std::condition_variable not_full_;
+    const std::size_t       capacity_;
+    std::atomic<bool>       closed_{false};
 
-// ---------------- Producer-consumer queue ----------------
-
-template<typename T>
-class Queue {
-private:
-    std::queue<T> data;
-    mutable std::mutex mut;
-    
 public:
+    explicit BoundedQueue(std::size_t cap = 64) : capacity_(cap) {}
+
     void push(T value) {
-        std::lock_guard<std::mutex> lk(mut);
-        data.push(value);
+        std::unique_lock lock(mtx_);
+        not_full_.wait(lock, [&] {
+            return data_.size() < capacity_ || closed_.load(std::memory_order_acquire);
+        });
+        if (closed_.load(std::memory_order_acquire)) return;
+        data_.push(std::move(value));
+        not_empty_.notify_one();
     }
-    
-    bool try_pop(T& value) {
-        std::lock_guard<std::mutex> lk(mut);
-        if (data.empty()) return false;
-        value = data.front();
-        data.pop();
+
+    [[nodiscard]] bool try_pop(T& out) {
+        std::lock_guard lock(mtx_);
+        if (data_.empty()) return false;
+        out = std::move(data_.front());
+        data_.pop();
+        not_full_.notify_one();
         return true;
     }
 
-    // -------- NEW ADDITION --------
-    size_t size() const {
-        std::lock_guard<std::mutex> lk(mut);
-        return data.size();
+    [[nodiscard]] std::optional<T> pop_wait(std::chrono::milliseconds timeout) {
+        std::unique_lock lock(mtx_);
+        if (!not_empty_.wait_for(lock, timeout, [&] {
+                return !data_.empty() || closed_.load(std::memory_order_acquire);
+            }))
+            return std::nullopt;
+        if (data_.empty()) return std::nullopt;
+        T val = std::move(data_.front());
+        data_.pop();
+        not_full_.notify_one();
+        return val;
     }
 
-    bool empty() const {
-        std::lock_guard<std::mutex> lk(mut);
-        return data.empty();
+    void close() {
+        closed_.store(true, std::memory_order_release);
+        not_empty_.notify_all();
+        not_full_.notify_all();
     }
-    // --------------------------------
 
-    // ---- EXTRA SMALL ADDITION ----
+    [[nodiscard]] std::size_t size() const {
+        std::lock_guard lock(mtx_);
+        return data_.size();
+    }
+
+    [[nodiscard]] bool empty() const {
+        std::lock_guard lock(mtx_);
+        return data_.empty();
+    }
+
     void clear() {
-        std::lock_guard<std::mutex> lk(mut);
-        while (!data.empty())
-            data.pop();
+        std::lock_guard lock(mtx_);
+        std::queue<T>{}.swap(data_);
+        not_full_.notify_all();
     }
-    // --------------------------------
 };
 
-// ---------------- Read-write lock example ----------------
-
 class SharedData {
-private:
-    int value = 0;
-    mutable std::shared_mutex rw_mutex;
+    int                  value_{0};
+    mutable std::shared_mutex rw_;
 
 public:
     void write(int v) {
-        std::unique_lock lock(rw_mutex);
-        value = v;
-        std::cout << "Writer updated value to " << value << "\n";
+        std::unique_lock lock(rw_);
+        value_ = v;
+        safe_print(std::format("Writer updated value to {}", v));
     }
 
     void read() const {
-        std::shared_lock lock(rw_mutex);
-        std::cout << "Reader saw value " << value << "\n";
+        std::shared_lock lock(rw_);
+        safe_print(std::format("Reader saw value {}", value_));
     }
 
-    // ---- VERY SMALL ADDITION ----
-    int get_value() const {
-        std::shared_lock lock(rw_mutex);
-        return value;
+    [[nodiscard]] int get() const {
+        std::shared_lock lock(rw_);
+        return value_;
     }
-    // -----------------------------
 };
 
-// ---------------- Thread-safe logging ----------------
-std::mutex cout_mutex;
-
-void safe_print(const std::string& msg) {
-    std::lock_guard<std::mutex> lock(cout_mutex);
-    std::cout << msg << std::endl;
-}
-// -----------------------------------------------------
-
-// ---------------- Producer / Consumer helpers ----------------
-
-void producer(Queue<int>& q) {
-    for (int i = 1; i <= 5; ++i) {
+void producer(BoundedQueue<int>& q, int count) {
+    for (int i = 1; i <= count; ++i) {
         q.push(i);
-        safe_print("Produced: " + std::to_string(i));
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        safe_print(std::format("Produced: {}", i));
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
 }
 
-void consumer(Queue<int>& q) {
-    int value;
-    for (int i = 0; i < 5; ++i) {
-        while (!q.try_pop(value)) {
+void consumer(BoundedQueue<int>& q, int count) {
+    for (int i = 0; i < count; ++i) {
+        int value;
+        while (!q.try_pop(value))
             std::this_thread::yield();
-        }
-        safe_print("Consumed: " + std::to_string(value));
+        safe_print(std::format("Consumed: {}", value));
     }
 }
 
-// -------- NEW ADDITIONS --------
-
-// Timed consumer (tries for limited time)
-void timed_consumer(Queue<int>& q) {
-    int value;
-    for (int i = 0; i < 5; ++i) {
-        auto start = std::chrono::steady_clock::now();
-        while (!q.try_pop(value)) {
-            if (std::chrono::steady_clock::now() - start >
-                std::chrono::milliseconds(200)) {
-                safe_print("Timed consumer: timeout");
-                break;
-            }
-        }
-        safe_print("Timed consumer cycle done");
+void timed_consumer(BoundedQueue<int>& q, int count) {
+    for (int i = 0; i < count; ++i) {
+        if (auto val = q.pop_wait(std::chrono::milliseconds(200)))
+            safe_print(std::format("Timed consumer got: {}", *val));
+        else
+            safe_print("Timed consumer: timeout");
     }
 }
-
-// Singleton access from multiple threads
-void singleton_task() {
-    auto s = ThreadSafeSingleton::get_instance();
-    s->say_hello(); // tiny addition usage
-    safe_print("Singleton accessed from thread");
-}
-
-// Small helper to show queue status
-void print_queue_status(const Queue<int>& q) {
-    safe_print("Queue size: " + std::to_string(q.size()));
-}
-
-// ---- EXTRA SMALL ADDITIONS ----
-
-// simple worker
-void worker_task(int id) {
-    safe_print("Worker thread " + std::to_string(id) + " running");
-}
-
-// atomic counter demo
-std::atomic<int> atomic_counter{0};
-
-void increment_counter() {
-    for (int i = 0; i < 1000; ++i)
-        ++atomic_counter;
-}
-
-// -----------------------------------------------------
-
-// ---------------- Main ----------------
 
 int main() {
+    std::cout << "--- Singleton ---\n";
+    Singleton::instance().say_hello();
+    Singleton::instance().print_address();
 
-    // Singleton demo
-    auto singleton = ThreadSafeSingleton::get_instance();
-    singleton->say_hello(); // tiny addition
-    singleton->print_address(); // extra addition
-    std::cout << "Singleton acquired\n";
-
-    // -------- NEW: multiple threads using singleton --------
-    std::thread s1(singleton_task);
-    std::thread s2(singleton_task);
-    s1.join();
-    s2.join();
-    // ------------------------------------------------------
-
-    // Producer-consumer demo
-    Queue<int> q;
-    std::thread p(producer, std::ref(q));
-    std::thread c(consumer, std::ref(q));
-
-    p.join();
-    c.join();
-
-    print_queue_status(q); // tiny addition
-
-    std::cout << "\n";
-
-    // -------- NEW: additional consumer --------
-    std::thread p2(producer, std::ref(q));
-    std::thread tc(timed_consumer, std::ref(q));
-
-    p2.join();
-    tc.join();
-    // -----------------------------------------
-
-    print_queue_status(q); // tiny addition
-
-    // Read-write lock demo
-    SharedData data;
-
-    std::thread writer([&]{
-        data.write(10);
-    });
-
-    std::thread reader1([&]{
-        data.read();
-    });
-
-    std::thread reader2([&]{
-        data.read();
-    });
-
-    writer.join();
-    reader1.join();
-    reader2.join();
-
-    // -------- NEW: read-heavy workload --------
-    std::cout << "\nRead-heavy workload:\n";
-
-    std::vector<std::thread> readers;
-    for (int i = 0; i < 5; ++i) {
-        readers.emplace_back([&]{
-            data.read();
-        });
+    {
+        std::latch ready(2);
+        auto singleton_task = [&] {
+            ready.count_down();
+            Singleton::instance().say_hello();
+            safe_print("Singleton accessed from thread");
+        };
+        std::jthread s1(singleton_task);
+        std::jthread s2(singleton_task);
     }
 
-    std::thread writer2([&]{
-        data.write(20);
-    });
+    std::cout << "\n--- Producer-Consumer ---\n";
+    {
+        BoundedQueue<int> q(8);
+        std::jthread p([&] { producer(q, 5); });
+        std::jthread c([&] { consumer(q, 5); });
+    }
 
-    for (auto& t : readers) t.join();
-    writer2.join();
-    // -----------------------------------------
+    std::cout << "\n--- Timed Consumer ---\n";
+    {
+        BoundedQueue<int> q(8);
+        std::jthread p([&] { producer(q, 5); });
+        std::jthread tc([&] { timed_consumer(q, 5); });
+    }
 
-    // ---- VERY SMALL EXTRA ----
-    std::cout << "Final value (safe read): "
-              << data.get_value() << "\n";
-    // -------------------------
+    std::cout << "\n--- Read-Write Lock ---\n";
+    {
+        SharedData data;
+        std::jthread writer([&] { data.write(10); });
+        std::jthread r1([&] { data.read(); });
+        std::jthread r2([&] { data.read(); });
+    }
 
-    // ===== EXTRA SMALL ADDITIONS =====
+    std::cout << "\n--- Read-heavy workload ---\n";
+    {
+        SharedData data;
+        std::vector<std::jthread> readers;
+        readers.reserve(5);
+        for (int i = 0; i < 5; ++i)
+            readers.emplace_back([&] { data.read(); });
+        std::jthread writer([&] { data.write(20); });
+        readers.clear();
+        std::cout << std::format("Final value: {}\n", data.get());
+    }
 
-    std::cout << "\nAdditional worker threads:\n";
+    std::cout << "\n--- Worker threads ---\n";
+    {
+        std::latch done(4);
+        for (int id : std::views::iota(1, 5)) {
+            std::jthread([id, &done] {
+                safe_print(std::format("Worker thread {} running", id));
+                done.count_down();
+            }).detach();
+        }
+        done.wait();
+    }
 
-    std::thread w1(worker_task, 1);
-    std::thread w2(worker_task, 2);
+    std::cout << "\n--- Atomic counter ---\n";
+    {
+        std::atomic<int> counter{0};
+        auto inc = [&] {
+            for ([[maybe_unused]] int i : std::views::iota(0, 1000))
+                counter.fetch_add(1, std::memory_order_relaxed);
+        };
+        std::jthread t1(inc);
+        std::jthread t2(inc);
+        t1.join();
+        t2.join();
+        std::cout << std::format("Atomic counter: {}\n", counter.load());
+        assert(counter.load() == 2000);
+    }
 
-    w1.join();
-    w2.join();
+    std::cout << "\n--- Semaphore rate-limiter ---\n";
+    {
+        std::counting_semaphore<3> sem(3);
+        std::atomic<int>           active{0};
+        std::latch                 complete(6);
+        std::vector<std::jthread>  workers;
+        workers.reserve(6);
 
-    // atomic counter demo
-    std::thread a1(increment_counter);
-    std::thread a2(increment_counter);
+        for (int i : std::views::iota(0, 6)) {
+            workers.emplace_back([&, i] {
+                sem.acquire();
+                const int n = active.fetch_add(1, std::memory_order_acq_rel) + 1;
+                safe_print(std::format("Worker {} active (concurrent: {})", i, n));
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                active.fetch_sub(1, std::memory_order_acq_rel);
+                sem.release();
+                complete.count_down();
+            });
+        }
+        complete.wait();
+    }
 
-    a1.join();
-    a2.join();
+    std::cout << "\n--- Queue operations ---\n";
+    {
+        BoundedQueue<int> q(8);
+        for (int v : {1, 2, 3, 4, 5}) q.push(v);
+        std::cout << std::format("Queue size: {}\n", q.size());
+        q.clear();
+        std::cout << std::format("Empty after clear: {}\n", q.empty() ? "Yes" : "No");
+        assert(q.empty());
+    }
 
-    std::cout << "Atomic counter value: "
-              << atomic_counter.load() << "\n";
+    const std::vector<int> nums = {1, 2, 3, 4, 5};
+    std::cout << std::format("Accumulated sum: {}\n",
+                             std::reduce(nums.begin(), nums.end(), 0));
 
-    // vector + accumulate demo
-    std::vector<int> nums = {1, 2, 3, 4, 5};
-
-    int total = std::accumulate(nums.begin(), nums.end(), 0);
-
-    std::cout << "Accumulated sum: "
-              << total << "\n";
-
-    // queue clear demo
-    q.clear();
-
-    std::cout << "Queue empty after clear? "
-              << (q.empty() ? "Yes" : "No") << "\n";
-
-    // =================================
-
+    std::cout << "\nAll assertions passed.\n";
     return 0;
 }

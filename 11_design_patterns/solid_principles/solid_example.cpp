@@ -3,319 +3,226 @@
 #include <ctime>
 #include <vector>
 #include <string>
-#include <algorithm> // tiny addition
-#include <numeric>   // tiny addition
-
-// ---------------- Single Responsibility ----------------
+#include <string_view>
+#include <algorithm>
+#include <numeric>
+#include <ranges>
+#include <format>
+#include <chrono>
+#include <span>
 
 class Logger {
 public:
-    virtual ~Logger() = default;
-    virtual void log(const std::string& msg) = 0;
+    virtual ~Logger()                        = default;
+    virtual void log(std::string_view msg)   = 0;
 };
 
-class ConsoleLogger : public Logger {
+class ConsoleLogger final : public Logger {
 public:
-    void log(const std::string& msg) override {
-        std::cout << msg << "\n";
+    void log(std::string_view msg) override {
+        std::cout << msg << '\n';
     }
 };
 
 class FileWriter {
 public:
-    void write(const std::string& msg) {
-        std::cout << "[Writing to file]: " << msg << "\n";
+    void write(std::string_view msg) const {
+        std::cout << std::format("[File] {}\n", msg);
     }
 };
 
-// ---------------- Open / Closed Principle ----------------
-
-class FileLogger : public Logger {
+class FileLogger final : public Logger {
 public:
-    void log(const std::string& msg) override {
-        std::cout << "[File] " << msg << "\n";
+    void log(std::string_view msg) override {
+        writer_.write(msg);
     }
-};
-
-class TimestampLogger : public Logger {
-public:
-    void log(const std::string& msg) override {
-        std::time_t now = std::time(nullptr);
-        std::cout << "[Time: " << now << "] " << msg << "\n";
-    }
-};
-
-class FileLoggerWithWriter : public Logger {
 private:
-    FileWriter writer;
-
-public:
-    void log(const std::string& msg) override {
-        writer.write(msg);
-    }
+    FileWriter writer_;
 };
 
-// ---------------- Interface Segregation ----------------
+class TimestampLogger final : public Logger {
+public:
+    void log(std::string_view msg) override {
+        const auto now = std::chrono::system_clock::now();
+        const auto ts  = std::chrono::system_clock::to_time_t(now);
+        std::cout << std::format("[ts={}] {}\n", ts, msg);
+    }
+};
 
 class Printer {
 public:
-    virtual ~Printer() = default;
-    virtual void print(const std::string& doc) = 0;
+    virtual ~Printer()                           = default;
+    virtual void print(std::string_view doc)     = 0;
 };
 
 class Scanner {
 public:
-    virtual ~Scanner() = default;
+    virtual ~Scanner()  = default;
     virtual void scan() = 0;
 };
 
-class MultiFunctionPrinter : public Printer, public Scanner {
+class MultiFunctionPrinter final : public Printer, public Scanner {
 public:
-    void print(const std::string& doc) override {
-        std::cout << "Printing: " << doc << "\n";
+    void print(std::string_view doc) override {
+        std::cout << std::format("Printing: {}\n", doc);
     }
-
     void scan() override {
         std::cout << "Scanning document\n";
     }
 };
 
-class SimplePrinter : public Printer {
+class SimplePrinter final : public Printer {
 public:
-    void print(const std::string& doc) override {
-        std::cout << "Simple printing: " << doc << "\n";
+    void print(std::string_view doc) override {
+        std::cout << std::format("Simple print: {}\n", doc);
     }
 };
-
-// ---------------- Liskov Substitution ----------------
 
 class Shape {
 public:
-    virtual ~Shape() = default;
-    virtual int area() const = 0;
+    virtual ~Shape()                  = default;
+    [[nodiscard]] virtual int area()  const noexcept = 0;
+    [[nodiscard]] virtual std::string_view name() const noexcept = 0;
 };
 
-class Rectangle : public Shape {
-protected:
-    int width;
-    int height;
-
+class Rectangle final : public Shape {
+    int width_, height_;
 public:
-    Rectangle(int w, int h) : width(w), height(h) {}
-
-    int area() const override {
-        return width * height;
-    }
+    Rectangle(int w, int h) noexcept : width_{w}, height_{h} {}
+    [[nodiscard]] int area()            const noexcept override { return width_ * height_; }
+    [[nodiscard]] std::string_view name() const noexcept override { return "Rectangle"; }
 };
 
-class Square : public Shape {
-private:
-    int side;
-
+class Square final : public Shape {
+    int side_;
 public:
-    Square(int s) : side(s) {}
-
-    int area() const override {
-        return side * side;
-    }
+    explicit Square(int s) noexcept : side_{s} {}
+    [[nodiscard]] int area()            const noexcept override { return side_ * side_; }
+    [[nodiscard]] std::string_view name() const noexcept override { return "Square"; }
 };
 
-class Circle : public Shape {
-private:
-    int radius;
-
+class Circle final : public Shape {
+    int radius_;
+    static constexpr double kPi{3.14159265358979};
 public:
-    Circle(int r) : radius(r) {}
-
-    int area() const override {
-        return static_cast<int>(3.14 * radius * radius);
+    explicit Circle(int r) noexcept : radius_{r} {}
+    [[nodiscard]] int area()            const noexcept override {
+        return static_cast<int>(kPi * radius_ * radius_);
     }
+    [[nodiscard]] std::string_view name() const noexcept override { return "Circle"; }
 };
-
-// ---------------- Dependency Inversion ----------------
 
 class Application {
-private:
-    std::shared_ptr<Logger> logger;
-    
+    std::shared_ptr<Logger> logger_;
 public:
-    Application(std::shared_ptr<Logger> log) : logger(log) {}
-    
-    void run() {
-        logger->log("Application started");
+    explicit Application(std::shared_ptr<Logger> logger)
+        : logger_{std::move(logger)} {}
+
+    void set_logger(std::shared_ptr<Logger> logger) {
+        logger_ = std::move(logger);
     }
 
-    void set_logger(std::shared_ptr<Logger> new_logger) {
-        logger = new_logger;
-    }
+    [[nodiscard]] bool has_logger()  const noexcept { return logger_ != nullptr; }
 
-    // ---- VERY SMALL ADDITION ----
-    bool has_logger() const {
-        return logger != nullptr;
-    }
-    // -----------------------------
-
-    // ---- EXTRA SMALL ADDITION ----
-    void stop() {
-        logger->log("Application stopped");
-    }
-    // --------------------------------
+    void run()  { logger_->log("Application started"); }
+    void stop() { logger_->log("Application stopped"); }
 };
 
-// ---------------- Helper Functions ----------------
+using ShapeVec = std::vector<std::unique_ptr<Shape>>;
 
-void print_shapes(const std::vector<std::unique_ptr<Shape>>& shapes) {
-    for (const auto& s : shapes) {
-        std::cout << "Area: " << s->area() << "\n";
-    }
-}
-
-void test_logger(std::shared_ptr<Logger> logger) {
-    logger->log("Testing logger...");
-}
-
-// ---- VERY SMALL ADDITIONS ----
-
-// Divider
-void print_divider() {
-    std::cout << "-----------------------------\n";
-}
-
-// Count shapes
-std::size_t count_shapes(const std::vector<std::unique_ptr<Shape>>& shapes) {
-    return shapes.size();
-}
-
-// --------------------------------
-
-// ---- EXTRA SMALL HELPERS ----
-
-// calculate total area
-int total_area(const std::vector<std::unique_ptr<Shape>>& shapes) {
-    int total = 0;
-
+void print_shapes(std::span<const std::unique_ptr<Shape>> shapes) {
     for (const auto& s : shapes)
-        total += s->area();
-
-    return total;
+        std::cout << std::format("  {}: area={}\n", s->name(), s->area());
 }
 
-// print title
-void print_title(const std::string& title) {
-    std::cout << "\n=== " << title << " ===\n";
+[[nodiscard]] int total_area(std::span<const std::unique_ptr<Shape>> shapes) noexcept {
+    return std::transform_reduce(
+        shapes.begin(), shapes.end(),
+        0, std::plus<>{},
+        [](const auto& s){ return s->area(); });
 }
 
-// --------------------------------
+void divider() { std::cout << "-----------------------------\n"; }
 
-// ---------------- Main ----------------
+void section(std::string_view title) {
+    std::cout << std::format("\n=== {} ===\n", title);
+}
 
 int main() {
-
-    auto console_logger = std::make_shared<ConsoleLogger>();
-    Application app(console_logger);
+    auto console = std::make_shared<ConsoleLogger>();
+    Application app{console};
     app.run();
+    std::cout << std::format("Has logger? {}\n", app.has_logger() ? "Yes" : "No");
 
-    std::cout << "App has logger? "
-              << (app.has_logger() ? "Yes" : "No") << "\n";
+    divider();
 
-    print_divider();
-
-    auto file_logger = std::make_shared<FileLogger>();
-    Application app2(file_logger);
+    auto file_log = std::make_shared<FileLogger>();
+    Application app2{file_log};
     app2.run();
 
-    print_divider();
+    divider();
 
-    auto time_logger = std::make_shared<TimestampLogger>();
-    app2.set_logger(time_logger);
+    app2.set_logger(std::make_shared<TimestampLogger>());
     app2.run();
 
-    print_divider();
+    divider();
 
-    auto writer_logger = std::make_shared<FileLoggerWithWriter>();
-    app2.set_logger(writer_logger);
-    app2.run();
+    MultiFunctionPrinter mfp;
+    mfp.print("Report.pdf");
+    mfp.scan();
 
-    print_divider();
+    SimplePrinter sp;
+    sp.print("Notes.txt");
 
-    // Interface Segregation
-    MultiFunctionPrinter printer;
-    printer.print("Report.pdf");
-    printer.scan();
+    divider();
 
-    SimplePrinter simple;
-    simple.print("Notes.txt");
+    section("Liskov Substitution");
+    const std::array<std::unique_ptr<Shape>, 3> singles{
+        std::make_unique<Rectangle>(4, 5),
+        std::make_unique<Square>(4),
+        std::make_unique<Circle>(3),
+    };
+    for (const auto& s : singles)
+        std::cout << std::format("{} area: {}\n", s->name(), s->area());
 
-    print_divider();
+    divider();
 
-    // Liskov Substitution
-    std::unique_ptr<Shape> shape1 = std::make_unique<Rectangle>(4, 5);
-    std::unique_ptr<Shape> shape2 = std::make_unique<Square>(4);
-    std::unique_ptr<Shape> shape3 = std::make_unique<Circle>(3);
-
-    std::cout << "Rectangle area: " << shape1->area() << "\n";
-    std::cout << "Square area: " << shape2->area() << "\n";
-    std::cout << "Circle area: " << shape3->area() << "\n";
-
-    std::cout << "\n--- Shape Collection Test ---\n";
-
-    std::vector<std::unique_ptr<Shape>> shapes;
+    section("Shape Collection");
+    ShapeVec shapes;
     shapes.push_back(std::make_unique<Rectangle>(2, 3));
     shapes.push_back(std::make_unique<Square>(5));
     shapes.push_back(std::make_unique<Circle>(2));
 
     print_shapes(shapes);
 
-    std::cout << "Total shapes: "
-              << count_shapes(shapes) << "\n";
+    std::cout << std::format("Count:      {}\n", shapes.size());
+    std::cout << std::format("Total area: {}\n", total_area(shapes));
 
-    // ---- EXTRA SMALL ADDITIONS ----
+    const auto largest = std::ranges::max_element(
+        shapes, {}, [](const auto& s){ return s->area(); });
+    std::cout << std::format("Largest:    {} (area={})\n",
+                             (*largest)->name(), (*largest)->area());
 
-    std::cout << "Total combined area: "
-              << total_area(shapes) << "\n";
+    divider();
 
-    auto max_shape = std::max_element(
-        shapes.begin(),
-        shapes.end(),
-        [](const auto& a, const auto& b) {
-            return a->area() < b->area();
-        });
-
-    if (max_shape != shapes.end()) {
-        std::cout << "Largest area: "
-                  << (*max_shape)->area() << "\n";
+    section("Logger Polymorphism");
+    for (auto& lg : {
+        std::static_pointer_cast<Logger>(console),
+        std::static_pointer_cast<Logger>(file_log),
+    }) {
+        lg->log("Test message");
     }
 
-    // --------------------------------
-
-    print_divider();
-
-    std::cout << "\n--- Logger Test Utility ---\n";
-
-    test_logger(console_logger);
-    test_logger(file_logger);
-    test_logger(time_logger);
-
-    // ===== FINAL SMALL ADDITIONS =====
-
-    print_title("Numeric Utility Demo");
-
-    std::vector<int> nums = {10, 20, 30, 40};
-
-    int sum = std::accumulate(nums.begin(), nums.end(), 0);
-
-    std::cout << "Sum: " << sum << "\n";
-
-    std::cout << "Average: "
-              << (sum / nums.size()) << "\n";
-
-    std::cout << "Max value: "
-              << *std::max_element(nums.begin(), nums.end())
-              << "\n";
+    section("Numeric Utility");
+    constexpr std::array nums{10, 20, 30, 40};
+    const int sum = std::reduce(nums.begin(), nums.end(), 0);
+    std::cout << std::format("Sum:     {}\n", sum);
+    std::cout << std::format("Average: {:.1f}\n",
+                             static_cast<double>(sum) / nums.size());
+    std::cout << std::format("Max:     {}\n",
+                             *std::ranges::max_element(nums));
 
     app.stop();
-
-    // =================================
 
     return 0;
 }

@@ -1,11 +1,11 @@
-#include <iostream>   // ✅ ADDED
+#include <iostream>   
 #include <bitset>
-#include <cstdint>    // ✅ ADDED
-#include <iomanip>    // ✅ ADDED
-#include <cassert>    // ✅ ADDED
+#include <cstdint>    
+#include <iomanip>    
+#include <cassert>    
 #include <cstring>    // ✅ NEW
 
-// ✅ ADDED: Color union for reinterpretation
+: Color union for reinterpretation
 union Color {
     uint32_t full;
     struct {
@@ -13,7 +13,7 @@ union Color {
     } channels;
 };
 
-// ✅ ADDED: Print color channels
+: Print color channels
 void print_color(const Color& c) {
     std::cout << "R: " << (int)c.channels.r << " "
               << "G: " << (int)c.channels.g << " "
@@ -21,7 +21,7 @@ void print_color(const Color& c) {
               << "A: " << (int)c.channels.a << "\n";
 }
 
-// ✅ ADDED: Print hex value
+: Print hex value
 void print_hex(const Color& c) {
     std::cout << "Hex: 0x"
               << std::hex << std::setw(8) << std::setfill('0')
@@ -29,7 +29,7 @@ void print_hex(const Color& c) {
               << std::dec << "\n";
 }
 
-// ✅ ADDED: Bitfield struct
+: Bitfield struct
 struct Flags {
     unsigned char a : 1;
     unsigned char b : 1;
@@ -217,7 +217,7 @@ int main() {
     // ✅ Endianness
     check_endianness();
 
-    // ✅ ADDED: create color for testing
+    : create color for testing
     Color c;
     c.full = 0xAABBCCDD;
 
@@ -229,7 +229,7 @@ int main() {
     // ✅ Union reinterpretation
     reinterpret_demo();
 
-    // ✅ ADDED: create flags
+    : create flags
     Flags f{};
     f.a = 1;
     f.b = 0;

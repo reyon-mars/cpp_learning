@@ -5,10 +5,10 @@
 #include <chrono>
 #include <vector>
 
-// ✅ ADDED
+
 #include <numeric>     // for std::accumulate
-#include <algorithm>   // ✅ ADDED
-#include <functional>  // ✅ ADDED
+#include <algorithm>   
+#include <functional>  
 #include <array>       // tiny addition
 
 // -------- NEW ADDITIONS --------
@@ -41,13 +41,13 @@ void warmup() {
     for (volatile int i = 0; i < 1000000; ++i);
 }
 
-// ✅ ADDED: simple result printer
+: simple result printer
 void print_result(const std::string& label, long long time) {
     std::cout << label << ": "
               << time << " microseconds\n";
 }
 
-// ✅ ADDED: compare two timings
+: compare two timings
 void compare(const std::string& name,
              long long a,
              long long b) {
@@ -86,7 +86,7 @@ int main() {
 
     const int N = 10000;
 
-    warmup(); // ✅ ADDED
+    warmup(); 
 
     // Example: Vector access patterns
     std::vector<int> vec;
@@ -119,7 +119,7 @@ int main() {
         return sum;
     });
 
-    // ✅ ADDED: Iterator loop benchmark
+    : Iterator loop benchmark
     auto duration3 = benchmark([&]() {
         int sum = 0;
 
@@ -131,7 +131,7 @@ int main() {
         return sum;
     });
 
-    // ✅ ADDED: STL accumulate benchmark
+    : STL accumulate benchmark
     auto duration4 = benchmark([&]() {
         return std::accumulate(vec.begin(), vec.end(), 0);
     });
@@ -162,7 +162,7 @@ int main() {
     print_divider();
 
     // ----------------------------------------------------
-    // ✅ ADDED: Cache locality experiment (2D array)
+    : Cache locality experiment (2D array)
 
     const int SIZE = 300;
 

@@ -3,10 +3,9 @@
 
 #include <iostream>
 
-// ✅ ADDED
+
 #include <string>
 
-// ===== VERY SMALL NEW ADDITIONS =====
 #include <vector>
 #include <iomanip>
 
@@ -20,7 +19,7 @@ void show_topics() {
     std::cout << "5. Textures and lighting\n";
 }
 
-// ✅ ADDED: Simulated modules
+: Simulated modules
 
 void basic_rendering_demo() {
     std::cout << "\n[Basic Rendering]\n";
@@ -72,14 +71,14 @@ bool ask_repeat() {
     return (ans == 'y' || ans == 'Y');
 }
 
-// ✅ ADDED: simple header printer
+: simple header printer
 void print_header(const std::string& title) {
     std::cout << "\n==============================\n";
     std::cout << title << "\n";
     std::cout << "==============================\n";
 }
 
-// ✅ ADDED: fake clear screen (portable)
+: fake clear screen (portable)
 void clear_screen() {
     std::cout << std::string(40, '\n');
 }
@@ -117,7 +116,7 @@ void graphics_tip() {
 
 // =====================================
 
-// ✅ ADDED: Menu system
+: Menu system
 void run_demo(int choice) {
     switch (choice) {
         case 1: basic_rendering_demo(); break;
@@ -140,11 +139,10 @@ int main() {
 
     show_topics();
 
-    // ✅ ADDED: track how many demos run
+    : track how many demos run
     int demo_count = 0;
 
-    // ===== VERY SMALL NEW ADDITIONS =====
-    std::vector<std::string> history;
+        std::vector<std::string> history;
     // ====================================
 
     // ✅ UPDATED: looped interaction (non-breaking addition)
@@ -175,20 +173,20 @@ int main() {
 
     } while (ask_repeat());
 
-    // ✅ ADDED: usage summary
+    : usage summary
     std::cout << "\nTotal demos run: " << demo_count << "\n";
 
     // ===== VERY SMALL EXTRA OUTPUT =====
     show_history(history);
     // ===================================
 
-    // ✅ ADDED: future roadmap
+    : future roadmap
     std::cout << "\nUpcoming upgrades:\n";
     std::cout << "- GLFW window creation\n";
     std::cout << "- GLEW/GLAD setup\n";
     std::cout << "- Real triangle rendering with shaders\n";
 
-    // ✅ ADDED: Future hint
+    : Future hint
     std::cout << "\n(Next step: integrate real OpenGL libraries like GLFW + GLEW)\n";
 
     return 0;

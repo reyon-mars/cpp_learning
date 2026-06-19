@@ -4,7 +4,7 @@
 #include <iostream>
 #include <climits>
 
-// ✅ ADDED
+
 #include <vector>
 #include <optional>
 
@@ -26,7 +26,6 @@ void safe_division(int a, int b) {
 
 // --------------------------------
 
-// ===== VERY SMALL NEW ADDITIONS =====
 
 // Safe narrowing conversion
 void safe_narrowing(long long value) {
@@ -98,18 +97,18 @@ int main() {
     std::cout << "Pointer after delete (dangling): " << ptr << "\n";
     std::cout << "Accessing it would be undefined behavior\n";
 
-    // ✅ ADDED: Best practice (null after delete)
+    : Best practice (null after delete)
     ptr = nullptr;
     std::cout << "Pointer reset to nullptr (safe practice)\n";
 
     // ----------------------------------------------------
-    // ✅ ADDED: Uninitialized variable awareness (safe note)
+    : Uninitialized variable awareness (safe note)
     std::cout << "\nUninitialized variables can cause UB if used.\n";
     int x; 
     std::cout << "Uninitialized variable declared (not used to avoid UB)\n";
 
     // ----------------------------------------------------
-    // ✅ ADDED: Safe array access
+    : Safe array access
     std::cout << "\nSafe array access using vector::at():\n";
     std::vector<int> v = {1, 2, 3};
 
@@ -121,7 +120,7 @@ int main() {
     }
 
     // ----------------------------------------------------
-    // ✅ ADDED: Using std::optional to avoid invalid states
+    : Using std::optional to avoid invalid states
     std::cout << "\nUsing std::optional:\n";
     std::optional<int> safe_value;
 

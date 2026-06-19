@@ -2,8 +2,8 @@
 // Understanding preprocessing, parsing, compilation, and linking
 
 #include <iostream>
-#include <string>   // ✅ ADDED
-#include <vector>   // ✅ ADDED
+#include <string>   
+#include <vector>   
 #include <array>    // ✅ NEW
 #include <functional> // ✅ NEW
 
@@ -82,30 +82,30 @@ inline int max_safe(int a, int b) {
 // Macro pitfall example
 #define BAD_SQUARE(x) x * x
 
-// ✅ ADDED: Stringify macro
+: Stringify macro
 #define STRINGIFY(x) #x
 
-// ✅ ADDED: Token pasting macro
+: Token pasting macro
 #define CONCAT(a, b) a##b
 
-// ✅ ADDED: Multi-line macro
+: Multi-line macro
 #define PRINT_SEPARATOR() \
     std::cout << "-----------------------------\n"
 
-// ✅ ADDED: Compiler info macro
+: Compiler info macro
 #define COMPILER_INFO "Compiled with standard preprocessing"
 
-// ✅ ADDED: Simple constexpr math
+: Simple constexpr math
 constexpr int cube_constexpr(int x) {
     return x * x * x;
 }
 
-// ✅ ADDED: Internal linkage helper
+: Internal linkage helper
 static void internalHelper() {
     std::cout << "Internal helper executed\n";
 }
 
-// ✅ ADDED: Simulated translation unit info
+: Simulated translation unit info
 void printCompilationStages() {
 
     std::vector<std::string> stages = {
@@ -123,7 +123,7 @@ void printCompilationStages() {
     }
 }
 
-// ✅ ADDED: constexpr compile-time test
+: constexpr compile-time test
 constexpr int compileTimeValue = square_constexpr(10);
 
 // ====================================================

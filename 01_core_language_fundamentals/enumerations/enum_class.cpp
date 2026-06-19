@@ -23,7 +23,7 @@ enum class Food {
     Pasta
 };
 
-// ✅ ADDED: Extra enum
+: Extra enum
 enum class Color {
     Red,
     Green,
@@ -70,7 +70,7 @@ const char* enumName(Food f) {
     return "Unknown";
 }
 
-// ✅ ADDED: to_string for Color
+: to_string for Color
 const char* enumName(Color c) {
     switch (c) {
         case Color::Red: return "Red";
@@ -111,17 +111,17 @@ int toInt(T e) {
     return static_cast<int>(e);
 }
 
-// ✅ ADDED: Print divider
+: Print divider
 void printDivider() {
     std::cout << "----------------------\n";
 }
 
-// ✅ ADDED: Count total animals
+: Count total animals
 size_t animalCount() {
     return getAllAnimals().size();
 }
 
-// ✅ ADDED: Print all vehicles
+: Print all vehicles
 void printVehicles() {
 
     std::vector<Vehicle> vehicles = {
@@ -179,7 +179,7 @@ int main() {
     Vehicle v = Vehicle::Car;
     Food f = Food::Pizza;
 
-    // ✅ ADDED
+    
     Color c = Color::Green;
 
     std::cout << "Basic Enum Usage:\n";
@@ -199,7 +199,7 @@ int main() {
     std::cout << "Food name: "
               << enumName(f) << "\n";
 
-    // ✅ ADDED
+    
     std::cout << "Color name: "
               << enumName(c) << "\n";
 
@@ -237,7 +237,7 @@ int main() {
                   ? "Yes\n"
                   : "No\n");
 
-    // ✅ ADDED
+    
     std::cout << "Are Car and Car same? "
               << (areSame(Vehicle::Car, Vehicle::Car)
                   ? "Yes\n"
@@ -248,7 +248,7 @@ int main() {
     std::cout << "Animal (Dog) as int: "
               << toInt(a) << "\n";
 
-    // ✅ ADDED
+    
     std::cout << "Vehicle (Car) as int: "
               << toInt(v) << "\n";
 
@@ -260,7 +260,7 @@ int main() {
 
     printDivider();
 
-    // ✅ ADDED
+    
     std::cout << "Total animals available: "
               << animalCount() << "\n";
 
@@ -273,7 +273,7 @@ int main() {
 
     printDivider();
 
-    // ✅ ADDED
+    
     std::cout << "Animal validation test:\n";
 
     std::cout << "Is 2 valid? "

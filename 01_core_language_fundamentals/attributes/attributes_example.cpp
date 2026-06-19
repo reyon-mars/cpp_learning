@@ -4,11 +4,10 @@
 #include <iostream>
 #include <utility>   // for structured binding pair
 
-// ✅ ADDED
+
 #include <string>
 #include <vector>
 
-// ===== VERY SMALL NEW ADDITIONS =====
 #include <type_traits>
 #include <array>
 
@@ -70,7 +69,7 @@ public:
     }
 };
 
-// ✅ ADDED: helper to demonstrate nodiscard usage properly
+: helper to demonstrate nodiscard usage properly
 void use_result(int value) {
     std::cout << "Using result: " << value << "\n";
 }
@@ -140,7 +139,7 @@ int main() {
     // nodiscard used correctly
     [[maybe_unused]] auto result = calculate();
 
-    // ✅ ADDED: Proper usage example
+    : Proper usage example
     use_result(calculate());
 
     // Uncomment to trigger nodiscard warning:
@@ -161,19 +160,19 @@ int main() {
     [[maybe_unused]] int temp = 10;
 
     // ----------------------------------------------------
-    // ✅ ADDED: nodiscard with message
+    : nodiscard with message
     [[maybe_unused]] int val = compute_value();
     std::cout << "Computed value: " << val << "\n";
 
     // ----------------------------------------------------
-    // ✅ ADDED: class method nodiscard
+    : class method nodiscard
     Calculator calc;
     [[maybe_unused]] int sum = calc.add(5, 3);
 
     std::cout << "Sum: " << sum << "\n";
 
     // ----------------------------------------------------
-    // ✅ ADDED: deprecated class usage
+    : deprecated class usage
     // OldSystem oldSys;  // ⚠️ will show warning if uncommented
     // oldSys.run();
 
@@ -181,14 +180,14 @@ int main() {
     newSys.run();
 
     // ----------------------------------------------------
-    // ✅ ADDED: structured binding with maybe_unused
+    : structured binding with maybe_unused
     std::pair<int, int> p = {1, 2};
     auto [x, [[maybe_unused]] y] = p;
 
     std::cout << "Structured binding x: " << x << "\n";
 
     // ----------------------------------------------------
-    // ✅ ADDED: Explicit ignore pattern
+    : Explicit ignore pattern
     (void)calculate(); // intentional ignore (no warning in some compilers)
 
     // ----------------------------------------------------

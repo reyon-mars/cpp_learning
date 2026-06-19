@@ -2,15 +2,14 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 
-// ✅ ADDED
+
 #include <string>
 #include <chrono>
 
-// ===== VERY SMALL NEW ADDITIONS =====
 #include <cmath>
 #include <iomanip>
 
-// ✅ ADDED: Resize callback
+: Resize callback
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
@@ -24,7 +23,7 @@ void process_input(GLFWwindow* window)
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    // ✅ ADDED: Toggle wireframe mode
+    : Toggle wireframe mode
     static bool wireframe = false;
     static bool keyPressed = false;
 
@@ -73,7 +72,7 @@ void check_shader_errors(unsigned int shader, std::string type)
     }
 }
 
-// ✅ ADDED: OpenGL error checker
+: OpenGL error checker
 void check_gl_error() {
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR) {
@@ -105,7 +104,7 @@ float get_runtime_seconds(
 
 // ====================================
 
-// ✅ ADDED: Shader sources
+: Shader sources
 const char* vertexShaderSource = R"(
 #version 330 core
 layout (location = 0) in vec3 aPos;
@@ -145,7 +144,7 @@ int main(){
 
     glfwMakeContextCurrent(window);
 
-    // ✅ ADDED
+    
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     // Load OpenGL functions using GLAD
@@ -155,14 +154,14 @@ int main(){
         return -1;
     }
 
-    // ✅ ADDED: Set viewport
+    : Set viewport
     glViewport(0, 0, 800, 600);
 
     // ===== VERY SMALL EXTRA ADDITION =====
     print_opengl_info();
     // =====================================
 
-    // ✅ ADDED: Triangle data
+    : Triangle data
     float vertices[] = {
          0.0f,  0.5f, 0.0f,
         -0.5f, -0.5f, 0.0f,
@@ -182,7 +181,7 @@ int main(){
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    // ✅ ADDED: Shader compilation
+    : Shader compilation
     unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
     glCompileShader(vertexShader);
@@ -202,7 +201,7 @@ int main(){
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
-    // ✅ ADDED: FPS counter setup
+    : FPS counter setup
     auto lastTime = std::chrono::high_resolution_clock::now();
 
     // ===== VERY SMALL EXTRA ADDITION =====
@@ -216,7 +215,7 @@ int main(){
     {
         process_input(window);
 
-        // ✅ ADDED: animated background color
+        : animated background color
         float time = glfwGetTime();
         float green = (std::sin(time) / 2.0f) + 0.5f;
 
@@ -227,7 +226,7 @@ int main(){
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
-        // ✅ ADDED: FPS calculation
+        : FPS calculation
         frames++;
         auto currentTime = std::chrono::high_resolution_clock::now();
 
@@ -249,7 +248,7 @@ int main(){
             lastTime = currentTime;
         }
 
-        // ✅ ADDED: OpenGL error check
+        : OpenGL error check
         check_gl_error();
 
         glfwSwapBuffers(window);

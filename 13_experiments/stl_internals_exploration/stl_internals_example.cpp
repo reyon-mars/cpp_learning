@@ -4,7 +4,7 @@
 #include <iostream>
 #include <vector>
 
-// ✅ ADDED
+
 #include <deque>
 #include <numeric>
 #include <iomanip>
@@ -38,7 +38,7 @@ void compare_reserve_behavior() {
     std::cout << "With reserve capacity: " << b.capacity() << "\n";
 }
 
-// ✅ ADDED: simple reallocation counter
+: simple reallocation counter
 int count_reallocations() {
     std::vector<int> v;
     const int* prev = nullptr;
@@ -53,7 +53,7 @@ int count_reallocations() {
     return reallocs;
 }
 
-// ✅ ADDED: print small stats
+: print small stats
 void print_stats(const std::vector<int>& v) {
     int sum = std::accumulate(v.begin(), v.end(), 0);
     double avg = v.empty() ? 0.0 : (double)sum / v.size();
@@ -62,7 +62,6 @@ void print_stats(const std::vector<int>& v) {
     std::cout << "Average: " << avg << "\n";
 }
 
-// ===== VERY SMALL NEW ADDITIONS =====
 
 // Print divider
 void print_divider() {
@@ -110,7 +109,7 @@ int main() {
 
     const int* previous_address = nullptr;
 
-    // ✅ ADDED: Track previous capacity
+    : Track previous capacity
     size_t prev_capacity = vec.capacity();
 
     for (int i = 0; i < 10; ++i) {
@@ -129,7 +128,7 @@ int main() {
             std::cout << "  <-- reallocation happened";
         }
 
-        // ✅ ADDED: Detect growth pattern
+        : Detect growth pattern
         if (vec.capacity() != prev_capacity) {
             std::cout << "  [capacity grew from "
                       << prev_capacity << " to "
@@ -155,7 +154,7 @@ int main() {
     std::cout << "After shrink_to_fit: capacity=" << vec.capacity() << "\n";
 
     // ----------------------------------------------------
-    // ✅ ADDED: Iterator invalidation demo
+    : Iterator invalidation demo
     std::cout << "\nIterator Invalidation Demo:\n";
     std::vector<int> v2 = {1, 2, 3};
 
@@ -168,7 +167,7 @@ int main() {
     std::cout << "(Do NOT dereference 'it' after reallocation)\n";
 
     // ----------------------------------------------------
-    // ✅ ADDED: Compare with deque
+    : Compare with deque
     std::cout << "\nDeque Comparison:\n";
     std::deque<int> dq;
 
@@ -180,7 +179,7 @@ int main() {
     std::cout << "Deque does not reallocate like vector (no single contiguous block)\n";
 
     // ----------------------------------------------------
-    // ✅ ADDED: Memory efficiency
+    : Memory efficiency
     std::cout << "\nMemory Efficiency:\n";
     std::cout << "Vector size: " << vec.size() << "\n";
     std::cout << "Vector capacity: " << vec.capacity() << "\n";

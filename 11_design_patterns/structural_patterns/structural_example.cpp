@@ -30,13 +30,13 @@ public:
     }
 };
 
-// ✅ ADDED: Another legacy system
+: Another legacy system
 class LegacyPrinter {
 public:
     void print_legacy() { std::cout << "Legacy Printer Output\n"; }
 };
 
-// ✅ ADDED: Adapter for new interface
+: Adapter for new interface
 class PrinterAdapter : public NewInterface {
 private:
     std::shared_ptr<LegacyPrinter> printer;
@@ -84,7 +84,7 @@ public:
     }
 };
 
-// ✅ ADDED: Extra decorator
+: Extra decorator
 class LoggingDecorator : public Decorator {
 public:
     using Decorator::Decorator;
@@ -111,7 +111,7 @@ public:
     }
 };
 
-// ✅ ADDED: Another implementation
+: Another implementation
 class RasterRenderer : public Renderer {
 public:
     void render_circle(float radius) override {
@@ -192,7 +192,7 @@ public:
     // --------------------------------
 };
 
-// ✅ ADDED: Secure proxy with access control
+: Secure proxy with access control
 class SecureImageProxy : public Image {
 private:
     std::shared_ptr<RealImage> real_image;

@@ -1,17 +1,17 @@
-#include <iostream>         // ✅ ADDED
-#include <initializer_list> // ✅ ADDED
+#include <iostream>         
+#include <initializer_list> 
 #include <vector>           // ✅ NEW
 #include <cassert>          // ✅ NEW
 #include <type_traits>      // ✅ NEW
 #include <array>            // ✅ EXTRA ADDED
 
-// ✅ ADDED: Point struct
+: Point struct
 struct Point {
     int x;
     int y;
 };
 
-// ✅ ADDED: Print function
+: Print function
 void print_point(const Point& p) {
     std::cout << "(" << p.x << ", " << p.y << ")\n";
 }

@@ -1,13 +1,13 @@
 // ----------- MORE ADVANCED ADDITIONS -----------
 
-#include <iostream>      // ✅ ADDED
-#include <type_traits>   // ✅ ADDED
+#include <iostream>      
+#include <type_traits>   
 #include <cstddef>       // ✅ NEW
 #include <iomanip>       // ✅ NEW
 #include <cassert>       // ✅ NEW
 #include <string>        // ✅ NEW
 
-// ✅ ADDED: Packed struct (from earlier context)
+: Packed struct (from earlier context)
 #pragma pack(push, 1)
 struct Packed {
     char c;
@@ -16,7 +16,7 @@ struct Packed {
 };
 #pragma pack(pop)
 
-// ✅ ADDED: Optimized struct
+: Optimized struct
 struct Optimized {
     int i;
     char c;

@@ -17,13 +17,13 @@
 #define MAX_USERS 100
 #endif
 
-// ✅ ADDED: extra config macro
+: extra config macro
 #define APP_NAME "CompilationDemo"
 
 // Macro function
 #define SQUARE_MACRO(x) ((x) * (x))
 
-// ✅ ADDED: cube macro
+: cube macro
 #define CUBE_MACRO(x) ((x) * (x) * (x))
 
 // Function prototype (parsing stage example)
@@ -34,7 +34,7 @@ void printVersion() {
     std::cout << "App Version: " << APP_VERSION << "\n";
 }
 
-// ✅ ADDED
+
 void printAppName() {
     std::cout << "Application Name: " << APP_NAME << "\n";
 }
@@ -55,7 +55,7 @@ constexpr int square_constexpr(int x) {
     return x * x;
 }
 
-// ✅ ADDED: constexpr cube
+: constexpr cube
 constexpr int cube_constexpr(int x) {
     return x * x * x;
 }
@@ -88,12 +88,12 @@ static void internalHelper() {
     std::cout << "Internal helper function\n";
 }
 
-// ✅ ADDED: inline helper
+: inline helper
 inline void printDivider() {
     std::cout << "-----------------------------\n";
 }
 
-// ✅ ADDED: namespace demo
+: namespace demo
 namespace compiler_demo {
 
 void showCompilationSteps() {
@@ -171,7 +171,7 @@ int main() {
     std::cout << "Square (constexpr): "
               << square_constexpr(5) << "\n";
 
-    // ✅ ADDED
+    
     std::cout << "Cube (macro): "
               << CUBE_MACRO(3) << "\n";
 
@@ -206,7 +206,7 @@ int main() {
     std::cout << "Compile-time evaluated value: "
               << val << "\n";
 
-    // ✅ ADDED
+    
     constexpr int cube_val = cube_constexpr(4);
 
     std::cout << "Compile-time cube value: "
@@ -214,13 +214,13 @@ int main() {
 
     printDivider();
 
-    // ✅ ADDED: namespace usage
+    : namespace usage
     std::cout << "Compilation stages:\n";
     compiler_demo::showCompilationSteps();
 
     printDivider();
 
-    // ✅ ADDED: static_assert example
+    : static_assert example
     static_assert(square_constexpr(5) == 25,
                   "Compile-time square failed");
 

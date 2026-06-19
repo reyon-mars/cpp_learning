@@ -3,10 +3,9 @@
 
 #include <iostream>
 
-// ✅ ADDED
+
 #include <string>
 
-// ===== VERY SMALL NEW ADDITIONS =====
 #include <vector>
 #include <iomanip>
 
@@ -44,7 +43,7 @@ void show_example_shaders() {
     std::cout << fragment_shader << "\n";
 }
 
-// ✅ ADDED: Uniform example
+: Uniform example
 void uniform_shader_example() {
     const char* shader = R"(
 
@@ -64,7 +63,7 @@ void uniform_shader_example() {
     std::cout << shader << "\n";
 }
 
-// ✅ ADDED: Simple lighting shader
+: Simple lighting shader
 void lighting_shader_example() {
     const char* shader = R"(
 
@@ -83,7 +82,7 @@ void lighting_shader_example() {
     std::cout << shader << "\n";
 }
 
-// ✅ ADDED: Shader explanations
+: Shader explanations
 void explain_shader(int choice) {
     switch (choice) {
         case 1:
@@ -201,11 +200,10 @@ int main() {
 
     show_example_shaders();
 
-    // ✅ ADDED
+    
     pipeline_overview();
 
-    // ===== VERY SMALL NEW ADDITIONS =====
-    int explored_count = 0;
+        int explored_count = 0;
     std::vector<std::string> history;
     // ====================================
 
@@ -236,7 +234,7 @@ int main() {
 
     } while (ask_repeat());
 
-    // ✅ ADDED: Show advanced examples
+    : Show advanced examples
     uniform_shader_example();
     lighting_shader_example();
 
@@ -247,7 +245,7 @@ int main() {
     show_history(history);
     // ===================================
 
-    // ✅ ADDED: Summary
+    : Summary
     std::cout << "\nTip: Shaders run on GPU and control rendering pipeline stages.\n";
 
     // ===== VERY SMALL EXTRA TIP =====

@@ -1,7 +1,7 @@
 #include <GL/glut.h>   // simpler header for GLUT
 #include <iostream>
 
-// ✅ ADDED
+
 #include <chrono>
 #include <cmath>
 
@@ -21,7 +21,7 @@ void keyboard(unsigned char key, int x, int y) {
         exit(0);
     }
 
-    // ✅ ADDED: toggle rotation
+    : toggle rotation
     if (key == 'r' || key == 'R') {
         rotate_triangle = !rotate_triangle;
     }
@@ -35,7 +35,7 @@ void timer(int) {
 
 // ----------------------------------------------------
 
-// ✅ ADDED: rotation + FPS tracking
+: rotation + FPS tracking
 float angle = 0.0f;
 
 auto lastTime = std::chrono::high_resolution_clock::now();
@@ -45,7 +45,7 @@ void display() {
 
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // ✅ ADDED: apply rotation
+    : apply rotation
     glLoadIdentity();
     if (rotate_triangle) {
         angle += 0.5f;
@@ -68,7 +68,7 @@ void display() {
     // ✅ UPDATED: use double buffering
     glutSwapBuffers();
 
-    // ✅ ADDED: FPS counter
+    : FPS counter
     frames++;
     auto currentTime = std::chrono::high_resolution_clock::now();
     float elapsed = std::chrono::duration<float>(currentTime - lastTime).count();
@@ -96,7 +96,7 @@ int main(int argc, char** argv) {
 
     glutDisplayFunc(display);
 
-    // ✅ ADDED
+    
     glutReshapeFunc(reshape);
     glutKeyboardFunc(keyboard);
     glutTimerFunc(0, timer, 0);

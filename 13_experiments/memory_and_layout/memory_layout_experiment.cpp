@@ -2,7 +2,7 @@
 #include <cstring>
 #include <cstddef>
 
-// ✅ ADDED
+
 #include <iomanip>      // for byte printing
 #include <type_traits>  // NEW
 #include <array>        // tiny addition
@@ -30,20 +30,20 @@ struct Packed {
 };
 #pragma pack(pop)
 
-// ✅ ADDED: Explicit alignment control
+: Explicit alignment control
 struct alignas(16) CustomAligned {
     char c;
     int i;
 };
 
-// ✅ ADDED: Better memory ordering
+: Better memory ordering
 struct Optimized {
     int i;
     char c;
     char d;
 };
 
-// ✅ ADDED: Function to calculate padding
+: Function to calculate padding
 template<typename T>
 void print_padding(const std::string& name) {
     size_t total = sizeof(T);
@@ -53,7 +53,7 @@ void print_padding(const std::string& name) {
               << (total - actual) << " bytes\n";
 }
 
-// ✅ ADDED: Memory dump
+: Memory dump
 void dump_bytes(const void* ptr, size_t size) {
     const unsigned char* bytes =
         static_cast<const unsigned char*>(ptr);
@@ -99,7 +99,6 @@ void fill_and_dump() {
     dump_bytes(&obj, sizeof(obj));
 }
 
-// ===== VERY SMALL NEW ADDITIONS =====
 
 // Check if type is trivially copyable
 template<typename T>
@@ -191,7 +190,7 @@ int main() {
     std::cout << "Size of Packed: "
               << sizeof(Packed) << "\n";
 
-    // ✅ ADDED
+    
     std::cout << "Size of CustomAligned: "
               << sizeof(CustomAligned) << "\n";
 
@@ -206,7 +205,7 @@ int main() {
     std::cout << "alignof(Aligned): "
               << alignof(Aligned) << "\n";
 
-    // ✅ ADDED
+    
     std::cout << "alignof(CustomAligned): "
               << alignof(CustomAligned) << "\n";
 
@@ -221,7 +220,7 @@ int main() {
     std::cout << "  d: "
               << offsetof(Unaligned, d) << "\n";
 
-    // ✅ ADDED: Padding info
+    : Padding info
     std::cout << "\nPadding Analysis:\n";
 
     print_padding<Unaligned>("Unaligned");
@@ -245,7 +244,7 @@ int main() {
     std::cout << "  &obj.d: "
               << static_cast<void*>(&obj.d) << "\n";
 
-    // ✅ ADDED: Raw memory view
+    : Raw memory view
     std::cout << "\nRaw memory dump (Unaligned):\n";
     dump_bytes(&obj, sizeof(obj));
 

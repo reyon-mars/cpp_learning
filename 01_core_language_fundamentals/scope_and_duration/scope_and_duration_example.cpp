@@ -1,9 +1,9 @@
 #include <iostream>
-#include <memory> // ✅ ADDED
-#include <utility>   // ✅ ADDED
-#include <cassert>   // ✅ ADDED
-#include <vector>    // ✅ ADDED
-#include <string>    // ✅ ADDED
+#include <memory> 
+#include <utility>   
+#include <cassert>   
+#include <vector>    
+#include <string>    
 
 // ---------- SMALL ADDITIONS ----------
 
@@ -34,7 +34,7 @@ int build_number = 1;
 // Static variable (internal linkage)
 static int internal_counter = 0;
 
-// ✅ ADDED: Internal global
+: Internal global
 static int internal_global = 999;
 
 // Inline function
@@ -81,10 +81,10 @@ inline int max_safe(int a, int b) {
 
 #define BAD_SQUARE(x) x * x
 
-// ✅ ADDED: stringify macro
+: stringify macro
 #define STRINGIFY(x) #x
 
-// ✅ ADDED: token concatenation
+: token concatenation
 #define CONCAT(a, b) a##b
 
 // --------------------------------------
@@ -96,7 +96,7 @@ inline int max_safe(int a, int b) {
 void smart_pointer_example() {
     std::unique_ptr<int> ptr = std::make_unique<int>(200);
 
-    assert(ptr);  // ✅ ADDED safety check
+    assert(ptr);   safety check
 
     std::cout << "smart_pointer value: "
               << *ptr << '\n';
@@ -120,7 +120,7 @@ void safe_delete(int*& ptr) {
     ptr = nullptr;
 }
 
-// ✅ ADDED: shared_ptr demo
+: shared_ptr demo
 void shared_pointer_example() {
 
     std::shared_ptr<int> ptr1 =
@@ -135,7 +135,7 @@ void shared_pointer_example() {
               << ptr1.use_count() << '\n';
 }
 
-// ✅ ADDED: weak_ptr demo
+: weak_ptr demo
 void weak_pointer_example() {
 
     std::shared_ptr<int> shared =
@@ -148,7 +148,7 @@ void weak_pointer_example() {
               << '\n';
 }
 
-// ✅ ADDED: stack vs heap
+: stack vs heap
 void memory_region_demo() {
 
     int stackVar = 10;
@@ -163,7 +163,7 @@ void memory_region_demo() {
     delete heapVar;
 }
 
-// ✅ ADDED: move semantics demo
+: move semantics demo
 void move_demo() {
 
     std::unique_ptr<int> ptr1 =
@@ -233,11 +233,11 @@ int main() {
     std::cout << "Correct SQUARE(2+3): "
               << SQUARE_MACRO(2+3) << "\n";
 
-    // ✅ ADDED: stringify demo
+    : stringify demo
     std::cout << "STRINGIFY(TestMacro): "
               << STRINGIFY(TestMacro) << "\n";
 
-    // ✅ ADDED: concatenation demo
+    : concatenation demo
     int CONCAT(my,Value) = 42;
 
     std::cout << "Concatenated variable: "
@@ -272,7 +272,7 @@ int main() {
     // safe delete
     int* temp_ptr = new int(500);
 
-    assert(temp_ptr != nullptr);  // ✅ ADDED
+    assert(temp_ptr != nullptr);  
 
     safe_delete(temp_ptr);
 
@@ -282,7 +282,7 @@ int main() {
 
     // ====================================================
 
-    // ✅ ADDED: vector dynamic storage
+    : vector dynamic storage
     std::vector<int> numbers = {1, 2, 3, 4, 5};
 
     std::cout << "\nVector contents:\n";
@@ -293,14 +293,14 @@ int main() {
 
     std::cout << "\n";
 
-    // ✅ ADDED: constexpr compile-time value
+    : constexpr compile-time value
     constexpr int compileTimeSquare =
         square_constexpr(8);
 
     std::cout << "Compile-time square: "
               << compileTimeSquare << "\n";
 
-    // ✅ ADDED: address demonstration
+    : address demonstration
     int localVar = 100;
 
     std::cout << "Address of localVar: "

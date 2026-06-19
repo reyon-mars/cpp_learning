@@ -1,6 +1,6 @@
 #include <iostream>
 #include <array>
-#include <type_traits>   // ✅ ADDED
+#include <type_traits>   
 #include <algorithm>     // tiny addition
 #include <numeric>       // tiny addition
 
@@ -85,7 +85,6 @@ constexpr int sum_n_ct(int n) {
     return (n <= 0) ? 0 : n + sum_n_ct(n - 1);
 }
 
-// ===== VERY SMALL NEW ADDITIONS =====
 
 // Compile-time min of array
 template<std::size_t N>

@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include <string>
 
-// ✅ ADDED
+
 #include <vector>
 #include <ctime>
 #include <map>
@@ -14,7 +14,7 @@ enum StatusCode {
     NETWORK_ERROR = 2
 };
 
-// ✅ ADDED: Extra error type
+: Extra error type
 enum ExtendedStatusCode {
     MEMORY_ERROR = 3
 };
@@ -38,7 +38,7 @@ void printError(int code) {
             std::cout << "Network error occurred.\n";
             break;
 
-        // ✅ ADDED
+        
         case MEMORY_ERROR:
             std::cout << "Memory error occurred.\n";
             break;
@@ -56,7 +56,7 @@ std::string errorToString(int code) {
         case FILE_ERROR: return "FILE_ERROR";
         case NETWORK_ERROR: return "NETWORK_ERROR";
 
-        // ✅ ADDED
+        
         case MEMORY_ERROR: return "MEMORY_ERROR";
 
         default: return "UNKNOWN_ERROR";
@@ -87,7 +87,7 @@ int retryTask(int attempts) {
 }
 
 // ------------------------------------------------
-// ✅ ADDED: Log helper
+: Log helper
 
 void logError(int code) {
     std::time_t now = std::time(nullptr);
@@ -96,7 +96,7 @@ void logError(int code) {
               << errorToString(code) << "\n";
 }
 
-// ✅ ADDED: Error history tracker
+: Error history tracker
 
 class ErrorTracker {
 private:
@@ -144,7 +144,7 @@ public:
     }
 };
 
-// ✅ ADDED: Divider helper
+: Divider helper
 
 void printDivider() {
     std::cout << "-----------------------------\n";
@@ -228,12 +228,12 @@ int main(void) {
 
     int status = -1;
 
-    // ✅ ADDED
+    
     ErrorTracker tracker;
 
     status = performTask();
 
-    // ✅ ADDED
+    
     tracker.add(status);
 
     if (status != EXIT_SUCCESS) {
@@ -246,7 +246,7 @@ int main(void) {
         std::cout << "Error type: "
                   << errorToString(status) << "\n";
 
-        // ✅ ADDED
+        
         logError(status);
 
         // ✅ NEW
@@ -260,7 +260,7 @@ int main(void) {
 
             status = retryTask(3);
 
-            // ✅ ADDED
+            
             tracker.add(status);
 
             if (status == SUCCESS) {
@@ -279,7 +279,7 @@ int main(void) {
     }
 
     // ------------------------------------------------
-    // ✅ ADDED: Extra demonstrations
+    : Extra demonstrations
 
     printDivider();
 

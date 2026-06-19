@@ -2,9 +2,9 @@
 #include <string>
 #include <vector>
 #include <typeinfo>
-#include <memory>     // ✅ ADDED for smart pointers
-#include <algorithm>  // ✅ ADDED
-#include <cassert>    // ✅ ADDED
+#include <memory>      for smart pointers
+#include <algorithm>  
+#include <cassert>    
 
 using namespace std;
 
@@ -36,18 +36,18 @@ public:
         return "Pet";
     }
 
-    // ✅ ADDED: Clone pattern
+    : Clone pattern
     virtual Pet* clone() const {
         return new Pet(*this);
     }
 
-    // ✅ ADDED: info function
+    : info function
     virtual void Info() const {
         cout << "Pet name: "
              << name << endl;
     }
 
-    // ✅ ADDED: getter
+    : getter
     string getName() const {
         return name;
     }
@@ -71,12 +71,12 @@ public:
         return "Dog";
     }
 
-    // ✅ ADDED clone
+     clone
     Pet* clone() const override {
         return new Dog(*this);
     }
 
-    // ✅ ADDED info
+     info
     void Info() const override {
         cout << "Dog named "
              << name << endl;
@@ -105,12 +105,12 @@ public:
         return "GermanShepherd";
     }
 
-    // ✅ ADDED clone
+     clone
     Pet* clone() const override {
         return new GermanShepherd(*this);
     }
 
-    // ✅ ADDED info
+     info
     void Info() const override {
         cout << "German Shepherd: "
              << name << endl;
@@ -139,12 +139,12 @@ public:
         return "MastinEspanol";
     }
 
-    // ✅ ADDED clone
+     clone
     Pet* clone() const override {
         return new MastinEspanol(*this);
     }
 
-    // ✅ ADDED info
+     info
     void Info() const override {
         cout << "Mastin Espanol: "
              << name << endl;
@@ -256,7 +256,7 @@ int countDogs(
 }
 
 
-// ✅ ADDED: smart pointer demo
+: smart pointer demo
 void smartPointerDemo() {
 
     cout << "\nSmart Pointer Demo:\n";
@@ -268,7 +268,7 @@ void smartPointerDemo() {
 }
 
 
-// ✅ ADDED: clone demo
+: clone demo
 void cloneDemo(const Pet& pet) {
 
     cout << "\nClone Demo:\n";
@@ -440,7 +440,7 @@ int main(void) {
         &mes
     };
 
-    assert(!pets.empty()); // ✅ ADDED
+    assert(!pets.empty()); 
 
     cout << "\nAll pets making sound:\n";
 

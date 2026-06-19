@@ -3,10 +3,9 @@
 
 #include <iostream>
 
-// ✅ ADDED
+
 #include <string>
 
-// ===== VERY SMALL NEW ADDITIONS =====
 #include <vector>
 #include <iomanip>
 
@@ -20,7 +19,7 @@ void show_rendering_topics() {
     std::cout << "5. Physically Based Rendering (PBR)\n";
 }
 
-// ✅ ADDED: Detailed explanations
+: Detailed explanations
 
 void rasterization_demo() {
     std::cout << "\n[Rasterization]\n";
@@ -52,7 +51,7 @@ void pbr_demo() {
     std::cout << "Simulates real-world lighting behavior\n";
 }
 
-// ✅ ADDED: Pipeline explanation
+: Pipeline explanation
 void pipeline_breakdown() {
     std::cout << "\nPipeline Breakdown:\n";
     std::cout << "1. Vertex Processing: Transform vertices\n";
@@ -128,7 +127,7 @@ void show_history(const std::vector<std::string>& history) {
 
 // ====================================
 
-// ✅ ADDED: Menu system
+: Menu system
 void run_demo(int choice) {
     switch (choice) {
         case 1: rasterization_demo(); break;
@@ -149,11 +148,10 @@ int main() {
 
     show_rendering_topics();
 
-    // ✅ ADDED
+    
     pipeline_breakdown();
 
-    // ===== VERY SMALL NEW ADDITIONS =====
-    int explored_count = 0;
+        int explored_count = 0;
     std::vector<std::string> history;
     // ====================================
 
@@ -185,7 +183,7 @@ int main() {
 
     } while (ask_repeat());
 
-    // ✅ ADDED
+    
     compare_modes();
 
     // ===== VERY SMALL EXTRA OUTPUT =====
@@ -195,7 +193,7 @@ int main() {
     show_history(history);
     // ===================================
 
-    // ✅ ADDED: Summary tip
+    : Summary tip
     std::cout << "\nTip: Rasterization is fast, Ray Tracing is realistic.\n";
 
     // ===== VERY SMALL EXTRA TIP =====

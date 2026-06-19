@@ -1,10 +1,10 @@
 #include <iostream>
-#include <type_traits>   // ✅ ADDED
-#include <typeinfo>      // ✅ ADDED
-#include <utility>       // ✅ ADDED
-#include <cassert>       // ✅ ADDED
-#include <vector>        // ✅ ADDED
-#include <string>        // ✅ ADDED
+#include <type_traits>   
+#include <typeinfo>      
+#include <utility>       
+#include <cassert>       
+#include <vector>        
+#include <string>        
 
 // ----------- MORE ADVANCED ADDITIONS -----------
 
@@ -30,13 +30,13 @@ decltype(auto) returnValue() {
     return x;  // returns by value
 }
 
-// ✅ ADDED: proper reference return example
+: proper reference return example
 decltype(auto) returnReference() {
     static int x = 50;
     return (x);  // returns reference
 }
 
-// ✅ ADDED: helper to print type
+: helper to print type
 template<typename T>
 void print_type() {
     std::cout << "Type: " << typeid(T).name() << "\n";
@@ -115,7 +115,7 @@ int main() {
 
     std::cout << "multiply result: " << mul << "\n";
 
-    // ✅ ADDED: define variable for forwarding test
+    : define variable for forwarding test
     int a = 5;
 
     // ✅ perfect forwarding test
@@ -126,7 +126,7 @@ int main() {
     auto val2 = returnValue();
     std::cout << "returnValue(): " << val2 << "\n";
 
-    // ✅ ADDED: reference behavior demo
+    : reference behavior demo
     auto ref = returnReference();
 
     assert(ref == 50);

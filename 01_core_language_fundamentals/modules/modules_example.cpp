@@ -5,7 +5,7 @@
 // export module math_module;
 // export int add(int a, int b) { return a + b; }
 
-// ✅ ADDED: More realistic module example (commented)
+: More realistic module example (commented)
 /*
 export module math_module;
 
@@ -188,7 +188,7 @@ void useMathModule() {
               << math_module_sim::gcd(48, 18) << "\n";
 }
 
-// ✅ ADDED: simulate importing another module
+: simulate importing another module
 namespace utility_module_sim {
 
     void printDivider() {
@@ -210,7 +210,7 @@ namespace utility_module_sim {
     }
 }
 
-// ✅ ADDED: testing helper
+: testing helper
 void runModuleTests() {
 
     utility_module_sim::printDivider();

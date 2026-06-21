@@ -1,496 +1,241 @@
 #include <iostream>
 #include <string>
+#include <string_view>
 #include <vector>
-#include <typeinfo>
-#include <memory>      for smart pointers
-#include <algorithm>  
-#include <cassert>    
-
-using namespace std;
+#include <memory>
+#include <algorithm>
+#include <ranges>
+#include <span>
+#include <cassert>
 
 class Pet {
-protected:
-    string name;
+    std::string name_;
 
 public:
-    Pet(string name)
-        : name(name) {}
+    explicit Pet(std::string name) : name_(std::move(name)) {}
 
     virtual ~Pet() {
-        cout << "Destroying Pet: "
-             << name << endl;
+        std::cout << "~Pet: " << name_ << '\n';
     }
 
-    void NameMe(string name) {
-        this->name = name;
+    Pet(const Pet&)            = default;
+    Pet& operator=(const Pet&) = default;
+    Pet(Pet&&)                 = default;
+    Pet& operator=(Pet&&)      = default;
+
+    void rename(std::string name) { name_ = std::move(name); }
+
+    virtual void make_sound() const {
+        std::cout << name_ << " says ...\n";
     }
 
-    virtual void MakeSound(void) {
-        cout << name
-             << " says Objects "
-             << endl;
+    [[nodiscard]] virtual std::string_view type() const noexcept { return "Pet"; }
+    [[nodiscard]] virtual std::unique_ptr<Pet> clone() const { return std::make_unique<Pet>(*this); }
+
+    virtual void info() const {
+        std::cout << "Pet: " << name_ << '\n';
     }
 
-    // ----------- NEW ADDITION -----------
-    virtual const char* getType() const {
-        return "Pet";
-    }
-
-    : Clone pattern
-    virtual Pet* clone() const {
-        return new Pet(*this);
-    }
-
-    : info function
-    virtual void Info() const {
-        cout << "Pet name: "
-             << name << endl;
-    }
-
-    : getter
-    string getName() const {
-        return name;
-    }
-    // -----------------------------------
+    [[nodiscard]] const std::string& name() const noexcept { return name_; }
 };
 
-
-// Declaring a child class of the Pet Superclass called Dog
 class Dog : public Pet {
 public:
-    Dog(string name)
-        : Pet(name) {}
+    explicit Dog(std::string name) : Pet(std::move(name)) {}
 
-    void MakeSound(void) override {
-        cout << name
-             << " says woof woof woof "
-             << endl;
+    void make_sound() const override {
+        std::cout << name() << " says woof woof\n";
     }
 
-    const char* getType() const override {
-        return "Dog";
+    [[nodiscard]] std::string_view type() const noexcept override { return "Dog"; }
+
+    [[nodiscard]] std::unique_ptr<Pet> clone() const override {
+        return std::make_unique<Dog>(*this);
     }
 
-     clone
-    Pet* clone() const override {
-        return new Dog(*this);
-    }
-
-     info
-    void Info() const override {
-        cout << "Dog named "
-             << name << endl;
+    void info() const override {
+        std::cout << "Dog: " << name() << '\n';
     }
 };
-
 
 class GermanShepherd : public Dog {
 public:
-    GermanShepherd(string name)
-        : Dog(name) {}
+    explicit GermanShepherd(std::string name) : Dog(std::move(name)) {}
 
-    void MakeSound(void) override {
-        cout << name
-             << " says wuff wuff wuff "
-             << endl;
+    void make_sound() const override {
+        std::cout << name() << " says wuff wuff\n";
     }
 
-    void Laufen(void) {
-        cout << name
-             << " the german shepherd is running "
-             << endl;
+    void laufen() const {
+        std::cout << name() << " the German Shepherd is running\n";
     }
 
-    const char* getType() const override {
-        return "GermanShepherd";
+    [[nodiscard]] std::string_view type() const noexcept override { return "GermanShepherd"; }
+
+    [[nodiscard]] std::unique_ptr<Pet> clone() const override {
+        return std::make_unique<GermanShepherd>(*this);
     }
 
-     clone
-    Pet* clone() const override {
-        return new GermanShepherd(*this);
-    }
-
-     info
-    void Info() const override {
-        cout << "German Shepherd: "
-             << name << endl;
+    void info() const override {
+        std::cout << "GermanShepherd: " << name() << '\n';
     }
 };
-
 
 class MastinEspanol : public Dog {
 public:
-    MastinEspanol(string name)
-        : Dog(name) {}
+    explicit MastinEspanol(std::string name) : Dog(std::move(name)) {}
 
-    void MakeSound(void) override {
-        cout << name
-             << " says Guau Guau Guau "
-             << endl;
+    void make_sound() const override {
+        std::cout << name() << " says Guau Guau\n";
     }
 
-    void Ejectuar(void) {
-        cout << name
-             << " the Mastin Espanol is running "
-             << endl;
+    void ejecutar() const {
+        std::cout << name() << " the Mastin Espanol is running\n";
     }
 
-    const char* getType() const override {
-        return "MastinEspanol";
+    [[nodiscard]] std::string_view type() const noexcept override { return "MastinEspanol"; }
+
+    [[nodiscard]] std::unique_ptr<Pet> clone() const override {
+        return std::make_unique<MastinEspanol>(*this);
     }
 
-     clone
-    Pet* clone() const override {
-        return new MastinEspanol(*this);
-    }
-
-     info
-    void Info() const override {
-        cout << "Mastin Espanol: "
-             << name << endl;
+    void info() const override {
+        std::cout << "MastinEspanol: " << name() << '\n';
     }
 };
 
-
-void PlayWithPet(Pet &pet) {
-
-    GermanShepherd *gs;
-    MastinEspanol *mes;
-
-    if ((gs = dynamic_cast<GermanShepherd*>(&pet))) {
-        gs->Laufen();
-    }
-
-    try {
-        dynamic_cast<MastinEspanol&>(pet)
-            .Ejectuar();
-    }
-    catch (...) {}
-
-    pet.MakeSound();
+void play_with_pet(Pet& pet) {
+    if (auto* gs = dynamic_cast<GermanShepherd*>(&pet))
+        gs->laufen();
+    else if (auto* mes = dynamic_cast<MastinEspanol*>(&pet))
+        mes->ejecutar();
+    pet.make_sound();
 }
 
-
-void PlayWithPet(Pet *pet) {
-    if (!pet) return;
-
-    pet->MakeSound();
+void play_with_pet(Pet* pet) {
+    if (pet) pet->make_sound();
 }
 
-
-void PlayWithPetByValue(
-    string name,
-    Pet pet) {
-
-    pet.NameMe(name);
-    pet.MakeSound();
+void play_by_value(std::string name, Pet pet) {
+    pet.rename(std::move(name));
+    pet.make_sound();
 }
 
-
-void PlayWithPetByPointer(
-    string name,
-    Pet *pet) {
-
-    pet->NameMe(name);
-    pet->MakeSound();
+void play_by_pointer(std::string_view name, Pet* pet) {
+    pet->rename(std::string(name));
+    pet->make_sound();
 }
 
-
-void PlayWithPetByReference(
-    string name,
-    Pet &pet) {
-
-    pet.NameMe(name);
-    pet.MakeSound();
+void play_by_reference(std::string_view name, Pet& pet) {
+    pet.rename(std::string(name));
+    pet.make_sound();
 }
 
-
-// ----------- NEW ADDITIONS -----------
-
-void SafePlay(Pet& pet) {
-
-    if (auto gs =
-        dynamic_cast<GermanShepherd*>(&pet)) {
-
-        gs->Laufen();
-    }
-    else if (auto mes =
-        dynamic_cast<MastinEspanol*>(&pet)) {
-
-        mes->Ejectuar();
-    }
-    else {
-        cout << "Unknown pet type\n";
-    }
+void print_virtual_type(const Pet& pet) {
+    std::cout << "Virtual type: " << pet.type() << '\n';
 }
 
-
-void printType(Pet& pet) {
-    cout << "Actual type: "
-         << typeid(pet).name()
-         << endl;
+[[nodiscard]] std::size_t count_dogs(std::span<Pet* const> pets) {
+    return static_cast<std::size_t>(
+        std::ranges::count_if(pets, [](Pet* p) { return dynamic_cast<Dog*>(p) != nullptr; }));
 }
 
-
-void printTypeVirtual(
-    const Pet& pet) {
-
-    cout << "Virtual type: "
-         << pet.getType()
-         << endl;
+[[nodiscard]] std::size_t count_german_shepherds(std::span<Pet* const> pets) {
+    return static_cast<std::size_t>(
+        std::ranges::count_if(pets, [](Pet* p) { return dynamic_cast<GermanShepherd*>(p) != nullptr; }));
 }
 
-
-int countDogs(
-    const vector<Pet*>& pets) {
-
-    int count = 0;
-
-    for (auto p : pets) {
-
-        if (dynamic_cast<Dog*>(p))
-            count++;
-    }
-
-    return count;
+[[nodiscard]] Pet* find_by_name(std::span<Pet* const> pets, std::string_view target) {
+    auto it = std::ranges::find_if(pets, [target](Pet* p) { return p->name() == target; });
+    return it != pets.end() ? *it : nullptr;
 }
 
-
-: smart pointer demo
-void smartPointerDemo() {
-
-    cout << "\nSmart Pointer Demo:\n";
-
-    unique_ptr<Pet> pet =
-        make_unique<GermanShepherd>("SmartDog");
-
-    pet->MakeSound();
+void print_all_info(std::span<Pet* const> pets) {
+    std::cout << "\nAll Pet Info:\n";
+    std::ranges::for_each(pets, [](const Pet* p) { p->info(); });
 }
 
-
-: clone demo
-void cloneDemo(const Pet& pet) {
-
-    cout << "\nClone Demo:\n";
-
-    unique_ptr<Pet> copy(pet.clone());
-
-    copy->MakeSound();
-}
-
-
-// ----------- EXTRA ADDITIONS -----------
-
-// Print all pet info
-void printAllPets(
-    const vector<Pet*>& pets) {
-
-    cout << "\nAll Pet Info:\n";
-
-    for (const auto* p : pets) {
-        p->Info();
-    }
-}
-
-
-// Find pet by name
-Pet* findPetByName(
-    const vector<Pet*>& pets,
-    const string& target) {
-
-    for (auto* p : pets) {
-
-        if (p->getName() == target)
-            return p;
-    }
-
-    return nullptr;
-}
-
-
-// Count specific type
-int countGermanShepherds(
-    const vector<Pet*>& pets) {
-
-    int count = 0;
-
-    for (auto* p : pets) {
-
-        if (dynamic_cast<GermanShepherd*>(p))
-            count++;
-    }
-
-    return count;
-}
-
-
-// Clone all pets
-vector<unique_ptr<Pet>>
-cloneAllPets(
-    const vector<Pet*>& pets) {
-
-    vector<unique_ptr<Pet>> copies;
-
-    for (auto* p : pets) {
-        copies.emplace_back(p->clone());
-    }
-
+[[nodiscard]] std::vector<std::unique_ptr<Pet>> clone_all(std::span<Pet* const> pets) {
+    std::vector<std::unique_ptr<Pet>> copies;
+    copies.reserve(pets.size());
+    std::ranges::transform(pets, std::back_inserter(copies),
+                           [](const Pet* p) { return p->clone(); });
     return copies;
 }
 
-
-// Sort pet names
-void printSortedNames(
-    const vector<Pet*>& pets) {
-
-    vector<string> names;
-
-    for (auto* p : pets) {
-        names.push_back(p->getName());
-    }
-
-    sort(names.begin(), names.end());
-
-    cout << "\nSorted Pet Names:\n";
-
-    for (const auto& n : names) {
-        cout << n << endl;
-    }
+void print_sorted_names(std::span<Pet* const> pets) {
+    std::vector<std::string_view> names;
+    names.reserve(pets.size());
+    std::ranges::transform(pets, std::back_inserter(names), [](const Pet* p) { return p->name(); });
+    std::ranges::sort(names);
+    std::cout << "\nSorted names:\n";
+    std::ranges::for_each(names, [](std::string_view n) { std::cout << n << '\n'; });
 }
 
-// ------------------------------------
+int main() {
+    auto petPtr = std::make_unique<Pet>("Max");
 
+    play_by_pointer("anonymous", petPtr.get());
 
-// ======================================================
-// MAIN
-// ======================================================
+    Pet petRef("Almonds");
+    play_by_reference("anonymous", petRef);
+    play_by_pointer("no_name", &petRef);
+    play_by_reference("no_name", *petPtr);
 
-int main(void) {
-
-    Pet petReference("Almonds"),
-        *petPointer = new Pet("Max");
-
-    PlayWithPetByPointer(
-        "anonymous",
-        petPointer);
-
-    PlayWithPetByReference(
-        "anonymous",
-        petReference);
-
-    PlayWithPetByPointer(
-        "no_name",
-        &petReference);
-
-    PlayWithPetByReference(
-        "no_name",
-        *petPointer);
-
-    Pet pet("Animal");
-    Pet *pet_ptr = &pet;
-
-    Dog dog("Dog");
-    Dog *dog_ptr = &dog;
-
+    Pet        pet("Animal");
+    Dog        dog("Dog");
     GermanShepherd gs("Hund");
-    GermanShepherd *gs_ptr = &gs;
+    MastinEspanol  mes("Perro");
 
-    MastinEspanol mes("Perro");
-    MastinEspanol *mes_ptr = &mes;
+    play_with_pet(pet);
+    play_with_pet(dog);
+    play_with_pet(gs);
+    play_with_pet(mes);
 
-    PlayWithPet(pet);
-    PlayWithPet(dog);
-    PlayWithPet(gs);
-    PlayWithPet(mes);
+    play_with_pet(&pet);
+    play_with_pet(&dog);
+    play_with_pet(static_cast<Pet*>(&gs));
+    play_with_pet(static_cast<Pet*>(&mes));
 
-    PlayWithPet(pet_ptr);
-    PlayWithPet(dog_ptr);
-    PlayWithPet(gs_ptr);
-    PlayWithPet(mes_ptr);
+    std::cout << "\n--- Object slicing (Pet copy) ---\n";
+    play_by_value("SlicedDog", dog);
 
-    // -------- NEW FEATURE USAGE --------
+    std::cout << "\n--- Virtual type info ---\n";
+    print_virtual_type(gs);
+    print_virtual_type(mes);
 
-    cout << "\nObject slicing example:\n";
+    std::vector<Pet*> pets = { &pet, &dog, &gs, &mes };
+    assert(!pets.empty());
 
-    PlayWithPetByValue(
-        "SlicedDog",
-        dog);
+    std::cout << "\n--- All pets ---\n";
+    std::ranges::for_each(pets, [](const Pet* p) { p->make_sound(); });
 
-    cout << "\nSafePlay demo:\n";
+    std::cout << "Dog count:             " << count_dogs(pets)             << '\n';
+    std::cout << "GermanShepherd count:  " << count_german_shepherds(pets) << '\n';
 
-    SafePlay(gs);
-    SafePlay(mes);
-    SafePlay(pet);
-
-    cout << "\nRTTI types:\n";
-
-    printType(pet);
-    printType(dog);
-    printType(gs);
-
-    cout << "\nVirtual type info:\n";
-
-    printTypeVirtual(gs);
-    printTypeVirtual(mes);
-
-    vector<Pet*> pets = {
-        &pet,
-        &dog,
-        &gs,
-        &mes
-    };
-
-    assert(!pets.empty()); 
-
-    cout << "\nAll pets making sound:\n";
-
-    for (const auto* p : pets) {
-        p->MakeSound();
+    std::cout << "\n--- Smart pointer demo ---\n";
+    {
+        auto smart = std::make_unique<GermanShepherd>("SmartDog");
+        smart->make_sound();
     }
 
-    cout << "Number of dogs: "
-         << countDogs(pets)
-         << endl;
-
-    // -------- EXTRA NEW USAGE --------
-
-    smartPointerDemo();
-
-    cloneDemo(gs);
-
-    // -------- MORE EXTRA USAGE --------
-
-    printAllPets(pets);
-
-    cout << "\nSearching for pet 'Hund':\n";
-
-    Pet* found =
-        findPetByName(pets, "Hund");
-
-    if (found) {
-        cout << "Found pet type: "
-             << found->getType()
-             << endl;
+    std::cout << "\n--- Clone demo ---\n";
+    {
+        auto copy = gs.clone();
+        copy->make_sound();
     }
 
-    cout << "\nGerman Shepherd count: "
-         << countGermanShepherds(pets)
-         << endl;
+    print_all_info(pets);
 
-    auto clonedPets =
-        cloneAllPets(pets);
+    std::cout << "\n--- Find by name ---\n";
+    if (auto* found = find_by_name(pets, "Hund"))
+        std::cout << "Found: " << found->type() << '\n';
 
-    cout << "\nCloned pets making sound:\n";
+    std::cout << "\n--- Cloned pets ---\n";
+    auto clones = clone_all(pets);
+    std::ranges::for_each(clones, [](const auto& c) { c->make_sound(); });
 
-    for (const auto& cp : clonedPets) {
-        cp->MakeSound();
-    }
-
-    printSortedNames(pets);
-
-    // ----------------------------------
-
-    delete petPointer;
+    print_sorted_names(pets);
 
     return 0;
 }

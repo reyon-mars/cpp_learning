@@ -1,354 +1,181 @@
 #include <iostream>
 #include <string>
-
-
+#include <string_view>
 #include <vector>
 #include <algorithm>
-
 #include <numeric>
+#include <ranges>
+#include <span>
 #include <cctype>
 
-// Put helpers in a small namespace (good practice)
 namespace utils {
 
-void greet() {
-    std::cout << "Hello, User !" << std::endl;
+void greet() { std::cout << "Hello, User!\n"; }
+
+void say_goodbye() { std::cout << "Goodbye! End of program.\n"; }
+
+void print_divider() { std::cout << "-----------------------------\n"; }
+
+void print_message(std::string_view msg) { std::cout << msg << '\n'; }
+
+void print_status(std::string_view status) { std::cout << "[STATUS] " << status << '\n'; }
+
+void print_vector(std::span<const int> values) {
+    for (int v : values) std::cout << v << ' ';
+    std::cout << '\n';
 }
 
-inline int add(int a, int b) {
-    return a + b;
-}
-
-// Simple Class
 class Demo {
 public:
-    void show() const {   // const correctness
-        std::cout << "Demo class method executed!" << std::endl;
-    }
+    void show() const { std::cout << "Demo::show()\n"; }
 };
 
-// Simple struct
-struct Info {
-    int value = 10;
-};
+struct Info   { int  value = 10;    };
+struct Stats  { int  runs  = 1;     };
+struct Config { bool debug = false; };
 
-// Simple helper function
-inline void printMessage(const std::string& msg) {
-    std::cout << msg << std::endl;
-}
+inline void toggle_debug(Config& cfg) noexcept { cfg.debug = !cfg.debug; }
+inline void record_run(Stats& stats)  noexcept { ++stats.runs; }
 
-// Increment
-inline int increment(int x) {
-    return x + 1;
-}
+[[nodiscard]] constexpr int  add(int a, int b)        noexcept { return a + b;           }
+[[nodiscard]] constexpr int  multiply(int a, int b)   noexcept { return a * b;           }
+[[nodiscard]] constexpr int  increment(int x)         noexcept { return x + 1;           }
+[[nodiscard]] constexpr int  square(int x)            noexcept { return x * x;           }
+[[nodiscard]] constexpr int  cube(int x)              noexcept { return x * x * x;       }
+[[nodiscard]] constexpr int  absolute(int x)          noexcept { return x < 0 ? -x : x; }
+[[nodiscard]] constexpr double average(int a, int b)  noexcept { return (a + b) / 2.0;  }
 
-inline bool isPositive(int x) {
-    return x > 0;
-}
-
-// Check if number is even
-inline bool isEven(int x) {
-    return x % 2 == 0;
-}
-
-// Print divider line
-inline void printDivider() {
-    std::cout << "-----------------------------\n";
-}
-
-// Multiply two numbers
-inline int multiply(int a, int b) {
-    return a * b;
-}
-
-// Tiny stats struct
-struct Stats {
-    int runs = 1;
-};
-
-// Goodbye helper
-inline void sayGoodbye() {
-    std::cout << "Goodbye! End of program.\n";
-}
-
-// Square a number (constexpr example)
-constexpr int square(int x) {
-    return x * x;
-}
-
-// Simple status printer
-inline void printStatus(const std::string& status) {
-    std::cout << "[STATUS] " << status << std::endl;
-}
-
-// Tiny config struct
-struct Config {
-    bool debug = false;
-};
-
-// Check if number is zero
-inline bool isZero(int x) {
-    return x == 0;
-}
-
-// ---------------- SMALL ADDITIONS ----------------
-
-// Toggle debug flag
-inline void toggleDebug(Config& cfg) {
-    cfg.debug = !cfg.debug;
-}
-
-// Increment stats runs
-inline void recordRun(Stats& stats) {
-    ++stats.runs;
-}
-
-// Absolute value helper
-constexpr int absolute(int x) {
-    return x < 0 ? -x : x;
-}
-
-// Template function (generic max)
-template<typename T>
-T maxValue(T a, T b) {
-    return (a > b) ? a : b;
-}
-
-// Compile-time factorial
-constexpr int factorial(int n) {
+[[nodiscard]] constexpr int factorial(int n) noexcept {
     return (n <= 1) ? 1 : n * factorial(n - 1);
 }
 
-// Convert string to uppercase
-inline std::string toUpper(std::string str) {
-    for (char& c : str) {
-        if (c >= 'a' && c <= 'z') {
-            c = c - 32;
-        }
-    }
-    return str;
+[[nodiscard]] constexpr int clamp(int value, int lo, int hi) noexcept {
+    return value < lo ? lo : value > hi ? hi : value;
 }
 
-// Simple input validation
-inline bool isValidNumber(int x) {
-    return x >= 0 && x <= 100;
-}
+[[nodiscard]] constexpr bool is_positive(int x)     noexcept { return x > 0;         }
+[[nodiscard]] constexpr bool is_even(int x)         noexcept { return x % 2 == 0;    }
+[[nodiscard]] constexpr bool is_odd(int x)          noexcept { return x % 2 != 0;    }
+[[nodiscard]] constexpr bool is_zero(int x)         noexcept { return x == 0;        }
+[[nodiscard]] constexpr bool is_valid_number(int x) noexcept { return x >= 0 && x <= 100; }
 
-// Clamp value between range
-inline int clamp(int value, int min, int max) {
-    return (value < min) ? min : (value > max) ? max : value;
-}
+[[nodiscard]] bool is_empty(std::string_view str) noexcept { return str.empty(); }
 
-// Check if string is empty
-inline bool isEmpty(const std::string& str) {
-    return str.empty();
-}
+[[nodiscard]] std::size_t char_count(std::string_view str) noexcept { return str.size(); }
 
-// Simple average
-inline double average(int a, int b) {
-    return (a + b) / 2.0;
-}
-
-// ---------------- NEW SMALL ADDITIONS ----------------
-
-// Minimum value template
 template<typename T>
-T minValue(T a, T b) {
-    return (a < b) ? a : b;
+[[nodiscard]] constexpr T max_value(T a, T b) noexcept { return a > b ? a : b; }
+
+template<typename T>
+[[nodiscard]] constexpr T min_value(T a, T b) noexcept { return a < b ? a : b; }
+
+[[nodiscard]] int sum_vector(std::span<const int> values) noexcept {
+    return std::accumulate(values.begin(), values.end(), 0);
 }
 
-// Cube function
-constexpr int cube(int x) {
-    return x * x * x;
+[[nodiscard]] int max_in_vector(std::span<const int> values) {
+    return *std::ranges::max_element(values);
 }
 
-// Reverse string
-inline std::string reverseString(std::string str) {
-    std::reverse(str.begin(), str.end());
-    return str;
-}
-
-// Print vector values
-inline void printVector(const std::vector<int>& values) {
-    for (int v : values) {
-        std::cout << v << " ";
-    }
-    std::cout << std::endl;
-}
-
-// Sum vector elements
-inline int sumVector(const std::vector<int>& values) {
-    int sum = 0;
-    for (int v : values) {
-        sum += v;
-    }
-    return sum;
-}
-
-// Count characters
-inline size_t charCount(const std::string& str) {
-    return str.size();
-}
-
-// ===== VERY SMALL EXTRA ADDITIONS =====
-
-// Check if number is odd
-inline bool isOdd(int x) {
-    return x % 2 != 0;
-}
-
-// Lowercase conversion
-inline std::string toLower(std::string str) {
-    for (char& c : str) {
-        c = static_cast<char>(std::tolower(
-            static_cast<unsigned char>(c)));
-    }
-    return str;
-}
-
-// Find largest element in vector
-inline int maxInVector(const std::vector<int>& values) {
-    return *std::max_element(values.begin(), values.end());
-}
-
-// Count vector elements
-inline std::size_t vectorSize(const std::vector<int>& values) {
+[[nodiscard]] std::size_t vector_size(std::span<const int> values) noexcept {
     return values.size();
 }
 
-// ======================================
+[[nodiscard]] std::string to_upper(std::string str) {
+    std::ranges::transform(str, str.begin(),
+        [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+    return str;
+}
 
-// -----------------------------------------------------
+[[nodiscard]] std::string to_lower(std::string str) {
+    std::ranges::transform(str, str.begin(),
+        [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    return str;
+}
+
+[[nodiscard]] std::string reverse_string(std::string str) {
+    std::ranges::reverse(str);
+    return str;
+}
 
 } // namespace utils
 
-// --------------------------------------------------
-// MAIN
-// --------------------------------------------------
-
-int main(void) {
-
+int main() {
     using namespace utils;
 
-    std::cout << "Hello, World" << std::endl;
-
+    std::cout << "Hello, World\n";
     greet();
-    std::cout << "5 + 7 = " << add(5, 7) << std::endl;
+    std::cout << "5 + 7 = " << add(5, 7) << '\n';
 
     Demo demo;
     demo.show();
 
     Info info;
-    std::cout << "Info value = " << info.value << std::endl;
+    std::cout << "Info value = " << info.value << '\n';
 
-    printMessage("This is a simple helper function");
+    print_message("This is a simple helper function");
 
-    int executionCount = 1;
-    executionCount = increment(executionCount);
+    int execution_count = increment(1);
+    std::cout << "Execution count: " << execution_count << '\n';
+    std::cout << "Is positive? " << (is_positive(execution_count) ? "Yes" : "No") << '\n';
+    std::cout << "Is even?     " << (is_even(execution_count)     ? "Yes" : "No") << '\n';
 
-    std::cout << "Program execution count: "
-              << executionCount << std::endl;
-
-    std::cout << "Execution count is "
-              << (isPositive(executionCount) ? "positive" : "not positive")
-              << std::endl;
-
-    std::cout << "Execution count is "
-              << (isEven(executionCount) ? "even" : "odd")
-              << std::endl;
-
-    printDivider();
+    print_divider();
 
     Stats stats;
-    recordRun(stats);
-    std::cout << "Total runs recorded: "
-              << stats.runs << std::endl;
+    record_run(stats);
+    std::cout << "Total runs: " << stats.runs << '\n';
 
-    std::cout << "3 * 4 = " << multiply(3, 4) << std::endl;
+    std::cout << "3 * 4 = " << multiply(3, 4) << '\n';
 
-    printStatus("Program running normally");
+    print_status("Program running normally");
 
     Config cfg;
-    toggleDebug(cfg);
-    std::cout << "Debug mode: "
-              << (cfg.debug ? "ON" : "OFF") << std::endl;
+    toggle_debug(cfg);
+    std::cout << "Debug mode: " << (cfg.debug ? "ON" : "OFF") << '\n';
 
-    std::cout << "Square of 5 = " << square(5) << std::endl;
+    std::cout << "square(5)    = " << square(5)    << '\n';
+    std::cout << "is_zero(2)?    " << (is_zero(execution_count) ? "Yes" : "No") << '\n';
+    std::cout << "absolute(-7) = " << absolute(-7) << '\n';
+    std::cout << "max(10,20)   = " << max_value(10, 20) << '\n';
+    std::cout << "factorial(5) = " << factorial(5)  << '\n';
+    std::cout << "to_upper:      " << to_upper("hello world") << '\n';
 
-    std::cout << "Execution count is "
-              << (isZero(executionCount) ? "zero" : "not zero")
-              << std::endl;
+    std::cout << "is_valid(50)? " << (is_valid_number(50) ? "Yes" : "No") << '\n';
+    std::cout << "clamp(150,0,100) = " << clamp(150, 0, 100) << '\n';
+    std::cout << "average(10,20)   = " << average(10, 20) << '\n';
+    std::cout << "is_empty(\"\")? " << (is_empty("") ? "Yes" : "No") << '\n';
 
-    std::cout << "Absolute of -7 = " << absolute(-7) << std::endl;
+    print_divider();
 
-    // --------------------------------------------------
+    std::cout << "min(10,20)       = " << min_value(10, 20) << '\n';
+    std::cout << "cube(3)          = " << cube(3) << '\n';
+    std::cout << "reverse(OpenAI)  = " << reverse_string("OpenAI") << '\n';
 
-    std::cout << "Max of 10 and 20 = " << maxValue(10, 20) << std::endl;
+    const std::vector<int> numbers = {1, 2, 3, 4, 5};
+    std::cout << "Vector: ";        print_vector(numbers);
+    std::cout << "sum    = " << sum_vector(numbers)    << '\n';
+    std::cout << "max    = " << max_in_vector(numbers) << '\n';
+    std::cout << "size   = " << vector_size(numbers)   << '\n';
+    std::cout << "char_count(\"ChatGPT\") = " << char_count("ChatGPT") << '\n';
 
-    std::cout << "Factorial of 5 = " << factorial(5) << std::endl;
+    print_divider();
 
-    std::cout << "Uppercase: " << toUpper("hello world") << std::endl;
+    std::cout << "is_odd(2)?    " << (is_odd(execution_count) ? "Yes" : "No") << '\n';
+    std::cout << "to_lower:     " << to_lower("HELLO WORLD") << '\n';
 
-    int testValue = 50;
-    std::cout << "Is " << testValue << " valid? "
-              << (isValidNumber(testValue) ? "Yes" : "No") << std::endl;
+    static_assert(square(5)    == 25);
+    static_assert(cube(3)      == 27);
+    static_assert(factorial(5) == 120);
+    static_assert(absolute(-7) == 7);
+    static_assert(clamp(150, 0, 100) == 100);
+    static_assert(add(5, 7)    == 12);
 
-    std::cout << "Clamped value of 150 (0-100): "
-              << clamp(150, 0, 100) << std::endl;
+    std::cout << "\nAll static assertions passed.\n";
 
-    std::cout << "Average of 10 and 20: "
-              << average(10, 20) << std::endl;
-
-    std::cout << "Is string empty? "
-              << (isEmpty("") ? "Yes" : "No") << std::endl;
-
-    // --------------------------------------------------
-    // ✅ NEW FEATURE USAGE
-
-    printDivider();
-
-    std::cout << "Min of 10 and 20 = "
-              << minValue(10, 20) << std::endl;
-
-    std::cout << "Cube of 3 = "
-              << cube(3) << std::endl;
-
-    std::cout << "Reversed string: "
-              << reverseString("OpenAI") << std::endl;
-
-    std::vector<int> numbers = {1, 2, 3, 4, 5};
-
-    std::cout << "Vector values: ";
-    printVector(numbers);
-
-    std::cout << "Vector sum = "
-              << sumVector(numbers) << std::endl;
-
-    std::cout << "Character count in 'ChatGPT' = "
-              << charCount("ChatGPT") << std::endl;
-
-    // --------------------------------------------------
-    // ✅ VERY SMALL EXTRA USAGE
-
-    printDivider();
-
-    std::cout << "Execution count is "
-              << (isOdd(executionCount) ? "odd" : "even")
-              << std::endl;
-
-    std::cout << "Lowercase: "
-              << toLower("HELLO WORLD") << std::endl;
-
-    std::cout << "Largest vector value = "
-              << maxInVector(numbers) << std::endl;
-
-    std::cout << "Vector size = "
-              << vectorSize(numbers) << std::endl;
-
-    // --------------------------------------------------
-
-    std::cout << "Program finished successfully." << std::endl;
-    sayGoodbye();
+    print_divider();
+    std::cout << "Program finished successfully.\n";
+    say_goodbye();
 
     return 0;
 }

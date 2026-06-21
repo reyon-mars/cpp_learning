@@ -1,281 +1,171 @@
 #include <iostream>
 #include <vector>
-#include <string>
-#include <algorithm>   // ✅ NEW
+#include <string_view>
+#include <algorithm>
+#include <ranges>
+#include <utility>
+#include <compare>
+#include <span>
 
 namespace my_lib {
 
 class MyClass {
-private:
-    int value;
-
-    // ✅ NEW: track object count
-    static int objectCount;
+    int   value_;
+    inline static int object_count_ = 0;
 
 public:
-    // constructor
-    MyClass() : value(0) {
-        ++objectCount;
-        std::cout << "MyClass default constructed\n";
+    MyClass() noexcept : value_(0) {
+        ++object_count_;
+        std::cout << "MyClass()\n";
     }
 
-    // Constructor overloading
-    MyClass(int v) : value(v) {
-        ++objectCount;
-        std::cout << "MyClass constructed with value\n";
+    explicit MyClass(int v) noexcept : value_(v) {
+        ++object_count_;
+        std::cout << "MyClass(" << v << ")\n";
     }
 
-    // Copy constructor
-    MyClass(const MyClass& other) : value(other.value) {
-        ++objectCount;
-        std::cout << "MyClass copied\n";
+    MyClass(const MyClass& other) noexcept : value_(other.value_) {
+        ++object_count_;
+        std::cout << "MyClass(copy)\n";
     }
 
-    // Move constructor
-    MyClass(MyClass&& other) noexcept : value(other.value) {
-        ++objectCount;
-        other.value = 0;
-        std::cout << "MyClass moved\n";
+    MyClass(MyClass&& other) noexcept : value_(std::exchange(other.value_, 0)) {
+        ++object_count_;
+        std::cout << "MyClass(move)\n";
     }
 
-    // Destructor
     ~MyClass() {
-        --objectCount;
-        std::cout << "MyClass destroyed\n";
+        --object_count_;
+        std::cout << "~MyClass(" << value_ << ")\n";
     }
 
-    int getValue() const {
-        return value;
-    }
-
-    void setValue(int v) {
-        value = v;
-    }
-
-    bool operator==(const MyClass& other) const {
-        return value == other.value;
-    }
-
-    bool operator!=(const MyClass& other) const {
-        return !(*this == other);
-    }
-
-    MyClass operator+(const MyClass& other) const {
-        return MyClass(value + other.value);
-    }
-
-    MyClass& operator++() {
-        ++value;
+    MyClass& operator=(const MyClass& other) noexcept {
+        if (this != &other) value_ = other.value_;
+        std::cout << "operator=(copy)\n";
         return *this;
     }
 
-    MyClass& operator=(const MyClass& other) {
-        if (this != &other) {
-            value = other.value;
-        }
-
-        std::cout << "Assignment operator called\n";
+    MyClass& operator=(MyClass&& other) noexcept {
+        if (this != &other) { value_ = std::exchange(other.value_, 0); }
+        std::cout << "operator=(move)\n";
         return *this;
     }
 
-    // --------------------------------------------------
-    // ✅ NEW ADDITIONS
+    [[nodiscard]] auto operator<=>(const MyClass&) const noexcept = default;
 
-    bool operator<(const MyClass& other) const {
-        return value < other.value;
+    [[nodiscard]] MyClass operator+(const MyClass& rhs) const noexcept {
+        return MyClass(value_ + rhs.value_);
     }
 
-    MyClass& operator+=(const MyClass& other) {
-        value += other.value;
+    MyClass& operator+=(const MyClass& rhs) noexcept {
+        value_ += rhs.value_;
         return *this;
     }
 
-    void reset() {
-        value = 0;
+    MyClass& operator++() noexcept { ++value_; return *this; }
+
+    [[nodiscard]] int  value()        const noexcept { return value_; }
+    void               set_value(int v)    noexcept { value_ = v; }
+    void               reset()             noexcept { value_ = 0; }
+
+    void display() const {
+        std::cout << "value = " << value_ << '\n';
     }
 
-    static int getObjectCount() {
-        return objectCount;
-    }
-
-    void displayInfo() const {
-        std::cout << "Current value = "
-                  << value << "\n";
-    }
+    [[nodiscard]] static int object_count() noexcept { return object_count_; }
 };
-
-// Static member definition
-int MyClass::objectCount = 0;
 
 } // namespace my_lib
 
-
-// Operator overloading for printing
-std::ostream& operator<<(std::ostream& os,
-                         const my_lib::MyClass& obj) {
-    os << "MyClass(value=" << obj.getValue() << ")";
-    return os;
+std::ostream& operator<<(std::ostream& os, const my_lib::MyClass& obj) {
+    return os << "MyClass(" << obj.value() << ')';
 }
 
-// Function to demonstrate copying
-void showCopy(const my_lib::MyClass& obj) {
+void show_copy(const my_lib::MyClass& obj) {
     my_lib::MyClass copy = obj;
-    std::cout << "Copied object: " << copy << "\n";
+    std::cout << "Copied: " << copy << '\n';
 }
 
-// Pass by value demo
-void showPassByValue(my_lib::MyClass obj) {
-    std::cout << "Passed by value: " << obj << "\n";
+void show_pass_by_value(my_lib::MyClass obj) {
+    std::cout << "By value: " << obj << '\n';
 }
 
-// Vector storage demo
-void showCollection(
-    const std::vector<my_lib::MyClass>& objects) {
-
-    std::cout << "\nCollection contents:\n";
-
-    for (const auto& obj : objects) {
-        std::cout << obj << "\n";
-    }
+void show_collection(std::span<const my_lib::MyClass> objects) {
+    std::cout << "\nCollection:\n";
+    std::ranges::for_each(objects, [](const auto& o) { std::cout << o << '\n'; });
 }
 
-// Factory helper
-my_lib::MyClass createObject(int value) {
+[[nodiscard]] my_lib::MyClass create_object(int value) {
     return my_lib::MyClass(value);
 }
 
-// --------------------------------------------------
-// ✅ NEW HELPER
-
-void printDivider() {
-    std::cout
-        << "-----------------------------\n";
-}
-
-// ================= MAIN =================
+void print_divider() { std::cout << "-----------------------------\n"; }
 
 int main() {
-
     my_lib::MyClass obj;
     my_lib::MyClass obj2(50);
-
-    std::cout << obj << "\n";
-    std::cout << obj2 << "\n";
-
-    std::cout << "\nAdvanced Features:\n";
-
     my_lib::MyClass obj3(77);
 
-    std::cout << obj3 << "\n";
+    std::cout << obj  << '\n';
+    std::cout << obj2 << '\n';
+    std::cout << obj3 << '\n';
 
-    std::cout << "obj == obj2 ? "
-              << (obj == obj2 ? "Yes\n" : "No\n");
+    std::cout << "\n--- Comparison ---\n";
+    std::cout << "obj == obj2 ? " << (obj == obj2 ? "Yes" : "No") << '\n';
+    std::cout << "obj < obj3 ?  " << (obj <  obj3 ? "Yes" : "No") << '\n';
+    std::cout << "obj2 != obj3? " << (obj2 != obj3 ? "Yes" : "No") << '\n';
 
-    showCopy(obj3);
+    show_copy(obj3);
 
-    // Assignment operator demo
+    std::cout << "\n--- Assignment ---\n";
     obj = obj2;
+    std::cout << obj << '\n';
 
-    std::cout << "\nAfter assignment:\n";
-    std::cout << obj << "\n";
-
-    // Addition operator demo
+    std::cout << "\n--- Addition ---\n";
     my_lib::MyClass sum = obj2 + obj3;
+    std::cout << sum << '\n';
 
-    std::cout << "\nAddition result:\n";
-    std::cout << sum << "\n";
+    std::cout << "\n--- += ---\n";
+    obj2 += obj3;
+    std::cout << obj2 << '\n';
 
-    // Increment operator demo
+    std::cout << "\n--- Increment ---\n";
     ++obj3;
+    std::cout << obj3 << '\n';
 
-    std::cout << "\nAfter increment:\n";
-    std::cout << obj3 << "\n";
+    std::cout << "\n--- set_value ---\n";
+    obj.set_value(99);
+    std::cout << obj << '\n';
 
-    // Inequality demo
-    std::cout << "obj2 != obj3 ? "
-              << (obj2 != obj3 ? "Yes\n" : "No\n");
+    show_pass_by_value(obj2);
 
-    // Setter demo
-    obj.setValue(99);
-
-    std::cout << "\nUpdated obj:\n";
-    std::cout << obj << "\n";
-
-    // Pass by value
-    showPassByValue(obj2);
-
-    // Collection demo
     std::vector<my_lib::MyClass> objects;
-
+    objects.reserve(3);
     objects.push_back(obj);
     objects.push_back(obj2);
     objects.push_back(obj3);
+    show_collection(objects);
 
-    showCollection(objects);
+    std::cout << "\n--- Factory + Move ---\n";
+    auto generated = create_object(500);
+    std::cout << generated << '\n';
+    auto moved = std::move(generated);
+    std::cout << moved << '\n';
 
-    // Factory function demo
-    my_lib::MyClass generated =
-        createObject(500);
+    print_divider();
 
-    std::cout << "\nGenerated object:\n";
-    std::cout << generated << "\n";
-
-    // Move semantics demo
-    my_lib::MyClass moved =
-        std::move(generated);
-
-    std::cout << "\nMoved object:\n";
-    std::cout << moved << "\n";
-
-    // --------------------------------------------------
-    // ✅ NEW FEATURES
-
-    printDivider();
-
-    std::cout << "Using += operator\n";
-
-    obj2 += obj3;
-
-    std::cout << obj2 << "\n";
-
-    printDivider();
-
-    std::cout << "Comparison using < operator:\n";
-
-    std::cout << (obj < obj3
-                  ? "obj is smaller\n"
-                  : "obj is not smaller\n");
-
-    printDivider();
-
-    std::cout << "Resetting obj...\n";
-
+    std::cout << "Reset:\n";
     obj.reset();
+    std::cout << obj << '\n';
 
-    std::cout << obj << "\n";
+    obj3.display();
 
-    printDivider();
+    std::cout << "\n--- Sorting ---\n";
+    std::ranges::sort(objects);
+    show_collection(objects);
 
-    std::cout << "Displaying object info:\n";
-
-    obj3.displayInfo();
-
-    printDivider();
-
-    std::cout << "Sorting collection...\n";
-
-    std::sort(objects.begin(),
-              objects.end());
-
-    showCollection(objects);
-
-    printDivider();
-
-    std::cout << "Current object count: "
-              << my_lib::MyClass::getObjectCount()
-              << "\n";
-
-    // --------------------------------------------------
+    print_divider();
+    std::cout << "Object count: " << my_lib::MyClass::object_count() << '\n';
 
     return 0;
 }

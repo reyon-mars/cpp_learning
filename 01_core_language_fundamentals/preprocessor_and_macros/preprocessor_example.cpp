@@ -1,340 +1,193 @@
-// Compilation Model Exercise
-// Understanding preprocessing, parsing, compilation, and linking
-
 #include <iostream>
-#include <string>   
-#include <vector>   
-#include <array>    // ✅ NEW
-#include <functional> // ✅ NEW
+#include <string>
+#include <string_view>
+#include <vector>
+#include <array>
+#include <functional>
+#include <format>
 
-// Preprocessor macro
 #define APP_VERSION "1.0"
-
-// Conditional compilation
 #define DEBUG_MODE
 
-// Header guard simulation
 #ifndef CONFIG_H
 #define CONFIG_H
-#define MAX_USERS 100
+inline constexpr int max_users = 100;
 #endif
 
-// Macro function
 #define SQUARE_MACRO(x) ((x) * (x))
+#define BAD_SQUARE(x) x * x
+#define STRINGIFY(x) #x
+#define CONCAT(a, b) a##b
+#define DEBUG_LOG(msg) \
+    std::cout << std::format("[DEBUG] {} ({}:{})\n", msg, __FILE__, __LINE__)
+#define PRINT_SEPARATOR() std::cout << "-----------------------------\n"
 
-// Function prototype (parsing stage example)
-void debugMessage();
+#if defined(DEBUG_MODE)
+inline constexpr std::string_view mode_status = "Debug Mode Active";
+#else
+inline constexpr std::string_view mode_status = "Release Mode";
+#endif
 
-// Simple helper function (compiled separately conceptually)
-void printVersion() {
-    std::cout << "App Version: " << APP_VERSION << "\n";
+inline constexpr std::string_view compiler_info = "Compiled with standard preprocessing";
+
+void debug_message();
+
+void print_version() {
+    std::cout << std::format("App Version: {}\n", APP_VERSION);
 }
 
-// Global variable (linking example)
 int build_number = 1;
 
-// Static variable (internal linkage)
-static int internal_counter = 0;
+namespace {
+int internal_counter = 0;
 
-// Inline function (compiler optimization)
-inline int square(int x) {
-    return x * x;
+void internal_helper() {
+    std::cout << "Internal helper executed\n";
+}
 }
 
-// constexpr alternative (better than macro)
-constexpr int square_constexpr(int x) {
-    return x * x;
-}
+[[nodiscard]] constexpr int square(int x) noexcept { return x * x; }
+[[nodiscard]] constexpr int cube(int x)   noexcept { return x * x * x; }
+[[nodiscard]] constexpr int max_safe(int a, int b) noexcept { return a > b ? a : b; }
 
-// Function definition (after prototype)
-void debugMessage() {
+void debug_message() {
 #ifdef DEBUG_MODE
     std::cout << "[DEBUG] Debug mode is ON\n";
 #endif
 }
 
-// Simulating extern usage
 extern int build_number;
 
-// extern function simulation
-void externalFunction() {
+void external_function() {
     std::cout << "Simulated external function call\n";
 }
 
-
-// Safer alternative to macro (inline function)
-inline int max_safe(int a, int b) {
-    return (a > b) ? a : b;
-}
-
-// Macro with file and line info
-#define DEBUG_LOG(msg) \
-    std::cout << "[DEBUG] " << msg \
-              << " (" << __FILE__ << ":" << __LINE__ << ")\n"
-
-// Conditional compilation using defined
-#if defined(DEBUG_MODE)
-    #define MODE_STATUS "Debug Mode Active"
-#else
-    #define MODE_STATUS "Release Mode"
-#endif
-
-// Macro pitfall example
-#define BAD_SQUARE(x) x * x
-
-: Stringify macro
-#define STRINGIFY(x) #x
-
-: Token pasting macro
-#define CONCAT(a, b) a##b
-
-: Multi-line macro
-#define PRINT_SEPARATOR() \
-    std::cout << "-----------------------------\n"
-
-: Compiler info macro
-#define COMPILER_INFO "Compiled with standard preprocessing"
-
-: Simple constexpr math
-constexpr int cube_constexpr(int x) {
-    return x * x * x;
-}
-
-: Internal linkage helper
-static void internalHelper() {
-    std::cout << "Internal helper executed\n";
-}
-
-: Simulated translation unit info
-void printCompilationStages() {
-
-    std::vector<std::string> stages = {
+void print_compilation_stages() {
+    constexpr std::array stages{
         "1. Preprocessing",
         "2. Parsing",
         "3. Compilation",
         "4. Assembly",
-        "5. Linking"
+        "5. Linking",
     };
 
     std::cout << "\nCompilation Stages:\n";
-
-    for (const auto& stage : stages) {
-        std::cout << stage << "\n";
-    }
+    for (const auto& stage : stages) std::cout << stage << '\n';
 }
 
-: constexpr compile-time test
-constexpr int compileTimeValue = square_constexpr(10);
+inline constexpr int compile_time_value = square(10);
 
-// ====================================================
-// ✅ NEW ADDITIONS (Original Code Unchanged)
-// ====================================================
-
-// Namespace example
 namespace CompilerDemo {
-    void showNamespaceInfo() {
-        std::cout << "Namespace function executed\n";
-    }
+void show_namespace_info() {
+    std::cout << "Namespace function executed\n";
+}
 }
 
-// Enum class
-enum class BuildType {
-    Debug,
-    Release
-};
+enum class BuildType { Debug, Release };
 
-// Function pointer target
-int multiply(int a, int b) {
-    return a * b;
+[[nodiscard]] constexpr int multiply(int a, int b) noexcept { return a * b; }
+
+inline constexpr std::array compile_array{1, 2, 3, 4, 5};
+
+template <typename T>
+void print_value(const T& value) {
+    std::cout << value << '\n';
 }
 
-// Compile-time array
-constexpr std::array<int, 5> compileArray = {1,2,3,4,5};
-
-// Template function
-template<typename T>
-void printValue(T value) {
-    std::cout << value << "\n";
-}
-
-// Lambda demonstration
-void lambdaDemo() {
-    auto greet = []() {
-        std::cout << "Lambda function executed\n";
-    };
-
+void lambda_demo() {
+    const auto greet = [] { std::cout << "Lambda function executed\n"; };
     greet();
 }
 
-// ====================================================
-
-
 int main() {
-
     std::cout << "Compiled successfully\n";
 
-    // Added usage
-    printVersion();
+    print_version();
+    std::cout << std::format("Build number: {}\n", build_number);
 
-    std::cout << "Build number: "
-              << build_number << "\n";
+    debug_message();
 
-    debugMessage();
+    ++internal_counter;
+    std::cout << std::format("Internal counter: {}\n", internal_counter);
 
-    internal_counter++;
+    std::cout << std::format("Square of 5 (constexpr): {}\n", square(5));
+    std::cout << std::format("Square of 5 (macro):     {}\n", SQUARE_MACRO(5));
+    std::cout << std::format("Max users: {}\n", max_users);
 
-    std::cout << "Internal counter: "
-              << internal_counter << "\n";
+    external_function();
 
-    std::cout << "Square of 5: "
-              << square(5) << "\n";
-
-    // Macro vs constexpr
-    std::cout << "Square (macro): "
-              << SQUARE_MACRO(5) << "\n";
-
-    std::cout << "Square (constexpr): "
-              << square_constexpr(5) << "\n";
-
-    // Config usage
-    std::cout << "Max users (macro): "
-              << MAX_USERS << "\n";
-
-    // External function simulation
-    externalFunction();
-
-    std::cout << "\nAdvanced Macro Features:\n";
-
-    std::cout << "max_safe(5,10): "
-              << max_safe(5,10) << "\n";
-
+    std::cout << "\nMacros vs. modern alternatives:\n";
+    std::cout << std::format("max_safe(5,10):           {}\n", max_safe(5, 10));
     DEBUG_LOG("Testing debug log");
+    std::cout << std::format("Mode: {}\n", mode_status);
 
-    std::cout << "Mode: "
-              << MODE_STATUS << "\n";
+    std::cout << std::format("BAD_SQUARE(2+3) [buggy]:  {}\n", BAD_SQUARE(2 + 3));
+    std::cout << std::format("SQUARE_MACRO(2+3) [safe]: {}\n", SQUARE_MACRO(2 + 3));
+    std::cout << std::format("square(2+3) [constexpr]:  {}\n", square(2 + 3));
 
-    std::cout << "BAD_SQUARE(2+3): "
-              << BAD_SQUARE(2+3) << "\n";
+    std::cout << "\nStringify macro:\n";
+    std::cout << STRINGIFY(Hello Compilation Model) << '\n';
 
-    std::cout << "Correct SQUARE(2+3): "
-              << SQUARE_MACRO(2+3) << "\n";
-
-    // --------------------------------------------------
-
-    std::cout << "\nStringify Macro:\n";
-    std::cout << STRINGIFY(Hello Compilation Model)
-              << "\n";
-
-    // --------------------------------------------------
-
-    int CONCAT(my,Var) = 25;
-
-    std::cout << "Concatenated variable value: "
-              << myVar << "\n";
-
-    // --------------------------------------------------
+    int CONCAT(my, Var) = 25;
+    std::cout << std::format("Concatenated variable value: {}\n", myVar);
 
     PRINT_SEPARATOR();
 
-    // --------------------------------------------------
+    std::cout << std::format("Cube of 3:           {}\n", cube(3));
+    std::cout << std::format("Compile-time value:  {}\n", compile_time_value);
 
-    std::cout << "Cube constexpr of 3: "
-              << cube_constexpr(3) << "\n";
-
-    // --------------------------------------------------
-
-    std::cout << "Compile-time value: "
-              << compileTimeValue << "\n";
-
-    // --------------------------------------------------
-
-    internalHelper();
-
-    // --------------------------------------------------
-
-    printCompilationStages();
-
-    // --------------------------------------------------
-
-    std::cout << "\nCompiler Info:\n";
-    std::cout << COMPILER_INFO << "\n";
-
-    // --------------------------------------------------
-
-    std::cout << "\nBuilt-in Macros:\n";
-
-    std::cout << "__LINE__: "
-              << __LINE__ << "\n";
-
-    std::cout << "__FILE__: "
-              << __FILE__ << "\n";
-
-    std::cout << "__cplusplus: "
-              << __cplusplus << "\n";
-
-    // ====================================================
-    // ✅ NEWLY ADDED EXECUTION SECTION
-    // ====================================================
+    internal_helper();
 
     PRINT_SEPARATOR();
 
-    std::cout << "\nNamespace Example:\n";
-    CompilerDemo::showNamespaceInfo();
+    print_compilation_stages();
+
+    std::cout << "\nCompiler info:\n" << compiler_info << '\n';
+
+    std::cout << "\nBuilt-in macros:\n";
+    std::cout << std::format("__LINE__:     {}\n", __LINE__);
+    std::cout << std::format("__FILE__:     {}\n", __FILE__);
+    std::cout << std::format("__cplusplus:  {}\n", __cplusplus);
+    std::cout << std::format("__DATE__:     {}\n", __DATE__);
+    std::cout << std::format("__TIME__:     {}\n", __TIME__);
 
     PRINT_SEPARATOR();
 
-    std::cout << "\nEnum Class Example:\n";
-    BuildType build = BuildType::Debug;
+    std::cout << "\nNamespace example:\n";
+    CompilerDemo::show_namespace_info();
 
-    if (build == BuildType::Debug) {
+    PRINT_SEPARATOR();
+
+    std::cout << "\nEnum class example:\n";
+    if (constexpr auto build = BuildType::Debug; build == BuildType::Debug)
         std::cout << "Current build type: Debug\n";
-    }
 
     PRINT_SEPARATOR();
 
-    std::cout << "\nFunction Pointer Example:\n";
-    int (*funcPtr)(int, int) = multiply;
-
-    std::cout << "6 * 7 = "
-              << funcPtr(6, 7)
-              << "\n";
+    std::cout << "\nFunction pointer example:\n";
+    const std::function<int(int, int)> func_ptr = multiply;
+    std::cout << std::format("6 * 7 = {}\n", func_ptr(6, 7));
 
     PRINT_SEPARATOR();
 
-    std::cout << "\nCompile-Time Array:\n";
-
-    for (auto value : compileArray) {
-        std::cout << value << " ";
-    }
-
-    std::cout << "\n";
+    std::cout << "\nCompile-time array:\n";
+    for (const auto value : compile_array) std::cout << value << ' ';
+    std::cout << '\n';
 
     PRINT_SEPARATOR();
 
-    std::cout << "\nTemplate Function Example:\n";
-    printValue(100);
-    printValue(std::string("Template Works"));
+    std::cout << "\nTemplate function example:\n";
+    print_value(100);
+    print_value(std::string_view{"Template works"});
 
     PRINT_SEPARATOR();
 
-    std::cout << "\nLambda Demonstration:\n";
-    lambdaDemo();
+    std::cout << "\nLambda demonstration:\n";
+    lambda_demo();
 
     PRINT_SEPARATOR();
 
-    std::cout << "\nAdditional Predefined Macros:\n";
-
-    std::cout << "__DATE__: "
-              << __DATE__ << "\n";
-
-    std::cout << "__TIME__: "
-              << __TIME__ << "\n";
-
-    // ====================================================
-
-    // undef example
-    #undef DEBUG_MODE
-    // debugMessage(); // would not print now if called again
+#undef DEBUG_MODE
 
     return 0;
 }

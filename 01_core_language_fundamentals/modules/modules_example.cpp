@@ -1,295 +1,192 @@
-// Modules Exercise (C++20)
-// Module interface and implementation units
-
-// This would be in a module interface unit (.cppm)
-// export module math_module;
-// export int add(int a, int b) { return a + b; }
-
-: More realistic module example (commented)
-/*
-export module math_module;
-
-export namespace math {
-    int add(int a, int b);
-    int multiply(int a, int b);
-}
-*/
-
-// Implementation unit (.cpp)
-/*
-module math_module;
-
-int math::add(int a, int b) {
-    return a + b;
-}
-
-int math::multiply(int a, int b) {
-    return a * b;
-}
-*/
-
 #include <iostream>
 #include <vector>
-#include <string>
+#include <array>
+#include <string_view>
+#include <format>
+#include <ranges>
+#include <algorithm>
+#include <optional>
 
-// ---- small added helper ----
-void printModuleHint() {
-    std::cout << "Modules replace headers in C++20\n";
-}
-// ----------------------------
+enum class Animal  { Cat, Dog, Bird, Fish };
+enum class Vehicle { Car, Bike, Bus, Train };
+enum class Food    { Pizza, Burger, Pasta };
+enum class Color   { Red, Green, Blue };
 
+template <typename E>
+struct enum_traits;
 
-// ----------- NEW ADDITIONS -----------
-
-namespace math_module_sim {
-
-    int add(int a, int b) {
-        return a + b;
-    }
-
-    int subtract(int a, int b) {
-        return a - b;
-    }
-
-    int multiply(int a, int b) {
-        return a * b;
-    }
-
-    const int version = 1;
-
-    constexpr int square(int x) {
-        return x * x;
-    }
-
-    struct Calculator {
-        int add(int a, int b) const {
-            return a + b;
+template <>
+struct enum_traits<Animal> {
+    static constexpr std::array values{Animal::Cat, Animal::Dog, Animal::Bird, Animal::Fish};
+    static constexpr std::string_view name(Animal v) noexcept {
+        switch (v) {
+            case Animal::Cat:  return "Cat";
+            case Animal::Dog:  return "Dog";
+            case Animal::Bird: return "Bird";
+            case Animal::Fish: return "Fish";
         }
-    };
+        return "Unknown";
+    }
+};
 
-    int divide(int a, int b) {
-        if (b == 0) {
-            std::cout << "Error: Division by zero\n";
-            return 0;
+template <>
+struct enum_traits<Vehicle> {
+    static constexpr std::array values{Vehicle::Car, Vehicle::Bike, Vehicle::Bus, Vehicle::Train};
+    static constexpr std::string_view name(Vehicle v) noexcept {
+        switch (v) {
+            case Vehicle::Car:   return "Car";
+            case Vehicle::Bike:  return "Bike";
+            case Vehicle::Bus:   return "Bus";
+            case Vehicle::Train: return "Train";
         }
-        return a / b;
+        return "Unknown";
     }
+};
 
-    int power(int base, int exp) {
-        int result = 1;
-
-        for (int i = 0; i < exp; ++i) {
-            result *= base;
+template <>
+struct enum_traits<Food> {
+    static constexpr std::array values{Food::Pizza, Food::Burger, Food::Pasta};
+    static constexpr std::string_view name(Food v) noexcept {
+        switch (v) {
+            case Food::Pizza:  return "Pizza";
+            case Food::Burger: return "Burger";
+            case Food::Pasta:  return "Pasta";
         }
-
-        return result;
+        return "Unknown";
     }
+};
 
-    int factorial(int n) {
-        if (n <= 1) return 1;
-        return n * factorial(n - 1);
-    }
-
-    double average(const std::vector<int>& nums) {
-        if (nums.empty()) return 0.0;
-
-        int sum = 0;
-
-        for (int v : nums) {
-            sum += v;
+template <>
+struct enum_traits<Color> {
+    static constexpr std::array values{Color::Red, Color::Green, Color::Blue};
+    static constexpr std::string_view name(Color v) noexcept {
+        switch (v) {
+            case Color::Red:   return "Red";
+            case Color::Green: return "Green";
+            case Color::Blue:  return "Blue";
         }
-
-        return static_cast<double>(sum) / nums.size();
+        return "Unknown";
     }
+};
 
-    std::string moduleName() {
-        return "math_module_sim";
-    }
-
-    // ------------------------------------------------
-    // ✅ NEW ADDITIONS
-
-    bool isPrime(int n) {
-
-        if (n < 2) return false;
-
-        for (int i = 2; i * i <= n; ++i) {
-            if (n % i == 0)
-                return false;
-        }
-
-        return true;
-    }
-
-    int gcd(int a, int b) {
-
-        while (b != 0) {
-            int temp = b;
-            b = a % b;
-            a = temp;
-        }
-
-        return a;
-    }
-
-    size_t featureCount() {
-        return 10;
-    }
-
-    // ------------------------------------------------
+template <typename E>
+[[nodiscard]] constexpr std::string_view enum_name(E value) noexcept {
+    return enum_traits<E>::name(value);
 }
 
-// Function showing module-like usage
-void useMathModule() {
-
-    std::cout << "Add: "
-              << math_module_sim::add(5, 3) << "\n";
-
-    std::cout << "Subtract: "
-              << math_module_sim::subtract(5, 3) << "\n";
-
-    std::cout << "Multiply: "
-              << math_module_sim::multiply(5, 3) << "\n";
-
-    std::cout << "Module version: "
-              << math_module_sim::version << "\n";
-
-    std::cout << "Square (constexpr): "
-              << math_module_sim::square(5) << "\n";
-
-    math_module_sim::Calculator calc;
-
-    std::cout << "Calculator add: "
-              << calc.add(10, 20) << "\n";
-
-    std::cout << "Divide: "
-              << math_module_sim::divide(10, 2) << "\n";
-
-    std::cout << "Power(2, 5): "
-              << math_module_sim::power(2, 5) << "\n";
-
-    std::cout << "Factorial(5): "
-              << math_module_sim::factorial(5) << "\n";
-
-    std::vector<int> values = {10, 20, 30, 40};
-
-    std::cout << "Average: "
-              << math_module_sim::average(values) << "\n";
-
-    std::cout << "Module Name: "
-              << math_module_sim::moduleName() << "\n";
-
-    // ✅ NEW
-    std::cout << "Is 17 prime? "
-              << (math_module_sim::isPrime(17) ? "Yes" : "No")
-              << "\n";
-
-    std::cout << "GCD(48, 18): "
-              << math_module_sim::gcd(48, 18) << "\n";
+template <typename E>
+[[nodiscard]] constexpr auto enum_values() noexcept {
+    return enum_traits<E>::values;
 }
 
-: simulate importing another module
-namespace utility_module_sim {
-
-    void printDivider() {
-        std::cout << "-----------------------------\n";
-    }
-
-    void printStatus(const std::string& status) {
-        std::cout << "[STATUS] " << status << "\n";
-    }
-
-    // ✅ NEW
-    void printVector(const std::vector<int>& values) {
-
-        for (int v : values) {
-            std::cout << v << " ";
-        }
-
-        std::cout << "\n";
-    }
+template <typename E>
+[[nodiscard]] constexpr std::size_t enum_count() noexcept {
+    return enum_traits<E>::values.size();
 }
 
-: testing helper
-void runModuleTests() {
-
-    utility_module_sim::printDivider();
-
-    std::cout << "Running simulated module tests...\n";
-
-    std::cout << "Test Add: "
-              << math_module_sim::add(1, 2) << "\n";
-
-    std::cout << "Test Multiply: "
-              << math_module_sim::multiply(3, 4) << "\n";
-
-    std::cout << "Test Power: "
-              << math_module_sim::power(3, 3) << "\n";
-
-    // ✅ NEW TESTS
-
-    std::cout << "Test Prime(11): "
-              << (math_module_sim::isPrime(11) ? "Pass" : "Fail")
-              << "\n";
-
-    std::cout << "Test GCD(20,10): "
-              << math_module_sim::gcd(20, 10) << "\n";
-
-    utility_module_sim::printStatus("Tests completed");
-
-    utility_module_sim::printDivider();
+template <typename E>
+[[nodiscard]] constexpr int to_int(E value) noexcept {
+    return static_cast<int>(value);
 }
 
-// ------------------------------------
+template <typename E>
+[[nodiscard]] constexpr bool is_valid(int value) noexcept {
+    return std::ranges::any_of(enum_traits<E>::values,
+        [value](E e) { return to_int(e) == value; });
+}
+
+template <typename E>
+[[nodiscard]] constexpr std::optional<E> from_int(int value) noexcept {
+    if (!is_valid<E>(value)) return std::nullopt;
+    return static_cast<E>(value);
+}
+
+template <typename E>
+void print_all() {
+    for (const auto v : enum_values<E>())
+        std::cout << enum_name(v) << '\n';
+}
+
+template <typename E>
+void print_enum_value(std::string_view label, E value) {
+    std::cout << std::format("{}: {}\n", label, to_int(value));
+}
+
+void divider() { std::cout << "----------------------\n"; }
 
 int main() {
+    constexpr Animal  a = Animal::Dog;
+    constexpr Vehicle v = Vehicle::Car;
+    constexpr Food    f = Food::Pizza;
+    constexpr Color   c = Color::Green;
 
-    std::cout << "C++20 Modules support\n";
+    std::cout << "Basic Enum Usage:\n";
+    std::cout << std::format("Animal: {}\n", enum_name(a));
 
-    printModuleHint();
+    divider();
 
-    std::cout << "\nUsing simulated module:\n";
-    useMathModule();
+    std::cout << "\nAdvanced Enum Features:\n";
+    std::cout << std::format("Vehicle name: {}\n", enum_name(v));
+    std::cout << std::format("Food name:    {}\n", enum_name(f));
+    std::cout << std::format("Color name:   {}\n", enum_name(c));
 
-    std::cout << "\nExecuting module test suite:\n";
-    runModuleTests();
+    if (const auto converted = from_int<Animal>(1))
+        std::cout << std::format("Converted from int 1 -> {}\n", enum_name(*converted));
 
-    constexpr int compileTimeSquare =
-        math_module_sim::square(8);
+    divider();
 
-    std::cout << "Compile-time square of 8: "
-              << compileTimeSquare << "\n";
+    std::cout << "Iterating all animals:\n";
+    print_all<Animal>();
 
-    std::cout << "Division by zero demo:\n";
-    math_module_sim::divide(5, 0);
+    divider();
 
-    std::cout << "\nNote:\n";
-    std::cout << "Modules improve compile time and avoid header issues like multiple inclusion.\n";
+    std::cout << "All vehicles:\n";
+    print_all<Vehicle>();
 
-    std::cout << "They also provide better encapsulation compared to traditional headers.\n";
+    divider();
 
-    // ✅ NEW SECTION
+    std::cout << "All colors:\n";
+    print_all<Color>();
 
-    utility_module_sim::printDivider();
+    divider();
 
-    std::cout << "Module Feature Summary:\n";
+    std::cout << std::format("Are Cat and Dog same? {}\n", a == Animal::Cat ? "Yes" : "No");
+    std::cout << std::format("Are Car and Car same?  {}\n", v == Vehicle::Car ? "Yes" : "No");
 
-    std::cout << "Feature count: "
-              << math_module_sim::featureCount()
-              << "\n";
+    divider();
 
-    std::vector<int> demoValues = {5, 10, 15, 20};
+    std::cout << std::format("Animal (Dog) as int:   {}\n", to_int(a));
+    std::cout << std::format("Vehicle (Car) as int:  {}\n", to_int(v));
+    std::cout << std::format("Food (Pizza) as int:   {}\n", to_int(f));
+    std::cout << std::format("Color (Green) as int:  {}\n", to_int(c));
 
-    std::cout << "Sample vector: ";
-    utility_module_sim::printVector(demoValues);
+    divider();
 
-    utility_module_sim::printDivider();
+    std::cout << std::format("Total animals available:  {}\n", enum_count<Animal>());
+    std::cout << std::format("Total vehicles available: {}\n", enum_count<Vehicle>());
+    std::cout << std::format("Total foods available:    {}\n", enum_count<Food>());
 
-    std::cout << "\nFuture module topics:\n";
-    std::cout << "- Real .cppm module interface files\n";
-    std::cout << "- export/import syntax\n";
-    std::cout << "- Partitioned modules\n";
-    std::cout << "- Faster incremental builds\n";
+    divider();
+
+    std::cout << "Animal validation test:\n";
+    std::cout << std::format("Is 2 valid?  {}\n", is_valid<Animal>(2) ? "Yes" : "No");
+    std::cout << std::format("Is 10 valid? {}\n", is_valid<Animal>(10) ? "Yes" : "No");
+
+    divider();
+
+    std::cout << "Generic enum integer values:\n";
+    print_enum_value("Animal::Dog",   a);
+    print_enum_value("Vehicle::Car",  v);
+    print_enum_value("Food::Pizza",   f);
+    print_enum_value("Color::Green",  c);
+
+    divider();
+
+    std::cout << "Enum Statistics Summary:\n";
+    std::cout << std::format("- Animals:  {}\n", enum_count<Animal>());
+    std::cout << std::format("- Vehicles: {}\n", enum_count<Vehicle>());
+    std::cout << std::format("- Foods:    {}\n", enum_count<Food>());
+    std::cout << std::format("- Colors:   {}\n", enum_count<Color>());
 
     return 0;
 }

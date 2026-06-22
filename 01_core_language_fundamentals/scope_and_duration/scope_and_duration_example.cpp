@@ -1,314 +1,180 @@
 #include <iostream>
-#include <memory> 
-#include <utility>   
-#include <cassert>   
-#include <vector>    
-#include <string>    
+#include <memory>
+#include <utility>
+#include <cassert>
+#include <vector>
+#include <string>
+#include <string_view>
+#include <format>
+#include <span>
 
-// ---------- SMALL ADDITIONS ----------
-
-// Preprocessor macro
 #define APP_VERSION "1.0"
-
-// Conditional compilation
 #define DEBUG_MODE
 
-// Header guard simulation
 #ifndef CONFIG_H
 #define CONFIG_H
-#define MAX_USERS 100
+inline constexpr int max_users = 100;
 #endif
 
-// Macro function
 #define SQUARE_MACRO(x) ((x) * (x))
+#define BAD_SQUARE(x) x * x
+#define STRINGIFY(x) #x
+#define CONCAT(a, b) a##b
+#define DEBUG_LOG(msg) \
+    std::cout << std::format("[DEBUG] {} ({}:{})\n", msg, __FILE__, __LINE__)
 
-void debugMessage();
+#if defined(DEBUG_MODE)
+inline constexpr std::string_view mode_status = "Debug Mode Active";
+#else
+inline constexpr std::string_view mode_status = "Release Mode";
+#endif
 
-void printVersion() {
-    std::cout << "App Version: " << APP_VERSION << "\n";
+void debug_message();
+
+void print_version() {
+    std::cout << std::format("App Version: {}\n", APP_VERSION);
 }
 
-// Global variable (linking example)
 int build_number = 1;
 
-// Static variable (internal linkage)
-static int internal_counter = 0;
-
-: Internal global
-static int internal_global = 999;
-
-// Inline function
-inline int square(int x) {
-    return x * x;
+namespace {
+int internal_counter = 0;
+int internal_global  = 999;
 }
 
-// constexpr alternative
-constexpr int square_constexpr(int x) {
-    return x * x;
-}
+[[nodiscard]] constexpr int square(int x) noexcept { return x * x; }
+[[nodiscard]] constexpr int max_safe(int a, int b) noexcept { return a > b ? a : b; }
 
-void debugMessage() {
+void debug_message() {
 #ifdef DEBUG_MODE
     std::cout << "[DEBUG] Debug mode is ON\n";
 #endif
 }
 
-// Simulating extern usage
 extern int build_number;
 
-void externalFunction() {
+void external_function() {
     std::cout << "Simulated external function call\n";
 }
 
-// ------------------------------------
-
-
-// ----------- MACRO ADDITIONS -----------
-
-inline int max_safe(int a, int b) {
-    return (a > b) ? a : b;
-}
-
-#define DEBUG_LOG(msg) \
-    std::cout << "[DEBUG] " << msg \
-              << " (" << __FILE__ << ":" << __LINE__ << ")\n"
-
-#if defined(DEBUG_MODE)
-    #define MODE_STATUS "Debug Mode Active"
-#else
-    #define MODE_STATUS "Release Mode"
-#endif
-
-#define BAD_SQUARE(x) x * x
-
-: stringify macro
-#define STRINGIFY(x) #x
-
-: token concatenation
-#define CONCAT(a, b) a##b
-
-// --------------------------------------
-
-
-// ----------- STORAGE ADDITIONS -----------
-
-// RAII example
 void smart_pointer_example() {
-    std::unique_ptr<int> ptr = std::make_unique<int>(200);
-
-    assert(ptr);   safety check
-
-    std::cout << "smart_pointer value: "
-              << *ptr << '\n';
+    const auto ptr = std::make_unique<int>(200);
+    assert(ptr);
+    std::cout << std::format("smart_pointer value: {}\n", *ptr);
 }
 
-// Lifetime demo
 void lifetime_demo() {
     std::cout << "Entering lifetime_demo\n";
-
-    int temp = 123;
-
-    std::cout << "temp exists: "
-              << temp << '\n';
-
+    const int temp = 123;
+    std::cout << std::format("temp exists: {}\n", temp);
     std::cout << "Exiting lifetime_demo (temp destroyed)\n";
 }
 
-// Dangling pointer prevention
-void safe_delete(int*& ptr) {
-    delete ptr;
-    ptr = nullptr;
+[[nodiscard]] std::unique_ptr<int> make_tracked(int value) {
+    return std::make_unique<int>(value);
 }
 
-: shared_ptr demo
 void shared_pointer_example() {
+    const auto ptr1 = std::make_shared<int>(300);
+    const auto ptr2 = ptr1;
 
-    std::shared_ptr<int> ptr1 =
-        std::make_shared<int>(300);
-
-    std::shared_ptr<int> ptr2 = ptr1;
-
-    std::cout << "shared_ptr value: "
-              << *ptr1 << '\n';
-
-    std::cout << "Reference count: "
-              << ptr1.use_count() << '\n';
+    std::cout << std::format("shared_ptr value: {}\n", *ptr1);
+    std::cout << std::format("Reference count: {}\n", ptr1.use_count());
 }
 
-: weak_ptr demo
 void weak_pointer_example() {
+    auto shared = std::make_shared<int>(999);
+    const std::weak_ptr<int> weak = shared;
 
-    std::shared_ptr<int> shared =
-        std::make_shared<int>(999);
+    std::cout << std::format("weak_ptr expired? {}\n", weak.expired() ? "Yes" : "No");
 
-    std::weak_ptr<int> weak = shared;
-
-    std::cout << "weak_ptr expired? "
-              << (weak.expired() ? "Yes" : "No")
-              << '\n';
+    shared.reset();
+    std::cout << std::format("weak_ptr expired after reset? {}\n",
+                             weak.expired() ? "Yes" : "No");
 }
 
-: stack vs heap
 void memory_region_demo() {
+    const int stack_var = 10;
+    const auto heap_var = std::make_unique<int>(20);
 
-    int stackVar = 10;
-    int* heapVar = new int(20);
-
-    std::cout << "Stack variable: "
-              << stackVar << '\n';
-
-    std::cout << "Heap variable: "
-              << *heapVar << '\n';
-
-    delete heapVar;
+    std::cout << std::format("Stack variable: {}\n", stack_var);
+    std::cout << std::format("Heap variable:  {}\n", *heap_var);
 }
 
-: move semantics demo
 void move_demo() {
+    auto ptr1 = std::make_unique<int>(555);
+    const auto ptr2 = std::move(ptr1);
 
-    std::unique_ptr<int> ptr1 =
-        std::make_unique<int>(555);
-
-    std::unique_ptr<int> ptr2 =
-        std::move(ptr1);
-
-    if (!ptr1) {
-        std::cout << "Ownership transferred using move\n";
-    }
-
-    std::cout << "Moved value: "
-              << *ptr2 << '\n';
+    std::cout << std::format("Ownership transferred using move: {}\n",
+                             ptr1 == nullptr ? "Yes" : "No");
+    std::cout << std::format("Moved value: {}\n", *ptr2);
 }
-
-// ----------------------------------------
-
-
-// ================= MAIN =================
 
 int main() {
-
     std::cout << "Compiled successfully\n";
 
-    printVersion();
+    print_version();
+    std::cout << std::format("Build number: {}\n", build_number);
 
-    std::cout << "Build number: "
-              << build_number << "\n";
+    debug_message();
 
-    debugMessage();
+    ++internal_counter;
+    std::cout << std::format("Internal counter: {}\n", internal_counter);
 
-    internal_counter++;
+    std::cout << std::format("Square of 5 (constexpr): {}\n", square(5));
+    std::cout << std::format("Square of 5 (macro):     {}\n", SQUARE_MACRO(5));
+    std::cout << std::format("Max users: {}\n", max_users);
 
-    std::cout << "Internal counter: "
-              << internal_counter << "\n";
-
-    std::cout << "Square of 5: "
-              << square(5) << "\n";
-
-    std::cout << "Square (macro): "
-              << SQUARE_MACRO(5) << "\n";
-
-    std::cout << "Square (constexpr): "
-              << square_constexpr(5) << "\n";
-
-    std::cout << "Max users (macro): "
-              << MAX_USERS << "\n";
-
-    externalFunction();
-
-    // ================= MACRO FEATURES =================
+    external_function();
 
     std::cout << "\nAdvanced Macro Features:\n";
 
-    std::cout << "max_safe(5,10): "
-              << max_safe(5,10) << "\n";
-
+    std::cout << std::format("max_safe(5,10): {}\n", max_safe(5, 10));
     DEBUG_LOG("Testing debug log");
+    std::cout << std::format("Mode: {}\n", mode_status);
 
-    std::cout << "Mode: "
-              << MODE_STATUS << "\n";
+    std::cout << std::format("BAD_SQUARE(2+3) [buggy]:  {}\n", BAD_SQUARE(2 + 3));
+    std::cout << std::format("SQUARE_MACRO(2+3) [safe]: {}\n", SQUARE_MACRO(2 + 3));
 
-    std::cout << "BAD_SQUARE(2+3): "
-              << BAD_SQUARE(2+3) << "\n";
+    std::cout << std::format("STRINGIFY(TestMacro): {}\n", STRINGIFY(TestMacro));
 
-    std::cout << "Correct SQUARE(2+3): "
-              << SQUARE_MACRO(2+3) << "\n";
-
-    : stringify demo
-    std::cout << "STRINGIFY(TestMacro): "
-              << STRINGIFY(TestMacro) << "\n";
-
-    : concatenation demo
-    int CONCAT(my,Value) = 42;
-
-    std::cout << "Concatenated variable: "
-              << myValue << "\n";
-
-    // ================= STORAGE FEATURES =================
+    int CONCAT(my, Value) = 42;
+    std::cout << std::format("Concatenated variable: {}\n", myValue);
 
     std::cout << "\nAdvanced Storage Concepts:\n";
 
-    // internal linkage
-    std::cout << "internal_global: "
-              << internal_global << '\n';
+    std::cout << std::format("internal_global: {}\n", internal_global);
 
-    // smart pointer demo
     smart_pointer_example();
-
-    // lifetime demo
     lifetime_demo();
-
-    // shared_ptr demo
     shared_pointer_example();
-
-    // weak_ptr demo
     weak_pointer_example();
-
-    // stack vs heap demo
     memory_region_demo();
-
-    // move semantics
     move_demo();
 
-    // safe delete
-    int* temp_ptr = new int(500);
-
-    assert(temp_ptr != nullptr);  
-
-    safe_delete(temp_ptr);
-
-    if (temp_ptr == nullptr) {
-        std::cout << "Pointer safely deleted and set to nullptr\n";
+    {
+        auto tracked = make_tracked(500);
+        assert(tracked != nullptr);
+        std::cout << std::format("Tracked value: {}\n", *tracked);
     }
+    std::cout << "Tracked pointer freed automatically at scope exit\n";
 
-    // ====================================================
-
-    : vector dynamic storage
-    std::vector<int> numbers = {1, 2, 3, 4, 5};
-
+    const std::vector numbers{1, 2, 3, 4, 5};
     std::cout << "\nVector contents:\n";
+    for (const int n : numbers) std::cout << n << ' ';
+    std::cout << '\n';
 
-    for (int n : numbers) {
-        std::cout << n << " ";
-    }
+    constexpr int compile_time_square = square(8);
+    std::cout << std::format("Compile-time square: {}\n", compile_time_square);
 
-    std::cout << "\n";
+    const int local_var = 100;
+    std::cout << std::format("Address of local_var: {}\n",
+                             static_cast<const void*>(&local_var));
 
-    : constexpr compile-time value
-    constexpr int compileTimeSquare =
-        square_constexpr(8);
+    const std::span<const int> view{numbers};
+    std::cout << std::format("Span size: {}, first: {}\n", view.size(), view.front());
 
-    std::cout << "Compile-time square: "
-              << compileTimeSquare << "\n";
-
-    : address demonstration
-    int localVar = 100;
-
-    std::cout << "Address of localVar: "
-              << &localVar << "\n";
-
-    // ====================================================
-
-    #undef DEBUG_MODE
+#undef DEBUG_MODE
 
     return 0;
 }

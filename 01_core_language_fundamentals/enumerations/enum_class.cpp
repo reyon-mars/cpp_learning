@@ -1,307 +1,192 @@
 #include <iostream>
 #include <vector>
+#include <array>
+#include <string_view>
+#include <format>
+#include <ranges>
+#include <algorithm>
+#include <optional>
 
-// ----------------  ENUMS ----------------
+enum class Animal  { Cat, Dog, Bird, Fish };
+enum class Vehicle { Car, Bike, Bus, Train };
+enum class Food    { Pizza, Burger, Pasta };
+enum class Color   { Red, Green, Blue };
 
-enum class Animal {
-    Cat,
-    Dog,
-    Bird,
-    Fish
+template <typename E>
+struct enum_traits;
+
+template <>
+struct enum_traits<Animal> {
+    static constexpr std::array values{Animal::Cat, Animal::Dog, Animal::Bird, Animal::Fish};
+    static constexpr std::string_view name(Animal v) noexcept {
+        switch (v) {
+            case Animal::Cat:  return "Cat";
+            case Animal::Dog:  return "Dog";
+            case Animal::Bird: return "Bird";
+            case Animal::Fish: return "Fish";
+        }
+        return "Unknown";
+    }
 };
 
-enum class Vehicle {
-    Car,
-    Bike,
-    Bus,
-    Train
+template <>
+struct enum_traits<Vehicle> {
+    static constexpr std::array values{Vehicle::Car, Vehicle::Bike, Vehicle::Bus, Vehicle::Train};
+    static constexpr std::string_view name(Vehicle v) noexcept {
+        switch (v) {
+            case Vehicle::Car:   return "Car";
+            case Vehicle::Bike:  return "Bike";
+            case Vehicle::Bus:   return "Bus";
+            case Vehicle::Train: return "Train";
+        }
+        return "Unknown";
+    }
 };
 
-enum class Food {
-    Pizza,
-    Burger,
-    Pasta
+template <>
+struct enum_traits<Food> {
+    static constexpr std::array values{Food::Pizza, Food::Burger, Food::Pasta};
+    static constexpr std::string_view name(Food v) noexcept {
+        switch (v) {
+            case Food::Pizza:  return "Pizza";
+            case Food::Burger: return "Burger";
+            case Food::Pasta:  return "Pasta";
+        }
+        return "Unknown";
+    }
 };
 
-: Extra enum
-enum class Color {
-    Red,
-    Green,
-    Blue
+template <>
+struct enum_traits<Color> {
+    static constexpr std::array values{Color::Red, Color::Green, Color::Blue};
+    static constexpr std::string_view name(Color v) noexcept {
+        switch (v) {
+            case Color::Red:   return "Red";
+            case Color::Green: return "Green";
+            case Color::Blue:  return "Blue";
+        }
+        return "Unknown";
+    }
 };
 
-// ----------------  HELPERS ----------------
-
-// Validate Animal from int
-bool isValidAnimal(int value) {
-    return value >= static_cast<int>(Animal::Cat) &&
-           value <= static_cast<int>(Animal::Fish);
+template <typename E>
+[[nodiscard]] constexpr std::string_view enum_name(E value) noexcept {
+    return enum_traits<E>::name(value);
 }
 
-// to_string for Animal
-const char* enumName(Animal a) {
-    switch (a) {
-        case Animal::Cat: return "Cat";
-        case Animal::Dog: return "Dog";
-        case Animal::Bird: return "Bird";
-        case Animal::Fish: return "Fish";
-    }
-    return "Unknown";
+template <typename E>
+[[nodiscard]] constexpr auto enum_values() noexcept {
+    return enum_traits<E>::values;
 }
 
-// to_string for Vehicle
-const char* enumName(Vehicle v) {
-    switch (v) {
-        case Vehicle::Car: return "Car";
-        case Vehicle::Bike: return "Bike";
-        case Vehicle::Bus: return "Bus";
-        case Vehicle::Train: return "Train";
-    }
-    return "Unknown";
+template <typename E>
+[[nodiscard]] constexpr std::size_t enum_count() noexcept {
+    return enum_traits<E>::values.size();
 }
 
-// to_string for Food
-const char* enumName(Food f) {
-    switch (f) {
-        case Food::Pizza: return "Pizza";
-        case Food::Burger: return "Burger";
-        case Food::Pasta: return "Pasta";
-    }
-    return "Unknown";
+template <typename E>
+[[nodiscard]] constexpr int to_int(E value) noexcept {
+    return static_cast<int>(value);
 }
 
-: to_string for Color
-const char* enumName(Color c) {
-    switch (c) {
-        case Color::Red: return "Red";
-        case Color::Green: return "Green";
-        case Color::Blue: return "Blue";
-    }
-    return "Unknown";
+template <typename E>
+[[nodiscard]] constexpr bool is_valid(int value) noexcept {
+    return std::ranges::any_of(enum_traits<E>::values,
+        [value](E e) { return to_int(e) == value; });
 }
 
-// Safe conversion: int → Animal
-bool intToAnimal(int value, Animal& out) {
-    if (!isValidAnimal(value)) return false;
-
-    out = static_cast<Animal>(value);
-
-    return true;
+template <typename E>
+[[nodiscard]] constexpr std::optional<E> from_int(int value) noexcept {
+    if (!is_valid<E>(value)) return std::nullopt;
+    return static_cast<E>(value);
 }
 
-// Iterate all Animal values
-std::vector<Animal> getAllAnimals() {
-    return {
-        Animal::Cat,
-        Animal::Dog,
-        Animal::Bird,
-        Animal::Fish
-    };
+template <typename E>
+void print_all() {
+    for (const auto v : enum_values<E>())
+        std::cout << enum_name(v) << '\n';
 }
 
-// Compare two enums
-template <typename T>
-bool areSame(T a, T b) {
-    return a == b;
+template <typename E>
+void print_enum_value(std::string_view label, E value) {
+    std::cout << std::format("{}: {}\n", label, to_int(value));
 }
 
-// enum → int helper
-template <typename T>
-int toInt(T e) {
-    return static_cast<int>(e);
-}
-
-: Print divider
-void printDivider() {
-    std::cout << "----------------------\n";
-}
-
-: Count total animals
-size_t animalCount() {
-    return getAllAnimals().size();
-}
-
-: Print all vehicles
-void printVehicles() {
-
-    std::vector<Vehicle> vehicles = {
-        Vehicle::Car,
-        Vehicle::Bike,
-        Vehicle::Bus,
-        Vehicle::Train
-    };
-
-    for (auto vehicle : vehicles) {
-        std::cout << enumName(vehicle) << "\n";
-    }
-}
-
-// ------------------------------------------------
-// ✅ NEW ADDITIONS
-
-std::vector<Color> getAllColors() {
-    return {
-        Color::Red,
-        Color::Green,
-        Color::Blue
-    };
-}
-
-size_t vehicleCount() {
-    return 4;
-}
-
-size_t foodCount() {
-    return 3;
-}
-
-void printColors() {
-    for (auto color : getAllColors()) {
-        std::cout << enumName(color) << "\n";
-    }
-}
-
-template<typename T>
-void printEnumValue(const char* label, T value) {
-    std::cout << label << ": "
-              << static_cast<int>(value)
-              << "\n";
-}
-
-// ------------------------------------------------
-
-
-// ================= MAIN =================
+void divider() { std::cout << "----------------------\n"; }
 
 int main() {
-
-    Animal a = Animal::Dog;
-    Vehicle v = Vehicle::Car;
-    Food f = Food::Pizza;
-
-    
-    Color c = Color::Green;
+    constexpr Animal  a = Animal::Dog;
+    constexpr Vehicle v = Vehicle::Car;
+    constexpr Food    f = Food::Pizza;
+    constexpr Color   c = Color::Green;
 
     std::cout << "Basic Enum Usage:\n";
+    std::cout << std::format("Animal: {}\n", enum_name(a));
 
-    std::cout << "Animal: "
-              << enumName(a) << "\n";
-
-    // ================= ADD IN MAIN =================
-
-    printDivider();
+    divider();
 
     std::cout << "\nAdvanced Enum Features:\n";
+    std::cout << std::format("Vehicle name: {}\n", enum_name(v));
+    std::cout << std::format("Food name:    {}\n", enum_name(f));
+    std::cout << std::format("Color name:   {}\n", enum_name(c));
 
-    std::cout << "Vehicle name: "
-              << enumName(v) << "\n";
+    if (const auto converted = from_int<Animal>(1))
+        std::cout << std::format("Converted from int 1 -> {}\n", enum_name(*converted));
 
-    std::cout << "Food name: "
-              << enumName(f) << "\n";
-
-    
-    std::cout << "Color name: "
-              << enumName(c) << "\n";
-
-    Animal converted;
-
-    if (intToAnimal(1, converted)) {
-
-        std::cout << "Converted from int 1 → "
-                  << enumName(converted) << "\n";
-    }
-
-    printDivider();
+    divider();
 
     std::cout << "Iterating all animals:\n";
+    print_all<Animal>();
 
-    for (auto animal : getAllAnimals()) {
-        std::cout << enumName(animal) << "\n";
-    }
-
-    printDivider();
+    divider();
 
     std::cout << "All vehicles:\n";
-    printVehicles();
+    print_all<Vehicle>();
 
-    printDivider();
+    divider();
 
-    // ✅ NEW
     std::cout << "All colors:\n";
-    printColors();
+    print_all<Color>();
 
-    printDivider();
+    divider();
 
-    std::cout << "Are Cat and Dog same? "
-              << (areSame(Animal::Cat, Animal::Dog)
-                  ? "Yes\n"
-                  : "No\n");
+    std::cout << std::format("Are Cat and Dog same? {}\n", a == Animal::Cat ? "Yes" : "No");
+    std::cout << std::format("Are Car and Car same?  {}\n", v == Vehicle::Car ? "Yes" : "No");
 
-    
-    std::cout << "Are Car and Car same? "
-              << (areSame(Vehicle::Car, Vehicle::Car)
-                  ? "Yes\n"
-                  : "No\n");
+    divider();
 
-    printDivider();
+    std::cout << std::format("Animal (Dog) as int:   {}\n", to_int(a));
+    std::cout << std::format("Vehicle (Car) as int:  {}\n", to_int(v));
+    std::cout << std::format("Food (Pizza) as int:   {}\n", to_int(f));
+    std::cout << std::format("Color (Green) as int:  {}\n", to_int(c));
 
-    std::cout << "Animal (Dog) as int: "
-              << toInt(a) << "\n";
+    divider();
 
-    
-    std::cout << "Vehicle (Car) as int: "
-              << toInt(v) << "\n";
+    std::cout << std::format("Total animals available:  {}\n", enum_count<Animal>());
+    std::cout << std::format("Total vehicles available: {}\n", enum_count<Vehicle>());
+    std::cout << std::format("Total foods available:    {}\n", enum_count<Food>());
 
-    std::cout << "Food (Pizza) as int: "
-              << toInt(f) << "\n";
+    divider();
 
-    std::cout << "Color (Green) as int: "
-              << toInt(c) << "\n";
-
-    printDivider();
-
-    
-    std::cout << "Total animals available: "
-              << animalCount() << "\n";
-
-    // ✅ NEW
-    std::cout << "Total vehicles available: "
-              << vehicleCount() << "\n";
-
-    std::cout << "Total foods available: "
-              << foodCount() << "\n";
-
-    printDivider();
-
-    
     std::cout << "Animal validation test:\n";
+    std::cout << std::format("Is 2 valid?  {}\n", is_valid<Animal>(2) ? "Yes" : "No");
+    std::cout << std::format("Is 10 valid? {}\n", is_valid<Animal>(10) ? "Yes" : "No");
 
-    std::cout << "Is 2 valid? "
-              << (isValidAnimal(2) ? "Yes" : "No")
-              << "\n";
+    divider();
 
-    std::cout << "Is 10 valid? "
-              << (isValidAnimal(10) ? "Yes" : "No")
-              << "\n";
-
-    printDivider();
-
-    // ✅ NEW
     std::cout << "Generic enum integer values:\n";
+    print_enum_value("Animal::Dog",   a);
+    print_enum_value("Vehicle::Car",  v);
+    print_enum_value("Food::Pizza",   f);
+    print_enum_value("Color::Green",  c);
 
-    printEnumValue("Animal::Dog", a);
-    printEnumValue("Vehicle::Car", v);
-    printEnumValue("Food::Pizza", f);
-    printEnumValue("Color::Green", c);
+    divider();
 
-    printDivider();
-
-    // ✅ NEW
     std::cout << "Enum Statistics Summary:\n";
-    std::cout << "- Animals: " << animalCount() << "\n";
-    std::cout << "- Vehicles: " << vehicleCount() << "\n";
-    std::cout << "- Foods: " << foodCount() << "\n";
-    std::cout << "- Colors: " << getAllColors().size() << "\n";
+    std::cout << std::format("- Animals:  {}\n", enum_count<Animal>());
+    std::cout << std::format("- Vehicles: {}\n", enum_count<Vehicle>());
+    std::cout << std::format("- Foods:    {}\n", enum_count<Food>());
+    std::cout << std::format("- Colors:   {}\n", enum_count<Color>());
 
     return 0;
 }

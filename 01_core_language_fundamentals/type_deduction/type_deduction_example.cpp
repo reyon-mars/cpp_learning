@@ -1,194 +1,134 @@
 #include <iostream>
-#include <type_traits>   
-#include <typeinfo>      
-#include <utility>       
-#include <cassert>       
-#include <vector>        
-#include <string>        
+#include <type_traits>
+#include <typeinfo>
+#include <utility>
+#include <cassert>
+#include <vector>
+#include <string>
+#include <string_view>
 
-// ----------- MORE ADVANCED ADDITIONS -----------
+template<typename T>
+void print_type() {
+    std::cout << "type=" << typeid(T).name() << "\n";
+}
 
-// Trailing return type (RENAMED to avoid conflict)
 template<typename T, typename U>
-auto multiply_generic(T a, U b) -> decltype(a * b) {
+[[nodiscard]] auto multiply_generic(T a, U b) -> decltype(a * b) {
     return a * b;
 }
 
-// Perfect forwarding example
-template<typename T>
-void forward_test(T&& param) {
-    if constexpr (std::is_lvalue_reference<T>::value) {
-        std::cout << "Lvalue passed\n";
-    } else {
-        std::cout << "Rvalue passed\n";
-    }
-}
-
-// decltype(auto) pitfall example
-decltype(auto) returnValue() {
-    int x = 10;
-    return x;  // returns by value
-}
-
-: proper reference return example
-decltype(auto) returnReference() {
-    static int x = 50;
-    return (x);  // returns reference
-}
-
-: helper to print type
-template<typename T>
-void print_type() {
-    std::cout << "Type: " << typeid(T).name() << "\n";
-}
-
-// ----------- NEW SMALL ADDITIONS -----------
-
-// Generic add function
 template<typename T, typename U>
-auto add_generic(T a, U b) {
+[[nodiscard]] auto add_generic(T a, U b) {
     return a + b;
 }
 
-// Check if type is integral
+template<typename T>
+void forward_test(T&& param) {
+    if constexpr (std::is_lvalue_reference_v<T>)
+        std::cout << "Lvalue\n";
+    else
+        std::cout << "Rvalue\n";
+}
+
+[[nodiscard]] decltype(auto) return_value() {
+    int x = 10;
+    return x;
+}
+
+[[nodiscard]] decltype(auto) return_reference() {
+    static int x = 50;
+    return (x);
+}
+
 template<typename T>
 void check_integral() {
-    std::cout << "Is integral? "
-              << std::is_integral<T>::value << "\n";
+    std::cout << "is_integral=" << std::boolalpha << std::is_integral_v<T> << "\n";
 }
 
-// Universal reference demo
 template<typename T>
-void universal_reference_demo(T&& value) {
-    std::cout << "Universal reference value: "
-              << value << "\n";
+void universal_ref_demo(T&& value) {
+    std::cout << "universal_ref value=" << value << "\n";
 }
 
-// constexpr deduction helper
-constexpr auto square_auto(auto x) {
+[[nodiscard]] constexpr auto square_auto(auto x) noexcept {
     return x * x;
 }
 
-// Type decay example
 template<typename T>
-void type_decay_demo(T param) {
-    std::cout << "After decay type: "
-              << typeid(T).name() << "\n";
+void type_decay_demo(T) {
+    std::cout << "decayed type=" << typeid(T).name() << "\n";
 }
 
-// Print vector types
 template<typename T>
 void print_vector_info(const std::vector<T>& vec) {
-    std::cout << "Vector size: "
-              << vec.size() << "\n";
-
-    std::cout << "Stored type: "
-              << typeid(T).name() << "\n";
+    std::cout << "vector: size=" << vec.size()
+              << " elem_type=" << typeid(T).name() << "\n";
 }
 
-// ----------------------------------------------
+static_assert(square_auto(6)   == 36);
+static_assert(square_auto(2.0) == 4.0);
 
 int main() {
-
-    std::cout << "\nAdvanced Deduction Concepts:\n";
-
-    // ✅ initializer list behavior
-    auto list = {1, 2, 3}; // std::initializer_list<int>
+    std::cout << "=== initializer_list deduction ===\n";
+    auto list = {1, 2, 3};
     print_type<decltype(list)>();
 
-    // ✅ top-level vs low-level const
+    std::cout << "\n=== const stripping by auto ===\n";
     const int ci = 10;
-    auto copy = ci;          // int
-    const auto copy2 = ci;   // const int
+    auto       copy  = ci;
+    const auto copy2 = ci;
+    std::cout << std::boolalpha
+              << "copy is_const="  << std::is_const_v<decltype(copy)>  << "\n"
+              << "copy2 is_const=" << std::is_const_v<decltype(copy2)> << "\n";
 
-    std::cout << "copy is const? "
-              << std::is_const<decltype(copy)>::value << "\n";
-
-    std::cout << "copy2 is const? "
-              << std::is_const<decltype(copy2)>::value << "\n";
-
-    // ✅ trailing return type
+    std::cout << "\n=== trailing return type ===\n";
     auto mul = multiply_generic(2, 3.5);
+    static_assert(std::is_same_v<decltype(mul), double>);
+    std::cout << "multiply(2, 3.5)=" << mul << "\n";
 
-    static_assert(std::is_same<decltype(mul), double>::value,
-                  "multiply_generic should return double");
-
-    std::cout << "multiply result: " << mul << "\n";
-
-    : define variable for forwarding test
+    std::cout << "\n=== perfect forwarding ===\n";
     int a = 5;
+    forward_test(a);
+    forward_test(10);
 
-    // ✅ perfect forwarding test
-    forward_test(a);   // lvalue
-    forward_test(10);  // rvalue
+    std::cout << "\n=== decltype(auto) value vs reference ===\n";
+    auto val = return_value();
+    std::cout << "return_value()=" << val << "\n";
 
-    // ✅ decltype(auto) pitfall
-    auto val2 = returnValue();
-    std::cout << "returnValue(): " << val2 << "\n";
-
-    : reference behavior demo
-    auto ref = returnReference();
-
+    decltype(auto) ref = return_reference();
     assert(ref == 50);
+    ref = 100;
+    std::cout << "After ref=100, return_reference()=" << return_reference() << "\n";
 
-    ref = 100; // modifies static variable
-
-    std::cout << "Modified reference value: "
-              << returnReference() << "\n";
-
-    // ==================================================
-    // ✅ EXTRA SMALL FEATURES
-    // ==================================================
-
-    std::cout << "\nExtra Type Deduction Features:\n";
-
-    // Generic add
+    std::cout << "\n=== add_generic ===\n";
     auto sum = add_generic(10, 2.5);
+    std::cout << "add(10, 2.5)=" << sum << "\n";
 
-    std::cout << "Generic add result: "
-              << sum << "\n";
-
-    // Integral checks
+    std::cout << "\n=== check_integral ===\n";
     check_integral<int>();
     check_integral<double>();
 
-    // Universal reference
-    universal_reference_demo(42);
-
+    std::cout << "\n=== universal reference ===\n";
+    universal_ref_demo(42);
     std::string text = "Hello";
-    universal_reference_demo(text);
+    universal_ref_demo(text);
 
-    // constexpr auto
+    std::cout << "\n=== constexpr auto (square_auto) ===\n";
     constexpr auto sq = square_auto(6);
+    std::cout << "square_auto(6)=" << sq << "\n";
 
-    static_assert(sq == 36,
-                  "square_auto failed");
-
-    std::cout << "square_auto(6): "
-              << sq << "\n";
-
-    // Type decay
+    std::cout << "\n=== type decay ===\n";
     const int value = 99;
     type_decay_demo(value);
 
-    // Vector type info
-    std::vector<std::string> names = {
-        "Alice",
-        "Bob",
-        "Charlie"
-    };
-
+    std::cout << "\n=== vector type info ===\n";
+    const std::vector<std::string> names{"Alice", "Bob", "Charlie"};
     print_vector_info(names);
 
-    // decltype demo
-    decltype(sum) another_sum = 55.5;
+    std::cout << "\n=== decltype variable ===\n";
+    decltype(sum) another = 55.5;
+    std::cout << "decltype(sum) another=" << another << "\n";
 
-    std::cout << "decltype variable: "
-              << another_sum << "\n";
-
-    // ==================================================
-
-    std::cout << "Type deduction demonstration completed.\n";
-    
+    std::cout << "\nCompleted.\n";
     return 0;
 }

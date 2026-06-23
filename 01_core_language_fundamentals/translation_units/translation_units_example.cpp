@@ -1,253 +1,160 @@
 #include <iostream>
 #include <memory>
-#include <utility>   
-#include <cassert>   
-#include <vector>    
-#include <string>    
+#include <utility>
+#include <cassert>
+#include <vector>
+#include <string>
+#include <string_view>
+#include <source_location>
 
-// ---------- SMALL ADDITIONS ----------
+inline constexpr std::string_view APP_VERSION  = "1.0";
+inline constexpr int              MAX_USERS     = 100;
+inline constexpr bool             DEBUG_MODE    = true;
+inline constexpr std::string_view MODE_STATUS   = DEBUG_MODE ? "Debug Mode Active" : "Release Mode";
 
-#define APP_VERSION "1.0"
-#define DEBUG_MODE
+[[nodiscard]] constexpr int  square(int x) noexcept { return x * x; }
+[[nodiscard]] constexpr int  cube(int x)   noexcept { return x * x * x; }
+[[nodiscard]] constexpr int  max_safe(int a, int b) noexcept { return a > b ? a : b; }
 
-#ifndef CONFIG_H
-#define CONFIG_H
-#define MAX_USERS 100
-#endif
+static_assert(square(5) == 25);
+static_assert(cube(3)   == 27);
+static_assert(max_safe(5, 10) == 10);
 
-#define SQUARE_MACRO(x) ((x) * (x))
+namespace {
 
-void debugMessage();
+int internal_counter = 0;
+int internal_global  = 999;
 
-void printVersion() {
+void hidden_function() {
+    std::cout << "Hidden function (anonymous namespace)\n";
+}
+
+}
+
+int  build_number      = 1;
+int  external_counter  = 5;
+
+void print_version() {
     std::cout << "App Version: " << APP_VERSION << "\n";
 }
 
-int build_number = 1;
-
-static int internal_counter = 0;
-static int internal_global = 999;
-
-inline int square(int x) {
-    return x * x;
+void debug_message() {
+    if constexpr (DEBUG_MODE)
+        std::cout << "[DEBUG] Debug mode is ON\n";
 }
 
-constexpr int square_constexpr(int x) {
-    return x * x;
+void debug_log(std::string_view msg,
+               const std::source_location loc = std::source_location::current()) {
+    std::cout << "[DEBUG] " << msg
+              << " (" << loc.file_name() << ":" << loc.line() << ")\n";
 }
 
-void debugMessage() {
-#ifdef DEBUG_MODE
-    std::cout << "[DEBUG] Debug mode is ON\n";
-#endif
-}
-
-extern int build_number;
-
-void externalFunction() {
+void external_function() {
     std::cout << "Simulated external function call\n";
 }
 
-// ----------- MACRO ADDITIONS -----------
-
-inline int max_safe(int a, int b) {
-    return (a > b) ? a : b;
+void modify_external() {
+    external_counter += 10;
+    std::cout << "external_counter=" << external_counter << "\n";
 }
 
-#define DEBUG_LOG(msg) \
-    std::cout << "[DEBUG] " << msg \
-              << " (" << __FILE__ << ":" << __LINE__ << ")\n"
-
-#if defined(DEBUG_MODE)
-    #define MODE_STATUS "Debug Mode Active"
-#else
-    #define MODE_STATUS "Release Mode"
-#endif
-
-#define BAD_SQUARE(x) x * x
-
-// ----------- STORAGE ADDITIONS -----------
+inline void inline_helper() {
+    std::cout << "Inline helper\n";
+}
 
 void smart_pointer_example() {
-    std::unique_ptr<int> ptr = std::make_unique<int>(200);
-    assert(ptr);  
-    std::cout << "smart_pointer value: " << *ptr << '\n';
+    auto ptr = std::make_unique<int>(200);
+    assert(ptr != nullptr);
+    std::cout << "unique_ptr value=" << *ptr << "\n";
 }
 
 void lifetime_demo() {
     std::cout << "Entering lifetime_demo\n";
     int temp = 123;
-    std::cout << "temp exists: " << temp << '\n';
-    std::cout << "Exiting lifetime_demo (temp destroyed)\n";
+    std::cout << "temp=" << temp << "\n";
+    std::cout << "Exiting lifetime_demo\n";
 }
 
-void safe_delete(int*& ptr) {
-    delete ptr;
-    ptr = nullptr;
-}
-
-// Simulating external variable
-extern int external_counter;
-
-// Definition (normally separate .cpp)
-int external_counter = 5;
-
-// Anonymous namespace (internal linkage)
-namespace {
-    void hidden_function() {
-        std::cout << "Hidden function (anonymous namespace)\n";
-    }
-}
-
-// Inline helper
-inline void inline_helper() {
-    std::cout << "Inline helper function\n";
-}
-
-// Modify external variable
-void modify_external() {
-    external_counter += 10;
-    std::cout << "Modified external_counter: "
-              << external_counter << "\n";
-}
-
-// constexpr compile-time helper
-constexpr int cube_constexpr(int x) {
-    return x * x * x;
-}
-
-// Simple resource class
 class Resource {
 public:
-    Resource() {
-        std::cout << "Resource acquired\n";
-    }
-
-    ~Resource() {
-        std::cout << "Resource released\n";
-    }
+    Resource()  { std::cout << "Resource acquired\n"; }
+    ~Resource() { std::cout << "Resource released\n"; }
 };
 
-// RAII demo
 void raii_demo() {
     Resource res;
-    std::cout << "Using resource safely\n";
+    std::cout << "Using Resource safely\n";
 }
 
-// Store debug logs
-std::vector<std::string> debug_history;
-
-// Add debug history
-void add_debug_history(const std::string& msg) {
-    debug_history.push_back(msg);
-}
-
-// Print debug history
-void print_debug_history() {
-    std::cout << "\nDebug History:\n";
-
-    for (const auto& msg : debug_history) {
-        std::cout << "- " << msg << "\n";
+class DebugHistory {
+public:
+    void add(std::string_view msg)   { entries_.emplace_back(msg); }
+    void print() const {
+        std::cout << "Debug History:\n";
+        for (const auto& e : entries_) std::cout << "  - " << e << "\n";
     }
-}
-
-// ------------------------------------------------------
-
+    [[nodiscard]] std::size_t size() const noexcept { return entries_.size(); }
+private:
+    std::vector<std::string> entries_;
+};
 
 int main() {
-    std::cout << "Compiled successfully\n";
+    std::cout << "=== Version / Build ===\n";
+    print_version();
+    std::cout << "build=" << build_number << "\n";
+    debug_message();
 
-    printVersion();
-    std::cout << "Build number: " << build_number << "\n";
+    std::cout << "\n=== Constants ===\n";
+    std::cout << "MAX_USERS=" << MAX_USERS << "\n"
+              << "Mode: "      << MODE_STATUS << "\n";
 
-    debugMessage();
+    std::cout << "\n=== Constexpr functions ===\n";
+    std::cout << "square(5)="    << square(5)    << "\n"
+              << "cube(3)="      << cube(3)       << "\n"
+              << "max_safe(5,10)=" << max_safe(5, 10) << "\n";
 
-    internal_counter++;
-    std::cout << "Internal counter: " << internal_counter << "\n";
-
-    std::cout << "Square of 5: " << square(5) << "\n";
-
-    std::cout << "Square (macro): " << SQUARE_MACRO(5) << "\n";
-    std::cout << "Square (constexpr): " << square_constexpr(5) << "\n";
-
-    std::cout << "Max users (macro): " << MAX_USERS << "\n";
-
-    externalFunction();
-
-    // ================= MACRO FEATURES =================
-
-    std::cout << "\nAdvanced Macro Features:\n";
-
-    std::cout << "max_safe(5,10): " << max_safe(5,10) << "\n";
-
-    DEBUG_LOG("Testing debug log");
-
-    std::cout << "Mode: " << MODE_STATUS << "\n";
-
-    std::cout << "BAD_SQUARE(2+3): " << BAD_SQUARE(2+3) << "\n";
-    std::cout << "Correct SQUARE(2+3): " << SQUARE_MACRO(2+3) << "\n";
-
-    // ================= STORAGE FEATURES =================
-
-    std::cout << "\nAdvanced Storage Concepts:\n";
-
-    std::cout << "internal_global: " << internal_global << '\n';
-
-    smart_pointer_example();
-    lifetime_demo();
-
-    int* temp_ptr = new int(500);
-    assert(temp_ptr != nullptr);  
-
-    safe_delete(temp_ptr);
-
-    if (temp_ptr == nullptr) {
-        std::cout << "Pointer safely deleted and set to nullptr\n";
-    }
-
-    // ================= NEW: TRANSLATION UNIT FEATURES =================
-
-    std::cout << "\nAdvanced Translation Unit Concepts:\n";
-
-    // Anonymous namespace
+    std::cout << "\n=== Internal linkage ===\n";
+    ++internal_counter;
+    std::cout << "internal_counter=" << internal_counter << "\n"
+              << "internal_global="  << internal_global  << "\n";
     hidden_function();
-
-    // Inline function
     inline_helper();
 
-    // External variable usage
-    std::cout << "external_counter: "
-              << external_counter << "\n";
-
+    std::cout << "\n=== External linkage ===\n";
+    external_function();
+    std::cout << "external_counter=" << external_counter << "\n";
     modify_external();
 
-    // ================= EXTRA SMALL FEATURES =================
+    std::cout << "\n=== Smart pointer ===\n";
+    smart_pointer_example();
 
-    std::cout << "\nExtra Compile-Time Features:\n";
+    std::cout << "\n=== Lifetime ===\n";
+    lifetime_demo();
 
-    constexpr int cube = cube_constexpr(3);
+    std::cout << "\n=== Raw pointer + null reset ===\n";
+    {
+        auto* raw = new int{500};
+        assert(raw != nullptr);
+        delete raw;
+        raw = nullptr;
+        std::cout << "raw after delete=" << std::boolalpha << (raw == nullptr) << "\n";
+    }
 
-    std::cout << "Cube constexpr (3^3): "
-              << cube << "\n";
-
-    static_assert(cube_constexpr(2) == 8,
-                  "Cube constexpr failed");
-
-    // RAII demo
-    std::cout << "\nRAII Demonstration:\n";
+    std::cout << "\n=== RAII ===\n";
     raii_demo();
 
-    // Debug history system
-    add_debug_history("Program initialized");
-    add_debug_history("Storage demo completed");
-    add_debug_history("Translation unit demo completed");
+    std::cout << "\n=== debug_log (std::source_location) ===\n";
+    debug_log("Testing debug log");
+    debug_log("Second log entry");
 
-    print_debug_history();
+    std::cout << "\n=== Debug history ===\n";
+    DebugHistory hist;
+    hist.add("Program initialized");
+    hist.add("Storage demo completed");
+    hist.add("Translation unit demo completed");
+    hist.print();
+    std::cout << "Entries=" << hist.size() << "\n";
 
-    // ====================================================
-    std::cout << "Program execution completed successfully.\n";
-
-    #undef DEBUG_MODE
-
+    std::cout << "\nCompleted successfully.\n";
     return 0;
 }

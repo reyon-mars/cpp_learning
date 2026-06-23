@@ -1,247 +1,130 @@
-// ----------- MORE ADVANCED ADDITIONS -----------
+#include <iostream>
+#include <limits>
+#include <bitset>
+#include <array>
+#include <span>
+#include <cassert>
+#include <climits>
+#include <cfloat>
+#include <bit>
 
-#include <iostream>   
-#include <cfloat>     // for float constants
-#include <limits>     
-#include <bitset>     // ✅ NEW
-#include <cassert>    // ✅ NEW
-#include <climits>    // ✅ NEW
-#include <typeinfo>   // ✅ EXTRA ADDED
-
-// ----------------------------------------------
-
-// ✅ NEW: print binary representation
 template<typename T>
 void print_bits(T value) {
-    std::bitset<sizeof(T) * 8> bits(value);
-
-    std::cout << "Bits: "
-              << bits << "\n";
+    std::cout << "Bits: " << std::bitset<sizeof(T) * CHAR_BIT>(
+        static_cast<std::make_unsigned_t<T>>(value)) << '\n';
 }
 
-// ✅ NEW: swap demo
-void swap_values(int& a, int& b) {
+void swap_values(int& a, int& b) noexcept {
     int temp = a;
     a = b;
     b = temp;
 }
 
-// ✅ NEW: reference demo
 void reference_demo() {
-
     int x = 10;
     int& ref = x;
-
     ref = 20;
-
-    std::cout << "x after reference modification: "
-              << x << "\n";
+    std::cout << "x after reference modification: " << x << '\n';
 }
 
-// ✅ NEW: overflow demonstration
 void overflow_demo() {
-
     unsigned char c = 255;
-
-    std::cout << "Before overflow: "
-              << static_cast<int>(c) << "\n";
-
-    c++;
-
-    std::cout << "After overflow: "
-              << static_cast<int>(c) << "\n";
+    std::cout << "Before overflow: " << static_cast<int>(c) << '\n';
+    ++c;
+    std::cout << "After overflow:  " << static_cast<int>(c) << '\n';
 }
 
-// ✅ NEW: type sizes
 void print_type_sizes() {
-
-    std::cout << "\nType Sizes:\n";
-
-    std::cout << "sizeof(char): "
-              << sizeof(char) << "\n";
-
-    std::cout << "sizeof(int): "
-              << sizeof(int) << "\n";
-
-    std::cout << "sizeof(double): "
-              << sizeof(double) << "\n";
-
-    std::cout << "sizeof(long long): "
-              << sizeof(long long) << "\n";
+    std::cout << "\nType sizes:\n"
+              << "  char:      " << sizeof(char)      << " byte(s)\n"
+              << "  int:       " << sizeof(int)        << " byte(s)\n"
+              << "  long long: " << sizeof(long long)  << " byte(s)\n"
+              << "  double:    " << sizeof(double)     << " byte(s)\n"
+              << "  bool:      " << sizeof(bool)       << " byte(s)\n";
 }
 
-// ✅ NEW: ASCII demo
 void ascii_demo() {
-
-    char ch = 'A';
-
-    std::cout << "\nASCII Demo:\n";
-
-    std::cout << "Character: "
-              << ch << "\n";
-
-    std::cout << "ASCII value: "
-              << static_cast<int>(ch) << "\n";
+    constexpr char ch = 'A';
+    std::cout << "\nASCII Demo:\n"
+              << "  Character:   " << ch << '\n'
+              << "  ASCII value: " << static_cast<int>(ch) << '\n'
+              << "  Next char:   " << static_cast<char>(ch + 1) << '\n';
 }
 
-// --------------------------------------------------
-// ✅ EXTRA ADDITIONS
-// --------------------------------------------------
-
-// Show signedness of types
 template<typename T>
 void show_type_info(const char* name) {
-
-    std::cout << name
-              << " -> size: "
-              << sizeof(T)
-              << " bytes, signed: "
-              << std::numeric_limits<T>::is_signed
-              << "\n";
+    std::cout << "  " << name
+              << " -> size: " << sizeof(T) << " bytes"
+              << ", signed: " << std::numeric_limits<T>::is_signed
+              << ", min: " << +std::numeric_limits<T>::min()
+              << ", max: " << +std::numeric_limits<T>::max()
+              << '\n';
 }
 
-// Pointer arithmetic demo
 void pointer_arithmetic_demo() {
-
-    int arr[3] = {10, 20, 30};
-
-    int* p = arr;
-
-    std::cout << "\nPointer Arithmetic Demo:\n";
-
-    std::cout << *p << "\n";
-    std::cout << *(p + 1) << "\n";
-    std::cout << *(p + 2) << "\n";
+    constexpr std::array<int, 3> arr{10, 20, 30};
+    const int* p = arr.data();
+    std::cout << "\nPointer arithmetic:\n"
+              << "  *p       = " << *p       << '\n'
+              << "  *(p+1)   = " << *(p + 1) << '\n'
+              << "  *(p+2)   = " << *(p + 2) << '\n';
 }
 
-// Enum demo
-enum Day {
-    Monday,
-    Tuesday,
-    Wednesday
-};
-
-// --------------------------------------------------
+enum class Day { Monday, Tuesday, Wednesday };
 
 int main() {
-
     std::cout << "\nAdvanced Fundamental Concepts:\n";
 
-    // ✅ Signed vs unsigned behavior
-    int neg = -1;
-    unsigned int u_neg = neg;
+    // Signed-to-unsigned reinterpretation
+    constexpr int neg = -1;
+    const auto u_neg = static_cast<unsigned int>(neg);
+    std::cout << "Signed -1 as unsigned: " << u_neg << '\n';
 
-    std::cout << "Signed -1 as unsigned: "
-              << u_neg << "\n";
+    // Floating-point precision
+    const double fp_sum = 0.1 + 0.2;
+    std::cout << "0.1 + 0.2 = " << fp_sum << '\n';
+    std::cout << "float epsilon: " << std::numeric_limits<float>::epsilon() << '\n';
 
-    // ✅ Floating point precision issue
-    double x = 0.1 + 0.2;
-
-    std::cout << "0.1 + 0.2 = "
-              << x << "\n";
-
-    // ✅ numeric_limits extra properties
-    std::cout << "int is signed? "
-              << std::numeric_limits<int>::is_signed << "\n";
-
-    std::cout << "float epsilon: "
-              << std::numeric_limits<float>::epsilon() << "\n";
-
-    // ✅ Pointer basics
+    // Pointer basics
     int value = 42;
     int* ptr = &value;
+    std::cout << "Pointer: " << ptr << ", dereferenced: " << *ptr << '\n';
 
-    std::cout << "Pointer value: "
-              << ptr << "\n";
-
-    std::cout << "Dereferenced: "
-              << *ptr << "\n";
-
-    // nullptr usage
     int* null_ptr = nullptr;
-
-    if (null_ptr == nullptr) {
+    if (null_ptr == nullptr)
         std::cout << "Pointer is null\n";
-    }
 
-    // ✅ Literal suffixes
-    auto big_num = 10000000000LL;
-    auto precise = 3.14L;
-
-    std::cout << "big_num (long long): "
-              << big_num << "\n";
-
-    std::cout << "precise (long double): "
-              << precise << "\n";
-
-    // --------------------------------------------------
-    // ✅ NEW FEATURE USAGE
-    // --------------------------------------------------
+    // Literal suffixes
+    constexpr auto big_num  = 10'000'000'000LL;
+    constexpr auto precise  = 3.14L;
+    std::cout << "big_num:  " << big_num  << '\n';
+    std::cout << "precise:  " << precise  << '\n';
 
     print_type_sizes();
 
-    // Binary representation
-    std::cout << "\nBinary of value 42:\n";
-    print_bits(value);
+    std::cout << "\nBinary of 42:\n";
+    print_bits(42);
+    std::cout << "Binary of -1 (int):\n";
+    print_bits(-1);
 
-    // Reference demo
     reference_demo();
-
-    // Overflow demo
     overflow_demo();
-
-    // ASCII demo
     ascii_demo();
 
-    // Swap demo
-    int a = 5;
-    int b = 10;
-
-    std::cout << "\nBefore swap: "
-              << a << ", " << b << "\n";
-
+    int a = 5, b = 10;
+    std::cout << "\nBefore swap: " << a << ", " << b << '\n';
     swap_values(a, b);
+    std::cout << "After swap:  " << a << ", " << b << '\n';
 
-    std::cout << "After swap: "
-              << a << ", " << b << "\n";
+    std::cout << "\nInteger limits (std::numeric_limits):\n"
+              << "  INT_MAX: " << std::numeric_limits<int>::max()    << '\n'
+              << "  INT_MIN: " << std::numeric_limits<int>::min()    << '\n'
+              << "  DBL_MAX: " << std::numeric_limits<double>::max() << '\n';
 
-    // Numeric limits
-    std::cout << "\nInteger Limits:\n";
+    constexpr bool flag = true;
+    std::cout << "\nBoolean: " << std::boolalpha << flag << '\n';
 
-    std::cout << "INT_MAX: "
-              << INT_MAX << "\n";
-
-    std::cout << "INT_MIN: "
-              << INT_MIN << "\n";
-
-    std::cout << "DBL_MAX: "
-              << DBL_MAX << "\n";
-
-    // Assertions
-    assert(sizeof(int) >= 4);
-
-    // Boolean fundamentals
-    bool flag = true;
-
-    std::cout << "\nBoolean value: "
-              << flag << "\n";
-
-    std::cout << "sizeof(bool): "
-              << sizeof(bool) << "\n";
-
-    // Character arithmetic
-    char letter = 'A';
-
-    std::cout << "\nNext character after A: "
-              << static_cast<char>(letter + 1)
-              << "\n";
-
-    // --------------------------------------------------
-    // ✅ EXTRA FEATURE USAGE
-    // --------------------------------------------------
-
-    std::cout << "\nType Information:\n";
-
+    std::cout << "\nType information:\n";
     show_type_info<char>("char");
     show_type_info<int>("int");
     show_type_info<unsigned int>("unsigned int");
@@ -249,24 +132,16 @@ int main() {
 
     pointer_arithmetic_demo();
 
-    Day today = Tuesday;
+    constexpr Day today = Day::Tuesday;
+    std::cout << "\nEnum Day::Tuesday = "
+              << static_cast<int>(today) << '\n';
 
-    std::cout << "\nEnum value (Tuesday): "
-              << today << "\n";
+    static_assert(sizeof(char)  == 1);
+    static_assert(sizeof(int)   >= 4);
+    static_assert(sizeof(float) == 4);
+    assert(ptr == &value);
+    assert(a == 10 && b == 5);
 
-    std::cout << "\nType name of variable x: "
-              << typeid(x).name() << "\n";
-
-    std::cout << "\nAddress of value: "
-              << &value << "\n";
-
-    std::cout << "Address stored in ptr: "
-              << ptr << "\n";
-
-    static_assert(sizeof(char) == 1,
-                  "char must be 1 byte");
-
-    // --------------------------------------------------
-
+    std::cout << "\nAll assertions passed.\n";
     return 0;
 }

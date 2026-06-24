@@ -1,290 +1,182 @@
-// Performance and Benchmarks Experiment
-// Measuring execution time, cache behavior, optimization comparisons
-
 #include <iostream>
 #include <chrono>
 #include <vector>
+#include <numeric>
+#include <algorithm>
+#include <functional>
+#include <array>
+#include <ranges>
+#include <format>
+#include <string_view>
+#include <concepts>
 
-
-#include <numeric>     // for std::accumulate
-#include <algorithm>   
-#include <functional>  
-#include <array>       // tiny addition
-
-// -------- NEW ADDITIONS --------
-
-// Prevent optimization
+namespace {
 volatile int sink = 0;
+}
 
-// Run benchmark multiple times
-template<typename Func>
-long long benchmark(Func f, int runs = 5) {
-    long long total = 0;
+template <std::invocable F>
+[[nodiscard]] std::chrono::microseconds benchmark(F&& f, int runs = 5) {
+    using namespace std::chrono;
+    microseconds total{0};
 
     for (int i = 0; i < runs; ++i) {
-        auto start = std::chrono::high_resolution_clock::now();
-
-        sink = f();
-
-        auto end = std::chrono::high_resolution_clock::now();
-
-        total +=
-            std::chrono::duration_cast<std::chrono::microseconds>(
-                end - start).count();
+        const auto start = high_resolution_clock::now();
+        sink = static_cast<int>(std::forward<F>(f)());
+        const auto end = high_resolution_clock::now();
+        total += duration_cast<microseconds>(end - start);
     }
 
     return total / runs;
 }
 
-// Warm-up function
-void warmup() {
-    for (volatile int i = 0; i < 1000000; ++i);
+void warmup() noexcept {
+    volatile int x = 0;
+    for (int i = 0; i < 1'000'000; ++i) x = i;
+    (void)x;
 }
 
-: simple result printer
-void print_result(const std::string& label, long long time) {
-    std::cout << label << ": "
-              << time << " microseconds\n";
+void print_result(std::string_view label, std::chrono::microseconds time) {
+    std::cout << std::format("{}: {} microseconds\n", label, time.count());
 }
 
-: compare two timings
-void compare(const std::string& name,
-             long long a,
-             long long b) {
-
-    std::cout << name << " faster: "
-              << (a < b ? "First" : "Second")
-              << "\n";
+void compare(std::string_view name, std::chrono::microseconds a, std::chrono::microseconds b) {
+    std::cout << std::format("{} faster: {}\n", name, a < b ? "First" : "Second");
 }
 
-// ---- EXTRA SMALL ADDITIONS ----
+void divider() { std::cout << "----------------------------------\n"; }
 
-// print divider
-void print_divider() {
-    std::cout << "----------------------------------\n";
+template <std::size_t N>
+[[nodiscard]] std::chrono::microseconds average_time(
+    const std::array<std::chrono::microseconds, N>& times) noexcept {
+    return std::reduce(times.begin(), times.end(), std::chrono::microseconds{0}) /
+           static_cast<long long>(N);
 }
 
-// average helper
-long long average_time(const std::array<long long, 4>& arr) {
-    return std::accumulate(arr.begin(), arr.end(), 0LL)
-           / static_cast<long long>(arr.size());
+template <std::size_t N>
+void show_best(const std::array<std::chrono::microseconds, N>& times) {
+    const auto best = *std::ranges::min_element(times);
+    std::cout << std::format("Best benchmark time: {} microseconds\n", best.count());
 }
-
-// show best benchmark
-void show_best(const std::array<long long, 4>& arr) {
-
-    auto best =
-        *std::min_element(arr.begin(), arr.end());
-
-    std::cout << "Best benchmark time: "
-              << best << " microseconds\n";
-}
-
-// --------------------------------
 
 int main() {
+    constexpr int n = 10000;
 
-    const int N = 10000;
+    warmup();
 
-    warmup(); 
-
-    // Example: Vector access patterns
     std::vector<int> vec;
-    vec.reserve(N);  // small optimization
+    vec.reserve(n);
+    std::ranges::copy(std::views::iota(0, n), std::back_inserter(vec));
 
-    for (int i = 0; i < N; ++i) {
-        vec.push_back(i);
-    }
+    std::cout << std::format("Vector size: {}\n", vec.size());
 
-    std::cout << "Vector size: "
-              << vec.size() << "\n";
-
-    // -------- Range-based loop benchmark --------
-    auto duration1 = benchmark([&]() {
+    const auto duration_range_loop = benchmark([&] {
         int sum = 0;
-
-        for (int v : vec)
-            sum += v;
-
+        for (const int v : vec) sum += v;
         return sum;
     });
 
-    // -------- Index loop benchmark --------
-    auto duration2 = benchmark([&]() {
+    const auto duration_index_loop = benchmark([&] {
         int sum = 0;
-
-        for (size_t i = 0; i < vec.size(); ++i)
-            sum += vec[i];
-
+        for (std::size_t i = 0; i < vec.size(); ++i) sum += vec[i];
         return sum;
     });
 
-    : Iterator loop benchmark
-    auto duration3 = benchmark([&]() {
+    const auto duration_iterator_loop = benchmark([&] {
         int sum = 0;
-
-        for (auto it = vec.begin();
-             it != vec.end();
-             ++it)
-            sum += *it;
-
+        for (auto it = vec.begin(); it != vec.end(); ++it) sum += *it;
         return sum;
     });
 
-    : STL accumulate benchmark
-    auto duration4 = benchmark([&]() {
-        return std::accumulate(vec.begin(), vec.end(), 0);
+    const auto duration_accumulate = benchmark([&] {
+        return std::reduce(vec.begin(), vec.end(), 0);
     });
 
-    // -------- Results --------
-    print_result("Time (range loop)", duration1);
-    print_result("Time (index loop)", duration2);
-    print_result("Time (iterator loop)", duration3);
-    print_result("Time (accumulate)", duration4);
+    print_result("Time (range loop)",    duration_range_loop);
+    print_result("Time (index loop)",    duration_index_loop);
+    print_result("Time (iterator loop)", duration_iterator_loop);
+    print_result("Time (accumulate)",    duration_accumulate);
 
-    compare("Range vs Index", duration1, duration2);
+    compare("Range vs Index", duration_range_loop, duration_index_loop);
 
-    // ---- EXTRA SMALL USAGE ----
-
-    std::array<long long, 4> loop_times = {
-        duration1,
-        duration2,
-        duration3,
-        duration4
+    const std::array loop_times{
+        duration_range_loop, duration_index_loop,
+        duration_iterator_loop, duration_accumulate,
     };
 
-    std::cout << "Average loop benchmark: "
-              << average_time(loop_times)
-              << " microseconds\n";
-
+    std::cout << std::format("Average loop benchmark: {} microseconds\n",
+                             average_time(loop_times).count());
     show_best(loop_times);
 
-    print_divider();
+    divider();
 
-    // ----------------------------------------------------
-    : Cache locality experiment (2D array)
+    constexpr int size = 300;
 
-    const int SIZE = 300;
+    std::vector<std::vector<int>> matrix(size, std::vector<int>(size, 1));
 
-    std::vector<std::vector<int>> matrix(
-        SIZE,
-        std::vector<int>(SIZE, 1)
-    );
-
-    auto duration5 = benchmark([&]() {
+    const auto duration_row_major_2d = benchmark([&] {
         int sum = 0;
-
-        for (int i = 0; i < SIZE; ++i)
-            for (int j = 0; j < SIZE; ++j)
+        for (int i = 0; i < size; ++i)
+            for (int j = 0; j < size; ++j)
                 sum += matrix[i][j];
-
         return sum;
     });
 
-    auto duration6 = benchmark([&]() {
+    const auto duration_col_major_2d = benchmark([&] {
         int sum = 0;
-
-        for (int j = 0; j < SIZE; ++j)
-            for (int i = 0; i < SIZE; ++i)
+        for (int j = 0; j < size; ++j)
+            for (int i = 0; i < size; ++i)
                 sum += matrix[i][j];
-
         return sum;
     });
 
     std::cout << "\nCache Locality Test (2D vector):\n";
+    print_result("Row-wise Time",    duration_row_major_2d);
+    print_result("Column-wise Time", duration_col_major_2d);
+    compare("2D Row vs Column", duration_row_major_2d, duration_col_major_2d);
 
-    print_result("Row-wise Time", duration5);
-    print_result("Column-wise Time", duration6);
+    divider();
 
-    compare("2D Row vs Column", duration5, duration6);
+    std::vector<int> flat(static_cast<std::size_t>(size) * size, 1);
 
-    print_divider();
-
-    // ----------------------------------------------------
-    // ✅ NEW: Contiguous memory vs non-contiguous
-
-    std::vector<int> flat(SIZE * SIZE, 1);
-
-    auto duration7 = benchmark([&]() {
+    const auto duration_row_major_1d = benchmark([&] {
         int sum = 0;
-
-        for (int i = 0; i < SIZE; ++i)
-            for (int j = 0; j < SIZE; ++j)
-                sum += flat[i * SIZE + j];   // row-major
-
+        for (int i = 0; i < size; ++i)
+            for (int j = 0; j < size; ++j)
+                sum += flat[i * size + j];
         return sum;
     });
 
-    auto duration8 = benchmark([&]() {
+    const auto duration_col_major_1d = benchmark([&] {
         int sum = 0;
-
-        for (int j = 0; j < SIZE; ++j)
-            for (int i = 0; i < SIZE; ++i)
-                sum += flat[i * SIZE + j];   // column-like
-
+        for (int j = 0; j < size; ++j)
+            for (int i = 0; i < size; ++i)
+                sum += flat[i * size + j];
         return sum;
     });
 
-    std::cout
-        << "\nCache Locality Test (1D contiguous array):\n";
+    std::cout << "\nCache Locality Test (1D contiguous array):\n";
+    print_result("Row-wise Time",    duration_row_major_1d);
+    print_result("Column-wise Time", duration_col_major_1d);
+    compare("1D Row vs Column", duration_row_major_1d, duration_col_major_1d);
 
-    print_result("Row-wise Time", duration7);
-    print_result("Column-wise Time", duration8);
+    divider();
 
-    compare("1D Row vs Column", duration7, duration8);
-
-    print_divider();
-
-    // ----------------------------------------------------
-    // ✅ VERY SMALL EXTRA ADDITIONS
-
-    // find max element benchmark
-    auto duration9 = benchmark([&]() {
-        return *std::max_element(
-            vec.begin(),
-            vec.end()
-        );
+    const auto duration_max_element = benchmark([&] {
+        return *std::ranges::max_element(vec);
     });
+    print_result("Max element (std::ranges::max_element)", duration_max_element);
 
-    print_result(
-        "\nMax element (std::max_element)",
-        duration9
-    );
-
-    // min element benchmark
-    auto duration10 = benchmark([&]() {
-        return *std::min_element(
-            vec.begin(),
-            vec.end()
-        );
+    const auto duration_min_element = benchmark([&] {
+        return *std::ranges::min_element(vec);
     });
+    print_result("Min element (std::ranges::min_element)", duration_min_element);
 
-    print_result(
-        "Min element (std::min_element)",
-        duration10
-    );
-
-    // count benchmark
-    auto duration11 = benchmark([&]() {
-        return std::count_if(
-            vec.begin(),
-            vec.end(),
-            [](int x) {
-                return x % 2 == 0;
-            }
-        );
+    const auto duration_count_even = benchmark([&] {
+        return std::ranges::count_if(vec, [](int x) { return x % 2 == 0; });
     });
+    print_result("Count even numbers", duration_count_even);
 
-    print_result(
-        "Count even numbers",
-        duration11
-    );
-
-    // simple sanity check
-    std::cout << "\nSink value (avoid optimization): "
-              << sink << "\n";
-
-    // ----------------------------------------------------
+    std::cout << std::format("\nSink value (avoid optimization): {}\n", sink);
 
     return 0;
 }

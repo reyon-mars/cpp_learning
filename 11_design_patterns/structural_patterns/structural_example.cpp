@@ -2,153 +2,118 @@
 #include <memory>
 #include <vector>
 #include <string>
-#include <algorithm> // tiny addition
-#include <numeric>   // tiny addition
-
-// ---------------- Adapter ----------------
-
-class OldInterface {
-public:
-    void old_method() { std::cout << "Old method\n"; }
-};
+#include <string_view>
+#include <numeric>
+#include <algorithm>
 
 class NewInterface {
 public:
     virtual ~NewInterface() = default;
-    virtual void new_method() = 0;
+    virtual void new_method() const = 0;
+};
+
+class OldInterface {
+public:
+    void old_method() const { std::cout << "OldInterface::old_method\n"; }
+};
+
+class LegacyPrinter {
+public:
+    void print_legacy() const { std::cout << "LegacyPrinter::print_legacy\n"; }
 };
 
 class Adapter : public NewInterface {
+public:
+    explicit Adapter(std::shared_ptr<OldInterface> obj) : old_{std::move(obj)} {}
+    void new_method() const override { old_->old_method(); }
 private:
-    std::shared_ptr<OldInterface> old;
-    
-public:
-    Adapter(std::shared_ptr<OldInterface> obj) : old(obj) {}
-    
-    void new_method() override {
-        old->old_method();
-    }
+    std::shared_ptr<OldInterface> old_;
 };
 
-: Another legacy system
-class LegacyPrinter {
-public:
-    void print_legacy() { std::cout << "Legacy Printer Output\n"; }
-};
-
-: Adapter for new interface
 class PrinterAdapter : public NewInterface {
-private:
-    std::shared_ptr<LegacyPrinter> printer;
-
 public:
-    PrinterAdapter(std::shared_ptr<LegacyPrinter> p) : printer(p) {}
-
-    void new_method() override {
-        printer->print_legacy();
-    }
+    explicit PrinterAdapter(std::shared_ptr<LegacyPrinter> p) : printer_{std::move(p)} {}
+    void new_method() const override { printer_->print_legacy(); }
+private:
+    std::shared_ptr<LegacyPrinter> printer_;
 };
-
-// ---------------- Decorator ----------------
 
 class Component {
 public:
     virtual ~Component() = default;
-    virtual void operation() = 0;
+    virtual void operation() const = 0;
 };
 
 class ConcreteComponent : public Component {
 public:
-    void operation() override { std::cout << "Operation\n"; }
+    void operation() const override { std::cout << "ConcreteComponent::operation\n"; }
 };
 
 class Decorator : public Component {
-protected:
-    std::shared_ptr<Component> component;
-    
 public:
-    Decorator(std::shared_ptr<Component> comp) : component(comp) {}
-    
-    void operation() override {
-        component->operation();
-    }
+    explicit Decorator(std::shared_ptr<Component> comp) : component_{std::move(comp)} {}
+    void operation() const override { component_->operation(); }
+protected:
+    std::shared_ptr<Component> component_;
 };
 
 class ConcreteDecorator : public Decorator {
 public:
     using Decorator::Decorator;
-    
-    void operation() override {
+    void operation() const override {
         std::cout << "Decorated: ";
         Decorator::operation();
     }
 };
 
-: Extra decorator
 class LoggingDecorator : public Decorator {
 public:
     using Decorator::Decorator;
-
-    void operation() override {
-        std::cout << "[Log] Before operation\n";
+    void operation() const override {
+        std::cout << "[Log] Before\n";
         Decorator::operation();
-        std::cout << "[Log] After operation\n";
+        std::cout << "[Log] After\n";
     }
 };
-
-// ---------------- Bridge ----------------
 
 class Renderer {
 public:
     virtual ~Renderer() = default;
-    virtual void render_circle(float radius) = 0;
+    virtual void render_circle(float radius) const = 0;
 };
 
 class VectorRenderer : public Renderer {
 public:
-    void render_circle(float radius) override {
-        std::cout << "Drawing circle of radius " << radius << " using vectors\n";
+    void render_circle(float r) const override {
+        std::cout << "VectorRenderer: circle radius=" << r << "\n";
     }
 };
 
-: Another implementation
 class RasterRenderer : public Renderer {
 public:
-    void render_circle(float radius) override {
-        std::cout << "Drawing pixels for circle of radius " << radius << "\n";
+    void render_circle(float r) const override {
+        std::cout << "RasterRenderer: circle radius=" << r << "\n";
     }
 };
 
 class Shape {
-protected:
-    std::shared_ptr<Renderer> renderer;
-
 public:
-    Shape(std::shared_ptr<Renderer> r) : renderer(r) {}
+    explicit Shape(std::shared_ptr<Renderer> r) : renderer_{std::move(r)} {}
     virtual ~Shape() = default;
-    virtual void draw() = 0;
+    virtual void draw() const = 0;
+protected:
+    std::shared_ptr<Renderer> renderer_;
 };
 
 class Circle : public Shape {
-private:
-    float radius;
-
 public:
-    Circle(std::shared_ptr<Renderer> r, float rad)
-        : Shape(r), radius(rad) {}
-
-    void draw() override {
-        renderer->render_circle(radius);
-    }
-
-    // ---- EXTRA SMALL ADDITION ----
-    float get_radius() const {
-        return radius;
-    }
-    // --------------------------------
+    Circle(std::shared_ptr<Renderer> r, float radius)
+        : Shape{std::move(r)}, radius_{radius} {}
+    void draw() const override { renderer_->render_circle(radius_); }
+    [[nodiscard]] float radius() const noexcept { return radius_; }
+private:
+    float radius_;
 };
-
-// ---------------- Proxy ----------------
 
 class Image {
 public:
@@ -157,204 +122,109 @@ public:
 };
 
 class RealImage : public Image {
-private:
-    std::string filename;
-
 public:
-    RealImage(const std::string& file) : filename(file) {
-        std::cout << "Loading image: " << filename << "\n";
+    explicit RealImage(std::string_view file) : filename_{file} {
+        std::cout << "Loading: " << filename_ << "\n";
     }
-
-    void display() override {
-        std::cout << "Displaying image: " << filename << "\n";
-    }
+    void display() override { std::cout << "Displaying: " << filename_ << "\n"; }
+private:
+    std::string filename_;
 };
 
 class ImageProxy : public Image {
-private:
-    std::shared_ptr<RealImage> real_image;
-    std::string filename;
-
 public:
-    ImageProxy(const std::string& file) : filename(file) {}
-
+    explicit ImageProxy(std::string file) : filename_{std::move(file)} {}
     void display() override {
-        if (!real_image) {
-            real_image = std::make_shared<RealImage>(filename);
-        }
-        real_image->display();
+        if (!real_) real_ = std::make_shared<RealImage>(filename_);
+        real_->display();
     }
-
-    // ---- EXTRA SMALL ADDITION ----
-    bool is_loaded() const {
-        return real_image != nullptr;
-    }
-    // --------------------------------
+    [[nodiscard]] bool is_loaded() const noexcept { return real_ != nullptr; }
+private:
+    std::shared_ptr<RealImage> real_;
+    std::string                filename_;
 };
 
-: Secure proxy with access control
 class SecureImageProxy : public Image {
-private:
-    std::shared_ptr<RealImage> real_image;
-    std::string filename;
-    bool authorized;
-
 public:
-    SecureImageProxy(const std::string& file, bool auth)
-        : filename(file), authorized(auth) {}
-
+    SecureImageProxy(std::string file, bool auth)
+        : filename_{std::move(file)}, authorized_{auth} {}
     void display() override {
-        if (!authorized) {
-            std::cout << "Access Denied to image: " << filename << "\n";
-            return;
-        }
-
-        if (!real_image) {
-            real_image = std::make_shared<RealImage>(filename);
-        }
-        real_image->display();
+        if (!authorized_) { std::cout << "Access denied: " << filename_ << "\n"; return; }
+        if (!real_) real_ = std::make_shared<RealImage>(filename_);
+        real_->display();
     }
+private:
+    std::shared_ptr<RealImage> real_;
+    std::string                filename_;
+    bool                       authorized_;
 };
 
-// ---------------- Helper Functions (ADDED) ----------------
+using ShapeVec   = std::vector<std::shared_ptr<Shape>>;
+using AdapterVec = std::vector<std::shared_ptr<NewInterface>>;
 
-// Run multiple adapters uniformly
-void run_adapters(const std::vector<std::shared_ptr<NewInterface>>& adapters) {
-    for (const auto& a : adapters) {
-        a->new_method();
-    }
+void run_adapters(const AdapterVec& adapters) {
+    for (const auto& a : adapters) a->new_method();
 }
 
-// Test decorator chain
-void test_component(std::shared_ptr<Component> comp) {
-    comp->operation();
+void test_shapes(const ShapeVec& shapes) {
+    for (const auto& s : shapes) s->draw();
 }
 
-// ✅ NEW: test multiple shapes
-void test_shapes(const std::vector<std::shared_ptr<Shape>>& shapes) {
-    for (const auto& s : shapes) {
-        s->draw();
-    }
+[[nodiscard]] float total_radius(const ShapeVec& shapes) {
+    return std::accumulate(shapes.begin(), shapes.end(), 0.0f,
+        [](float acc, const auto& s) {
+            if (auto c = std::dynamic_pointer_cast<Circle>(s)) return acc + c->radius();
+            return acc;
+        });
 }
 
-// ✅ NEW: proxy tester
 void test_proxy(Image& img) {
-    std::cout << "First call:\n";
-    img.display();
-    std::cout << "Second call (cached):\n";
-    img.display();
+    std::cout << "Call 1: "; img.display();
+    std::cout << "Call 2 (cached): "; img.display();
 }
-
-// ---- EXTRA SMALL HELPERS ----
-
-// print divider
-void print_divider() {
-    std::cout << "---------------------------\n";
-}
-
-// count total radius
-float total_radius(const std::vector<std::shared_ptr<Shape>>& shapes) {
-    float total = 0.0f;
-
-    for (const auto& s : shapes) {
-        auto circle = std::dynamic_pointer_cast<Circle>(s);
-        if (circle)
-            total += circle->get_radius();
-    }
-
-    return total;
-}
-
-// --------------------------------
-
-// ---------------- Main ----------------
 
 int main() {
-
-    // Adapter
-    auto old = std::make_shared<OldInterface>();
-    auto legacy = std::make_shared<LegacyPrinter>();
-
-    std::vector<std::shared_ptr<NewInterface>> adapters;
-    adapters.push_back(std::make_shared<Adapter>(old));
-    adapters.push_back(std::make_shared<PrinterAdapter>(legacy));
-
+    std::cout << "=== Adapter ===\n";
+    AdapterVec adapters;
+    adapters.push_back(std::make_shared<Adapter>(std::make_shared<OldInterface>()));
+    adapters.push_back(std::make_shared<PrinterAdapter>(std::make_shared<LegacyPrinter>()));
     run_adapters(adapters);
 
-    std::cout << "\n";
+    std::cout << "\n=== Decorator ===\n";
+    auto comp    = std::make_shared<ConcreteComponent>();
+    auto deco    = std::make_shared<ConcreteDecorator>(comp);
+    auto logged  = std::make_shared<LoggingDecorator>(deco);
+    logged->operation();
 
-    // Decorator
-    auto component = std::make_shared<ConcreteComponent>();
-    auto decorated = std::make_shared<ConcreteDecorator>(component);
-    auto logged = std::make_shared<LoggingDecorator>(decorated);
+    std::cout << "\n=== Bridge ===\n";
+    auto vec_r = std::make_shared<VectorRenderer>();
+    auto ras_r = std::make_shared<RasterRenderer>();
+    Circle{vec_r, 5.0f}.draw();
+    Circle{ras_r, 3.0f}.draw();
 
-    test_component(logged);
-
-    std::cout << "\n";
-
-    // Bridge
-    auto vector_renderer = std::make_shared<VectorRenderer>();
-    auto raster_renderer = std::make_shared<RasterRenderer>();
-
-    Circle c1(vector_renderer, 5.0f);
-    Circle c2(raster_renderer, 3.0f);
-
-    c1.draw();
-    c2.draw();
-
-    // ✅ NEW: batch test
-    std::vector<std::shared_ptr<Shape>> shapes;
-    shapes.push_back(std::make_shared<Circle>(vector_renderer, 2.0f));
-    shapes.push_back(std::make_shared<Circle>(raster_renderer, 4.0f));
-
-    std::cout << "\nBatch shape rendering:\n";
+    ShapeVec shapes;
+    shapes.push_back(std::make_shared<Circle>(vec_r, 2.0f));
+    shapes.push_back(std::make_shared<Circle>(ras_r, 4.0f));
+    std::cout << "Batch:\n";
     test_shapes(shapes);
+    std::cout << "total_radius=" << total_radius(shapes) << "\n";
 
-    // ---- EXTRA SMALL ADDITION ----
-    std::cout << "Total radius: "
-              << total_radius(shapes) << "\n";
-    // --------------------------------
+    std::cout << "\n=== Proxy ===\n";
+    ImageProxy img{"photo.png"};
+    test_proxy(img);
+    std::cout << "is_loaded=" << std::boolalpha << img.is_loaded() << "\n";
 
-    std::cout << "\n";
+    std::cout << "\n=== Secure Proxy ===\n";
+    SecureImageProxy denied{"secret.png", false};
+    SecureImageProxy granted{"secret.png", true};
+    denied.display();
+    granted.display();
 
-    // Proxy
-    ImageProxy img("photo.png");
-    test_proxy(img);   // ✅ NEW helper used
-
-    // ---- EXTRA SMALL ADDITION ----
-    std::cout << "Image loaded? "
-              << (img.is_loaded() ? "Yes" : "No") << "\n";
-    // --------------------------------
-
-    std::cout << "\n";
-
-    // Secure proxy usage
-    SecureImageProxy secure_img("secret.png", false);
-    SecureImageProxy secure_img2("secret.png", true);
-
-    secure_img.display();
-    secure_img2.display();
-
-    // ===== FINAL SMALL ADDITIONS =====
-
-    print_divider();
-
-    std::vector<int> nums = {1, 2, 3, 4, 5};
-
-    int total = std::accumulate(nums.begin(), nums.end(), 0);
-
-    std::cout << "Numeric sum: "
-              << total << "\n";
-
-    std::cout << "Largest value: "
-              << *std::max_element(nums.begin(), nums.end())
-              << "\n";
-
-    std::cout << "Smallest value: "
-              << *std::min_element(nums.begin(), nums.end())
-              << "\n";
-
-    // =================================
+    std::cout << "\n=== Numeric utilities ===\n";
+    const std::vector<int> nums{1, 2, 3, 4, 5};
+    std::cout << "sum=" << std::accumulate(nums.begin(), nums.end(), 0)
+              << " max=" << *std::ranges::max_element(nums)
+              << " min=" << *std::ranges::min_element(nums) << "\n";
 
     return 0;
 }

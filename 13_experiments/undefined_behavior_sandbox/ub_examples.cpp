@@ -1,212 +1,115 @@
-// Undefined Behavior Sandbox
-// Exploring and understanding undefined behavior
-
 #include <iostream>
 #include <climits>
-
-
-#include <vector>
-#include <optional>
-
-// -------- NEW ADDITIONS --------
-#include <array>
-
-// ✅ VERY SMALL EXTRA ADDITIONS
-#include <memory>
 #include <limits>
+#include <vector>
+#include <array>
+#include <optional>
+#include <memory>
+#include <cstddef>
 
-// Safe division helper
 void safe_division(int a, int b) {
-    if (b == 0) {
-        std::cout << "Division by zero avoided (would be UB)\n";
-        return;
-    }
-    std::cout << "Division result: " << a / b << "\n";
+    if (b == 0) { std::cout << "Division by zero — would be UB\n"; return; }
+    std::cout << "Division " << a << "/" << b << "=" << a / b << "\n";
 }
 
-// --------------------------------
-
-
-// Safe narrowing conversion
 void safe_narrowing(long long value) {
-    if (value > std::numeric_limits<int>::max() ||
-        value < std::numeric_limits<int>::min()) {
-        std::cout << "Narrowing conversion would overflow int\n";
+    if (value > static_cast<long long>(std::numeric_limits<int>::max()) ||
+        value < static_cast<long long>(std::numeric_limits<int>::min())) {
+        std::cout << value << " overflows int\n";
     } else {
-        int converted = static_cast<int>(value);
-        std::cout << "Safely converted: " << converted << "\n";
+        std::cout << "Narrowed: " << static_cast<int>(value) << "\n";
     }
 }
 
-// Smart pointer safety example
 void smart_pointer_demo() {
-    std::unique_ptr<int> ptr = std::make_unique<int>(99);
-
-    std::cout << "Smart pointer value: " << *ptr << "\n";
-
+    auto ptr = std::make_unique<int>(99);
+    std::cout << "unique_ptr value=" << *ptr << "\n";
     ptr.reset();
-
-    std::cout << "Smart pointer reset safely\n";
+    std::cout << "After reset ptr=" << std::boolalpha << (ptr == nullptr) << "\n";
 }
-
-// Small divider helper
-void print_divider() {
-    std::cout << "-----------------------------\n";
-}
-
-// =====================================
 
 int main() {
+    std::cout << "=== Integer limits ===\n";
+    std::cout << "INT_MAX=" << INT_MAX << " INT_MIN=" << INT_MIN << "\n"
+              << "numeric_limits<int>::max()=" << std::numeric_limits<int>::max() << "\n";
 
-    // Example 1: Buffer overflow
-    // char buffer[5];
-    // strcpy(buffer, "Hello World");  // UB: exceeds buffer size
-
-    // Example 2: Null pointer dereference
-    // int* ptr = nullptr;
-    // *ptr = 10;  // UB
-
-    // Example 3: Use after free
-    // int* p = new int(10);
-    // delete p;
-    // *p = 20;  // UB
-
-    // Example 4: Signed integer overflow
-    // int max_int = INT_MAX;
-    // int overflow = max_int + 1;  // UB in C++
-
-    std::cout << "Undefined behavior examples (commented out for safety)\n\n";
-
-    // ---- Safe experiments ----
-
-    // Demonstrating integer limits
-    std::cout << "INT_MAX: " << INT_MAX << "\n";
-    std::cout << "INT_MIN: " << INT_MIN << "\n";
-
-    // Safe overflow check
     int a = INT_MAX;
+    if (a > INT_MAX - 1)
+        std::cout << "Adding 1 to INT_MAX would be signed overflow (UB)\n";
 
-    if (a > INT_MAX - 1) {
-        std::cout << "Adding 1 would cause signed integer overflow (UB)\n";
+    std::cout << "\n=== Dangling pointer (no dereference) ===\n";
+    {
+        int* raw = new int{42};
+        delete raw;
+        raw = nullptr;
+        std::cout << "After delete + null: raw=" << std::boolalpha << (raw == nullptr) << "\n";
     }
 
-    // Dangling pointer example (without dereferencing)
-    int* ptr = new int(42);
-    delete ptr;
+    std::cout << "\n=== Uninitialized variable (declared, not used) ===\n";
+    [[maybe_unused]] int x;
+    std::cout << "Declared but not read — avoids UB\n";
 
-    std::cout << "Pointer after delete (dangling): " << ptr << "\n";
-    std::cout << "Accessing it would be undefined behavior\n";
-
-    : Best practice (null after delete)
-    ptr = nullptr;
-    std::cout << "Pointer reset to nullptr (safe practice)\n";
-
-    // ----------------------------------------------------
-    : Uninitialized variable awareness (safe note)
-    std::cout << "\nUninitialized variables can cause UB if used.\n";
-    int x; 
-    std::cout << "Uninitialized variable declared (not used to avoid UB)\n";
-
-    // ----------------------------------------------------
-    : Safe array access
-    std::cout << "\nSafe array access using vector::at():\n";
-    std::vector<int> v = {1, 2, 3};
-
+    std::cout << "\n=== Safe bounds check (vector::at) ===\n";
+    std::vector<int> v{1, 2, 3};
     try {
-        std::cout << "Access v.at(5): ";
-        std::cout << v.at(5) << "\n"; // throws exception instead of UB
-    } catch (const std::out_of_range& e) {
-        std::cout << "Caught exception: out_of_range (safe handling)\n";
+        std::cout << "v.at(5)=";
+        std::cout << v.at(5) << "\n";
+    } catch (const std::out_of_range&) {
+        std::cout << "out_of_range caught\n";
     }
 
-    // ----------------------------------------------------
-    : Using std::optional to avoid invalid states
-    std::cout << "\nUsing std::optional:\n";
-    std::optional<int> safe_value;
+    std::cout << "\n=== std::optional ===\n";
+    std::optional<int> opt;
+    if (!opt.has_value()) std::cout << "opt is empty — avoids UB\n";
+    opt = 10;
+    std::cout << "opt=" << opt.value() << "\n";
 
-    if (!safe_value.has_value()) {
-        std::cout << "Value not initialized, avoiding UB\n";
-    }
-
-    safe_value = 10;
-    std::cout << "Safe value: " << safe_value.value() << "\n";
-
-    // ----------------------------------------------------
-    // ✅ NEW: std::array vs raw array
-    std::cout << "\nstd::array vs raw array:\n";
-    std::array<int, 3> arr = {1, 2, 3};
-
+    std::cout << "\n=== std::array bounds check ===\n";
+    std::array<int, 3> arr{1, 2, 3};
     try {
-        std::cout << "arr.at(5): ";
+        std::cout << "arr.at(5)=";
         std::cout << arr.at(5) << "\n";
-    } catch (...) {
-        std::cout << "Out-of-bounds prevented using std::array\n";
+    } catch (const std::out_of_range&) {
+        std::cout << "out_of_range caught\n";
     }
 
-    // ----------------------------------------------------
-    // ✅ NEW: Division by zero safety
-    std::cout << "\nDivision safety:\n";
+    std::cout << "\n=== Division safety ===\n";
     safe_division(10, 2);
     safe_division(10, 0);
 
-    // ----------------------------------------------------
-    // ✅ NEW: Iterator invalidation awareness
-    std::cout << "\nIterator invalidation awareness:\n";
-    std::vector<int> v2 = {1, 2, 3};
-    auto it = v2.begin();
+    std::cout << "\n=== Iterator invalidation ===\n";
+    std::vector<int> v2{1, 2, 3};
+    [[maybe_unused]] auto it = v2.begin();
+    v2.push_back(4);
+    std::cout << "push_back may invalidate iterators — do not dereference it\n";
 
-    v2.push_back(4); // may invalidate iterator
-    std::cout << "After push_back, iterator may be invalid\n";
+    std::cout << "\n=== Signed/unsigned mismatch ===\n";
+    const int neg = -1;
+    const unsigned int u = 1;
+    if (static_cast<unsigned int>(neg) < u)
+        std::cout << "With implicit conversion -1 becomes a large unsigned value\n";
+    if (neg < static_cast<int>(u))
+        std::cout << "Explicit cast to signed: -1 < 1 as expected\n";
 
-    // ----------------------------------------------------
-    // ✅ NEW: Signed vs unsigned mismatch
-    std::cout << "\nSigned vs unsigned example:\n";
-    int neg = -1;
-    unsigned int u = 1;
+    std::cout << "\n=== Alignment ===\n";
+    std::cout << "alignof(int)=" << alignof(int)
+              << " alignof(double)=" << alignof(double) << "\n";
 
-    if (neg < u) {
-        std::cout << "Unexpected comparison result due to type conversion\n";
-    }
-
-    // ----------------------------------------------------
-    // ✅ NEW: Alignment awareness
-    std::cout << "\nAlignment info:\n";
-    std::cout << "Alignment of int: " << alignof(int) << "\n";
-    std::cout << "Alignment of double: " << alignof(double) << "\n";
-
-    // ====================================================
-    // ✅ VERY SMALL EXTRA USAGE
-
-    print_divider();
-
-    std::cout << "\nSafe narrowing conversion:\n";
+    std::cout << "\n=== Narrowing conversion ===\n";
     safe_narrowing(100);
-    safe_narrowing(999999999999LL);
+    safe_narrowing(999'999'999'999LL);
 
-    print_divider();
-
-    std::cout << "\nSmart pointer safety demo:\n";
+    std::cout << "\n=== Smart pointer ===\n";
     smart_pointer_demo();
 
-    print_divider();
-
-    // Safe null pointer check
-    int* safe_ptr = nullptr;
-
-    if (safe_ptr == nullptr) {
+    std::cout << "\n=== Null pointer check ===\n";
+    const int* safe_ptr = nullptr;
+    if (safe_ptr == nullptr)
         std::cout << "Null pointer detected safely\n";
-    }
 
-    print_divider();
-
-    // Safe loop bounds
-    std::cout << "\nSafe vector iteration:\n";
-    for (std::size_t i = 0; i < v.size(); ++i) {
-        std::cout << v[i] << " ";
-    }
+    std::cout << "\n=== Safe iteration ===\n";
+    for (std::size_t i = 0; i < v.size(); ++i) std::cout << v[i] << " ";
     std::cout << "\n";
-
-    // ====================================================
 
     return 0;
 }

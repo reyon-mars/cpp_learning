@@ -1,107 +1,82 @@
-#include <GL/glut.h>   // simpler header for GLUT
+#include <GL/glut.h>
 #include <iostream>
-
-
 #include <chrono>
-#include <cmath>
 
-// ---------------- NEW SMALL ADDITIONS ----------------
+namespace {
 
-// handle window resize
+bool  rotate_triangle = false;
+float angle           = 0.0f;
+int   frame_count     = 0;
+
+auto last_time = std::chrono::steady_clock::now();
+
 void reshape(int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-// keyboard input (ESC to exit + NEW: toggle rotation)
-bool rotate_triangle = false;
-
-void keyboard(unsigned char key, int x, int y) {
-    if (key == 27) { // ESC key
-        std::cout << "Exiting...\n";
-        exit(0);
-    }
-
-    : toggle rotation
-    if (key == 'r' || key == 'R') {
-        rotate_triangle = !rotate_triangle;
+void keyboard(unsigned char key, int /*x*/, int /*y*/) {
+    switch (key) {
+        case 27:
+            std::cout << "Exiting...\n";
+            std::exit(0);
+        case 'r':
+        case 'R':
+            rotate_triangle = !rotate_triangle;
+            std::cout << "Rotation: " << (rotate_triangle ? "ON" : "OFF") << '\n';
+            break;
+        default:
+            break;
     }
 }
 
-// simple animation (refresh loop)
 void timer(int) {
-    glutPostRedisplay();              // request redraw
-    glutTimerFunc(16, timer, 0);      // ~60 FPS
+    glutPostRedisplay();
+    glutTimerFunc(16, timer, 0);
 }
-
-// ----------------------------------------------------
-
-: rotation + FPS tracking
-float angle = 0.0f;
-
-auto lastTime = std::chrono::high_resolution_clock::now();
-int frames = 0;
 
 void display() {
-
     glClear(GL_COLOR_BUFFER_BIT);
-
-    : apply rotation
     glLoadIdentity();
+
     if (rotate_triangle) {
-        angle += 0.5f;
+        angle = std::fmod(angle + 0.5f, 360.0f);
         glRotatef(angle, 0.0f, 0.0f, 1.0f);
     }
 
     glBegin(GL_TRIANGLES);
-
-        glColor3f(1.0f, 0.0f, 0.0f);
-        glVertex2f(-0.5f, -0.5f);
-
-        glColor3f(0.0f, 1.0f, 0.0f);
-        glVertex2f(0.5f, -0.5f);
-
-        glColor3f(0.0f, 0.0f, 1.0f);
-        glVertex2f(0.0f, 0.5f);
-
+        glColor3f(1.0f, 0.0f, 0.0f); glVertex2f(-0.5f, -0.5f);
+        glColor3f(0.0f, 1.0f, 0.0f); glVertex2f( 0.5f, -0.5f);
+        glColor3f(0.0f, 0.0f, 1.0f); glVertex2f( 0.0f,  0.5f);
     glEnd();
 
-    // ✅ UPDATED: use double buffering
     glutSwapBuffers();
 
-    : FPS counter
-    frames++;
-    auto currentTime = std::chrono::high_resolution_clock::now();
-    float elapsed = std::chrono::duration<float>(currentTime - lastTime).count();
-
-    if (elapsed >= 1.0f) {
-        std::cout << "FPS: " << frames << "\n";
-        frames = 0;
-        lastTime = currentTime;
+    ++frame_count;
+    const auto now    = std::chrono::steady_clock::now();
+    const float delta = std::chrono::duration<float>(now - last_time).count();
+    if (delta >= 1.0f) {
+        std::cout << "FPS: " << frame_count << '\n';
+        frame_count = 0;
+        last_time   = now;
     }
 }
 
+} // anonymous namespace
+
 int main(int argc, char** argv) {
-
     glutInit(&argc, argv);
-
-    // ✅ UPDATED: enable double buffering
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
-
     glutInitWindowSize(800, 600);
     glutInitWindowPosition(100, 100);
+    glutCreateWindow("OpenGL Triangle");
 
-    glutCreateWindow("OpenGL Test");
-
-    glClearColor(0.0, 0.0, 0.0, 1.0);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     glutDisplayFunc(display);
-
-    
     glutReshapeFunc(reshape);
     glutKeyboardFunc(keyboard);
     glutTimerFunc(0, timer, 0);
 
     glutMainLoop();
-
     return 0;
 }

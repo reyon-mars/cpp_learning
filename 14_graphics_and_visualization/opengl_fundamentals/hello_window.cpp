@@ -1,268 +1,176 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
-
-
-#include <string>
+#include <string_view>
 #include <chrono>
-
 #include <cmath>
 #include <iomanip>
+#include <array>
 
-: Resize callback
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
+using Clock = std::chrono::high_resolution_clock;
+
+void framebuffer_size_callback(GLFWwindow*, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-// ---------------- NEW SMALL ADDITIONS ----------------
-
-// process input (ESC to close + NEW: wireframe toggle)
-void process_input(GLFWwindow* window)
-{
+void process_input(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    : Toggle wireframe mode
-    static bool wireframe = false;
-    static bool keyPressed = false;
+    static bool wireframe  = false;
+    static bool key_held   = false;
 
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS && !keyPressed) {
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS && !key_held) {
         wireframe = !wireframe;
-        keyPressed = true;
-
-        if (wireframe)
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        else
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-        std::cout << "Wireframe mode: "
-                  << (wireframe ? "ON" : "OFF") << "\n";
+        key_held  = true;
+        glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
+        std::cout << "Wireframe: " << std::boolalpha << wireframe << "\n";
     }
-
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_RELEASE)
-        keyPressed = false;
+        key_held = false;
 }
 
-// check shader compilation errors
-void check_shader_errors(unsigned int shader, std::string type)
-{
-    int success;
-    char infoLog[512];
+void check_shader_errors(GLuint shader, std::string_view type) {
+    GLint success = 0;
+    std::array<char, 512> log{};
 
-    if (type != "PROGRAM")
-    {
+    if (type != "PROGRAM") {
         glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-        if (!success)
-        {
-            glGetShaderInfoLog(shader, 512, NULL, infoLog);
-            std::cout << "ERROR::SHADER_COMPILATION (" << type << ")\n"
-                      << infoLog << "\n";
+        if (!success) {
+            glGetShaderInfoLog(shader, static_cast<GLsizei>(log.size()), nullptr, log.data());
+            std::cerr << "Shader compile error (" << type << "):\n" << log.data() << "\n";
         }
-    }
-    else
-    {
+    } else {
         glGetProgramiv(shader, GL_LINK_STATUS, &success);
-        if (!success)
-        {
-            glGetProgramInfoLog(shader, 512, NULL, infoLog);
-            std::cout << "ERROR::PROGRAM_LINKING\n"
-                      << infoLog << "\n";
+        if (!success) {
+            glGetProgramInfoLog(shader, static_cast<GLsizei>(log.size()), nullptr, log.data());
+            std::cerr << "Program link error:\n" << log.data() << "\n";
         }
     }
 }
 
-: OpenGL error checker
-void check_gl_error() {
-    GLenum err;
-    while ((err = glGetError()) != GL_NO_ERROR) {
-        std::cout << "OpenGL Error: " << err << "\n";
-    }
+void check_gl_errors() {
+    for (GLenum err; (err = glGetError()) != GL_NO_ERROR;)
+        std::cerr << "GL error: 0x" << std::hex << err << std::dec << "\n";
 }
 
-// -----------------------------------------------------
-
-// ===== VERY SMALL EXTRA HELPERS =====
-
-// Print OpenGL information
 void print_opengl_info() {
-    std::cout << "Renderer: "
-              << glGetString(GL_RENDERER) << "\n";
-
-    std::cout << "OpenGL Version: "
-              << glGetString(GL_VERSION) << "\n";
+    std::cout << "Renderer: "       << glGetString(GL_RENDERER) << "\n"
+              << "OpenGL Version: " << glGetString(GL_VERSION)  << "\n";
 }
 
-// Simple runtime timer
-float get_runtime_seconds(
-    const std::chrono::high_resolution_clock::time_point& start)
-{
-    auto now = std::chrono::high_resolution_clock::now();
-
-    return std::chrono::duration<float>(now - start).count();
+[[nodiscard]] float elapsed_seconds(Clock::time_point from) {
+    return std::chrono::duration<float>(Clock::now() - from).count();
 }
 
-// ====================================
-
-: Shader sources
-const char* vertexShaderSource = R"(
+constexpr char VERTEX_SHADER_SRC[] = R"glsl(
 #version 330 core
 layout (location = 0) in vec3 aPos;
-void main()
-{
-    gl_Position = vec4(aPos, 1.0);
-}
-)";
+void main() { gl_Position = vec4(aPos, 1.0); }
+)glsl";
 
-const char* fragmentShaderSource = R"(
+constexpr char FRAGMENT_SHADER_SRC[] = R"glsl(
 #version 330 core
 out vec4 FragColor;
-void main()
-{
-    FragColor = vec4(0.2f, 0.7f, 0.3f, 1.0f);
-}
-)";
+void main() { FragColor = vec4(0.2, 0.7, 0.3, 1.0); }
+)glsl";
 
-int main(){
-
-    // Initialize GLFW
+int main() {
     glfwInit();
-
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    // Create window
-    GLFWwindow* window = glfwCreateWindow(800, 600, "OpenGL Window", NULL, NULL);
-
-    if (window == NULL)
-    {
-        std::cout << "Failed to create GLFW window\n";
+    GLFWwindow* window = glfwCreateWindow(800, 600, "OpenGL Triangle", nullptr, nullptr);
+    if (!window) {
+        std::cerr << "Failed to create GLFW window\n";
         glfwTerminate();
         return -1;
     }
 
     glfwMakeContextCurrent(window);
-
-    
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-    // Load OpenGL functions using GLAD
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cout << "Failed to initialize GLAD\n";
+    if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
+        std::cerr << "Failed to initialise GLAD\n";
         return -1;
     }
 
-    : Set viewport
     glViewport(0, 0, 800, 600);
-
-    // ===== VERY SMALL EXTRA ADDITION =====
     print_opengl_info();
-    // =====================================
 
-    : Triangle data
-    float vertices[] = {
+    constexpr std::array<float, 9> vertices{
          0.0f,  0.5f, 0.0f,
         -0.5f, -0.5f, 0.0f,
-         0.5f, -0.5f, 0.0f
+         0.5f, -0.5f, 0.0f,
     };
 
-    // VAO + VBO
-    unsigned int VAO, VBO;
+    GLuint VAO{}, VBO{};
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
 
     glBindVertexArray(VAO);
-
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glBufferData(GL_ARRAY_BUFFER,
+                 static_cast<GLsizeiptr>(vertices.size() * sizeof(float)),
+                 vertices.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
     glEnableVertexAttribArray(0);
 
-    : Shader compilation
-    unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
-    check_shader_errors(vertexShader, "VERTEX");
+    const GLuint vertShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertShader, 1, &VERTEX_SHADER_SRC, nullptr);
+    glCompileShader(vertShader);
+    check_shader_errors(vertShader, "VERTEX");
 
-    unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-    check_shader_errors(fragmentShader, "FRAGMENT");
+    const GLuint fragShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragShader, 1, &FRAGMENT_SHADER_SRC, nullptr);
+    glCompileShader(fragShader);
+    check_shader_errors(fragShader, "FRAGMENT");
 
-    unsigned int shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-    check_shader_errors(shaderProgram, "PROGRAM");
+    const GLuint program = glCreateProgram();
+    glAttachShader(program, vertShader);
+    glAttachShader(program, fragShader);
+    glLinkProgram(program);
+    check_shader_errors(program, "PROGRAM");
 
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+    glDeleteShader(vertShader);
+    glDeleteShader(fragShader);
 
-    : FPS counter setup
-    auto lastTime = std::chrono::high_resolution_clock::now();
+    const auto app_start = Clock::now();
+    auto       fps_timer  = Clock::now();
+    int        frames     = 0;
 
-    // ===== VERY SMALL EXTRA ADDITION =====
-    auto appStart = std::chrono::high_resolution_clock::now();
-    // =====================================
-
-    int frames = 0;
-
-    // Render loop
-    while (!glfwWindowShouldClose(window))
-    {
+    while (!glfwWindowShouldClose(window)) {
         process_input(window);
 
-        : animated background color
-        float time = glfwGetTime();
-        float green = (std::sin(time) / 2.0f) + 0.5f;
-
+        const float t     = static_cast<float>(glfwGetTime());
+        const float green = (std::sin(t) / 2.0f) + 0.5f;
         glClearColor(0.1f, green, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glUseProgram(shaderProgram);
+        glUseProgram(program);
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
-        : FPS calculation
-        frames++;
-        auto currentTime = std::chrono::high_resolution_clock::now();
-
-        float elapsed =
-            std::chrono::duration<float>(currentTime - lastTime).count();
-
-        if (elapsed >= 1.0f) {
-
-            // ===== VERY SMALL EXTRA OUTPUT =====
-            float runtime = get_runtime_seconds(appStart);
-            // ===================================
-
-            std::cout << "FPS: " << frames
-                      << " | Runtime: "
-                      << std::fixed << std::setprecision(1)
-                      << runtime << "s\n";
-
-            frames = 0;
-            lastTime = currentTime;
+        ++frames;
+        if (elapsed_seconds(fps_timer) >= 1.0f) {
+            std::cout << "FPS=" << frames
+                      << " Runtime=" << std::fixed << std::setprecision(1)
+                      << elapsed_seconds(app_start) << "s\n";
+            frames    = 0;
+            fps_timer = Clock::now();
         }
 
-        : OpenGL error check
-        check_gl_error();
-
+        check_gl_errors();
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    // ---------------- CLEANUP ----------------
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
-    glDeleteProgram(shaderProgram);
-    // -----------------------------------------
+    glDeleteProgram(program);
 
-    std::cout << "OpenGL resources cleaned successfully\n";
-
+    std::cout << "Cleaned up OpenGL resources\n";
     glfwTerminate();
     return 0;
 }

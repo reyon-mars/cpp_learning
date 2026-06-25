@@ -1,253 +1,133 @@
-// STL Internals Exploration
-// Understanding how STL containers are implemented
-
 #include <iostream>
 #include <vector>
-
-
 #include <deque>
+#include <list>
+#include <array>
 #include <numeric>
+#include <algorithm>
 #include <iomanip>
-#include <list>        // NEW
-#include <array>       // NEW
-#include <algorithm>   // NEW
+#include <span>
+#include <string_view>
 
-// -------- NEW ADDITIONS --------
-
-// Show growth factor
-void print_growth(size_t old_cap, size_t new_cap) {
-    if (old_cap > 0) {
-        double factor = (double)new_cap / old_cap;
-        std::cout << "  [growth factor: " << factor << "]";
-    }
+void print_growth(std::size_t old_cap, std::size_t new_cap) {
+    if (old_cap > 0)
+        std::cout << " [growth x" << static_cast<double>(new_cap) / static_cast<double>(old_cap) << "]";
 }
 
-// Compare reserve vs no reserve
-void compare_reserve_behavior() {
-    std::vector<int> a, b;
-
-    for (int i = 0; i < 100; ++i)
-        a.push_back(i);
-
-    b.reserve(100);
-    for (int i = 0; i < 100; ++i)
-        b.push_back(i);
-
-    std::cout << "\nReserve vs No Reserve:\n";
-    std::cout << "Without reserve capacity: " << a.capacity() << "\n";
-    std::cout << "With reserve capacity: " << b.capacity() << "\n";
-}
-
-: simple reallocation counter
-int count_reallocations() {
+[[nodiscard]] int count_reallocations(int n = 50) {
     std::vector<int> v;
     const int* prev = nullptr;
-    int reallocs = 0;
-
-    for (int i = 0; i < 50; ++i) {
+    int count = 0;
+    for (int i = 0; i < n; ++i) {
         v.push_back(i);
-        if (prev && prev != v.data())
-            ++reallocs;
+        if (prev && prev != v.data()) ++count;
         prev = v.data();
     }
-    return reallocs;
+    return count;
 }
 
-: print small stats
-void print_stats(const std::vector<int>& v) {
-    int sum = std::accumulate(v.begin(), v.end(), 0);
-    double avg = v.empty() ? 0.0 : (double)sum / v.size();
-
-    std::cout << "Sum: " << sum << "\n";
-    std::cout << "Average: " << avg << "\n";
+void print_stats(std::span<const int> v) {
+    if (v.empty()) { std::cout << "(empty)\n"; return; }
+    const int sum = std::accumulate(v.begin(), v.end(), 0);
+    std::cout << "sum=" << sum
+              << " avg=" << static_cast<double>(sum) / static_cast<double>(v.size()) << "\n";
 }
 
-
-// Print divider
-void print_divider() {
-    std::cout << "-----------------------------\n";
+void compare_reserve_behavior() {
+    std::cout << "\n=== reserve vs no reserve ===\n";
+    std::vector<int> a, b;
+    b.reserve(100);
+    for (int i = 0; i < 100; ++i) { a.push_back(i); b.push_back(i); }
+    std::cout << "without reserve: capacity=" << a.capacity() << "\n"
+              << "with reserve:    capacity=" << b.capacity() << "\n";
 }
 
-// Show front/back elements
-void print_front_back(const std::vector<int>& v) {
-    if (!v.empty()) {
-        std::cout << "Front: " << v.front() << "\n";
-        std::cout << "Back: " << v.back() << "\n";
-    }
-}
-
-// Compare vector and list sizes
-void compare_container_sizes() {
-    std::vector<int> vec(10);
-    std::list<int> lst(10);
-
-    std::cout << "\nContainer comparison:\n";
-    std::cout << "Vector size: " << vec.size() << "\n";
-    std::cout << "List size: " << lst.size() << "\n";
-}
-
-// Small array demo
 void array_demo() {
-    std::array<int, 5> arr = {1, 2, 3, 4, 5};
-
-    std::cout << "\nstd::array contents: ";
-    for (int v : arr)
-        std::cout << v << " ";
-
+    std::cout << "\n=== std::array ===\n";
+    constexpr std::array<int, 5> arr{1, 2, 3, 4, 5};
+    for (int v : arr) std::cout << v << " ";
     std::cout << "\n";
 }
 
-// ====================================
-
-// --------------------------------
-
 int main() {
+    std::cout << "=== Vector growth tracking ===\n";
     std::vector<int> vec;
+    std::cout << "initial: capacity=" << vec.capacity() << " size=" << vec.size() << "\n";
 
-    std::cout << "Vector capacity: " << vec.capacity() << "\n";
-    std::cout << "Vector size: " << vec.size() << "\n";
-
-    const int* previous_address = nullptr;
-
-    : Track previous capacity
-    size_t prev_capacity = vec.capacity();
+    const int* prev_ptr = nullptr;
+    std::size_t prev_cap = vec.capacity();
 
     for (int i = 0; i < 10; ++i) {
-
         vec.push_back(i);
-
-        const int* current_address = vec.data();
-
-        std::cout << "After push_back(" << i << "): "
-                  << "capacity=" << vec.capacity()
-                  << ", size=" << vec.size()
-                  << ", data=" << current_address;
-
-        // Detect reallocation
-        if (previous_address && previous_address != current_address) {
-            std::cout << "  <-- reallocation happened";
+        const int* cur = vec.data();
+        std::cout << "push_back(" << i << "): capacity=" << vec.capacity()
+                  << " size=" << vec.size();
+        if (prev_ptr && prev_ptr != cur)
+            std::cout << " <-- reallocation";
+        if (vec.capacity() != prev_cap) {
+            std::cout << " [" << prev_cap << " → " << vec.capacity() << "]";
+            print_growth(prev_cap, vec.capacity());
+            prev_cap = vec.capacity();
         }
-
-        : Detect growth pattern
-        if (vec.capacity() != prev_capacity) {
-            std::cout << "  [capacity grew from "
-                      << prev_capacity << " to "
-                      << vec.capacity() << "]";
-
-            // ✅ NEW: growth factor
-            print_growth(prev_capacity, vec.capacity());
-
-            prev_capacity = vec.capacity();
-        }
-
         std::cout << "\n";
-
-        previous_address = current_address;
+        prev_ptr = cur;
     }
 
-    // Reserve memory
     vec.reserve(100);
     std::cout << "After reserve(100): capacity=" << vec.capacity() << "\n";
-
-    // Shrink to fit
     vec.shrink_to_fit();
     std::cout << "After shrink_to_fit: capacity=" << vec.capacity() << "\n";
 
-    // ----------------------------------------------------
-    : Iterator invalidation demo
-    std::cout << "\nIterator Invalidation Demo:\n";
-    std::vector<int> v2 = {1, 2, 3};
-
+    std::cout << "\n=== Iterator invalidation ===\n";
+    std::vector<int> v2{1, 2, 3};
     auto it = v2.begin();
-    std::cout << "Before push_back, first element: " << *it << "\n";
+    std::cout << "Before push_back: *it=" << *it << "\n";
+    v2.push_back(4);
+    std::cout << "After push_back (it may be invalidated — do not dereference it)\n";
 
-    v2.push_back(4); // may invalidate iterator
-
-    std::cout << "After push_back, iterator may be invalidated!\n";
-    std::cout << "(Do NOT dereference 'it' after reallocation)\n";
-
-    // ----------------------------------------------------
-    : Compare with deque
-    std::cout << "\nDeque Comparison:\n";
+    std::cout << "\n=== deque (no single contiguous block) ===\n";
     std::deque<int> dq;
+    for (int i = 0; i < 5; ++i) { dq.push_back(i); std::cout << "size=" << dq.size() << "\n"; }
 
-    for (int i = 0; i < 10; ++i) {
-        dq.push_back(i);
-        std::cout << "Deque size: " << dq.size() << "\n";
-    }
+    std::cout << "\n=== Memory efficiency ===\n";
+    const double eff = static_cast<double>(vec.size()) / static_cast<double>(vec.capacity()) * 100.0;
+    std::cout << "size=" << vec.size() << " capacity=" << vec.capacity()
+              << " efficiency=" << std::fixed << std::setprecision(2) << eff << "%\n";
 
-    std::cout << "Deque does not reallocate like vector (no single contiguous block)\n";
+    std::cout << "\n=== Contiguous memory ===\n";
+    for (std::size_t i = 0; i + 1 < vec.size(); ++i)
+        std::cout << static_cast<void*>(&vec[i]) << " → " << static_cast<void*>(&vec[i+1]) << "\n";
 
-    // ----------------------------------------------------
-    : Memory efficiency
-    std::cout << "\nMemory Efficiency:\n";
-    std::cout << "Vector size: " << vec.size() << "\n";
-    std::cout << "Vector capacity: " << vec.capacity() << "\n";
-
-    double efficiency = (double)vec.size() / vec.capacity() * 100.0;
-    std::cout << "Usage efficiency: " << std::fixed << std::setprecision(2)
-              << efficiency << "%\n";
-
-    // ----------------------------------------------------
-    // ✅ NEW: Contiguous memory proof
-    std::cout << "\nContiguous Memory Check:\n";
-    for (size_t i = 0; i < vec.size() - 1; ++i) {
-        std::cout << &vec[i] << " -> " << &vec[i + 1] << "\n";
-    }
-
-    std::cout << "Addresses are sequential → vector is contiguous\n";
-
-    // ----------------------------------------------------
-    // ✅ NEW: push_back vs emplace_back
-    std::cout << "\nPush vs Emplace Demo:\n";
+    std::cout << "\n=== push_back vs emplace_back ===\n";
     std::vector<std::pair<int,int>> pairs;
+    pairs.push_back({1, 2});
+    pairs.emplace_back(3, 4);
+    std::cout << "pairs size=" << pairs.size() << "\n";
 
-    pairs.push_back({1,2});
-    pairs.emplace_back(3,4);
-
-    std::cout << "pairs size: " << pairs.size() << "\n";
-
-    // ----------------------------------------------------
-    // ✅ NEW: Reserve comparison
     compare_reserve_behavior();
 
-    // ----------------------------------------------------
-    // ✅ VERY SMALL EXTRA ADDITIONS
+    std::cout << "\n=== Reallocation count (50 inserts) ===\n";
+    std::cout << "reallocations=" << count_reallocations() << "\n";
 
-    std::cout << "\nReallocation count (first 50 inserts): "
-              << count_reallocations() << "\n";
-
-    std::cout << "\nVector stats:\n";
+    std::cout << "\n=== Vector stats ===\n";
     print_stats(vec);
+    if (!vec.empty())
+        std::cout << "front=" << vec.front() << " back=" << vec.back() << "\n";
 
-    // ===== NEW SMALL USAGE =====
-
-    print_divider();
-
-    print_front_back(vec);
-
-    compare_container_sizes();
+    std::cout << "\n=== Container size comparison ===\n";
+    std::cout << "vector(10).size="  << std::vector<int>(10).size() << "\n"
+              << "list(10).size="    << std::list<int>(10).size()   << "\n";
 
     array_demo();
 
-    // max element demo
-    auto max_it = std::max_element(vec.begin(), vec.end());
-    if (max_it != vec.end()) {
-        std::cout << "\nMax element in vector: "
-                  << *max_it << "\n";
-    }
+    std::cout << "\n=== max_element ===\n";
+    if (auto m = std::ranges::max_element(vec); m != vec.end())
+        std::cout << "max=" << *m << "\n";
 
-    // clear demo
+    std::cout << "\n=== clear ===\n";
     std::vector<int> temp = vec;
     temp.clear();
-
-    std::cout << "After clear():\n";
-    std::cout << "temp size: " << temp.size() << "\n";
-    std::cout << "temp capacity: " << temp.capacity() << "\n";
-
-    // ====================================
-
-    // ----------------------------------------------------
+    std::cout << "after clear: size=" << temp.size() << " capacity=" << temp.capacity() << "\n";
 
     return 0;
 }

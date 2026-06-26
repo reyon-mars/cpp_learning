@@ -1,178 +1,160 @@
-// Shader Programming
-// GLSL and shader implementations
-
 #include <iostream>
-
-
 #include <string>
-
+#include <string_view>
 #include <vector>
-#include <iomanip>
+#include <array>
+#include <span>
+#include <optional>
+#include <format>
+#include <ranges>
 
-// Example GLSL shaders as strings
+enum class ShaderType {
+    Vertex = 1,
+    Fragment,
+    Geometry,
+    Compute,
+};
+
+enum class Difficulty { Beginner, Intermediate, Advanced, Unknown };
+
+[[nodiscard]] constexpr std::string_view to_string(Difficulty d) noexcept {
+    switch (d) {
+        case Difficulty::Beginner:     return "Beginner";
+        case Difficulty::Intermediate: return "Intermediate";
+        case Difficulty::Advanced:     return "Advanced";
+        case Difficulty::Unknown:      return "Unknown";
+    }
+    return "Unknown";
+}
+
+struct ShaderInfo {
+    ShaderType type;
+    std::string_view name;
+    std::string_view explanation;
+    Difficulty difficulty;
+};
+
+inline constexpr std::array<ShaderInfo, 4> kShaders{{
+    {ShaderType::Vertex,   "Vertex Shader",   "Processes vertex positions",        Difficulty::Beginner},
+    {ShaderType::Fragment, "Fragment Shader", "Determines pixel color",            Difficulty::Beginner},
+    {ShaderType::Geometry, "Geometry Shader", "Modifies primitives",               Difficulty::Intermediate},
+    {ShaderType::Compute,  "Compute Shader",  "General GPU computation",           Difficulty::Advanced},
+}};
+
+[[nodiscard]] std::optional<ShaderInfo> find_shader(int choice) noexcept {
+    const auto it = std::ranges::find_if(kShaders,
+        [choice](const ShaderInfo& s) { return static_cast<int>(s.type) == choice; });
+    if (it == kShaders.end()) return std::nullopt;
+    return *it;
+}
+
 void show_example_shaders() {
+    constexpr std::string_view vertex_shader = R"(
+#version 330 core
+layout (location = 0) in vec3 aPos;
 
-    const char* vertex_shader = R"(
+void main()
+{
+    gl_Position = vec4(aPos, 1.0);
+}
+)";
 
-    #version 330 core
-    layout (location = 0) in vec3 aPos;
+    constexpr std::string_view fragment_shader = R"(
+#version 330 core
+out vec4 FragColor;
 
-    void main()
-    {
-        gl_Position = vec4(aPos, 1.0);
-    }
+void main()
+{
+    FragColor = vec4(1.0, 0.5, 0.2, 1.0);
+}
+)";
 
-    )";
-
-    const char* fragment_shader = R"(
-
-    #version 330 core
-    out vec4 FragColor;
-
-    void main()
-    {
-        FragColor = vec4(1.0, 0.5, 0.2, 1.0);
-    }
-
-    )";
-
-    std::cout << "\nExample Vertex Shader:\n";
-    std::cout << vertex_shader << "\n";
-
-    std::cout << "\nExample Fragment Shader:\n";
-    std::cout << fragment_shader << "\n";
+    std::cout << std::format("\nExample Vertex Shader:\n{}\n", vertex_shader);
+    std::cout << std::format("\nExample Fragment Shader:\n{}\n", fragment_shader);
 }
 
-: Uniform example
 void uniform_shader_example() {
-    const char* shader = R"(
+    constexpr std::string_view shader = R"(
+#version 330 core
+out vec4 FragColor;
+uniform float time;
 
-    #version 330 core
-    out vec4 FragColor;
-    uniform float time;
+void main()
+{
+    float green = (sin(time) + 1.0) / 2.0;
+    FragColor = vec4(0.0, green, 0.0, 1.0);
+}
+)";
 
-    void main()
-    {
-        float green = (sin(time) + 1.0) / 2.0;
-        FragColor = vec4(0.0, green, 0.0, 1.0);
-    }
-
-    )";
-
-    std::cout << "\n[Uniform Shader Example]\n";
-    std::cout << shader << "\n";
+    std::cout << std::format("\n[Uniform Shader Example]\n{}\n", shader);
 }
 
-: Simple lighting shader
 void lighting_shader_example() {
-    const char* shader = R"(
+    constexpr std::string_view shader = R"(
+#version 330 core
+out vec4 FragColor;
 
-    #version 330 core
-    out vec4 FragColor;
+void main()
+{
+    float intensity = 0.8;
+    FragColor = vec4(intensity, intensity, intensity, 1.0);
+}
+)";
 
-    void main()
-    {
-        float intensity = 0.8;
-        FragColor = vec4(intensity, intensity, intensity, 1.0);
-    }
-
-    )";
-
-    std::cout << "\n[Basic Lighting Shader]\n";
-    std::cout << shader << "\n";
+    std::cout << std::format("\n[Basic Lighting Shader]\n{}\n", shader);
 }
 
-: Shader explanations
 void explain_shader(int choice) {
-    switch (choice) {
-        case 1:
-            std::cout << "\nVertex Shader: Processes vertex positions\n";
-            break;
-        case 2:
-            std::cout << "\nFragment Shader: Determines pixel color\n";
-            break;
-        case 3:
-            std::cout << "\nGeometry Shader: Modifies primitives\n";
-            break;
-        case 4:
-            std::cout << "\nCompute Shader: General GPU computation\n";
-            break;
-        default:
-            std::cout << "Invalid choice\n";
-    }
+    if (const auto info = find_shader(choice))
+        std::cout << std::format("\n{}: {}\n", info->name, info->explanation);
+    else
+        std::cout << "Invalid choice\n";
 }
 
-// ---------------- NEW SMALL ADDITIONS ----------------
+void shader_difficulty(int choice) {
+    const auto info = find_shader(choice);
+    const auto difficulty = info ? info->difficulty : Difficulty::Unknown;
+    std::cout << std::format("Difficulty: {}\n", to_string(difficulty));
+}
 
-// input validation
-int get_valid_choice() {
-    int choice;
+[[nodiscard]] int get_valid_choice() {
+    int choice{};
     while (true) {
         std::cin >> choice;
-        if (std::cin.fail() || choice < 1 || choice > 4) {
+        if (std::cin.fail() || choice < 1 || choice > static_cast<int>(kShaders.size())) {
             std::cin.clear();
             std::cin.ignore(1000, '\n');
-            std::cout << "Invalid input. Enter (1-4): ";
+            std::cout << std::format("Invalid input. Enter (1-{}): ", kShaders.size());
         } else {
             return choice;
         }
     }
 }
 
-// repeat option
-bool ask_repeat() {
-    char ans;
+[[nodiscard]] bool ask_repeat() {
+    char ans{};
     std::cout << "\nExplore another shader? (y/n): ";
     std::cin >> ans;
-    return (ans == 'y' || ans == 'Y');
+    return ans == 'y' || ans == 'Y';
 }
 
-// pipeline stages overview
 void pipeline_overview() {
     std::cout << "\nGPU Pipeline Stages:\n";
-    std::cout << "- Vertex Shader\n";
-    std::cout << "- Geometry Shader (optional)\n";
-    std::cout << "- Rasterization\n";
-    std::cout << "- Fragment Shader\n";
+    constexpr std::array stages{
+        "Vertex Shader",
+        "Geometry Shader (optional)",
+        "Rasterization",
+        "Fragment Shader",
+    };
+    for (const auto& stage : stages) std::cout << std::format("- {}\n", stage);
 }
 
-// -----------------------------------------------------
-
-// ===== VERY SMALL EXTRA HELPERS =====
-
-// pretty section header
-void print_header(const std::string& title) {
-    std::cout << "\n=================================\n";
-    std::cout << title << "\n";
-    std::cout << "=================================\n";
+void print_header(std::string_view title) {
+    std::cout << std::format("\n=================================\n{}\n=================================\n",
+                             title);
 }
 
-// show shader difficulty
-void shader_difficulty(int choice) {
-
-    std::cout << "Difficulty: ";
-
-    switch (choice) {
-        case 1:
-            std::cout << "Beginner\n";
-            break;
-        case 2:
-            std::cout << "Beginner\n";
-            break;
-        case 3:
-            std::cout << "Intermediate\n";
-            break;
-        case 4:
-            std::cout << "Advanced\n";
-            break;
-        default:
-            std::cout << "Unknown\n";
-    }
-}
-
-// explored history
-void show_history(const std::vector<std::string>& history) {
-
+void show_history(std::span<const std::string> history) {
     std::cout << "\nExplored Shader Types:\n";
 
     if (history.empty()) {
@@ -180,77 +162,47 @@ void show_history(const std::vector<std::string>& history) {
         return;
     }
 
-    for (std::size_t i = 0; i < history.size(); ++i) {
-        std::cout << std::setw(2) << i + 1
-                  << ". " << history[i] << "\n";
-    }
+    for (std::size_t i = 0; i < history.size(); ++i)
+        std::cout << std::format("{:2}. {}\n", i + 1, history[i]);
 }
 
-// ====================================
-
 int main() {
-
     std::cout << "Shader programming area\n";
 
     std::cout << "\nShader Types:\n";
-    std::cout << "1. Vertex Shader\n";
-    std::cout << "2. Fragment Shader\n";
-    std::cout << "3. Geometry Shader\n";
-    std::cout << "4. Compute Shader\n";
+    for (const auto& s : kShaders)
+        std::cout << std::format("{}. {}\n", static_cast<int>(s.type), s.name);
 
     show_example_shaders();
-
-    
     pipeline_overview();
 
-        int explored_count = 0;
+    int explored_count = 0;
     std::vector<std::string> history;
-    // ====================================
 
-    // ✅ UPDATED: loop interaction
     do {
-
         print_header("Shader Learning Menu");
 
-        std::cout << "\nSelect shader type to learn more (1-4): ";
-        int choice = get_valid_choice();
+        std::cout << std::format("\nSelect shader type to learn more (1-{}): ", kShaders.size());
+        const int choice = get_valid_choice();
 
         explain_shader(choice);
-
-        // ===== VERY SMALL EXTRA USAGE =====
-
         shader_difficulty(choice);
 
-        switch (choice) {
-            case 1: history.push_back("Vertex Shader"); break;
-            case 2: history.push_back("Fragment Shader"); break;
-            case 3: history.push_back("Geometry Shader"); break;
-            case 4: history.push_back("Compute Shader"); break;
-        }
+        if (const auto info = find_shader(choice))
+            history.emplace_back(info->name);
 
         ++explored_count;
 
-        // ==================================
-
     } while (ask_repeat());
 
-    : Show advanced examples
     uniform_shader_example();
     lighting_shader_example();
 
-    // ===== VERY SMALL EXTRA OUTPUT =====
-    std::cout << "\nTotal shader topics explored: "
-              << explored_count << "\n";
-
+    std::cout << std::format("\nTotal shader topics explored: {}\n", explored_count);
     show_history(history);
-    // ===================================
 
-    : Summary
     std::cout << "\nTip: Shaders run on GPU and control rendering pipeline stages.\n";
-
-    // ===== VERY SMALL EXTRA TIP =====
     std::cout << "Modern graphics engines rely heavily on optimized GLSL shaders.\n";
-    // =================================
 
     return 0;
 }

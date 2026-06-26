@@ -1,118 +1,118 @@
-// Rendering Techniques
-// 3D rendering concepts
-
 #include <iostream>
-
-
 #include <string>
-
+#include <string_view>
 #include <vector>
 #include <iomanip>
+#include <format>
+#include <array>
+#include <optional>
+#include <functional>
+#include <ranges>
+#include <span>
 
-// Helper function to show rendering topics
+enum class Technique {
+    Rasterization = 1,
+    RayTracing,
+    ShadowMapping,
+    DeferredRendering,
+    PBR,
+};
+
+struct TechniqueInfo {
+    Technique tech;
+    std::string_view name;
+    std::string_view header;
+    std::array<std::string_view, 2> lines;
+};
+
+inline constexpr std::array<TechniqueInfo, 5> kTechniques{{
+    {Technique::Rasterization, "Rasterization", "Rasterization",
+     {"Fast rendering using triangles", "Converts 3D objects into pixels"}},
+    {Technique::RayTracing, "Ray Tracing", "Ray Tracing",
+     {"Simulates light rays", "Produces realistic reflections and shadows"}},
+    {Technique::ShadowMapping, "Shadow Mapping", "Shadow Mapping",
+     {"Renders scene from light's perspective", "Determines shadowed areas"}},
+    {Technique::DeferredRendering, "Deferred Rendering", "Deferred Rendering",
+     {"Stores geometry info in buffers (G-buffer)", "Applies lighting later for efficiency"}},
+    {Technique::PBR, "Physically Based Rendering", "Physically Based Rendering",
+     {"Uses realistic material properties", "Simulates real-world lighting behavior"}},
+}};
+
 void show_rendering_topics() {
     std::cout << "\nCommon Rendering Techniques:\n";
-    std::cout << "1. Rasterization (standard GPU pipeline)\n";
-    std::cout << "2. Ray Tracing (realistic lighting simulation)\n";
-    std::cout << "3. Shadow Mapping\n";
-    std::cout << "4. Deferred Rendering\n";
-    std::cout << "5. Physically Based Rendering (PBR)\n";
+    for (std::size_t i = 0; i < kTechniques.size(); ++i)
+        std::cout << std::format("{}. {}\n", i + 1, kTechniques[i].name);
 }
 
-: Detailed explanations
-
-void rasterization_demo() {
-    std::cout << "\n[Rasterization]\n";
-    std::cout << "Fast rendering using triangles\n";
-    std::cout << "Converts 3D objects into pixels\n";
-}
-
-void ray_tracing_demo() {
-    std::cout << "\n[Ray Tracing]\n";
-    std::cout << "Simulates light rays\n";
-    std::cout << "Produces realistic reflections and shadows\n";
-}
-
-void shadow_mapping_demo() {
-    std::cout << "\n[Shadow Mapping]\n";
-    std::cout << "Renders scene from light's perspective\n";
-    std::cout << "Determines shadowed areas\n";
-}
-
-void deferred_rendering_demo() {
-    std::cout << "\n[Deferred Rendering]\n";
-    std::cout << "Stores geometry info in buffers (G-buffer)\n";
-    std::cout << "Applies lighting later for efficiency\n";
-}
-
-void pbr_demo() {
-    std::cout << "\n[Physically Based Rendering]\n";
-    std::cout << "Uses realistic material properties\n";
-    std::cout << "Simulates real-world lighting behavior\n";
-}
-
-: Pipeline explanation
 void pipeline_breakdown() {
     std::cout << "\nPipeline Breakdown:\n";
-    std::cout << "1. Vertex Processing: Transform vertices\n";
-    std::cout << "2. Primitive Assembly: Form triangles\n";
-    std::cout << "3. Rasterization: Convert to fragments\n";
-    std::cout << "4. Fragment Processing: Apply color & lighting\n";
+    constexpr std::array stages{
+        "Vertex Processing: Transform vertices",
+        "Primitive Assembly: Form triangles",
+        "Rasterization: Convert to fragments",
+        "Fragment Processing: Apply color & lighting",
+    };
+    for (std::size_t i = 0; i < stages.size(); ++i)
+        std::cout << std::format("{}. {}\n", i + 1, stages[i]);
 }
 
-// ---------------- NEW SMALL ADDITIONS ----------------
+void run_demo(int choice) {
+    const auto it = std::ranges::find_if(kTechniques,
+        [choice](const TechniqueInfo& t) { return static_cast<int>(t.tech) == choice; });
 
-// input validation
-int get_valid_choice() {
-    int choice;
+    if (it == kTechniques.end()) {
+        std::cout << "Invalid choice\n";
+        return;
+    }
+
+    std::cout << std::format("\n[{}]\n", it->header);
+    for (const auto& line : it->lines) std::cout << line << '\n';
+}
+
+[[nodiscard]] std::optional<std::string_view> technique_name(int choice) noexcept {
+    const auto it = std::ranges::find_if(kTechniques,
+        [choice](const TechniqueInfo& t) { return static_cast<int>(t.tech) == choice; });
+    if (it == kTechniques.end()) return std::nullopt;
+    return it->name;
+}
+
+[[nodiscard]] int get_valid_choice() {
+    int choice{};
     while (true) {
         std::cin >> choice;
-        if (std::cin.fail() || choice < 1 || choice > 5) {
+        if (std::cin.fail() || choice < 1 || choice > static_cast<int>(kTechniques.size())) {
             std::cin.clear();
             std::cin.ignore(1000, '\n');
-            std::cout << "Invalid input. Enter (1-5): ";
+            std::cout << std::format("Invalid input. Enter (1-{}): ", kTechniques.size());
         } else {
             return choice;
         }
     }
 }
 
-// repeat option
-bool ask_repeat() {
-    char ans;
+[[nodiscard]] bool ask_repeat() {
+    char ans{};
     std::cout << "\nExplore another technique? (y/n): ";
     std::cin >> ans;
-    return (ans == 'y' || ans == 'Y');
+    return ans == 'y' || ans == 'Y';
 }
 
-// comparison helper
 void compare_modes() {
     std::cout << "\nQuick Comparison:\n";
     std::cout << "- Rasterization: Very fast, less realistic\n";
     std::cout << "- Ray Tracing: Slower, highly realistic\n";
 }
 
-// -----------------------------------------------------
-
-// ===== VERY SMALL EXTRA HELPERS =====
-
-// print section title
-void print_header(const std::string& title) {
-    std::cout << "\n================================\n";
-    std::cout << title << "\n";
-    std::cout << "================================\n";
+void print_header(std::string_view title) {
+    std::cout << std::format("\n================================\n{}\n================================\n",
+                             title);
 }
 
-// fake GPU stats
 void show_gpu_stats() {
-    std::cout << "\n[GPU Stats Simulation]\n";
-    std::cout << "VRAM Usage: " << std::fixed << std::setprecision(1)
-              << 2.5 << " GB\n";
-    std::cout << "GPU Load: 78%\n";
+    std::cout << std::format("\n[GPU Stats Simulation]\nVRAM Usage: {:.1f} GB\nGPU Load: 78%\n", 2.5);
 }
 
-// show explored history
-void show_history(const std::vector<std::string>& history) {
+void show_history(std::span<const std::string> history) {
     std::cout << "\nExplored Techniques:\n";
 
     if (history.empty()) {
@@ -120,85 +120,46 @@ void show_history(const std::vector<std::string>& history) {
         return;
     }
 
-    for (std::size_t i = 0; i < history.size(); ++i) {
-        std::cout << i + 1 << ". " << history[i] << "\n";
-    }
-}
-
-// ====================================
-
-: Menu system
-void run_demo(int choice) {
-    switch (choice) {
-        case 1: rasterization_demo(); break;
-        case 2: ray_tracing_demo(); break;
-        case 3: shadow_mapping_demo(); break;
-        case 4: deferred_rendering_demo(); break;
-        case 5: pbr_demo(); break;
-        default: std::cout << "Invalid choice\n";
-    }
+    for (std::size_t i = 0; i < history.size(); ++i)
+        std::cout << std::format("{}. {}\n", i + 1, history[i]);
 }
 
 int main() {
-
     std::cout << "Rendering techniques area\n";
 
     std::cout << "\nBasic 3D Graphics Pipeline:\n";
     std::cout << "Vertex Processing -> Primitive Assembly -> Rasterization -> Fragment Processing\n";
 
     show_rendering_topics();
-
-    
     pipeline_breakdown();
 
-        int explored_count = 0;
+    int explored_count = 0;
     std::vector<std::string> history;
-    // ====================================
 
-    // ✅ UPDATED: loop interaction
     do {
-
         print_header("Rendering Technique Explorer");
 
-        std::cout << "\nSelect a technique to explore (1-5): ";
-        int choice = get_valid_choice();
+        std::cout << std::format("\nSelect a technique to explore (1-{}): ", kTechniques.size());
+        const int choice = get_valid_choice();
 
         run_demo(choice);
 
-        // ===== VERY SMALL EXTRA USAGE =====
-
-        switch (choice) {
-            case 1: history.push_back("Rasterization"); break;
-            case 2: history.push_back("Ray Tracing"); break;
-            case 3: history.push_back("Shadow Mapping"); break;
-            case 4: history.push_back("Deferred Rendering"); break;
-            case 5: history.push_back("Physically Based Rendering"); break;
-        }
+        if (const auto name = technique_name(choice))
+            history.emplace_back(*name);
 
         ++explored_count;
 
         show_gpu_stats();
 
-        // ==================================
-
     } while (ask_repeat());
 
-    
     compare_modes();
 
-    // ===== VERY SMALL EXTRA OUTPUT =====
-    std::cout << "\nTotal techniques explored: "
-              << explored_count << "\n";
-
+    std::cout << std::format("\nTotal techniques explored: {}\n", explored_count);
     show_history(history);
-    // ===================================
 
-    : Summary tip
     std::cout << "\nTip: Rasterization is fast, Ray Tracing is realistic.\n";
-
-    // ===== VERY SMALL EXTRA TIP =====
     std::cout << "Modern game engines often combine multiple rendering techniques.\n";
-    // =================================
 
     return 0;
 }

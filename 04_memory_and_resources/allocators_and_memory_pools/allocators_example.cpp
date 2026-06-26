@@ -7,8 +7,9 @@
 #include <cassert>
 #include <algorithm>
 #include <span>
+#include <format>
 
-template<typename T>
+template <typename T>
 class SimpleAllocator {
 public:
     using value_type      = T;
@@ -19,26 +20,25 @@ public:
 
     SimpleAllocator() noexcept = default;
 
-    template<typename U>
-    SimpleAllocator(const SimpleAllocator<U>&) noexcept {}
+    template <typename U>
+    explicit SimpleAllocator(const SimpleAllocator<U>&) noexcept {}
 
     [[nodiscard]] T* allocate(size_type n) {
-        std::cout << "[Allocator] allocate " << n
-                  << " object(s) (" << n * sizeof(T) << " bytes)\n";
+        std::cout << std::format("[Allocator] allocate {} object(s) ({} bytes)\n",
+                                 n, n * sizeof(T));
         return static_cast<T*>(::operator new(n * sizeof(T)));
     }
 
     void deallocate(T* p, size_type n) noexcept {
-        std::cout << "[Allocator] deallocate " << n << " object(s)\n";
+        std::cout << std::format("[Allocator] deallocate {} object(s)\n", n);
         ::operator delete(p);
     }
 
     [[nodiscard]] size_type max_size() const noexcept {
-        return size_type(-1) / sizeof(T);
+        return static_cast<size_type>(-1) / sizeof(T);
     }
 
-    [[nodiscard]] bool operator==(const SimpleAllocator&) const noexcept { return true;  }
-    [[nodiscard]] bool operator!=(const SimpleAllocator&) const noexcept { return false; }
+    [[nodiscard]] bool operator==(const SimpleAllocator&) const noexcept = default;
 };
 
 class IntPool {
@@ -47,7 +47,7 @@ public:
 
     [[nodiscard]] int* allocate() {
         if (index_ >= pool_.size()) throw std::bad_alloc();
-        std::cout << "[IntPool] allocate slot=" << index_ << "\n";
+        std::cout << std::format("[IntPool] allocate slot={}\n", index_);
         return &pool_[index_++];
     }
 
@@ -57,93 +57,96 @@ public:
     }
 
     [[nodiscard]] std::size_t capacity() const noexcept { return pool_.size(); }
-    [[nodiscard]] std::size_t used()     const noexcept { return index_;       }
+    [[nodiscard]] std::size_t used()     const noexcept { return index_; }
     [[nodiscard]] bool        full()     const noexcept { return index_ >= pool_.size(); }
 
 private:
     std::vector<int> pool_;
-    std::size_t      index_ = 0;
+    std::size_t      index_{0};
 };
 
 struct Test {
     int x;
-    explicit Test(int v) : x{v} { std::cout << "Test constructed x=" << x << "\n"; }
-    ~Test()                      { std::cout << "Test destroyed   x=" << x << "\n"; }
+    explicit Test(int v) noexcept : x{v} {
+        std::cout << std::format("Test constructed x={}\n", x);
+    }
+    ~Test() {
+        std::cout << std::format("Test destroyed   x={}\n", x);
+    }
 };
 
-template<typename T>
+template <typename T>
 class ObjectPool {
 public:
-    explicit ObjectPool(std::size_t size) : index_{0} {
-        buffer_.reserve(size);
-        buffer_.resize(size);
-    }
+    explicit ObjectPool(std::size_t size) : buffer_(size) {}
 
-    template<typename... Args>
+    template <typename... Args>
     [[nodiscard]] T* create(Args&&... args) {
         if (index_ >= buffer_.size()) throw std::bad_alloc();
         void* place = &buffer_[index_];
-        std::cout << "[ObjectPool] create slot=" << index_ << "\n";
+        std::cout << std::format("[ObjectPool] create slot={}\n", index_);
         ++index_;
         return ::new (place) T(std::forward<Args>(args)...);
     }
 
-    void destroyAll() noexcept {
-        for (std::size_t i = 0; i < index_; ++i) {
+    void destroy_all() noexcept {
+        for (std::size_t i = 0; i < index_; ++i)
             std::launder(reinterpret_cast<T*>(&buffer_[i]))->~T();
-        }
         index_ = 0;
-        std::cout << "[ObjectPool] destroyAll + reset\n";
+        std::cout << "[ObjectPool] destroy_all + reset\n";
     }
 
-    [[nodiscard]] std::size_t capacity() const noexcept { return buffer_.size();        }
-    [[nodiscard]] std::size_t used()     const noexcept { return index_;                }
+    [[nodiscard]] std::size_t capacity() const noexcept { return buffer_.size(); }
+    [[nodiscard]] std::size_t used()     const noexcept { return index_; }
     [[nodiscard]] bool        full()     const noexcept { return index_ >= buffer_.size(); }
 
 private:
-    using Storage = std::aligned_storage_t<sizeof(T), alignof(T)>;
+    struct alignas(T) Storage { std::byte data[sizeof(T)]; };
     std::vector<Storage> buffer_;
-    std::size_t          index_;
+    std::size_t          index_{0};
 };
 
 class ScopeGuard {
 public:
     ScopeGuard()  { std::cout << "[ScopeGuard] enter\n"; }
-    ~ScopeGuard() { std::cout << "[ScopeGuard] exit\n";  }
+    ~ScopeGuard() { std::cout << "[ScopeGuard] exit\n"; }
+
+    ScopeGuard(const ScopeGuard&)            = delete;
+    ScopeGuard& operator=(const ScopeGuard&) = delete;
 };
 
-void printVector(std::span<const int> vec) {
+void print_vector(std::span<const int> vec) {
     std::cout << "Vector: ";
-    for (int v : vec) { std::cout << v << " "; }
-    std::cout << "\n";
+    for (const int v : vec) std::cout << v << ' ';
+    std::cout << '\n';
 }
 
-void printPoolState(const IntPool& pool) {
-    std::cout << "IntPool usage=" << pool.used() << "/" << pool.capacity()
-              << " full=" << std::boolalpha << pool.full() << "\n";
+void print_pool_state(const IntPool& pool) {
+    std::cout << std::format("IntPool usage={}/{} full={}\n",
+                             pool.used(), pool.capacity(), pool.full());
 }
 
-void placementNewDemo() {
+void placement_new_demo() {
     std::cout << "\n--- Placement new ---\n";
     alignas(Test) std::byte raw[sizeof(Test)];
     auto* obj = ::new (raw) Test{555};
-    std::cout << "Placement value=" << obj->x << "\n";
+    std::cout << std::format("Placement value={}\n", obj->x);
     std::destroy_at(obj);
 }
 
-template<typename T>
-void showAlignment() {
-    std::cout << "sizeof=" << sizeof(T) << " alignof=" << alignof(T) << "\n";
+template <typename T>
+void show_alignment() {
+    std::cout << std::format("sizeof={} alignof={}\n", sizeof(T), alignof(T));
 }
 
-void allocatorVectorDemo() {
+void allocator_vector_demo() {
     std::cout << "\n--- Custom allocator vector ---\n";
     std::vector<Test, SimpleAllocator<Test>> objects;
     objects.reserve(3);
     objects.emplace_back(1);
     objects.emplace_back(2);
     objects.emplace_back(3);
-    std::cout << "size=" << objects.size() << "\n";
+    std::cout << std::format("size={}\n", objects.size());
 }
 
 int main() {
@@ -153,7 +156,7 @@ int main() {
     vec.push_back(1);
     vec.push_back(2);
     vec.push_back(3);
-    printVector(vec);
+    print_vector(vec);
     assert(vec.size() == 3);
 
     std::cout << "\n--- IntPool ---\n";
@@ -162,42 +165,41 @@ int main() {
     int* b = pool.allocate();
     int* c = pool.allocate();
     *a = 10; *b = 20; *c = 30;
-    std::cout << "Values: " << *a << " " << *b << " " << *c << "\n";
-    printPoolState(pool);
+    std::cout << std::format("Values: {} {} {}\n", *a, *b, *c);
+    print_pool_state(pool);
     pool.reset();
 
     std::cout << "\n--- allocator_traits construct/destroy ---\n";
     SimpleAllocator<Test> alloc;
     Test* t = alloc.allocate(1);
     std::allocator_traits<SimpleAllocator<Test>>::construct(alloc, t, 42);
-    std::cout << "Test value=" << t->x << "\n";
+    std::cout << std::format("Test value={}\n", t->x);
     std::allocator_traits<SimpleAllocator<Test>>::destroy(alloc, t);
     alloc.deallocate(t, 1);
 
     std::cout << "\n--- ObjectPool ---\n";
     {
-        ScopeGuard guard;
-        ObjectPool<Test> objPool{2};
-        Test* p1 = objPool.create(100);
-        Test* p2 = objPool.create(200);
-        std::cout << "Objects: " << p1->x << ", " << p2->x << "\n";
-        std::cout << "usage=" << objPool.used() << "/" << objPool.capacity()
-                  << " full=" << objPool.full() << "\n";
-        objPool.destroyAll();
+        const ScopeGuard guard;
+        ObjectPool<Test> obj_pool{2};
+        Test* p1 = obj_pool.create(100);
+        Test* p2 = obj_pool.create(200);
+        std::cout << std::format("Objects: {}, {}\n", p1->x, p2->x);
+        std::cout << std::format("usage={}/{} full={}\n",
+                                 obj_pool.used(), obj_pool.capacity(), obj_pool.full());
+        obj_pool.destroy_all();
     }
 
-    placementNewDemo();
+    placement_new_demo();
 
     std::cout << "\n--- Alignment ---\n";
-    showAlignment<Test>();
+    show_alignment<Test>();
 
     std::cout << "\n--- Type traits ---\n";
-    std::cout << "trivially_destructible=" << std::boolalpha
-              << std::is_trivially_destructible_v<Test> << "\n"
-              << "move_constructible="
-              << std::is_move_constructible_v<Test> << "\n";
+    std::cout << std::format("trivially_destructible={}\nmove_constructible={}\n",
+                             std::is_trivially_destructible_v<Test>,
+                             std::is_move_constructible_v<Test>);
 
-    allocatorVectorDemo();
+    allocator_vector_demo();
 
     std::cout << "\n--- End of main ---\n";
     return 0;

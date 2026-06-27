@@ -9,6 +9,8 @@
 #include <string_view>
 #include <ranges>
 #include <span>
+#include <map>
+#include <optional>
 
 [[nodiscard]] auto sum_vector(std::vector<int> vec) {
     return [v = std::move(vec)]() mutable {
@@ -102,6 +104,33 @@ void immediately_invoked_generic_lambda_demo() {
     std::cout << "6 * 7 = " << result << '\n';
 }
 
+// --- NEW: memoized lambda via std::map cache ---
+[[nodiscard]] auto make_memoized(std::function<int(int)> fn) {
+    return [fn, cache = std::map<int,int>{}](int x) mutable -> int {
+        if (auto it = cache.find(x); it != cache.end())
+            return it->second;
+        return cache[x] = fn(x);
+    };
+}
+
+// --- NEW: retry combinator ---
+void with_retry(int attempts, std::invocable<int> auto fn) {
+    for (int i = 0; i < attempts; ++i) {
+        if (fn(i)) return;
+    }
+    std::cout << "All " << attempts << " attempts exhausted\n";
+}
+
+// --- NEW: lazy evaluation wrapper ---
+template<std::invocable Producer>
+[[nodiscard]] auto lazy(Producer p) {
+    using T = std::invoke_result_t<Producer>;
+    return [p = std::move(p), cache = std::optional<T>{}]() mutable -> const T& {
+        if (!cache) cache = std::invoke(p);
+        return *cache;
+    };
+}
+
 int main() {
     std::vector<int> vec = {1, 2, 3, 4, 5};
 
@@ -153,8 +182,8 @@ int main() {
     std::cout << "Square of 8 = " << square(8) << '\n';
 
     int val = 5;
-    auto non_mut = [val]()         { return val;    };
-    auto mut     = [val]() mutable { return ++val;  };
+    auto non_mut = [val]()         { return val;   };
+    auto mut     = [val]() mutable { return ++val; };
     std::cout << "Mutable: " << mut() << ", Non-mutable: " << non_mut() << '\n';
 
     auto uptr = std::make_unique<int>(100);
@@ -180,9 +209,8 @@ int main() {
     std::cout << "4^2 = " << power2(4) << '\n';
 
     std::cout << "Even numbers: ";
-    for (int n : vec | std::views::filter([](int x) { return x % 2 == 0; })) {
+    for (int n : vec | std::views::filter([](int x) { return x % 2 == 0; }))
         std::cout << n << ' ';
-    }
     std::cout << '\n';
 
     auto add_to_all = [&vec](int amount) {
@@ -226,6 +254,45 @@ int main() {
     auto capture_init = [value = base * 2]() { return value; };
     std::cout << "Captured initialized value: " << capture_init() << '\n';
 
-    std::cout << "Program finished successfully.\n";
+    // --- NEW: memoized fibonacci ---
+    std::cout << "\n--- Memoized Lambda ---\n";
+    auto slow_square = make_memoized([](int n) { return n * n; });
+    std::cout << "slow_square(7) = " << slow_square(7) << '\n';
+    std::cout << "slow_square(7) = " << slow_square(7) << " (cached)\n";
+    std::cout << "slow_square(9) = " << slow_square(9) << '\n';
+
+    // --- NEW: retry combinator ---
+    std::cout << "\n--- Retry Combinator ---\n";
+    int attempt_count = 0;
+    with_retry(5, [&](int i) -> bool {
+        ++attempt_count;
+        std::cout << "Attempt " << (i + 1);
+        if (i == 2) { std::cout << " -> success\n"; return true; }
+        std::cout << " -> fail\n";
+        return false;
+    });
+    std::cout << "Total attempts made: " << attempt_count << '\n';
+
+    // --- NEW: lazy evaluation ---
+    std::cout << "\n--- Lazy Evaluation ---\n";
+    int compute_count = 0;
+    auto expensive = lazy([&] {
+        ++compute_count;
+        std::cout << "  (computing...)\n";
+        return 42 * 42;
+    });
+    std::cout << "Before first access, compute_count = " << compute_count << '\n';
+    std::cout << "lazy value = " << expensive() << '\n';
+    std::cout << "lazy value = " << expensive() << " (no recompute)\n";
+    std::cout << "compute_count = " << compute_count << '\n';
+
+    // --- NEW: transform + accumulate pipeline ---
+    std::cout << "\n--- Transform + Accumulate Pipeline ---\n";
+    const std::vector<int> nums = {1, 2, 3, 4, 5};
+    auto pipeline_result = std::accumulate(nums.begin(), nums.end(), 0,
+        [sq = square](int acc, int n) { return acc + sq(n); });
+    std::cout << "Sum of squares(1..5) = " << pipeline_result << '\n';
+
+    std::cout << "\nProgram finished successfully.\n";
     return 0;
 }

@@ -2,13 +2,16 @@
 #include <string>
 #include <string_view>
 #include <type_traits>
-#include <typeinfo>
 #include <vector>
 #include <array>
 #include <span>
 #include <cassert>
 #include <utility>
 #include <algorithm>
+#include <ranges>
+#include <concepts>
+#include <numeric>
+#include <optional>
 
 template<typename T>
 [[nodiscard]] constexpr T max_of(T a, T b) noexcept(noexcept(b < a)) {
@@ -16,9 +19,31 @@ template<typename T>
 }
 
 template<typename T>
+[[nodiscard]] constexpr T min_of(T a, T b) noexcept(noexcept(a < b)) {
+    return a < b ? a : b;
+}
+
+template<typename T>
+[[nodiscard]] constexpr T clamp(T value, T lo, T hi) noexcept {
+    return value < lo ? lo : value > hi ? hi : value;
+}
+
+template<typename T>
 [[nodiscard]] int find_position(std::span<const T> arr, const T& value) {
     auto it = std::ranges::find(arr, value);
     return it != arr.end() ? static_cast<int>(it - arr.begin()) : -1;
+}
+
+template<typename T, std::predicate<T> Pred>
+[[nodiscard]] int find_if_position(std::span<const T> arr, Pred pred) {
+    auto it = std::ranges::find_if(arr, pred);
+    return it != arr.end() ? static_cast<int>(it - arr.begin()) : -1;
+}
+
+template<typename T>
+[[nodiscard]] std::optional<T> safe_at(std::span<const T> arr, std::size_t index) noexcept {
+    if (index >= arr.size()) return std::nullopt;
+    return arr[index];
 }
 
 template<typename T>
@@ -88,9 +113,13 @@ struct Printer<const T*> {
 };
 
 template<typename T>
-void print_type(const T&) {
-    std::cout << "Type: " << typeid(T).name() << "\n";
-}
+struct Printer<std::vector<T>> {
+    static void print_value(const std::vector<T>& vec) {
+        std::cout << "Vector[" << vec.size() << "]: ";
+        for (const auto& v : vec) std::cout << v << " ";
+        std::cout << "\n";
+    }
+};
 
 template<typename T>
 void check_reference(T&&) {
@@ -112,14 +141,40 @@ void type_category() {
         std::cout << "Other type\n";
 }
 
+template<typename T>
+void type_traits_summary() {
+    std::cout << "  is_integral="      << std::boolalpha << std::is_integral_v<T>      << "\n"
+              << "  is_floating_point=" << std::is_floating_point_v<T>                  << "\n"
+              << "  is_signed="         << std::is_signed_v<T>                          << "\n"
+              << "  is_trivial="        << std::is_trivial_v<T>                         << "\n";
+}
+
 template<typename... Args>
 void print_all(const Args&... args) {
     ((std::cout << args << " "), ...);
     std::cout << "\n";
 }
 
+template<typename... Args>
+[[nodiscard]] constexpr std::size_t count_args(const Args&...) noexcept {
+    return sizeof...(Args);
+}
+
+template<typename T, typename... Args>
+[[nodiscard]] constexpr bool all_same_type(const T&, const Args&...) noexcept {
+    return (std::is_same_v<T, Args> && ...);
+}
+
 template<typename T = int>
 [[nodiscard]] constexpr T multiply(T a, T b) noexcept { return a * b; }
+
+template<typename T>
+[[nodiscard]] constexpr T sum_variadic() noexcept { return T{}; }
+
+template<typename T, typename... Rest>
+[[nodiscard]] constexpr T sum_variadic(T first, Rest... rest) noexcept {
+    return first + sum_variadic<T>(static_cast<T>(rest)...);
+}
 
 template void print<int>(const int&);
 
@@ -141,26 +196,34 @@ int main() {
     Printer<int*>::print_value(&x);
     const int* cptr = &x;
     Printer<const int*>::print_value(cptr);
+    Printer<std::vector<int>>::print_value({1, 2, 3, 4, 5});
 
     std::cout << "\n=== Array print ===\n";
     int arr[5]{1, 2, 3, 4, 5};
     print(arr);
 
-    std::cout << "\n=== print_type / check_reference ===\n";
-    print_type(x);
+    std::cout << "\n=== check_reference ===\n";
     check_reference(x);
     check_reference(10);
 
-    std::cout << "\n=== max_of ===\n";
-    std::cout << "max_of(10,20)="  << max_of(10, 20)    << "\n"
-              << "max_of(3.5,7.2)=" << max_of(3.5, 7.2) << "\n";
+    std::cout << "\n=== max_of / min_of / clamp ===\n";
+    std::cout << "max_of(10,20)="   << max_of(10, 20)      << "\n"
+              << "max_of(3.5,7.2)=" << max_of(3.5, 7.2)    << "\n"
+              << "min_of(10,20)="   << min_of(10, 20)       << "\n"
+              << "clamp(15,0,10)="  << clamp(15, 0, 10)     << "\n"
+              << "clamp(-5,0,10)="  << clamp(-5, 0, 10)     << "\n";
 
     std::cout << "\n=== print_all (variadic) ===\n";
     print_all("Templates:", 1, 2.5, 'X');
+    std::cout << "count_args=" << count_args(1, 2, 3, 4) << "\n";
+    std::cout << "all_same_type(1,2,3)=" << all_same_type(1, 2, 3) << "\n";
+
+    std::cout << "\n=== sum_variadic ===\n";
+    std::cout << "sum(1,2,3,4,5)=" << sum_variadic<int>(1, 2, 3, 4, 5) << "\n";
 
     std::cout << "\n=== multiply (default type param) ===\n";
-    std::cout << "multiply(3,4)="          << multiply(3, 4)            << "\n"
-              << "multiply<double>(2.5,4)=" << multiply<double>(2.5, 4.0) << "\n";
+    std::cout << "multiply(3,4)="           << multiply(3, 4)              << "\n"
+              << "multiply<double>(2.5,4.0)=" << multiply<double>(2.5, 4.0) << "\n";
 
     std::cout << "\n=== type_category ===\n";
     type_category<int>();
@@ -168,20 +231,34 @@ int main() {
     type_category<int*>();
     type_category<std::string>();
 
-    std::cout << "\n=== find_position ===\n";
+    std::cout << "\n=== type_traits_summary ===\n";
+    std::cout << "int:\n";    type_traits_summary<int>();
+    std::cout << "double:\n"; type_traits_summary<double>();
+    std::cout << "bool:\n";   type_traits_summary<bool>();
+
+    std::cout << "\n=== find_position / find_if_position / safe_at ===\n";
     std::array<int, 5> search{10, 20, 30, 40, 50};
-    std::cout << "find 30: pos=" << find_position<int>(search, 30) << "\n"
-              << "find 99: pos=" << find_position<int>(search, 99) << "\n";
+    std::cout << "find 30:       pos=" << find_position<int>(search, 30) << "\n"
+              << "find 99:       pos=" << find_position<int>(search, 99) << "\n"
+              << "find >25:      pos=" << find_if_position<int>(search, [](int n) { return n > 25; }) << "\n";
+    if (auto v = safe_at<int>(search, 2)) std::cout << "safe_at(2)=" << *v << "\n";
+    if (!safe_at<int>(search, 99))        std::cout << "safe_at(99)=nullopt\n";
 
     std::cout << "\n=== vector ===\n";
     const std::vector<int> vec{1, 2, 3};
     for (int n : vec) std::cout << n << " ";
     std::cout << "\n";
 
-    static_assert(max_of(5, 9) == 9);
-    static_assert(multiply(3, 4) == 12);
+    static_assert(max_of(5, 9)    == 9);
+    static_assert(min_of(5, 9)    == 5);
+    static_assert(clamp(15, 0, 10) == 10);
+    static_assert(multiply(3, 4)  == 12);
+    static_assert(count_args(1, 2, 3) == 3);
+    static_assert(sum_variadic<int>(1, 2, 3, 4, 5) == 15);
     assert(find_position<int>(search, 30) == 2);
     assert(find_position<int>(search, 99) == -1);
+    assert(find_if_position<int>(search, [](int n){ return n > 25; }) == 2);
 
+    std::cout << "\nAll assertions passed.\n";
     return 0;
 }

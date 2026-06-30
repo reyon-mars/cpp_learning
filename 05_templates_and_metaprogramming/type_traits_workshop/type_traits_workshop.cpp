@@ -3,6 +3,9 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <map>
+#include <array>
+#include <memory>
 #include <cassert>
 #include <utility>
 #include <concepts>
@@ -12,12 +15,6 @@ struct is_string : std::bool_constant<std::is_same_v<T, std::string>> {};
 
 template<typename T>
 inline constexpr bool is_string_v = is_string<T>::value;
-
-template<typename T, typename Alloc>
-struct is_vector_spec : std::false_type {};
-
-template<typename T, typename Alloc>
-struct is_vector_spec<std::vector<T, Alloc>, Alloc> : std::true_type {};
 
 template<typename T>
 struct is_vector : std::false_type {};
@@ -29,6 +26,36 @@ template<typename T>
 inline constexpr bool is_vector_v = is_vector<T>::value;
 
 template<typename T>
+struct is_map : std::false_type {};
+
+template<typename K, typename V, typename Cmp, typename Alloc>
+struct is_map<std::map<K, V, Cmp, Alloc>> : std::true_type {};
+
+template<typename T>
+inline constexpr bool is_map_v = is_map<T>::value;
+
+template<typename T>
+struct is_array_like : std::false_type {};
+
+template<typename T, std::size_t N>
+struct is_array_like<std::array<T, N>> : std::true_type {};
+
+template<typename T>
+inline constexpr bool is_array_like_v = is_array_like<T>::value;
+
+template<typename T>
+struct is_smart_pointer : std::false_type {};
+
+template<typename T>
+struct is_smart_pointer<std::unique_ptr<T>> : std::true_type {};
+
+template<typename T>
+struct is_smart_pointer<std::shared_ptr<T>> : std::true_type {};
+
+template<typename T>
+inline constexpr bool is_smart_pointer_v = is_smart_pointer<T>::value;
+
+template<typename T>
 struct pointer_depth : std::integral_constant<int, 0> {};
 
 template<typename T>
@@ -37,11 +64,29 @@ struct pointer_depth<T*> : std::integral_constant<int, 1 + pointer_depth<T>::val
 template<typename T>
 inline constexpr int pointer_depth_v = pointer_depth<T>::value;
 
+template<typename T>
+struct array_extent_product : std::integral_constant<std::size_t, 1> {};
+
+template<typename T, std::size_t N>
+struct array_extent_product<T[N]>
+    : std::integral_constant<std::size_t, N * array_extent_product<T>::value> {};
+
+template<typename T>
+inline constexpr std::size_t array_extent_product_v = array_extent_product<T>::value;
+
 static_assert(is_string_v<std::string>);
 static_assert(!is_string_v<int>);
 static_assert(is_vector_v<std::vector<int>>);
 static_assert(!is_vector_v<int>);
+static_assert(is_map_v<std::map<int, std::string>>);
+static_assert(!is_map_v<std::vector<int>>);
+static_assert(is_array_like_v<std::array<int, 5>>);
+static_assert(!is_array_like_v<std::vector<int>>);
+static_assert(is_smart_pointer_v<std::unique_ptr<int>>);
+static_assert(is_smart_pointer_v<std::shared_ptr<int>>);
+static_assert(!is_smart_pointer_v<int*>);
 static_assert(pointer_depth_v<int***> == 3);
+static_assert(array_extent_product_v<int[3][4]> == 12);
 static_assert(std::is_same_v<int, int>);
 static_assert(!std::is_same_v<int, double>);
 
@@ -83,10 +128,10 @@ void only_integral(T value) {
 template<typename T>
 void extra_traits() {
     std::cout << std::boolalpha
-              << "  is_array=" << std::is_array_v<T>                                             << "\n"
-              << "  is_enum="  << std::is_enum_v<T>                                              << "\n"
+              << "  is_array=" << std::is_array_v<T>                          << "\n"
+              << "  is_enum="  << std::is_enum_v<T>                           << "\n"
               << "  is_const(no_ref)="
-              << std::is_const_v<std::remove_reference_t<T>>                                     << "\n";
+              << std::is_const_v<std::remove_reference_t<T>>                  << "\n";
 }
 
 template<typename T>
@@ -116,7 +161,8 @@ void object_capabilities() {
     std::cout << std::boolalpha
               << "  copy_constructible="    << std::is_copy_constructible_v<T>    << "\n"
               << "  move_constructible="    << std::is_move_constructible_v<T>    << "\n"
-              << "  default_constructible=" << std::is_default_constructible_v<T> << "\n";
+              << "  default_constructible=" << std::is_default_constructible_v<T> << "\n"
+              << "  nothrow_move_constructible=" << std::is_nothrow_move_constructible_v<T> << "\n";
 }
 
 template<typename T>
@@ -124,6 +170,35 @@ void function_check() {
     std::cout << std::boolalpha
               << "  is_function=" << std::is_function_v<T> << "\n";
 }
+
+template<typename Base, typename Derived>
+void inheritance_check() {
+    std::cout << std::boolalpha
+              << "  is_base_of=" << std::is_base_of_v<Base, Derived> << "\n";
+}
+
+template<typename From, typename To>
+void conversion_check() {
+    std::cout << std::boolalpha
+              << "  is_convertible=" << std::is_convertible_v<From, To> << "\n";
+}
+
+template<typename T>
+[[nodiscard]] constexpr auto remove_all_pointers() {
+    if constexpr (std::is_pointer_v<T>)
+        return std::type_identity<typename std::remove_pointer_t<T>>{};
+    else
+        return std::type_identity<T>{};
+}
+
+template<typename T>
+using remove_all_pointers_t = typename decltype(remove_all_pointers<T>())::type;
+
+static_assert(std::is_same_v<remove_all_pointers_t<int*>, int>);
+static_assert(std::is_same_v<remove_all_pointers_t<int>,  int>);
+
+struct Base {};
+struct Derived : Base {};
 
 int main() {
     std::cout << "=== int ===\n";
@@ -164,9 +239,19 @@ int main() {
     reference_info<int&>();
     reference_info<int&&>();
 
-    std::cout << "\n=== is_vector ===\n";
-    std::cout << "int="              << is_vector_v<int>              << "\n"
-              << "vector<int>="      << is_vector_v<std::vector<int>> << "\n";
+    std::cout << "\n=== is_vector / is_map / is_array_like ===\n";
+    std::cout << "int="              << is_vector_v<int>                 << "\n"
+              << "vector<int>="      << is_vector_v<std::vector<int>>    << "\n"
+              << "map<int,string>="  << is_map_v<std::map<int, std::string>> << "\n"
+              << "array<int,5>="     << is_array_like_v<std::array<int, 5>> << "\n";
+
+    std::cout << "\n=== is_smart_pointer ===\n";
+    std::cout << "unique_ptr<int>=" << is_smart_pointer_v<std::unique_ptr<int>> << "\n"
+              << "shared_ptr<int>=" << is_smart_pointer_v<std::shared_ptr<int>> << "\n"
+              << "int*="            << is_smart_pointer_v<int*>                 << "\n";
+
+    std::cout << "\n=== array_extent_product ===\n";
+    std::cout << "int[3][4]=" << array_extent_product_v<int[3][4]> << "\n";
 
     std::cout << "\n=== signed_info ===\n";
     signed_info<int>();
@@ -179,7 +264,22 @@ int main() {
     function_check<int>();
     function_check<void()>();
 
-    assert(is_vector_v<std::vector<int>>);
+    std::cout << "\n=== inheritance_check / conversion_check ===\n";
+    inheritance_check<Base, Derived>();
+    inheritance_check<Derived, Base>();
+    conversion_check<int, double>();
+    conversion_check<std::string, int>();
 
+    std::cout << "\n=== remove_all_pointers_t ===\n";
+    std::cout << std::boolalpha
+              << "remove_all_pointers_t<int*> == int? "
+              << std::is_same_v<remove_all_pointers_t<int*>, int> << "\n";
+
+    assert(is_vector_v<std::vector<int>>);
+    using IntIntMap = std::map<int, int>;
+    assert(is_map_v<IntIntMap>);
+    assert(is_smart_pointer_v<std::shared_ptr<double>>);
+
+    std::cout << "\nAll assertions passed.\n";
     return 0;
 }

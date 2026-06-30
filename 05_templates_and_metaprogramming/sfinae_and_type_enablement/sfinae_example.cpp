@@ -6,8 +6,12 @@
 #include <iterator>
 #include <list>
 #include <map>
+#include <set>
 #include <cassert>
 #include <utility>
+#include <optional>
+#include <algorithm>
+#include <ranges>
 
 template<typename T>
 concept Arithmetic = std::is_arithmetic_v<T>;
@@ -31,6 +35,21 @@ concept HasSize = requires(const T& t) {
 template<typename T>
 concept HasPushBack = requires(T t, typename T::value_type v) {
     { t.push_back(v) };
+};
+
+template<typename T>
+concept HasFind = requires(T t, typename T::key_type k) {
+    { t.find(k) };
+};
+
+template<typename T>
+concept Hashable = requires(const T& t) {
+    { std::hash<T>{}(t) } -> std::convertible_to<std::size_t>;
+};
+
+template<typename T>
+concept Sortable = Iterable<T> && requires(T t) {
+    { std::sort(std::begin(t), std::end(t)) };
 };
 
 template<Arithmetic T>
@@ -122,11 +141,46 @@ void check_pointer() {
         std::cout << "not a pointer type\n";
 }
 
+template<typename T>
+void check_find_support() {
+    if constexpr (HasFind<T>)
+        std::cout << "supports find\n";
+    else
+        std::cout << "does NOT support find\n";
+}
+
+template<typename T>
+void check_hashable() {
+    if constexpr (Hashable<T>)
+        std::cout << "hashable\n";
+    else
+        std::cout << "not hashable\n";
+}
+
+template<HasSize T>
+[[nodiscard]] bool is_empty(const T& container) noexcept {
+    return container.size() == 0;
+}
+
+template<typename T>
+[[nodiscard]] auto first_or_nullopt(const T& container) -> std::optional<typename T::value_type> {
+    if constexpr (HasSize<T>) {
+        if (container.empty()) return std::nullopt;
+    }
+    return *std::begin(container);
+}
+
 template<Arithmetic T>
 [[nodiscard]] constexpr T add_values(T a, T b) noexcept { return a + b; }
 
+template<Arithmetic... Ts>
+[[nodiscard]] constexpr auto sum_all(Ts... values) noexcept {
+    return (values + ...);
+}
+
 static_assert(add_values(2, 3) == 5);
 static_assert(add_values(1.5, 2.5) == 4.0);
+static_assert(sum_all(1, 2, 3, 4) == 10);
 
 int main() {
     std::cout << "=== process (integral / float) ===\n";
@@ -177,8 +231,17 @@ int main() {
     check_push_back_support<std::vector<int>>();
     check_push_back_support<std::map<int, int>>();
 
-    std::cout << "\n=== add_values ===\n";
-    std::cout << "add_values(5,7)=" << add_values(5, 7) << "\n";
+    std::cout << "\n=== check_find_support ===\n";
+    check_find_support<std::map<int, int>>();
+    check_find_support<std::vector<int>>();
+
+    std::cout << "\n=== check_hashable ===\n";
+    check_hashable<int>();
+    check_hashable<std::string>();
+
+    std::cout << "\n=== add_values / sum_all ===\n";
+    std::cout << "add_values(5,7)=" << add_values(5, 7) << "\n"
+              << "sum_all(1,2,3,4,5)=" << sum_all(1, 2, 3, 4, 5) << "\n";
 
     std::cout << "\n=== check_pointer ===\n";
     check_pointer<int>();
@@ -188,7 +251,17 @@ int main() {
     const std::list<int> lst{4, 5, 6};
     smart_process(lst);
 
-    assert(add_values(2, 3) == 5);
+    std::cout << "\n=== is_empty / first_or_nullopt ===\n";
+    const std::vector<int> empty_vec;
+    std::cout << "is_empty(vec)="       << std::boolalpha << is_empty(vec)        << "\n"
+              << "is_empty(empty_vec)=" << is_empty(empty_vec)                    << "\n";
+    if (auto v = first_or_nullopt(vec))       std::cout << "first(vec)="       << *v << "\n";
+    if (!first_or_nullopt(empty_vec))          std::cout << "first(empty_vec)=nullopt\n";
 
+    assert(add_values(2, 3) == 5);
+    assert(is_empty(empty_vec));
+    assert(!is_empty(vec));
+
+    std::cout << "\nAll assertions passed.\n";
     return 0;
 }

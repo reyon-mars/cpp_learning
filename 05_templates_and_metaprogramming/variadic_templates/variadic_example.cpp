@@ -3,8 +3,13 @@
 #include <type_traits>
 #include <algorithm>
 #include <tuple>
+#include <array>
+#include <string>
+#include <string_view>
+#include <vector>
 #include <cassert>
 #include <cstddef>
+#include <concepts>
 
 template<typename... Args>
 void print_all(const Args&... args) {
@@ -119,9 +124,51 @@ template<typename... Args>
     return std::make_tuple(std::forward<Args>(args)...);
 }
 
+template<typename... Args>
+[[nodiscard]] constexpr bool none_of_pack(Args... args) noexcept {
+    return !(args || ...);
+}
+
+template<typename T, typename... Args>
+[[nodiscard]] constexpr bool contains_value(const T& target, Args... args) noexcept {
+    return ((args == target) || ...);
+}
+
+template<typename T, typename... Args>
+[[nodiscard]] constexpr T max_of_pack(T first, Args... rest) noexcept {
+    T m = first;
+    ((m = rest > m ? rest : m), ...);
+    return m;
+}
+
+template<typename... Args>
+[[nodiscard]] std::vector<std::common_type_t<Args...>> make_vector_pack(Args... args) {
+    return { static_cast<std::common_type_t<Args...>>(args)... };
+}
+
+template<typename... Funcs>
+class Overloaded : public Funcs... {
+public:
+    using Funcs::operator()...;
+};
+
+template<typename... Funcs>
+Overloaded(Funcs...) -> Overloaded<Funcs...>;
+
+template<typename T, typename... Args>
+[[nodiscard]] constexpr T fold_apply(T init, Args... args) noexcept {
+    ((init += args), ...);
+    return init;
+}
+
+template<typename... Args>
+[[nodiscard]] constexpr std::size_t total_size_of() noexcept {
+    return (sizeof(Args) + ...);
+}
+
 static_assert(sum(1, 2, 3)             == 6);
 static_assert(multiply(2, 3, 4)        == 24);
-static_assert(subtract_all(100, 10, 5) == 85);
+static_assert(subtract_all(100, 10, 5) == 95);
 static_assert(any_floating<int, double>());
 static_assert(!any_floating<int, char>());
 static_assert(all_same<int, int, int>());
@@ -130,16 +177,23 @@ static_assert(logical_and(true, true));
 static_assert(!logical_and(true, false));
 static_assert(logical_or(false, true));
 static_assert(count_args(1, 2, 3) == 3);
+static_assert(none_of_pack(false, false, false));
+static_assert(!none_of_pack(false, true, false));
+static_assert(contains_value(3, 1, 2, 3, 4));
+static_assert(!contains_value(99, 1, 2, 3, 4));
+static_assert(max_of_pack(3, 7, 2, 9, 4) == 9);
+static_assert(fold_apply(10, 1, 2, 3) == 16);
+static_assert(total_size_of<int, double, char>() == sizeof(int) + sizeof(double) + sizeof(char));
 
 int main() {
     std::cout << "=== print_all ===\n";
     print_all(1, 2.5, "hello", 3, 4);
 
     std::cout << "\n=== fold arithmetic ===\n";
-    std::cout << "sum(1..5)="        << sum(1, 2, 3, 4, 5)     << "\n"
+    std::cout << "sum(1..5)="        << sum(1, 2, 3, 4, 5)        << "\n"
               << "sum_with_init="    << sum_with_init(10, 20, 30) << "\n"
               << "subtract_all="     << subtract_all(100, 10, 5)  << "\n"
-              << "average(2,4,6,8)=" << average(2, 4, 6, 8)      << "\n"
+              << "average(2,4,6,8)=" << average(2, 4, 6, 8)       << "\n"
               << "multiply(2,3,4)="  << multiply(2, 3, 4)         << "\n";
 
     std::cout << "\n=== print_forward ===\n";
@@ -152,7 +206,7 @@ int main() {
     print_csv(10, 20, 30, 40);
 
     std::cout << "\n=== pack meta ===\n";
-    std::cout << "count_args=" << count_args(1, 2, 3, 4, 5) << "\n"
+    std::cout << "count_args=" << count_args(1, 2, 3, 4, 5)                              << "\n"
               << "all_same<int,int,int>=" << std::boolalpha << all_same<int, int, int>() << "\n"
               << "all_same<int,double>="  << all_same<int, double>()                     << "\n"
               << "any_floating<int,char,double>=" << any_floating<int, char, double>()   << "\n";
@@ -162,8 +216,9 @@ int main() {
               << "max(5,2,8,1)=" << max_value(5, 2, 8, 1) << "\n";
 
     std::cout << "\n=== logical folds ===\n";
-    std::cout << "AND(T,T,F)=" << logical_and(true, true, false) << "\n"
-              << "OR(F,F,T)="  << logical_or(false, false, true)  << "\n";
+    std::cout << "AND(T,T,F)="    << logical_and(true, true, false)   << "\n"
+              << "OR(F,F,T)="     << logical_or(false, false, true)   << "\n"
+              << "NONE(F,F,F)="   << none_of_pack(false, false, false) << "\n";
 
     std::cout << "\n=== invoke_all ===\n";
     invoke_all([](auto x) { std::cout << "Value=" << x << "\n"; }, 1, 2, 3);
@@ -179,7 +234,34 @@ int main() {
     auto tup = make_tuple_pack(1, 2.5, "tuple");
     std::cout << "tuple size=" << std::tuple_size_v<decltype(tup)> << "\n";
 
-    assert(sum(1, 2, 3) == 6);
+    std::cout << "\n=== contains_value / max_of_pack ===\n";
+    std::cout << "contains(3, {1,2,3,4})="  << contains_value(3, 1, 2, 3, 4)  << "\n"
+              << "contains(99, {1,2,3,4})=" << contains_value(99, 1, 2, 3, 4) << "\n"
+              << "max_of_pack(3,7,2,9,4)="  << max_of_pack(3, 7, 2, 9, 4)     << "\n";
 
+    std::cout << "\n=== make_vector_pack ===\n";
+    auto vp = make_vector_pack(1, 2.5, 3);
+    for (auto v : vp) std::cout << v << " ";
+    std::cout << "\n";
+
+    std::cout << "\n=== Overloaded visitor ===\n";
+    auto visitor = Overloaded{
+        [](int i)            { std::cout << "int: "    << i << "\n"; },
+        [](double d)         { std::cout << "double: " << d << "\n"; },
+        [](std::string_view s) { std::cout << "string: " << s << "\n"; },
+    };
+    visitor(42);
+    visitor(3.14);
+    visitor(std::string_view{"variant-like"});
+
+    std::cout << "\n=== fold_apply / total_size_of ===\n";
+    std::cout << "fold_apply(10, 1, 2, 3)=" << fold_apply(10, 1, 2, 3) << "\n"
+              << "total_size_of<int,double,char>()=" << total_size_of<int, double, char>() << "\n";
+
+    assert(sum(1, 2, 3) == 6);
+    assert(contains_value(3, 1, 2, 3, 4));
+    assert(max_of_pack(3, 7, 2, 9, 4) == 9);
+
+    std::cout << "\nAll assertions passed.\n";
     return 0;
 }

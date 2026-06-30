@@ -5,11 +5,17 @@
 #include <algorithm>
 #include <numeric>
 #include <ranges>
+#include <span>
 #include <cassert>
 #include <utility>
 #include <concepts>
+#include <optional>
+#include <variant>
+#include <unordered_map>
+#include <string>
 
 [[nodiscard]] int add(int a, int b) noexcept { return a + b; }
+[[nodiscard]] int sub(int a, int b) noexcept { return a - b; }
 
 struct Multiplier {
     int factor;
@@ -48,6 +54,62 @@ public:
         return listeners_.size();
     }
 };
+
+class CommandRegistry {
+    std::unordered_map<std::string, std::function<int(int, int)>> commands_;
+
+public:
+    void register_command(std::string name, std::function<int(int, int)> fn) {
+        commands_.emplace(std::move(name), std::move(fn));
+    }
+
+    [[nodiscard]] std::optional<int> run(std::string_view name, int a, int b) const {
+        auto it = commands_.find(std::string(name));
+        if (it == commands_.end()) return std::nullopt;
+        return it->second(a, b);
+    }
+
+    [[nodiscard]] std::size_t size() const noexcept { return commands_.size(); }
+};
+
+template<typename Sig>
+class FunctionCache;
+
+template<typename R, typename Arg>
+class FunctionCache<R(Arg)> {
+    std::function<R(Arg)>      fn_;
+    mutable std::optional<Arg> last_arg_;
+    mutable std::optional<R>   last_result_;
+
+public:
+    explicit FunctionCache(std::function<R(Arg)> fn) : fn_(std::move(fn)) {}
+
+    [[nodiscard]] R operator()(Arg arg) const {
+        if (last_arg_ && *last_arg_ == arg) return *last_result_;
+        last_arg_    = arg;
+        last_result_ = fn_(arg);
+        return *last_result_;
+    }
+};
+
+template<typename... Funcs>
+class Overloaded : public Funcs... {
+public:
+    using Funcs::operator()...;
+};
+
+template<typename... Funcs>
+Overloaded(Funcs...) -> Overloaded<Funcs...>;
+
+[[nodiscard]] std::function<int(int)> compose(std::function<int(int)> f,
+                                               std::function<int(int)> g) {
+    return [f = std::move(f), g = std::move(g)](int x) { return f(g(x)); };
+}
+
+template<typename T>
+[[nodiscard]] std::function<T(T)> identity_fn() {
+    return [](T x) { return x; };
+}
 
 int main() {
     std::vector<std::function<int()>> functions;
@@ -151,8 +213,48 @@ int main() {
     for (int n : nums) std::cout << n << ' ';
     std::cout << '\n';
 
-    assert(execute_operation(add, 2, 3) == 5);
-    std::cout << "\nAll assertions passed.\n";
+    std::cout << "\n--- Command Registry ---\n";
+    CommandRegistry registry;
+    registry.register_command("add", add);
+    registry.register_command("sub", sub);
+    registry.register_command("mul", [](int a, int b) { return a * b; });
 
+    if (auto r = registry.run("add", 4, 5)) std::cout << "add(4,5)=" << *r << '\n';
+    if (auto r = registry.run("mul", 4, 5)) std::cout << "mul(4,5)=" << *r << '\n';
+    if (!registry.run("div", 4, 5))         std::cout << "div: not registered\n";
+    std::cout << "Registered commands: " << registry.size() << '\n';
+
+    std::cout << "\n--- FunctionCache ---\n";
+    int call_count = 0;
+    FunctionCache<int(int)> cached_square([&](int x) { ++call_count; return x * x; });
+    std::cout << "cached_square(7)=" << cached_square(7) << " calls=" << call_count << '\n';
+    std::cout << "cached_square(7)=" << cached_square(7) << " calls=" << call_count << " (cached)\n";
+    std::cout << "cached_square(9)=" << cached_square(9) << " calls=" << call_count << '\n';
+
+    std::cout << "\n--- Overloaded visitor ---\n";
+    auto visitor = Overloaded{
+        [](int i)    { std::cout << "int: "    << i << '\n'; },
+        [](double d) { std::cout << "double: " << d << '\n'; },
+    };
+    std::variant<int, double> v1 = 42;
+    std::variant<int, double> v2 = 3.14;
+    std::visit(visitor, v1);
+    std::visit(visitor, v2);
+
+    std::cout << "\n--- compose / identity_fn ---\n";
+    auto double_then_inc = compose([](int x) { return x + 1; }, [](int x) { return x * 2; });
+    std::cout << "double_then_inc(5)=" << double_then_inc(5) << '\n';
+
+    auto id = identity_fn<int>();
+    std::cout << "identity_fn(99)=" << id(99) << '\n';
+
+    assert(execute_operation(add, 2, 3) == 5);
+    assert(registry.run("add", 1, 1).value() == 2);
+    assert(!registry.run("nope", 1, 1).has_value());
+    assert(cached_square(7) == 49);
+    assert(call_count == 3);
+    assert(double_then_inc(5) == 11);
+
+    std::cout << "\nAll assertions passed.\n";
     return 0;
 }

@@ -1,345 +1,309 @@
-#include <iostream>
 #include <cstdlib>
-#include <string>
-
-
-#include <vector>
 #include <ctime>
+#include <iostream>
 #include <map>
+#include <string>
+#include <vector>
 
-// Custom status codes
-enum StatusCode {
-    SUCCESS = 0,
-    FILE_ERROR = 1,
-    NETWORK_ERROR = 2
+enum StatusCode
+{
+	SUCCESS = 0,
+	FILE_ERROR = 1,
+	NETWORK_ERROR = 2
 };
 
-: Extra error type
-enum ExtendedStatusCode {
-    MEMORY_ERROR = 3
+enum ExtendedStatusCode
+{
+	MEMORY_ERROR = 3
 };
 
-// Simulated operation
-int performTask() {
-    // simulate a failure (change value to test)
-    return FILE_ERROR;
+int performTask()
+{
+	return FILE_ERROR;
 }
 
-// Error message helper
-void printError(int code) {
-    switch (code) {
-        case SUCCESS:
-            std::cout << "No error.\n";
-            break;
-        case FILE_ERROR:
-            std::cout << "File error occurred.\n";
-            break;
-        case NETWORK_ERROR:
-            std::cout << "Network error occurred.\n";
-            break;
+void printError(int code)
+{
+	switch (code)
+	{
+	case SUCCESS:
+		std::cout << "No error.\n";
+		break;
+	case FILE_ERROR:
+		std::cout << "File error occurred.\n";
+		break;
+	case NETWORK_ERROR:
+		std::cout << "Network error occurred.\n";
+		break;
 
-        
-        case MEMORY_ERROR:
-            std::cout << "Memory error occurred.\n";
-            break;
+	case MEMORY_ERROR:
+		std::cout << "Memory error occurred.\n";
+		break;
 
-        default:
-            std::cout << "Unknown error.\n";
-    }
+	default:
+		std::cout << "Unknown error.\n";
+	}
 }
 
+std::string errorToString(int code)
+{
+	switch (code)
+	{
+	case SUCCESS:
+		return "SUCCESS";
+	case FILE_ERROR:
+		return "FILE_ERROR";
+	case NETWORK_ERROR:
+		return "NETWORK_ERROR";
 
-// Convert error code to string (useful for logs)
-std::string errorToString(int code) {
-    switch (code) {
-        case SUCCESS: return "SUCCESS";
-        case FILE_ERROR: return "FILE_ERROR";
-        case NETWORK_ERROR: return "NETWORK_ERROR";
+	case MEMORY_ERROR:
+		return "MEMORY_ERROR";
 
-        
-        case MEMORY_ERROR: return "MEMORY_ERROR";
-
-        default: return "UNKNOWN_ERROR";
-    }
+	default:
+		return "UNKNOWN_ERROR";
+	}
 }
 
-// Check if error is recoverable
-bool isRecoverable(int code) {
-    return code == NETWORK_ERROR; // example: network can be retried
+bool isRecoverable(int code)
+{
+	return code == NETWORK_ERROR;
 }
 
-// Retry mechanism (simple demo)
-int retryTask(int attempts) {
-    int result;
+int retryTask(int attempts)
+{
+	int result;
 
-    for (int i = 1; i <= attempts; ++i) {
+	for (int i = 1; i <= attempts; ++i)
+	{
 
-        std::cout << "Attempt " << i << "...\n";
+		std::cout << "Attempt " << i << "...\n";
 
-        result = performTask();
+		result = performTask();
 
-        if (result == SUCCESS) {
-            return SUCCESS;
-        }
-    }
+		if (result == SUCCESS)
+		{
+			return SUCCESS;
+		}
+	}
 
-    return result;
+	return result;
 }
 
-// ------------------------------------------------
-: Log helper
+void logError(int code)
+{
+	std::time_t now = std::time(nullptr);
 
-void logError(int code) {
-    std::time_t now = std::time(nullptr);
-
-    std::cout << "[LOG " << now << "] "
-              << errorToString(code) << "\n";
+	std::cout << "[LOG " << now << "] " << errorToString(code) << "\n";
 }
 
-: Error history tracker
-
-class ErrorTracker {
+class ErrorTracker
+{
 private:
-    std::vector<int> history;
+	std::vector<int> history;
 
 public:
-    void add(int code) {
-        history.push_back(code);
-    }
+	void add(int code)
+	{
+		history.push_back(code);
+	}
 
-    void printHistory() const {
+	void printHistory() const
+	{
 
-        std::cout << "\n--- Error History ---\n";
+		std::cout << "\n--- Error History ---\n";
 
-        for (int code : history) {
-            std::cout << errorToString(code) << "\n";
-        }
-    }
+		for (int code : history)
+		{
+			std::cout << errorToString(code) << "\n";
+		}
+	}
 
-    int total() const {
-        return history.size();
-    }
+	int total() const
+	{
+		return history.size();
+	}
 
-    // ✅ NEW
-    int successCount() const {
-        int count = 0;
-        for (int code : history) {
-            if (code == SUCCESS)
-                ++count;
-        }
-        return count;
-    }
+	int successCount() const
+	{
+		int count = 0;
+		for (int code : history)
+		{
+			if (code == SUCCESS)
+				++count;
+		}
+		return count;
+	}
 
-    // ✅ NEW
-    int errorCount() const {
-        return total() - successCount();
-    }
+	int errorCount() const
+	{
+		return total() - successCount();
+	}
 
-    // ✅ NEW
-    int lastError() const {
-        if (history.empty())
-            return SUCCESS;
+	int lastError() const
+	{
+		if (history.empty())
+			return SUCCESS;
 
-        return history.back();
-    }
+		return history.back();
+	}
 };
 
-: Divider helper
-
-void printDivider() {
-    std::cout << "-----------------------------\n";
+void printDivider()
+{
+	std::cout << "-----------------------------\n";
 }
 
-// =====================================================
-// ✅ NEW ADDITIONS
-// =====================================================
+std::string errorSeverity(int code)
+{
 
-// Error severity
-std::string errorSeverity(int code) {
+	switch (code)
+	{
 
-    switch (code) {
+	case SUCCESS:
+		return "NONE";
 
-        case SUCCESS:
-            return "NONE";
+	case FILE_ERROR:
+		return "LOW";
 
-        case FILE_ERROR:
-            return "LOW";
+	case NETWORK_ERROR:
+		return "MEDIUM";
 
-        case NETWORK_ERROR:
-            return "MEDIUM";
+	case MEMORY_ERROR:
+		return "HIGH";
 
-        case MEMORY_ERROR:
-            return "HIGH";
-
-        default:
-            return "UNKNOWN";
-    }
+	default:
+		return "UNKNOWN";
+	}
 }
 
-// Print error summary statistics
-void printStatistics(const ErrorTracker& tracker) {
+void printStatistics(const ErrorTracker& tracker)
+{
 
-    std::cout << "\n--- Statistics ---\n";
+	std::cout << "\n--- Statistics ---\n";
 
-    std::cout << "Total events: "
-              << tracker.total() << "\n";
+	std::cout << "Total events: " << tracker.total() << "\n";
 
-    std::cout << "Success count: "
-              << tracker.successCount() << "\n";
+	std::cout << "Success count: " << tracker.successCount() << "\n";
 
-    std::cout << "Error count: "
-              << tracker.errorCount() << "\n";
+	std::cout << "Error count: " << tracker.errorCount() << "\n";
 
-    if (tracker.total() > 0) {
+	if (tracker.total() > 0)
+	{
 
-        double successRate =
-            (static_cast<double>(tracker.successCount()) /
-             tracker.total()) * 100.0;
+		double successRate = (static_cast<double>(tracker.successCount()) / tracker.total()) * 100.0;
 
-        std::cout << "Success rate: "
-                  << successRate << "%\n";
-    }
+		std::cout << "Success rate: " << successRate << "%\n";
+	}
 }
 
-// Frequency report
-void printFrequencyReport(const std::vector<int>& codes) {
+void printFrequencyReport(const std::vector<int>& codes)
+{
 
-    std::map<int, int> freq;
+	std::map<int, int> freq;
 
-    for (int code : codes) {
-        ++freq[code];
-    }
+	for (int code : codes)
+	{
+		++freq[code];
+	}
 
-    std::cout << "\n--- Frequency Report ---\n";
+	std::cout << "\n--- Frequency Report ---\n";
 
-    for (const auto& entry : freq) {
+	for (const auto& entry : freq)
+	{
 
-        std::cout
-            << errorToString(entry.first)
-            << " -> "
-            << entry.second
-            << "\n";
-    }
+		std::cout << errorToString(entry.first) << " -> " << entry.second << "\n";
+	}
 }
 
-// =====================================================
+int main(void)
+{
 
-int main(void) {
+	int status = -1;
 
-    int status = -1;
+	ErrorTracker tracker;
 
-    
-    ErrorTracker tracker;
+	status = performTask();
 
-    status = performTask();
+	tracker.add(status);
 
-    
-    tracker.add(status);
+	if (status != EXIT_SUCCESS)
+	{
 
-    if (status != EXIT_SUCCESS) {
+		std::cout << "Program exited with error code: " << status << std::endl;
 
-        std::cout << "Program exited with error code: "
-                  << status << std::endl;
+		printError(status);
 
-        printError(status);
+		std::cout << "Error type: " << errorToString(status) << "\n";
 
-        std::cout << "Error type: "
-                  << errorToString(status) << "\n";
+		logError(status);
 
-        
-        logError(status);
+		std::cout << "Severity: " << errorSeverity(status) << "\n";
 
-        // ✅ NEW
-        std::cout << "Severity: "
-                  << errorSeverity(status)
-                  << "\n";
+		if (isRecoverable(status))
+		{
 
-        if (isRecoverable(status)) {
+			std::cout << "Retrying operation...\n";
 
-            std::cout << "Retrying operation...\n";
+			status = retryTask(3);
 
-            status = retryTask(3);
+			tracker.add(status);
 
-            
-            tracker.add(status);
+			if (status == SUCCESS)
+			{
 
-            if (status == SUCCESS) {
+				std::cout << "Recovered successfully after retry.\n";
+			}
+			else
+			{
 
-                std::cout << "Recovered successfully after retry.\n";
+				std::cout << "Retry failed.\n";
+			}
+		}
+	}
+	else
+	{
 
-            } else {
+		std::cout << "Program exited successfully." << std::endl;
+	}
 
-                std::cout << "Retry failed.\n";
-            }
-        }
+	printDivider();
 
-    } else {
+	std::cout << "Testing additional error handling:\n";
 
-        std::cout << "Program exited successfully." << std::endl;
-    }
+	int simulatedErrors[] = {FILE_ERROR, NETWORK_ERROR, MEMORY_ERROR};
 
-    // ------------------------------------------------
-    : Extra demonstrations
+	std::vector<int> allCodes;
 
-    printDivider();
+	for (int code : simulatedErrors)
+	{
 
-    std::cout << "Testing additional error handling:\n";
+		tracker.add(code);
+		allCodes.push_back(code);
 
-    int simulatedErrors[] = {
-        FILE_ERROR,
-        NETWORK_ERROR,
-        MEMORY_ERROR
-    };
+		std::cout << "\nCode: " << code << "\n";
 
-    // ✅ NEW
-    std::vector<int> allCodes;
+		printError(code);
 
-    for (int code : simulatedErrors) {
+		std::cout << "Recoverable? " << (isRecoverable(code) ? "Yes" : "No") << "\n";
 
-        tracker.add(code);
-        allCodes.push_back(code);
+		std::cout << "Severity: " << errorSeverity(code) << "\n";
+	}
 
-        std::cout << "\nCode: " << code << "\n";
+	printDivider();
 
-        printError(code);
+	tracker.printHistory();
 
-        std::cout << "Recoverable? "
-                  << (isRecoverable(code) ? "Yes" : "No")
-                  << "\n";
+	std::cout << "\nTotal tracked errors: " << tracker.total() << "\n";
 
-        // ✅ NEW
-        std::cout << "Severity: "
-                  << errorSeverity(code)
-                  << "\n";
-    }
+	printDivider();
 
-    printDivider();
+	std::cout << "Most recent status: " << errorToString(tracker.lastError()) << "\n";
 
-    tracker.printHistory();
+	printStatistics(tracker);
 
-    std::cout << "\nTotal tracked errors: "
-              << tracker.total() << "\n";
+	printFrequencyReport(allCodes);
 
-    // =================================================
-    // ✅ NEW REPORTING FEATURES
-    // =================================================
+	printDivider();
 
-    printDivider();
-
-    std::cout << "Most recent status: "
-              << errorToString(tracker.lastError())
-              << "\n";
-
-    printStatistics(tracker);
-
-    printFrequencyReport(allCodes);
-
-    printDivider();
-
-    // ------------------------------------------------
-
-    // Optional: normalize return value
-    return (status == 0)
-           ? EXIT_SUCCESS
-           : EXIT_FAILURE;
+	return (status == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

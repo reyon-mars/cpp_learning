@@ -1,254 +1,259 @@
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <vector>
-#include <algorithm>
 
-struct Book {
-    std::string name;
-    int ISBN_NO;
-    std::string publisher;
+struct Book
+{
+	std::string name;
+	int ISBN_NO;
+	std::string publisher;
 };
 
-// Print book details
-void printBook(const Book& b) {
-    std::cout << "Name: " << b.name << "\n";
-    std::cout << "ISBN: " << b.ISBN_NO << "\n";
-    std::cout << "Publisher: " << b.publisher << "\n";
+void printBook(const Book& b)
+{
+	std::cout << "Name: " << b.name << "\n";
+	std::cout << "ISBN: " << b.ISBN_NO << "\n";
+	std::cout << "Publisher: " << b.publisher << "\n";
 }
 
-// Print entire library
-void printLibrary(const std::vector<Book>& lib) {
-    for (const auto& b : lib) {
-        printBook(b);
-        std::cout << "------------------\n";
-    }
+void printLibrary(const std::vector<Book>& lib)
+{
+	for (const auto& b : lib)
+	{
+		printBook(b);
+		std::cout << "------------------\n";
+	}
 }
 
-// ---------------- ORIGINAL SAMPLE DATA ----------------
-std::vector<Book> createSampleLibrary() {
-    return {
-        {"C++ Primer", 123, "Pearson"},
-        {"Clean Code", 456, "Prentice Hall"},
-        {"Design Patterns", 789, "Addison-Wesley"}
-    };
+std::vector<Book> createSampleLibrary()
+{
+	return {{"C++ Primer", 123, "Pearson"},
+			{"Clean Code", 456, "Prentice Hall"},
+			{"Design Patterns", 789, "Addison-Wesley"}};
 }
-// ------------------------------------------------------
 
 // Find and return a book (pointer version for safety)
-const Book* getBookByName(const std::vector<Book>& lib,
-                          const std::string& name) {
-    for (const auto& b : lib) {
-        if (b.name == name) {
-            return &b;
-        }
-    }
-    return nullptr;
+const Book* getBookByName(const std::vector<Book>& lib, const std::string& name)
+{
+	for (const auto& b : lib)
+	{
+		if (b.name == name)
+		{
+			return &b;
+		}
+	}
+	return nullptr;
 }
 
 // Sort books by name (simple bubble sort for learning)
-void sortBooksByName(std::vector<Book>& lib) {
-    for (size_t i = 0; i < lib.size(); ++i) {
-        for (size_t j = i + 1; j < lib.size(); ++j) {
-            if (lib[i].name > lib[j].name) {
-                std::swap(lib[i], lib[j]);
-            }
-        }
-    }
+void sortBooksByName(std::vector<Book>& lib)
+{
+	for (size_t i = 0; i < lib.size(); ++i)
+	{
+		for (size_t j = i + 1; j < lib.size(); ++j)
+		{
+			if (lib[i].name > lib[j].name)
+			{
+				std::swap(lib[i], lib[j]);
+			}
+		}
+	}
 }
 
 // Find book with highest ISBN
-Book getLatestBook(const std::vector<Book>& lib) {
-    Book latest = lib[0];
+Book getLatestBook(const std::vector<Book>& lib)
+{
+	Book latest = lib[0];
 
-    for (const auto& b : lib) {
-        if (b.ISBN_NO > latest.ISBN_NO) {
-            latest = b;
-        }
-    }
+	for (const auto& b : lib)
+	{
+		if (b.ISBN_NO > latest.ISBN_NO)
+		{
+			latest = b;
+		}
+	}
 
-    return latest;
+	return latest;
 }
 
-// --------------------------------------------------
-// ORIGINAL ADDED FUNCTIONS
+void addBook(std::vector<Book>& lib, const std::string& name, int isbn, const std::string& publisher)
+{
 
-void addBook(std::vector<Book>& lib,
-             const std::string& name,
-             int isbn,
-             const std::string& publisher) {
-
-    lib.push_back({name, isbn, publisher});
+	lib.push_back({name, isbn, publisher});
 }
 
-bool removeBookByISBN(std::vector<Book>& lib, int isbn) {
+bool removeBookByISBN(std::vector<Book>& lib, int isbn)
+{
 
-    for (auto it = lib.begin(); it != lib.end(); ++it) {
+	for (auto it = lib.begin(); it != lib.end(); ++it)
+	{
 
-        if (it->ISBN_NO == isbn) {
-            lib.erase(it);
-            return true;
-        }
-    }
+		if (it->ISBN_NO == isbn)
+		{
+			lib.erase(it);
+			return true;
+		}
+	}
 
-    return false;
+	return false;
 }
 
-void printBookCount(const std::vector<Book>& lib) {
-    std::cout << "Total books: "
-              << lib.size() << "\n";
+void printBookCount(const std::vector<Book>& lib)
+{
+	std::cout << "Total books: " << lib.size() << "\n";
 }
 
-bool isLibraryEmpty(const std::vector<Book>& lib) {
-    return lib.empty();
+bool isLibraryEmpty(const std::vector<Book>& lib)
+{
+	return lib.empty();
 }
 
-// --------------------------------------------------
-// NEW SMALL ADDITIONS
-
-const Book* getBookByISBN(const std::vector<Book>& lib, int isbn) {
-    for (const auto& b : lib) {
-        if (b.ISBN_NO == isbn) {
-            return &b;
-        }
-    }
-    return nullptr;
+const Book* getBookByISBN(const std::vector<Book>& lib, int isbn)
+{
+	for (const auto& b : lib)
+	{
+		if (b.ISBN_NO == isbn)
+		{
+			return &b;
+		}
+	}
+	return nullptr;
 }
 
-void sortBooksByISBN(std::vector<Book>& lib) {
-    std::sort(lib.begin(), lib.end(),
-        [](const Book& a, const Book& b) {
-            return a.ISBN_NO < b.ISBN_NO;
-        });
+void sortBooksByISBN(std::vector<Book>& lib)
+{
+	std::sort(lib.begin(),
+			  lib.end(),
+			  [](const Book& a, const Book& b)
+			  {
+				  return a.ISBN_NO < b.ISBN_NO;
+			  });
 }
 
-void printBooksByPublisher(const std::vector<Book>& lib,
-                           const std::string& publisher) {
+void printBooksByPublisher(const std::vector<Book>& lib, const std::string& publisher)
+{
 
-    std::cout << "\nBooks from publisher: "
-              << publisher << "\n";
+	std::cout << "\nBooks from publisher: " << publisher << "\n";
 
-    bool found = false;
+	bool found = false;
 
-    for (const auto& b : lib) {
-        if (b.publisher == publisher) {
-            printBook(b);
-            std::cout << "------------------\n";
-            found = true;
-        }
-    }
+	for (const auto& b : lib)
+	{
+		if (b.publisher == publisher)
+		{
+			printBook(b);
+			std::cout << "------------------\n";
+			found = true;
+		}
+	}
 
-    if (!found) {
-        std::cout << "No books found.\n";
-    }
+	if (!found)
+	{
+		std::cout << "No books found.\n";
+	}
 }
 
-double averageISBN(const std::vector<Book>& lib) {
+double averageISBN(const std::vector<Book>& lib)
+{
 
-    if (lib.empty())
-        return 0.0;
+	if (lib.empty())
+		return 0.0;
 
-    long long total = 0;
+	long long total = 0;
 
-    for (const auto& b : lib) {
-        total += b.ISBN_NO;
-    }
+	for (const auto& b : lib)
+	{
+		total += b.ISBN_NO;
+	}
 
-    return static_cast<double>(total) / lib.size();
+	return static_cast<double>(total) / lib.size();
 }
 
-void libraryStatistics(const std::vector<Book>& lib) {
+void libraryStatistics(const std::vector<Book>& lib)
+{
 
-    std::cout << "\n=== Library Statistics ===\n";
-    std::cout << "Books stored: "
-              << lib.size() << "\n";
+	std::cout << "\n=== Library Statistics ===\n";
+	std::cout << "Books stored: " << lib.size() << "\n";
 
-    std::cout << "Average ISBN: "
-              << averageISBN(lib) << "\n";
+	std::cout << "Average ISBN: " << averageISBN(lib) << "\n";
 }
 
-// ================= MAIN =================
+int main()
+{
 
-int main() {
+	std::vector<Book> library = createSampleLibrary();
 
-    std::vector<Book> library = createSampleLibrary();
+	std::cout << "Initial Library:\n";
+	printLibrary(library);
 
-    std::cout << "Initial Library:\n";
-    printLibrary(library);
+	const Book* found = getBookByName(library, "C++ Primer");
 
-    const Book* found = getBookByName(library, "C++ Primer");
+	if (found)
+	{
 
-    if (found) {
+		std::cout << "\nFound book details:\n";
+		printBook(*found);
+	}
+	else
+	{
 
-        std::cout << "\nFound book details:\n";
-        printBook(*found);
+		std::cout << "Book not found.\n";
+	}
 
-    } else {
+	std::cout << "\nSorting books by name...\n";
 
-        std::cout << "Book not found.\n";
-    }
+	sortBooksByName(library);
 
-    std::cout << "\nSorting books by name...\n";
+	printLibrary(library);
 
-    sortBooksByName(library);
+	Book latest = getLatestBook(library);
 
-    printLibrary(library);
+	std::cout << "\nLatest book (highest ISBN):\n";
+	printBook(latest);
 
-    Book latest = getLatestBook(library);
+	// --------------------------------------------------
+	// Add books
 
-    std::cout << "\nLatest book (highest ISBN):\n";
-    printBook(latest);
+	std::cout << "\nAdding new books...\n";
 
-    // --------------------------------------------------
-    // Add books
+	addBook(library, "Effective C++", 999, "O'Reilly");
+	addBook(library, "The Pragmatic Programmer", 888, "Addison-Wesley");
 
-    std::cout << "\nAdding new books...\n";
+	printLibrary(library);
 
-    addBook(library, "Effective C++", 999, "O'Reilly");
-    addBook(library, "The Pragmatic Programmer", 888, "Addison-Wesley");
+	printBookCount(library);
 
-    printLibrary(library);
+	std::cout << "\nRemoving ISBN 456...\n";
 
-    // --------------------------------------------------
+	if (removeBookByISBN(library, 456))
+	{
+		std::cout << "Book removed successfully.\n";
+	}
+	else
+	{
+		std::cout << "Book not found.\n";
+	}
 
-    printBookCount(library);
+	printLibrary(library);
 
-    // --------------------------------------------------
+	std::cout << "\nLibrary empty? " << (isLibraryEmpty(library) ? "Yes" : "No") << "\n";
 
-    std::cout << "\nRemoving ISBN 456...\n";
+	const Book* isbnBook = getBookByISBN(library, 999);
 
-    if (removeBookByISBN(library, 456)) {
-        std::cout << "Book removed successfully.\n";
-    } else {
-        std::cout << "Book not found.\n";
-    }
+	if (isbnBook)
+	{
+		std::cout << "\nBook found by ISBN:\n";
+		printBook(*isbnBook);
+	}
 
-    printLibrary(library);
+	std::cout << "\nSorting books by ISBN...\n";
+	sortBooksByISBN(library);
+	printLibrary(library);
 
-    // --------------------------------------------------
+	printBooksByPublisher(library, "Addison-Wesley");
 
-    std::cout << "\nLibrary empty? "
-              << (isLibraryEmpty(library) ? "Yes" : "No")
-              << "\n";
+	libraryStatistics(library);
 
-    // --------------------------------------------------
-    // NEW FEATURES
-
-    const Book* isbnBook = getBookByISBN(library, 999);
-
-    if (isbnBook) {
-        std::cout << "\nBook found by ISBN:\n";
-        printBook(*isbnBook);
-    }
-
-    std::cout << "\nSorting books by ISBN...\n";
-    sortBooksByISBN(library);
-    printLibrary(library);
-
-    printBooksByPublisher(library, "Addison-Wesley");
-
-    libraryStatistics(library);
-
-    // --------------------------------------------------
-
-    return 0;
+	return 0;
 }

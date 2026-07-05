@@ -16,6 +16,9 @@
 #include <semaphore>
 #include <atomic>
 #include <optional>
+#include <queue>
+#include <condition_variable>
+#include <deque>
 
 [[nodiscard]] int heavy_computation(int n) noexcept {
     return n * (n + 1) / 2;
@@ -35,23 +38,17 @@
 [[nodiscard]] std::future<int> promise_example(int n) {
     std::promise<int> prom;
     auto fut = prom.get_future();
-
     std::thread([n, p = std::move(prom)]() mutable {
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
         p.set_value(heavy_computation(n));
     }).detach();
-
     return fut;
 }
 
 void shared_future_demo() {
     std::promise<int> prom;
     std::shared_future<int> sf = prom.get_future().share();
-
-    std::thread([p = std::move(prom)]() mutable {
-        p.set_value(123);
-    }).detach();
-
+    std::thread([p = std::move(prom)]() mutable { p.set_value(123); }).detach();
     const auto val = sf.get();
     std::cout << std::format("Shared future value 1: {}\n", val);
     std::cout << std::format("Shared future value 2: {}\n", val);
@@ -62,33 +59,27 @@ void timed_wait_demo() {
         std::this_thread::sleep_for(std::chrono::milliseconds(150));
         return 77;
     });
-
     if (fut.wait_for(std::chrono::milliseconds(50)) == std::future_status::timeout)
         std::cout << "Still waiting...\n";
-
     std::cout << std::format("Timed wait result: {}\n", fut.get());
 }
 
 [[nodiscard]] int parallel_sum(std::span<const int> values) {
     if (values.empty()) return 0;
-
     const auto mid = values.size() / 2;
-
     auto left  = std::async(std::launch::async, [=] {
         return std::reduce(values.begin(), values.begin() + mid, 0);
     });
     auto right = std::async(std::launch::async, [=] {
         return std::reduce(values.begin() + mid, values.end(), 0);
     });
-
     return left.get() + right.get();
 }
 
 [[nodiscard]] std::future<long long> async_factorial(int n) {
     return std::async(std::launch::async, [n]() noexcept -> long long {
         long long result = 1;
-        for (int i = 2; i <= n; ++i)
-            result *= i;
+        for (int i = 2; i <= n; ++i) result *= i;
         return result;
     });
 }
@@ -100,8 +91,8 @@ void safe_print(std::string_view msg) {
     std::cout << std::format("{}\n", msg);
 }
 
-template <std::invocable<> Fn>
-[[nodiscard]] std::future<std::invoke_result_t<Fn>> async_guarded(Fn&& fn) {
+template<std::invocable<> Fn>
+[[nodiscard]] auto async_guarded(Fn&& fn) {
     return std::async(std::launch::async,
         [f = std::forward<Fn>(fn)]() mutable -> std::invoke_result_t<Fn> {
             try {
@@ -117,31 +108,18 @@ template <std::invocable<> Fn>
     );
 }
 
-template <std::invocable<> Fn>
-[[nodiscard]] auto batch_async(std::span<Fn> fns) {
-    using R = std::invoke_result_t<Fn>;
-    std::vector<std::future<R>> futures;
-    futures.reserve(fns.size());
-    for (auto& fn : fns)
-        futures.emplace_back(std::async(std::launch::async, std::move(fn)));
-    return futures;
-}
-
 void latch_demo() {
     constexpr int worker_count = 3;
     std::latch ready(worker_count);
     std::atomic<int> total{0};
-
     std::vector<std::jthread> workers;
     workers.reserve(worker_count);
-
     for (int i = 1; i <= worker_count; ++i) {
         workers.emplace_back([&, i] {
             total.fetch_add(heavy_computation(i * 10), std::memory_order_relaxed);
             ready.count_down();
         });
     }
-
     ready.wait();
     std::cout << std::format("Latch demo total: {}\n", total.load());
 }
@@ -150,24 +128,118 @@ void semaphore_demo() {
     std::counting_semaphore<3> sem(3);
     std::atomic<int> concurrent{0};
     std::atomic<int> max_concurrent{0};
-
     auto task = [&](int id) {
         sem.acquire();
         const int c = concurrent.fetch_add(1, std::memory_order_acq_rel) + 1;
         int expected = max_concurrent.load(std::memory_order_relaxed);
         while (c > expected &&
-               !max_concurrent.compare_exchange_weak(expected, c,
-                                                      std::memory_order_relaxed));
+               !max_concurrent.compare_exchange_weak(expected, c, std::memory_order_relaxed));
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         concurrent.fetch_sub(1, std::memory_order_acq_rel);
         sem.release();
         safe_print(std::format("Semaphore task {} done", id));
     };
-
     std::vector<std::jthread> threads;
     threads.reserve(5);
-    for (int i = 1; i <= 5; ++i)
-        threads.emplace_back(task, i);
+    for (int i = 1; i <= 5; ++i) threads.emplace_back(task, i);
+}
+
+void barrier_demo() {
+    constexpr int n = 3;
+    std::atomic<int> phase{0};
+    std::barrier sync(n, [&]() noexcept {
+        phase.fetch_add(1, std::memory_order_relaxed);
+    });
+    std::vector<std::jthread> workers;
+    workers.reserve(n);
+    for (int i = 0; i < n; ++i) {
+        workers.emplace_back([&, i] {
+            safe_print(std::format("Worker {} phase 1", i));
+            sync.arrive_and_wait();
+            safe_print(std::format("Worker {} phase 2", i));
+            sync.arrive_and_wait();
+        });
+    }
+    for (auto& w : workers) w.join();
+    std::cout << std::format("Barrier completed {} phases\n", phase.load());
+}
+
+class ThreadPool {
+    std::vector<std::jthread>       threads_;
+    std::queue<std::function<void()>> tasks_;
+    std::mutex                       mutex_;
+    std::condition_variable          cv_;
+    std::atomic<bool>                stop_{false};
+
+public:
+    explicit ThreadPool(std::size_t n) {
+        threads_.reserve(n);
+        for (std::size_t i = 0; i < n; ++i) {
+            threads_.emplace_back([this] {
+                while (true) {
+                    std::function<void()> task;
+                    {
+                        std::unique_lock lock(mutex_);
+                        cv_.wait(lock, [this] { return stop_ || !tasks_.empty(); });
+                        if (stop_ && tasks_.empty()) return;
+                        task = std::move(tasks_.front());
+                        tasks_.pop();
+                    }
+                    task();
+                }
+            });
+        }
+    }
+
+    template<std::invocable<> Fn>
+    [[nodiscard]] std::future<std::invoke_result_t<Fn>> submit(Fn&& fn) {
+        using R = std::invoke_result_t<Fn>;
+        auto task = std::make_shared<std::packaged_task<R()>>(std::forward<Fn>(fn));
+        auto fut  = task->get_future();
+        {
+            std::lock_guard lock(mutex_);
+            tasks_.emplace([t = std::move(task)] { (*t)(); });
+        }
+        cv_.notify_one();
+        return fut;
+    }
+
+    ~ThreadPool() {
+        stop_ = true;
+        cv_.notify_all();
+    }
+};
+
+void async_exception_propagation_demo() {
+    auto fut = std::async(std::launch::async, [] -> int {
+        throw std::runtime_error("async failure");
+    });
+    try {
+        fut.get();
+    } catch (const std::exception& e) {
+        std::cout << std::format("Caught propagated exception: {}\n", e.what());
+    }
+}
+
+[[nodiscard]] std::vector<int> parallel_transform(std::span<const int> in,
+                                                   std::function<int(int)> fn) {
+    const auto mid = in.size() / 2;
+    std::vector<int> li(in.begin(), in.begin() + mid);
+    std::vector<int> ri(in.begin() + mid, in.end());
+    auto lf = std::async(std::launch::async, [li, fn] {
+        std::vector<int> r(li.size());
+        std::transform(li.begin(), li.end(), r.begin(), fn);
+        return r;
+    });
+    auto rf = std::async(std::launch::async, [ri, fn] {
+        std::vector<int> r(ri.size());
+        std::transform(ri.begin(), ri.end(), r.begin(), fn);
+        return r;
+    });
+    auto lv = lf.get();
+    auto rv = rf.get();
+    lv.insert(lv.end(), rv.begin(), rv.end());
+    return lv;
 }
 
 int main() {
@@ -187,7 +259,6 @@ int main() {
         std::packaged_task<int(int)> task(heavy_computation);
         auto future3 = task.get_future();
         std::thread worker(std::move(task), 500);
-        std::cout << "Waiting for packaged_task result...\n";
         std::cout << std::format("Packaged task result: {}\n", future3.get());
         worker.join();
     }
@@ -212,31 +283,25 @@ int main() {
         futures.reserve(3);
         for (int i : {100, 200, 300})
             futures.emplace_back(std::async(std::launch::async, heavy_computation, i));
-
         std::cout << "Batch async results: ";
-        for (auto& f : futures)
-            std::cout << std::format("{} ", f.get());
+        for (auto& f : futures) std::cout << std::format("{} ", f.get());
         std::cout << '\n';
     }
 
     std::cout << "\n--- Extra Tests ---\n";
-
     std::cout << std::format("Promise result: {}\n", promise_example(150).get());
     shared_future_demo();
     timed_wait_demo();
 
     std::cout << "\n--- Advanced Async Features ---\n";
-
     const std::vector<int> nums = {1,2,3,4,5,6,7,8,9,10};
     std::cout << std::format("Parallel sum result: {}\n", parallel_sum(nums));
-
     std::cout << std::format("Factorial async result: {}\n", async_factorial(5).get());
 
     {
         auto p1 = std::async(std::launch::async, [] { safe_print("Async printer 1 executed"); });
         auto p2 = std::async(std::launch::async, [] { safe_print("Async printer 2 executed"); });
-        p1.wait();
-        p2.wait();
+        p1.wait(); p2.wait();
     }
 
     {
@@ -249,6 +314,33 @@ int main() {
 
     std::cout << "\n--- C++20 Semaphore ---\n";
     semaphore_demo();
+
+    std::cout << "\n--- C++20 Barrier ---\n";
+    barrier_demo();
+
+    std::cout << "\n--- Thread Pool ---\n";
+    {
+        ThreadPool pool(3);
+        std::vector<std::future<int>> results;
+        results.reserve(5);
+        for (int i = 1; i <= 5; ++i)
+            results.emplace_back(pool.submit([i] { return heavy_computation(i * 10); }));
+        int pool_sum = 0;
+        for (auto& f : results) pool_sum += f.get();
+        std::cout << std::format("Thread pool sum: {}\n", pool_sum);
+    }
+
+    std::cout << "\n--- Exception Propagation ---\n";
+    async_exception_propagation_demo();
+
+    std::cout << "\n--- Parallel Transform ---\n";
+    {
+        const std::vector<int> src = {1, 2, 3, 4, 5, 6};
+        auto squared = parallel_transform(src, [](int x) { return x * x; });
+        std::cout << "Parallel transform result: ";
+        for (int v : squared) std::cout << std::format("{} ", v);
+        std::cout << '\n';
+    }
 
     std::cout << "\n--- jthread with stop_token ---\n";
     {

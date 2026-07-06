@@ -6,6 +6,7 @@
 #include <vector>
 #include <numeric>
 #include <utility>
+#include <string>
 
 using namespace std::chrono_literals;
 
@@ -58,6 +59,11 @@ make_promised(Func fn) {
         catch (...) { p.set_exception(std::current_exception()); }
     }};
     return {std::move(fut), std::move(t)};
+}
+
+template<typename... Futures>
+int sum_all(Futures&... futs) {
+    return (futs.get() + ...);
 }
 
 int main() {
@@ -145,6 +151,75 @@ int main() {
         auto f1 = std::async(std::launch::async, calculate_sum, 1, 2);
         auto f2 = std::async(std::launch::async, calculate_sum, 3, 4);
         std::cout << "Combined=" << f1.get() + f2.get() << "\n";
+    }
+
+    std::cout << "\n=== packaged_task on its own thread ===\n";
+    {
+        std::packaged_task<int(int, int)> task{calculate_sum};
+        std::future<int> fut = task.get_future();
+        std::thread worker{std::move(task), 15, 27};
+        std::cout << "PackagedTask=" << fut.get() << "\n";
+        worker.join();
+    }
+
+    std::cout << "\n=== packaged_task queue simulation ===\n";
+    {
+        std::vector<std::packaged_task<int()>> tasks;
+        std::vector<std::future<int>> results;
+        for (int i = 1; i <= 3; ++i) {
+            tasks.emplace_back([i] { return risky_division(100, i); });
+            results.push_back(tasks.back().get_future());
+        }
+        std::vector<std::thread> workers;
+        for (auto& t : tasks) workers.emplace_back(std::move(t));
+        for (auto& r : results) std::cout << "Task result=" << r.get() << " ";
+        std::cout << "\n";
+        for (auto& w : workers) w.join();
+    }
+
+    std::cout << "\n=== deferred vs async launch policy ===\n";
+    {
+        auto deferred = std::async(std::launch::deferred, [] {
+            std::cout << "Deferred body runs on get()\n";
+            return 11;
+        });
+        auto eager = std::async(std::launch::async, [] {
+            std::this_thread::sleep_for(30ms);
+            return 22;
+        });
+        check_status(eager, "eager");
+        std::cout << "Deferred=" << deferred.get() << ", Eager=" << eager.get() << "\n";
+    }
+
+    std::cout << "\n=== void future for signaling completion ===\n";
+    {
+        std::promise<void> done;
+        auto signal = done.get_future();
+        std::thread worker{[&done] {
+            std::this_thread::sleep_for(40ms);
+            std::cout << "Worker finished side effects\n";
+            done.set_value();
+        }};
+        signal.wait();
+        std::cout << "Main observed completion\n";
+        worker.join();
+    }
+
+    std::cout << "\n=== wait_until with absolute deadline ===\n";
+    {
+        auto fut = delayed_future(123, 60ms);
+        auto deadline = std::chrono::steady_clock::now() + 20ms;
+        if (fut.wait_until(deadline) == std::future_status::timeout)
+            std::cout << "Deadline hit before completion\n";
+        std::cout << "Final=" << fut.get() << "\n";
+    }
+
+    std::cout << "\n=== variadic fold over multiple futures ===\n";
+    {
+        auto a = std::async(std::launch::async, calculate_sum, 5, 5);
+        auto b = std::async(std::launch::async, calculate_sum, 10, 10);
+        auto c = std::async(std::launch::async, calculate_sum, 20, 20);
+        std::cout << "Sum of three=" << sum_all(a, b, c) << "\n";
     }
 
     return 0;

@@ -6,7 +6,10 @@
 #include <chrono>
 #include <string_view>
 #include <span>
+#include <optional>
 #include <cassert>
+#include <random>
+#include <functional>
 
 using Clock = std::chrono::high_resolution_clock;
 
@@ -47,6 +50,19 @@ void print_first(std::span<const int> v, int n = 5) {
     return result;
 }
 
+[[nodiscard]] std::vector<int> exclusive_prefix_sum(std::span<const int> v) {
+    std::vector<int> result(v.size());
+    std::exclusive_scan(std::execution::par, v.begin(), v.end(), result.begin(), 0);
+    return result;
+}
+
+[[nodiscard]] std::vector<int> squared_prefix_sum(std::span<const int> v) {
+    std::vector<int> result(v.size());
+    std::transform_inclusive_scan(std::execution::par, v.begin(), v.end(), result.begin(),
+        std::plus<>{}, [](int x) { return x * x; });
+    return result;
+}
+
 [[nodiscard]] std::vector<int> adjacent_diff(std::span<const int> v) {
     std::vector<int> result(v.size());
     std::adjacent_difference(std::execution::par, v.begin(), v.end(), result.begin());
@@ -67,6 +83,29 @@ void erase_odds(std::vector<int>& v) {
     assert(a.size() == b.size());
     return std::transform_reduce(std::execution::par,
         a.begin(), a.end(), b.begin(), 0);
+}
+
+[[nodiscard]] long long sum_of_squares(std::span<const int> v) {
+    return std::transform_reduce(std::execution::par, v.begin(), v.end(), 0LL,
+        std::plus<>{}, [](int x) { return static_cast<long long>(x) * x; });
+}
+
+[[nodiscard]] std::pair<std::vector<int>, std::vector<int>> partition_evens(std::vector<int> v) {
+    auto mid = std::partition(std::execution::par, v.begin(), v.end(),
+        [](int x) { return x % 2 == 0; });
+    return {std::vector<int>(v.begin(), mid), std::vector<int>(mid, v.end())};
+}
+
+[[nodiscard]] std::vector<int> merge_sorted(std::span<const int> a, std::span<const int> b) {
+    std::vector<int> result(a.size() + b.size());
+    std::merge(std::execution::par, a.begin(), a.end(), b.begin(), b.end(), result.begin());
+    return result;
+}
+
+[[nodiscard]] int kth_smallest(std::vector<int> v, std::size_t k) {
+    auto nth = v.begin() + static_cast<std::ptrdiff_t>(k);
+    std::nth_element(std::execution::par, v.begin(), nth, v.end());
+    return *nth;
 }
 
 int main() {
@@ -115,6 +154,12 @@ int main() {
     std::cout << "\n=== prefix_sum ===\n";
     print_first(prefix_sum(data));
 
+    std::cout << "\n=== exclusive_prefix_sum ===\n";
+    print_first(exclusive_prefix_sum(data));
+
+    std::cout << "\n=== squared_prefix_sum ===\n";
+    print_first(squared_prefix_sum(std::span{data}.subspan(0, 5)), 5);
+
     std::cout << "\n=== replace_even_with_zero ===\n";
     replace_even_with_zero(data);
     print_first(data);
@@ -124,11 +169,32 @@ int main() {
     const std::vector<int> b{5, 4, 3, 2, 1};
     std::cout << "dot=" << dot_product(a, b) << "\n";
 
+    std::cout << "\n=== sum_of_squares ===\n";
+    std::cout << "sum_of_squares=" << sum_of_squares(a) << "\n";
+
     std::cout << "\n=== erase_odds ===\n";
     std::vector<int> nums{1,2,3,4,5,6,7,8,9,10};
     erase_odds(nums);
     for (int n : nums) std::cout << n << " ";
     std::cout << "\n";
+
+    std::cout << "\n=== partition_evens ===\n";
+    {
+        auto [evens, odds] = partition_evens({1,2,3,4,5,6,7,8,9,10});
+        std::cout << "evens: "; for (int n : evens) std::cout << n << " "; std::cout << "\n";
+        std::cout << "odds:  "; for (int n : odds)  std::cout << n << " "; std::cout << "\n";
+    }
+
+    std::cout << "\n=== merge_sorted ===\n";
+    {
+        const std::vector<int> left{1, 3, 5, 7};
+        const std::vector<int> right{2, 4, 6, 8};
+        for (int n : merge_sorted(left, right)) std::cout << n << " ";
+        std::cout << "\n";
+    }
+
+    std::cout << "\n=== kth_smallest ===\n";
+    std::cout << "3rd smallest=" << kth_smallest({9, 4, 7, 1, 3, 6, 8, 2, 5}, 2) << "\n";
 
     std::cout << "\n=== adjacent_diff ===\n";
     for (int n : adjacent_diff(a)) std::cout << n << " ";
@@ -139,6 +205,11 @@ int main() {
     std::iota(big.begin(), big.end(), 1);
     measure_time("seq reduce", [&]{ std::reduce(std::execution::seq, big.begin(), big.end(), 0LL); });
     measure_time("par reduce", [&]{ std::reduce(std::execution::par, big.begin(), big.end(), 0LL); });
+    measure_time("par sort",   [&]{
+        auto copy = big;
+        std::shuffle(copy.begin(), copy.end(), std::mt19937{std::random_device{}()});
+        std::sort(std::execution::par, copy.begin(), copy.end());
+    });
 
     std::cout << "\n=== generate (sequential — no data race) ===\n";
     std::vector<int> generated(10);

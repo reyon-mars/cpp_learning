@@ -6,6 +6,9 @@
 #include <algorithm>
 #include <numeric>
 #include <cstddef>
+#include <vector>
+#include <ranges>
+#include <cassert>
 
 void print_list(const std::forward_list<std::string>& lst, std::string_view label = "") {
     if (!label.empty()) std::cout << label << ": ";
@@ -33,12 +36,42 @@ void print_list(const std::forward_list<std::string>& lst, std::string_view labe
 }
 
 [[nodiscard]] bool all_non_empty(const std::forward_list<std::string>& lst) {
-    return std::ranges::all_of(lst, [](const std::string& s){ return !s.empty(); });
+    return std::ranges::all_of(lst, [](const std::string& s) { return !s.empty(); });
 }
 
 [[nodiscard]] std::size_t total_characters(const std::forward_list<std::string>& lst) {
     return std::accumulate(lst.begin(), lst.end(), std::size_t{0},
-        [](std::size_t acc, const std::string& s){ return acc + s.size(); });
+        [](std::size_t acc, const std::string& s) { return acc + s.size(); });
+}
+
+[[nodiscard]] std::optional<std::string> find_longest(const std::forward_list<std::string>& lst) {
+    if (lst.empty()) return std::nullopt;
+    auto it = std::ranges::max_element(lst, {}, &std::string::size);
+    return *it;
+}
+
+[[nodiscard]] std::optional<std::string> find_shortest(const std::forward_list<std::string>& lst) {
+    if (lst.empty()) return std::nullopt;
+    auto it = std::ranges::min_element(lst, {}, &std::string::size);
+    return *it;
+}
+
+[[nodiscard]] std::vector<std::string> to_vector(const std::forward_list<std::string>& lst) {
+    return std::vector<std::string>(lst.begin(), lst.end());
+}
+
+[[nodiscard]] std::forward_list<std::string> from_vector(const std::vector<std::string>& v) {
+    std::forward_list<std::string> result;
+    for (auto it = v.rbegin(); it != v.rend(); ++it)
+        result.push_front(*it);
+    return result;
+}
+
+[[nodiscard]] bool starts_with_any(const std::forward_list<std::string>& lst,
+                                    std::string_view prefix) {
+    return std::ranges::any_of(lst, [prefix](const std::string& s) {
+        return s.starts_with(prefix);
+    });
 }
 
 void print_first_n(const std::forward_list<std::string>& lst, int n) {
@@ -66,6 +99,19 @@ void find_and_add(std::forward_list<std::string>& lst,
     lst.insert_after(tail, std::move(replacement));
 }
 
+void transform_in_place(std::forward_list<std::string>& lst, auto fn) {
+    for (auto& s : lst) s = fn(std::move(s));
+}
+
+[[nodiscard]] std::forward_list<std::string> merge_sorted(
+    std::forward_list<std::string> a,
+    std::forward_list<std::string> b) {
+    a.sort();
+    b.sort();
+    a.merge(b);
+    return a;
+}
+
 int main() {
     std::forward_list<std::string> lst{"apple", "banana", "cherry", "date"};
 
@@ -88,13 +134,27 @@ int main() {
     std::cout << "size=" << list_size(lst) << "\n";
 
     std::cout << "\n=== Query helpers ===\n";
-    std::cout << "empty="    << std::boolalpha << lst.empty()                   << "\n"
-              << "front="    << lst.front()                                      << "\n"
-              << "contains(cherry)=" << contains(lst, "cherry")                 << "\n"
-              << "count(cherry)="    << count_value(lst, "cherry")              << "\n"
-              << "all_non_empty="    << all_non_empty(lst)                      << "\n"
-              << "total_chars="      << total_characters(lst)                   << "\n";
+    std::cout << "empty="           << std::boolalpha << lst.empty()            << "\n"
+              << "front="           << lst.front()                               << "\n"
+              << "contains(cherry)=" << contains(lst, "cherry")                  << "\n"
+              << "count(cherry)="   << count_value(lst, "cherry")               << "\n"
+              << "all_non_empty="   << all_non_empty(lst)                       << "\n"
+              << "total_chars="     << total_characters(lst)                    << "\n";
     if (auto last = last_element(lst)) std::cout << "last=" << *last << "\n";
+
+    std::cout << "\n=== find_longest / find_shortest ===\n";
+    if (auto l = find_longest(lst))  std::cout << "longest="  << *l << "\n";
+    if (auto s = find_shortest(lst)) std::cout << "shortest=" << *s << "\n";
+
+    std::cout << "\n=== starts_with_any(a) ===\n";
+    std::cout << "starts_with 'a'=" << starts_with_any(lst, "a") << "\n"
+              << "starts_with 'z'=" << starts_with_any(lst, "z") << "\n";
+
+    std::cout << "\n=== to_vector / from_vector round-trip ===\n";
+    auto vec = to_vector(lst);
+    std::cout << "vector size=" << vec.size() << "\n";
+    auto lst2 = from_vector(vec);
+    print_list(lst2, "from_vector");
 
     std::cout << "\n=== push_front / pop_front ===\n";
     lst.push_front("first");
@@ -111,7 +171,7 @@ int main() {
     print_list(lst, "Sorted");
 
     std::cout << "\n=== remove_if / unique ===\n";
-    lst.remove_if([](const std::string& s){ return s.size() < 6; });
+    lst.remove_if([](const std::string& s) { return s.size() < 6; });
     print_list(lst, "After remove_if(len<6)");
 
     lst.push_front("apple");
@@ -134,9 +194,28 @@ int main() {
     lst.resize(5);
     print_list(lst, "After resize(5)");
 
+    std::cout << "\n=== transform_in_place (uppercase first char) ===\n";
+    std::forward_list<std::string> words{"cat", "dog", "eel"};
+    transform_in_place(words, [](std::string s) {
+        if (!s.empty()) s[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(s[0])));
+        return s;
+    });
+    print_list(words, "Capitalised");
+
+    std::cout << "\n=== merge_sorted ===\n";
+    std::forward_list<std::string> ma{"banana", "date"};
+    std::forward_list<std::string> mb{"apricot", "cherry", "elderberry"};
+    auto merged = merge_sorted(std::move(ma), std::move(mb));
+    print_list(merged, "Merged sorted");
+
+    assert(!contains(merged, "kiwi"));
+    assert(contains(merged, "cherry"));
+    assert(find_longest(merged).has_value());
+
     std::cout << "\n=== clear ===\n";
     lst.clear();
     std::cout << "size=" << list_size(lst) << " empty=" << lst.empty() << "\n";
 
+    std::cout << "\nAll assertions passed.\n";
     return 0;
 }

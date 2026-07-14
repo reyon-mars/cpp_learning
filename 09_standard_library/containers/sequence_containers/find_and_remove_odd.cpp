@@ -4,6 +4,10 @@
 #include <numeric>
 #include <optional>
 #include <string_view>
+#include <vector>
+#include <ranges>
+#include <functional>
+#include <cassert>
 #include <cstddef>
 
 void print_list(const std::forward_list<int>& lst, std::string_view label = "") {
@@ -25,11 +29,11 @@ void print_first_n(const std::forward_list<int>& lst, int n) {
     return static_cast<std::size_t>(std::ranges::distance(lst));
 }
 
-[[nodiscard]] int  sum_elements     (const std::forward_list<int>& lst) noexcept {
+[[nodiscard]] int sum_elements(const std::forward_list<int>& lst) noexcept {
     return std::accumulate(lst.cbegin(), lst.cend(), 0);
 }
 
-[[nodiscard]] int  multiply_elements(const std::forward_list<int>& lst) noexcept {
+[[nodiscard]] int multiply_elements(const std::forward_list<int>& lst) noexcept {
     return lst.empty() ? 0
                        : std::accumulate(lst.cbegin(), lst.cend(), 1, std::multiplies<>{});
 }
@@ -57,24 +61,67 @@ void print_first_n(const std::forward_list<int>& lst, int n) {
     return *it;
 }
 
-[[nodiscard]] bool contains     (const std::forward_list<int>& lst, int v) {
+[[nodiscard]] bool contains(const std::forward_list<int>& lst, int v) {
     return std::ranges::find(lst, v) != lst.end();
 }
 
-[[nodiscard]] bool all_even     (const std::forward_list<int>& lst) {
-    return std::ranges::all_of(lst, [](int v){ return v % 2 == 0; });
+[[nodiscard]] bool all_even(const std::forward_list<int>& lst) {
+    return std::ranges::all_of(lst, [](int v) { return v % 2 == 0; });
 }
 
-[[nodiscard]] long count_odds   (const std::forward_list<int>& lst) {
-    return std::ranges::count_if(lst, [](int v){ return v % 2 != 0; });
+[[nodiscard]] bool all_positive(const std::forward_list<int>& lst) {
+    return std::ranges::all_of(lst, [](int v) { return v > 0; });
 }
 
-[[nodiscard]] long count_evens  (const std::forward_list<int>& lst) {
-    return std::ranges::count_if(lst, [](int v){ return v % 2 == 0; });
+[[nodiscard]] long count_odds(const std::forward_list<int>& lst) {
+    return std::ranges::count_if(lst, [](int v) { return v % 2 != 0; });
+}
+
+[[nodiscard]] long count_evens(const std::forward_list<int>& lst) {
+    return std::ranges::count_if(lst, [](int v) { return v % 2 == 0; });
+}
+
+[[nodiscard]] long count_greater_than(const std::forward_list<int>& lst, int threshold) {
+    return std::ranges::count_if(lst, [threshold](int v) { return v > threshold; });
 }
 
 [[nodiscard]] bool is_sorted_list(const std::forward_list<int>& lst) {
     return std::ranges::is_sorted(lst);
+}
+
+[[nodiscard]] std::vector<int> to_vector(const std::forward_list<int>& lst) {
+    return std::vector<int>(lst.begin(), lst.end());
+}
+
+[[nodiscard]] std::forward_list<int> from_vector(const std::vector<int>& v) {
+    std::forward_list<int> result;
+    for (auto it = v.rbegin(); it != v.rend(); ++it) result.push_front(*it);
+    return result;
+}
+
+[[nodiscard]] std::forward_list<int> transform_list(const std::forward_list<int>& lst,
+                                                     std::invocable<int> auto fn) {
+    std::forward_list<int> result;
+    auto tail = result.before_begin();
+    for (int v : lst) tail = result.insert_after(tail, std::invoke(fn, v));
+    return result;
+}
+
+[[nodiscard]] std::forward_list<int> filter_list(const std::forward_list<int>& lst,
+                                                  std::predicate<int> auto pred) {
+    std::forward_list<int> result;
+    auto tail = result.before_begin();
+    for (int v : lst)
+        if (pred(v)) tail = result.insert_after(tail, v);
+    return result;
+}
+
+[[nodiscard]] std::forward_list<int> merge_sorted_lists(std::forward_list<int> a,
+                                                          std::forward_list<int> b) {
+    a.sort();
+    b.sort();
+    a.merge(b);
+    return a;
 }
 
 void find_and_remove_odd(std::forward_list<int>& lst) {
@@ -96,18 +143,20 @@ int main() {
     print_list(fl1, "Original");
     find_and_remove_odd(fl1);
     print_list(fl1, "After remove_odd");
-    std::cout << "count=" << count_elements(fl1) << "\n"
-              << "sum="   << sum_elements(fl1)   << "\n";
-    if (auto a = average_elements(fl1))   std::cout << "avg=" << *a << "\n";
-    if (auto m = max_element_safe(fl1))   std::cout << "max=" << *m << "\n";
-    if (auto m = min_element_safe(fl1))   std::cout << "min=" << *m << "\n";
+    std::cout << "count="   << count_elements(fl1)    << "\n"
+              << "sum="     << sum_elements(fl1)       << "\n";
+    if (auto a = average_elements(fl1))   std::cout << "avg="  << *a << "\n";
+    if (auto m = max_element_safe(fl1))   std::cout << "max="  << *m << "\n";
+    if (auto m = min_element_safe(fl1))   std::cout << "min="  << *m << "\n";
     if (auto l = last_element(fl1))       std::cout << "last=" << *l << "\n";
-    std::cout << "front=" << fl1.front() << "\n"
+    std::cout << "front="        << fl1.front()           << "\n"
               << std::boolalpha
-              << "contains(6)=" << contains(fl1, 6) << "\n"
-              << "all_even="    << all_even(fl1)     << "\n";
+              << "contains(6)="  << contains(fl1, 6)      << "\n"
+              << "all_even="     << all_even(fl1)          << "\n"
+              << "all_positive=" << all_positive(fl1)      << "\n"
+              << "count_gt(5)="  << count_greater_than(fl1, 5) << "\n";
 
-    std::cout << "\n=== fl2: all odds → empty ===\n";
+    std::cout << "\n=== fl2: all odds -> empty ===\n";
     std::forward_list<int> fl2{1, 3, 5, 7, 9};
     print_list(fl2, "Original");
     find_and_remove_odd(fl2);
@@ -148,9 +197,9 @@ int main() {
     fl1.unique();
     print_list(fl1, "unique");
 
-    std::cout << "evens="    << count_evens(fl1)     << "\n"
-              << "product="  << multiply_elements(fl1) << "\n"
-              << "sorted="   << is_sorted_list(fl1)   << "\n";
+    std::cout << "evens="   << count_evens(fl1)       << "\n"
+              << "product=" << multiply_elements(fl1)  << "\n"
+              << "sorted="  << is_sorted_list(fl1)     << "\n";
 
     std::cout << "First 3: ";
     print_first_n(fl1, 3);
@@ -165,8 +214,40 @@ int main() {
     print_list(fl1, "splice_after");
     std::cout << "extra empty=" << extra.empty() << "\n";
 
-    fl2.clear();
-    std::cout << "fl2 after clear empty=" << fl2.empty() << "\n";
+    std::cout << "\n=== to_vector / from_vector ===\n";
+    auto v = to_vector(fl1);
+    std::cout << "vector: ";
+    for (int x : v) std::cout << x << " ";
+    std::cout << "\n";
+    auto fl5 = from_vector(v);
+    print_list(fl5, "from_vector");
 
+    std::cout << "\n=== transform_list (x*2) ===\n";
+    std::forward_list<int> base{1, 2, 3, 4, 5};
+    auto doubled = transform_list(base, [](int x) { return x * 2; });
+    print_list(doubled, "doubled");
+
+    std::cout << "\n=== filter_list (>3) ===\n";
+    auto filtered = filter_list(base, [](int x) { return x > 3; });
+    print_list(filtered, "filtered(>3)");
+
+    std::cout << "\n=== merge_sorted_lists ===\n";
+    std::forward_list<int> ma{5, 1, 3};
+    std::forward_list<int> mb{8, 2, 6};
+    auto merged = merge_sorted_lists(std::move(ma), std::move(mb));
+    print_list(merged, "merged sorted");
+
+    assert(is_sorted_list(merged));
+    assert(count_elements(merged) == 6);
+    assert(sum_elements(merged) == 25);
+    assert(max_element_safe(merged).value() == 8);
+    assert(min_element_safe(merged).value() == 1);
+    assert(!contains(merged, 99));
+
+    std::cout << "\n=== fl2 after clear ===\n";
+    fl2.clear();
+    std::cout << "fl2 empty=" << fl2.empty() << "\n";
+
+    std::cout << "\nAll assertions passed.\n";
     return 0;
 }

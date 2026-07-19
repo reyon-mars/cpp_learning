@@ -1,309 +1,210 @@
-#include <cstdlib>
-#include <ctime>
 #include <iostream>
 #include <map>
 #include <string>
+#include <string_view>
 #include <vector>
+#include <format>
+#include <ranges>
+#include <algorithm>
+#include <numeric>
+#include <chrono>
+#include <cassert>
+#include <optional>
+#include <span>
+#include <cstdlib>
 
-enum StatusCode
-{
-	SUCCESS = 0,
-	FILE_ERROR = 1,
-	NETWORK_ERROR = 2
+enum class StatusCode : int {
+    Success       = 0,
+    FileError     = 1,
+    NetworkError  = 2,
+    MemoryError   = 3,
 };
 
-enum ExtendedStatusCode
-{
-	MEMORY_ERROR = 3
-};
-
-int performTask()
-{
-	return FILE_ERROR;
+[[nodiscard]] constexpr std::string_view to_string(StatusCode c) noexcept {
+    switch (c) {
+        case StatusCode::Success:      return "SUCCESS";
+        case StatusCode::FileError:    return "FILE_ERROR";
+        case StatusCode::NetworkError: return "NETWORK_ERROR";
+        case StatusCode::MemoryError:  return "MEMORY_ERROR";
+    }
+    return "UNKNOWN_ERROR";
 }
 
-void printError(int code)
-{
-	switch (code)
-	{
-	case SUCCESS:
-		std::cout << "No error.\n";
-		break;
-	case FILE_ERROR:
-		std::cout << "File error occurred.\n";
-		break;
-	case NETWORK_ERROR:
-		std::cout << "Network error occurred.\n";
-		break;
-
-	case MEMORY_ERROR:
-		std::cout << "Memory error occurred.\n";
-		break;
-
-	default:
-		std::cout << "Unknown error.\n";
-	}
+[[nodiscard]] constexpr std::string_view severity(StatusCode c) noexcept {
+    switch (c) {
+        case StatusCode::Success:      return "NONE";
+        case StatusCode::FileError:    return "LOW";
+        case StatusCode::NetworkError: return "MEDIUM";
+        case StatusCode::MemoryError:  return "HIGH";
+    }
+    return "UNKNOWN";
 }
 
-std::string errorToString(int code)
-{
-	switch (code)
-	{
-	case SUCCESS:
-		return "SUCCESS";
-	case FILE_ERROR:
-		return "FILE_ERROR";
-	case NETWORK_ERROR:
-		return "NETWORK_ERROR";
-
-	case MEMORY_ERROR:
-		return "MEMORY_ERROR";
-
-	default:
-		return "UNKNOWN_ERROR";
-	}
+[[nodiscard]] constexpr bool is_recoverable(StatusCode c) noexcept {
+    return c == StatusCode::NetworkError;
 }
 
-bool isRecoverable(int code)
-{
-	return code == NETWORK_ERROR;
+void print_error(StatusCode c) {
+    switch (c) {
+        case StatusCode::Success:      std::cout << "No error.\n";             return;
+        case StatusCode::FileError:    std::cout << "File error occurred.\n";   return;
+        case StatusCode::NetworkError: std::cout << "Network error occurred.\n";return;
+        case StatusCode::MemoryError:  std::cout << "Memory error occurred.\n"; return;
+    }
+    std::cout << "Unknown error.\n";
 }
 
-int retryTask(int attempts)
-{
-	int result;
-
-	for (int i = 1; i <= attempts; ++i)
-	{
-
-		std::cout << "Attempt " << i << "...\n";
-
-		result = performTask();
-
-		if (result == SUCCESS)
-		{
-			return SUCCESS;
-		}
-	}
-
-	return result;
+[[nodiscard]] StatusCode perform_task() noexcept {
+    return StatusCode::FileError;
 }
 
-void logError(int code)
-{
-	std::time_t now = std::time(nullptr);
-
-	std::cout << "[LOG " << now << "] " << errorToString(code) << "\n";
+void log_error(StatusCode c) {
+    const auto now = std::chrono::system_clock::now();
+    const auto ts  = std::chrono::duration_cast<std::chrono::seconds>(
+                         now.time_since_epoch()).count();
+    std::cout << std::format("[LOG {}] {}\n", ts, to_string(c));
 }
 
-class ErrorTracker
-{
-private:
-	std::vector<int> history;
+[[nodiscard]] StatusCode retry_task(int attempts) {
+    StatusCode result = StatusCode::FileError;
+    for (int i : std::views::iota(1, attempts + 1)) {
+        std::cout << std::format("Attempt {}...\n", i);
+        result = perform_task();
+        if (result == StatusCode::Success) return StatusCode::Success;
+    }
+    return result;
+}
+
+class ErrorTracker {
+    std::vector<StatusCode> history_;
 
 public:
-	void add(int code)
-	{
-		history.push_back(code);
-	}
+    void add(StatusCode c) { history_.push_back(c); }
 
-	void printHistory() const
-	{
+    [[nodiscard]] int total()         const noexcept { return static_cast<int>(history_.size()); }
+    [[nodiscard]] std::optional<StatusCode> last() const noexcept {
+        if (history_.empty()) return std::nullopt;
+        return history_.back();
+    }
 
-		std::cout << "\n--- Error History ---\n";
+    [[nodiscard]] int success_count() const {
+        return static_cast<int>(std::ranges::count(history_, StatusCode::Success));
+    }
 
-		for (int code : history)
-		{
-			std::cout << errorToString(code) << "\n";
-		}
-	}
+    [[nodiscard]] int error_count() const { return total() - success_count(); }
 
-	int total() const
-	{
-		return history.size();
-	}
+    [[nodiscard]] double success_rate() const {
+        if (history_.empty()) return 0.0;
+        return static_cast<double>(success_count()) / static_cast<double>(total()) * 100.0;
+    }
 
-	int successCount() const
-	{
-		int count = 0;
-		for (int code : history)
-		{
-			if (code == SUCCESS)
-				++count;
-		}
-		return count;
-	}
+    [[nodiscard]] std::map<StatusCode, int> frequency() const {
+        std::map<StatusCode, int> freq;
+        for (StatusCode c : history_) ++freq[c];
+        return freq;
+    }
 
-	int errorCount() const
-	{
-		return total() - successCount();
-	}
+    void print_history() const {
+        std::cout << "\n--- Error History ---\n";
+        for (StatusCode c : history_)
+            std::cout << std::format("{}\n", to_string(c));
+    }
 
-	int lastError() const
-	{
-		if (history.empty())
-			return SUCCESS;
+    void print_statistics() const {
+        std::cout << std::format(
+            "\n--- Statistics ---\n"
+            "Total events:  {}\n"
+            "Success count: {}\n"
+            "Error count:   {}\n"
+            "Success rate:  {:.1f}%\n",
+            total(), success_count(), error_count(), success_rate());
+    }
 
-		return history.back();
-	}
+    void print_frequency() const {
+        std::cout << "\n--- Frequency Report ---\n";
+        for (const auto& [code, count] : frequency())
+            std::cout << std::format("{} -> {}\n", to_string(code), count);
+    }
 };
 
-void printDivider()
-{
-	std::cout << "-----------------------------\n";
-}
+void print_divider() { std::cout << "-----------------------------\n"; }
 
-std::string errorSeverity(int code)
-{
+int main() {
+    ErrorTracker tracker;
 
-	switch (code)
-	{
+    StatusCode status = perform_task();
+    tracker.add(status);
 
-	case SUCCESS:
-		return "NONE";
+    if (status != StatusCode::Success) {
+        std::cout << std::format("Error code: {}\n", static_cast<int>(status));
+        print_error(status);
+        std::cout << std::format("Type:     {}\n", to_string(status));
+        std::cout << std::format("Severity: {}\n", severity(status));
+        log_error(status);
 
-	case FILE_ERROR:
-		return "LOW";
+        if (is_recoverable(status)) {
+            std::cout << "Retrying operation...\n";
+            status = retry_task(3);
+            tracker.add(status);
+            std::cout << (status == StatusCode::Success
+                         ? "Recovered successfully after retry.\n"
+                         : "Retry failed.\n");
+        }
+    } else {
+        std::cout << "Program exited successfully.\n";
+    }
 
-	case NETWORK_ERROR:
-		return "MEDIUM";
+    print_divider();
+    std::cout << "Testing additional error handling:\n";
 
-	case MEMORY_ERROR:
-		return "HIGH";
+    constexpr std::array simulated{
+        StatusCode::FileError,
+        StatusCode::NetworkError,
+        StatusCode::MemoryError,
+    };
 
-	default:
-		return "UNKNOWN";
-	}
-}
+    for (StatusCode code : simulated) {
+        tracker.add(code);
+        std::cout << std::format("\nCode: {}\n", static_cast<int>(code));
+        print_error(code);
+        std::cout << std::format("Recoverable? {}\n", is_recoverable(code) ? "Yes" : "No");
+        std::cout << std::format("Severity:    {}\n", severity(code));
+    }
 
-void printStatistics(const ErrorTracker& tracker)
-{
+    print_divider();
+    tracker.print_history();
 
-	std::cout << "\n--- Statistics ---\n";
+    std::cout << std::format("\nTotal tracked: {}\n", tracker.total());
+    print_divider();
 
-	std::cout << "Total events: " << tracker.total() << "\n";
+    if (const auto last = tracker.last())
+        std::cout << std::format("Most recent: {}\n", to_string(*last));
 
-	std::cout << "Success count: " << tracker.successCount() << "\n";
+    tracker.print_statistics();
+    tracker.print_frequency();
 
-	std::cout << "Error count: " << tracker.errorCount() << "\n";
+    std::cout << "\n--- views pipeline over error history ---\n";
+    std::vector<StatusCode> all_errors(simulated.begin(), simulated.end());
+    const auto recoverable_count = std::ranges::count_if(all_errors, is_recoverable);
+    std::cout << std::format("Recoverable errors: {}\n", recoverable_count);
 
-	if (tracker.total() > 0)
-	{
+    auto severities = all_errors
+        | std::views::transform([](StatusCode c) { return severity(c); });
+    std::cout << "Severities: ";
+    for (std::string_view s : severities) std::cout << std::format("{} ", s);
+    std::cout << '\n';
 
-		double successRate = (static_cast<double>(tracker.successCount()) / tracker.total()) * 100.0;
+    print_divider();
 
-		std::cout << "Success rate: " << successRate << "%\n";
-	}
-}
+    assert(to_string(StatusCode::Success)      == "SUCCESS");
+    assert(to_string(StatusCode::FileError)    == "FILE_ERROR");
+    assert(to_string(StatusCode::MemoryError)  == "MEMORY_ERROR");
+    assert(severity(StatusCode::NetworkError)  == "MEDIUM");
+    assert(!is_recoverable(StatusCode::FileError));
+    assert(is_recoverable(StatusCode::NetworkError));
+    assert(tracker.total() > 0);
+    assert(tracker.last().has_value());
 
-void printFrequencyReport(const std::vector<int>& codes)
-{
-
-	std::map<int, int> freq;
-
-	for (int code : codes)
-	{
-		++freq[code];
-	}
-
-	std::cout << "\n--- Frequency Report ---\n";
-
-	for (const auto& entry : freq)
-	{
-
-		std::cout << errorToString(entry.first) << " -> " << entry.second << "\n";
-	}
-}
-
-int main(void)
-{
-
-	int status = -1;
-
-	ErrorTracker tracker;
-
-	status = performTask();
-
-	tracker.add(status);
-
-	if (status != EXIT_SUCCESS)
-	{
-
-		std::cout << "Program exited with error code: " << status << std::endl;
-
-		printError(status);
-
-		std::cout << "Error type: " << errorToString(status) << "\n";
-
-		logError(status);
-
-		std::cout << "Severity: " << errorSeverity(status) << "\n";
-
-		if (isRecoverable(status))
-		{
-
-			std::cout << "Retrying operation...\n";
-
-			status = retryTask(3);
-
-			tracker.add(status);
-
-			if (status == SUCCESS)
-			{
-
-				std::cout << "Recovered successfully after retry.\n";
-			}
-			else
-			{
-
-				std::cout << "Retry failed.\n";
-			}
-		}
-	}
-	else
-	{
-
-		std::cout << "Program exited successfully." << std::endl;
-	}
-
-	printDivider();
-
-	std::cout << "Testing additional error handling:\n";
-
-	int simulatedErrors[] = {FILE_ERROR, NETWORK_ERROR, MEMORY_ERROR};
-
-	std::vector<int> allCodes;
-
-	for (int code : simulatedErrors)
-	{
-
-		tracker.add(code);
-		allCodes.push_back(code);
-
-		std::cout << "\nCode: " << code << "\n";
-
-		printError(code);
-
-		std::cout << "Recoverable? " << (isRecoverable(code) ? "Yes" : "No") << "\n";
-
-		std::cout << "Severity: " << errorSeverity(code) << "\n";
-	}
-
-	printDivider();
-
-	tracker.printHistory();
-
-	std::cout << "\nTotal tracked errors: " << tracker.total() << "\n";
-
-	printDivider();
-
-	std::cout << "Most recent status: " << errorToString(tracker.lastError()) << "\n";
-
-	printStatistics(tracker);
-
-	printFrequencyReport(allCodes);
-
-	printDivider();
-
-	return (status == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
+    std::cout << "\nAll assertions passed.\n";
+    return status == StatusCode::Success ? EXIT_SUCCESS : EXIT_FAILURE;
 }

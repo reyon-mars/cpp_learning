@@ -1,8 +1,11 @@
 #include <algorithm>
 #include <cassert>
+#include <compare>
 #include <iostream>
+#include <iterator>
 #include <map>
 #include <numeric>
+#include <optional>
 #include <set>
 #include <span>
 #include <string>
@@ -15,6 +18,8 @@ struct Book
 	std::string name;
 	int isbn = 0;
 	std::string publisher;
+
+	[[nodiscard]] auto operator<=>(const Book&) const = default;
 };
 
 void print_book(const Book& b)
@@ -51,6 +56,14 @@ void print_library(std::span<const Book> lib)
 	return static_cast<double>(total_isbn(lib)) / lib.size();
 }
 
+[[nodiscard]] int median_isbn(std::vector<Book> lib)
+{
+	assert(!lib.empty());
+	auto mid = lib.begin() + static_cast<std::ptrdiff_t>(lib.size() / 2);
+	std::ranges::nth_element(lib, mid, {}, &Book::isbn);
+	return mid->isbn;
+}
+
 [[nodiscard]] const Book* find_by_name(std::span<const Book> lib, std::string_view name) noexcept
 {
 	auto it = std::ranges::find_if(lib,
@@ -59,6 +72,13 @@ void print_library(std::span<const Book> lib)
 									   return b.name == name;
 								   });
 	return it != lib.end() ? &*it : nullptr;
+}
+
+[[nodiscard]] std::optional<Book> find_by_name_copy(std::span<const Book> lib, std::string_view name)
+{
+	if (const auto* b = find_by_name(lib, name))
+		return *b;
+	return std::nullopt;
 }
 
 [[nodiscard]] const Book* find_by_isbn(std::span<const Book> lib, int isbn) noexcept
@@ -102,6 +122,15 @@ void remove_book(std::vector<Book>& lib, std::string_view name)
 				  });
 }
 
+[[nodiscard]] bool update_isbn(std::vector<Book>& lib, std::string_view name, int new_isbn)
+{
+	auto it = std::ranges::find_if(lib, [name](const Book& b) { return b.name == name; });
+	if (it == lib.end())
+		return false;
+	it->isbn = new_isbn;
+	return true;
+}
+
 void sort_by_name(std::vector<Book>& lib)
 {
 	std::ranges::sort(lib, {}, &Book::name);
@@ -110,6 +139,15 @@ void sort_by_name(std::vector<Book>& lib)
 void sort_by_isbn(std::vector<Book>& lib)
 {
 	std::ranges::sort(lib, {}, &Book::isbn);
+}
+
+void sort_by_publisher_then_name(std::vector<Book>& lib)
+{
+	std::ranges::sort(lib,
+					  [](const Book& a, const Book& b)
+					  {
+						  return std::tie(a.publisher, a.name) < std::tie(b.publisher, b.name);
+					  });
 }
 
 [[nodiscard]] bool has_duplicate_isbn(std::span<const Book> lib)
@@ -122,6 +160,14 @@ void sort_by_isbn(std::vector<Book>& lib)
 							   });
 }
 
+[[nodiscard]] std::vector<Book> books_by_publisher(std::span<const Book> lib, std::string_view publisher)
+{
+	std::vector<Book> matches;
+	std::ranges::copy_if(lib, std::back_inserter(matches),
+						 [publisher](const Book& b) { return b.publisher == publisher; });
+	return matches;
+}
+
 void count_publishers(std::span<const Book> lib)
 {
 	std::map<std::string_view, int> counts;
@@ -131,6 +177,41 @@ void count_publishers(std::span<const Book> lib)
 	for (const auto& [pub, cnt] : counts)
 		std::cout << pub << ": " << cnt << '\n';
 }
+
+[[nodiscard]] std::map<std::string, std::vector<std::string>> group_names_by_publisher(std::span<const Book> lib)
+{
+	std::map<std::string, std::vector<std::string>> grouped;
+	for (const auto& b : lib)
+		grouped[b.publisher].push_back(b.name);
+	return grouped;
+}
+
+class Library
+{
+public:
+	void add(std::string name, int isbn, std::string publisher)
+	{
+		books_.push_back({std::move(name), isbn, std::move(publisher)});
+	}
+
+	bool remove(std::string_view name)
+	{
+		return std::erase_if(books_, [name](const Book& b) { return b.name == name; }) > 0;
+	}
+
+	[[nodiscard]] std::size_t size()  const noexcept { return books_.size(); }
+	[[nodiscard]] bool        empty() const noexcept { return books_.empty(); }
+
+	[[nodiscard]] auto begin()       noexcept { return books_.begin(); }
+	[[nodiscard]] auto begin() const noexcept { return books_.begin(); }
+	[[nodiscard]] auto end()         noexcept { return books_.end(); }
+	[[nodiscard]] auto end()   const noexcept { return books_.end(); }
+
+	[[nodiscard]] operator std::span<const Book>() const noexcept { return books_; }
+
+private:
+	std::vector<Book> books_;
+};
 
 int main()
 {
@@ -173,6 +254,7 @@ int main()
 	}
 
 	std::cout << "Average ISBN: " << average_isbn(library) << '\n';
+	std::cout << "Median ISBN:  " << median_isbn(library) << '\n';
 
 	remove_book(library, "Clean Code");
 	std::cout << "\nAfter removing 'Clean Code':\n";
@@ -189,6 +271,47 @@ int main()
 	count_publishers(library);
 
 	std::cout << "\nDuplicate ISBNs? " << (has_duplicate_isbn(library) ? "Yes" : "No") << '\n';
+
+	std::cout << "\nUpdating ISBN of 'Effective C++' to 888:\n";
+	if (update_isbn(library, "Effective C++", 888))
+		print_book(*find_by_name(library, "Effective C++"));
+
+	std::cout << "\nSort by publisher then name:\n";
+	sort_by_publisher_then_name(library);
+	print_library(library);
+
+	std::cout << "\nGrouped names by publisher:\n";
+	for (const auto& [publisher, names] : group_names_by_publisher(library))
+	{
+		std::cout << publisher << ": ";
+		for (const auto& name : names) std::cout << name << " | ";
+		std::cout << '\n';
+	}
+
+	std::cout << "\nBooks published by 'Pearson':\n";
+	for (const auto& b : books_by_publisher(library, "Pearson"))
+		print_book(b);
+
+	std::cout << "\nSafe copy-lookup via optional ('NoSuchBook'):\n";
+	if (auto maybe = find_by_name_copy(library, "NoSuchBook"))
+		print_book(*maybe);
+	else
+		std::cout << "Not found, no dangling pointer risk\n";
+
+	std::cout << "\nSame Book value compares equal:\n";
+	{
+		const Book a{"Same", 42, "Nowhere Press"};
+		const Book b{"Same", 42, "Nowhere Press"};
+		std::cout << "a == b: " << std::boolalpha << (a == b) << '\n';
+	}
+
+	std::cout << "\nLibrary class wrapper:\n";
+	Library modern_lib;
+	modern_lib.add("The Pragmatic Programmer", 321, "Addison-Wesley");
+	modern_lib.add("Refactoring", 654, "Addison-Wesley");
+	for (const auto& b : modern_lib) print_book(b);
+	std::cout << "size=" << modern_lib.size() << '\n';
+	std::cout << "average isbn (via span conversion)=" << average_isbn(modern_lib) << '\n';
 
 	assert(!has_duplicate_isbn(library));
 	assert(find_by_name(library, "C++ Primer") != nullptr);

@@ -1,200 +1,258 @@
 #include <array>
+#include <bit>
+#include <bitset>
 #include <cassert>
-#include <initializer_list>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+#include <iomanip>
 #include <iostream>
-#include <string>
-#include <type_traits>
-#include <vector>
 
-struct Point
+union Color
 {
-	int x = 0;
-	int y = 0;
+	std::uint32_t full;
+	struct
+	{
+		unsigned char r, g, b, a;
+	} channels;
 };
 
-static_assert(std::is_aggregate_v<Point>, "Point must be an aggregate");
+static_assert(sizeof(Color) == sizeof(std::uint32_t));
 
-void print_point(const Point& p)
+struct Flags
 {
-	std::cout << '(' << p.x << ", " << p.y << ")\n";
+	unsigned char a : 1;
+	unsigned char b : 1;
+	unsigned char c : 1;
+	unsigned char d : 1;
+	unsigned char e : 4;
+};
+
+static_assert(sizeof(Flags) == 1);
+
+void print_color(const Color& c)
+{
+	std::cout << "R=" << static_cast<int>(c.channels.r) << " G=" << static_cast<int>(c.channels.g)
+			  << " B=" << static_cast<int>(c.channels.b) << " A=" << static_cast<int>(c.channels.a) << "\n";
 }
 
-struct Student
+void print_hex(const Color& c)
 {
-	std::string name;
-	int age = 0;
-};
-
-void print_student(const Student& s)
-{
-	std::cout << "Student: " << s.name << ", age " << s.age << '\n';
+	std::cout << "hex=0x" << std::hex << std::setw(8) << std::setfill('0') << c.full << std::dec << "\n";
 }
 
-struct Config
+void print_bits(std::uint32_t value, const char* label = nullptr)
 {
-	int version = 0;
-	bool debug = false;
-};
-
-struct Settings
-{
-	int width = 800;
-	int height = 600;
-};
-
-class ExplicitDemo
-{
-	int value_;
-
-public:
-	explicit ExplicitDemo(int v) noexcept : value_(v)
-	{
-	}
-	[[nodiscard]] int value() const noexcept
-	{
-		return value_;
-	}
-};
-
-class Box
-{
-	int width_;
-	int height_;
-
-public:
-	Box(int w, int h) noexcept : width_(w), height_(h)
-	{
-	}
-	void show() const
-	{
-		std::cout << "Box(" << width_ << ", " << height_ << ")\n";
-	}
-};
-
-class Rectangle
-{
-	int width_;
-	int height_;
-
-public:
-	Rectangle() noexcept : Rectangle(1, 1)
-	{
-	}
-	Rectangle(int w, int h) noexcept : width_(w), height_(h)
-	{
-	}
-	void print() const
-	{
-		std::cout << "Rectangle(" << width_ << ", " << height_ << ")\n";
-	}
-};
-
-class NumberList
-{
-	std::vector<int> values_;
-
-public:
-	NumberList(std::initializer_list<int> vals) : values_(vals)
-	{
-	}
-	void print() const
-	{
-		for (int v : values_)
-			std::cout << v << ' ';
-		std::cout << '\n';
-	}
-};
-
-void show_init_difference()
-{
-	const int x(5);
-	const int y{5};
-	std::cout << "direct(" << x << ")  uniform{" << y << "}\n";
+	if (label)
+		std::cout << label << ": ";
+	std::cout << std::bitset<32>{value} << "\n";
 }
 
-void value_init_demo()
+void print_channel_bits(const Color& c)
 {
-	const int x{};
-	const double y{};
-	const bool z{};
-	std::cout << "\nValue initialization:\n"
-			  << "int:    " << x << '\n'
-			  << "double: " << y << '\n'
-			  << "bool:   " << z << '\n';
+	std::cout << "R=" << std::bitset<8>{c.channels.r} << "\n"
+			  << "G=" << std::bitset<8>{c.channels.g} << "\n"
+			  << "B=" << std::bitset<8>{c.channels.b} << "\n"
+			  << "A=" << std::bitset<8>{c.channels.a} << "\n";
 }
 
-void narrowing_demo()
+void check_endianness()
 {
-	const int a = static_cast<int>(3.14);
-	std::cout << "Explicit cast (int)3.14 = " << a << '\n';
-	std::cout << "Brace init int{3.14} would be a compile error\n";
+	if constexpr (std::endian::native == std::endian::little)
+		std::cout << "Little Endian\n";
+	else if constexpr (std::endian::native == std::endian::big)
+		std::cout << "Big Endian\n";
+	else
+		std::cout << "Mixed Endian\n";
+}
+
+void print_flag_bits(const Flags& f)
+{
+	unsigned char raw{};
+	std::memcpy(&raw, &f, 1);
+	std::cout << "Flags raw=" << std::bitset<8>{raw} << "\n";
+}
+
+void dump_memory(const void* ptr, std::size_t size)
+{
+	const auto* bytes = static_cast<const unsigned char*>(ptr);
+	std::cout << "raw_memory: ";
+	for (std::size_t i = 0; i < size; ++i)
+		std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(bytes[i]) << " ";
+	std::cout << std::dec << "\n";
+}
+
+void bitwise_demo(std::uint32_t value)
+{
+	print_bits(value, "original  ");
+	print_bits(value << 1, "shl 1     ");
+	print_bits(value >> 1, "shr 1     ");
+	print_bits(~value, "NOT       ");
+}
+
+void memcpy_demo()
+{
+	constexpr std::uint32_t value = 0x12345678;
+	std::array<unsigned char, 4> buf{};
+	std::memcpy(buf.data(), &value, sizeof(value));
+	std::cout << "memcpy bytes: ";
+	for (unsigned char b : buf)
+		std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(b) << " ";
+	std::cout << std::dec << "\n";
+}
+
+void cast_vs_memcpy_demo()
+{
+	constexpr std::uint32_t value = 0xDEADBEEF;
+	const auto* cast_ptr = reinterpret_cast<const unsigned char*>(&value);
+	std::array<unsigned char, 4> buf{};
+	std::memcpy(buf.data(), &value, sizeof(value));
+	std::cout << "reinterpret[0]=0x" << std::hex << static_cast<int>(cast_ptr[0]) << " memcpy[0]=0x"
+			  << static_cast<int>(buf[0]) << std::dec << "\n";
+}
+
+void bit_cast_demo()
+{
+	constexpr std::uint32_t packed = 0x11223344;
+	const Color safely_punned = std::bit_cast<Color>(packed);
+	std::cout << "bit_cast into Color: ";
+	print_color(safely_punned);
+	const auto round_tripped = std::bit_cast<std::uint32_t>(safely_punned);
+	std::cout << "bit_cast round-trip matches original? " << std::boolalpha << (round_tripped == packed) << "\n";
+}
+
+[[nodiscard]] constexpr std::uint32_t toggle_bit(std::uint32_t v, int bit) noexcept
+{
+	return v ^ (std::uint32_t{1} << bit);
+}
+
+[[nodiscard]] constexpr int count_set_bits(std::uint32_t v) noexcept
+{
+	return std::popcount(v);
+}
+
+void bit_query_demo(std::uint32_t value)
+{
+	std::cout << "value=" << value << "\n"
+			  << "has_single_bit=" << std::boolalpha << std::has_single_bit(value) << "\n"
+			  << "bit_width=" << std::bit_width(value) << "\n"
+			  << "bit_ceil=" << std::bit_ceil(value) << "\n"
+			  << "bit_floor=" << std::bit_floor(value) << "\n"
+			  << "countl_zero=" << std::countl_zero(value) << "\n"
+			  << "countr_zero=" << std::countr_zero(value) << "\n"
+			  << "countl_one=" << std::countl_one(value) << "\n"
+			  << "countr_one=" << std::countr_one(value) << "\n";
+}
+
+void rotate_demo(std::uint32_t value)
+{
+	print_bits(value, "original    ");
+	print_bits(std::rotl(value, 8), "rotl 8      ");
+	print_bits(std::rotr(value, 8), "rotr 8      ");
+}
+
+void byteswap_demo(std::uint32_t value)
+{
+	print_hex(Color{.full = value});
+	const auto swapped = std::byteswap(value);
+	std::cout << "byteswapped=0x" << std::hex << std::setw(8) << std::setfill('0') << swapped << std::dec << "\n";
+}
+
+void print_sizes()
+{
+	std::cout << "sizeof(Color)=" << sizeof(Color) << "\n"
+			  << "sizeof(Flags)=" << sizeof(Flags) << "\n"
+			  << "sizeof(uint32_t)=" << sizeof(std::uint32_t) << "\n";
+}
+
+void bitset_operations_demo()
+{
+	std::bitset<8> bits{0b1010'1010};
+	std::cout << "initial=" << bits << " count=" << bits.count()
+			  << " any=" << std::boolalpha << bits.any() << " all=" << bits.all() << " none=" << bits.none() << "\n";
+	bits.flip();
+	std::cout << "after flip=" << bits << "\n";
+	bits.set(0, true);
+	bits.reset(1);
+	std::cout << "after set(0)/reset(1)=" << bits << "\n";
+	std::cout << "test(0)=" << bits.test(0) << " to_ulong=" << bits.to_ulong() << " to_string=" << bits.to_string()
+			  << "\n";
+}
+
+void byte_type_demo()
+{
+	std::byte b{0b0000'1111};
+	const auto shifted = b << 2;
+	const auto combined = b | std::byte{0b1111'0000};
+	std::cout << "byte to_integer=" << std::to_integer<int>(b) << "\n"
+			  << "shifted to_integer=" << std::to_integer<int>(shifted) << "\n"
+			  << "combined to_integer=" << std::to_integer<int>(combined) << "\n";
 }
 
 int main()
 {
-	std::cout << "\nAdvanced Initialization Concepts:\n";
+	std::cout << "=== Endianness ===\n";
+	check_endianness();
 
-	const Point p4{};
-	std::cout << "p4 (zero-initialized) = ";
-	print_point(p4);
+	std::cout << "\n=== Color union ===\n";
+	Color c{};
+	c.full = 0xAABBCCDD;
+	print_color(c);
+	print_hex(c);
+	print_bits(c.full);
 
-	const ExplicitDemo ex1(10);
-	std::cout << "ExplicitDemo value: " << ex1.value() << "\n";
+	std::cout << "\n=== Channel bits ===\n";
+	print_channel_bits(c);
 
-	const auto list = {1, 2, 3};
-	static_assert(std::is_same_v<decltype(list), const std::initializer_list<int>>,
-				  "list must be std::initializer_list<int>");
-	std::cout << "Initializer list size: " << list.size() << '\n';
+	std::cout << "\n=== Flags bitfield ===\n";
+	Flags f{};
+	f.a = 1;
+	f.b = 0;
+	f.c = 1;
+	f.d = 1;
+	print_flag_bits(f);
 
-	show_init_difference();
+	std::cout << "\n=== Sizes ===\n";
+	print_sizes();
 
-	const Student s1{"Alice", 20};
-	print_student(s1);
+	std::cout << "\n=== Memory dump ===\n";
+	dump_memory(&c, sizeof(c));
 
-	const Box b1(5, 10);
-	b1.show();
+	std::cout << "\n=== Bitwise operations ===\n";
+	bitwise_demo(c.full);
 
-	narrowing_demo();
+	std::cout << "\n=== memcpy ===\n";
+	memcpy_demo();
 
-	const NumberList nums{1, 2, 3, 4, 5};
-	std::cout << "NumberList: ";
-	nums.print();
+	std::cout << "\n=== reinterpret vs memcpy ===\n";
+	cast_vs_memcpy_demo();
 
-	constexpr Config cfg{2, true};
-	std::cout << "Config version: " << cfg.version << '\n';
-	std::cout << "Debug mode: " << (cfg.debug ? "ON" : "OFF") << '\n';
+	std::cout << "\n=== std::bit_cast (safe, defined-behavior type punning) ===\n";
+	bit_cast_demo();
 
-	assert(ex1.value() == 10);
+	std::cout << "\n=== Bit utilities ===\n";
+	std::cout << "set_bits(c.full)=" << count_set_bits(c.full) << "\n";
+	const auto toggled = toggle_bit(c.full, 0);
+	print_bits(toggled, "after toggle_bit(0)");
 
-	const std::vector<Point> points = {{1, 2}, {3, 4}, {5, 6}};
-	std::cout << "\nVector of points:\n";
-	for (const auto& p : points)
-		print_point(p);
+	std::cout << "\n=== Bit queries (has_single_bit / bit_width / bit_ceil / bit_floor / countl / countr) ===\n";
+	bit_query_demo(0b0001'1000);
 
-	const Settings settings{};
-	std::cout << "\nSettings: width=" << settings.width << " height=" << settings.height << '\n';
+	std::cout << "\n=== Rotate left / right ===\n";
+	rotate_demo(c.full);
 
-	const Rectangle r1;
-	const Rectangle r2(10, 20);
-	std::cout << "\nDelegating constructors:\n";
-	r1.print();
-	r2.print();
+	std::cout << "\n=== Byteswap ===\n";
+	byteswap_demo(c.full);
 
-	value_init_demo();
+	std::cout << "\n=== bitset operations ===\n";
+	bitset_operations_demo();
 
-	constexpr std::array<int, 5> arr{1, 2, 3, 4, 5};
-	std::cout << "\nstd::array: ";
-	for (int n : arr)
-		std::cout << n << ' ';
-	std::cout << '\n';
+	std::cout << "\n=== std::byte ===\n";
+	byte_type_demo();
 
-	const Point origin{};
-	std::cout << "\nOrigin: ";
-	print_point(origin);
+	std::cout << "\n=== Addresses ===\n";
+	std::cout << "Color addr=" << static_cast<void*>(&c) << "\n"
+			  << "Flags addr=" << static_cast<void*>(&f) << "\n";
 
-	static_assert(cfg.version == 2);
-	static_assert(cfg.debug == true);
-
-	std::cout << "\nAll assertions passed.\n";
 	return 0;
 }

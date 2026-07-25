@@ -1,10 +1,16 @@
 #include <array>
+#include <bit>
 #include <bitset>
 #include <cassert>
 #include <cfloat>
 #include <climits>
+#include <cmath>
+#include <compare>
+#include <cstdint>
 #include <iostream>
 #include <limits>
+#include <numeric>
+#include <optional>
 #include <type_traits>
 
 template <typename T>
@@ -43,7 +49,12 @@ void print_type_sizes()
 			  << "  int:       " << sizeof(int) << " byte(s)\n"
 			  << "  long long: " << sizeof(long long) << " byte(s)\n"
 			  << "  double:    " << sizeof(double) << " byte(s)\n"
-			  << "  bool:      " << sizeof(bool) << " byte(s)\n";
+			  << "  long double: " << sizeof(long double) << " byte(s)\n"
+			  << "  bool:      " << sizeof(bool) << " byte(s)\n"
+			  << "  wchar_t:   " << sizeof(wchar_t) << " byte(s)\n"
+			  << "  char8_t:   " << sizeof(char8_t) << " byte(s)\n"
+			  << "  char16_t:  " << sizeof(char16_t) << " byte(s)\n"
+			  << "  char32_t:  " << sizeof(char32_t) << " byte(s)\n";
 }
 
 void ascii_demo()
@@ -70,7 +81,42 @@ void pointer_arithmetic_demo()
 	std::cout << "\nPointer arithmetic:\n"
 			  << "  *p       = " << *p << '\n'
 			  << "  *(p+1)   = " << *(p + 1) << '\n'
-			  << "  *(p+2)   = " << *(p + 2) << '\n';
+			  << "  *(p+2)   = " << *(p + 2) << '\n'
+			  << "  p[2]-p[0]= " << (&arr[2] - &arr[0]) << '\n';
+}
+
+[[nodiscard]] std::uint32_t float_bit_pattern(float f) noexcept
+{
+	return std::bit_cast<std::uint32_t>(f);
+}
+
+void float_representation_demo()
+{
+	constexpr float sample = 1.5F;
+	std::cout << "\nFloating-point bit pattern:\n"
+			  << "  value=" << sample << '\n'
+			  << "  as bits=" << std::bitset<32>{float_bit_pattern(sample)} << '\n';
+}
+
+void literal_forms_demo()
+{
+	constexpr int hex_form = 0x2A;
+	constexpr int octal_form = 052;
+	constexpr int binary_form = 0b0010'1010;
+	std::cout << "\nSame value, different literal forms:\n"
+			  << "  hex 0x2A     = " << hex_form << '\n'
+			  << "  octal 052    = " << octal_form << '\n'
+			  << "  binary 0b101010 = " << binary_form << '\n';
+}
+
+void type_trait_checks_demo(bool is_day_enum)
+{
+	std::cout << "\nType trait checks:\n"
+			  << "  is_arithmetic<int>    = " << std::boolalpha << std::is_arithmetic_v<int> << '\n'
+			  << "  is_floating_point<int>= " << std::is_floating_point_v<int> << '\n'
+			  << "  is_signed<unsigned>   = " << std::is_signed_v<unsigned int> << '\n'
+			  << "  is_pointer<int*>      = " << std::is_pointer_v<int*> << '\n'
+			  << "  is_enum<Day>          = " << is_day_enum << '\n';
 }
 
 enum class Day
@@ -80,30 +126,76 @@ enum class Day
 	Wednesday
 };
 
+[[nodiscard]] constexpr auto to_underlying(Day d) noexcept
+{
+	return static_cast<std::underlying_type_t<Day>>(d);
+}
+
+void enum_demo()
+{
+	constexpr Day today = Day::Tuesday;
+	constexpr Day tomorrow = Day::Wednesday;
+	std::cout << "\nEnum Day::Tuesday = " << to_underlying(today) << '\n';
+	std::cout << "today <=> tomorrow is ";
+	if (const auto ordering = to_underlying(today) <=> to_underlying(tomorrow); ordering < 0)
+		std::cout << "less\n";
+	else if (ordering > 0)
+		std::cout << "greater\n";
+	else
+		std::cout << "equal\n";
+}
+
+[[nodiscard]] std::optional<int> safe_divide(int numerator, int denominator) noexcept
+{
+	if (denominator == 0)
+		return std::nullopt;
+	return numerator / denominator;
+}
+
+void optional_demo()
+{
+	std::cout << "\nSafe division with std::optional:\n";
+	if (const auto result = safe_divide(10, 2))
+		std::cout << "  10 / 2 = " << *result << '\n';
+	if (const auto result = safe_divide(10, 0))
+		std::cout << "  10 / 0 = " << *result << '\n';
+	else
+		std::cout << "  10 / 0 -> no result (division by zero avoided)\n";
+}
+
+void structured_binding_demo()
+{
+	constexpr std::array<int, 3> coordinates{4, 5, 6};
+	const auto [x, y, z] = coordinates;
+	std::cout << "\nStructured bindings over std::array: x=" << x << " y=" << y << " z=" << z << '\n';
+}
+
+void midpoint_lerp_demo()
+{
+	std::cout << "\nOverflow-safe midpoint and lerp:\n"
+			  << "  midpoint(INT_MAX-2, INT_MAX) = " << std::midpoint(INT_MAX - 2, INT_MAX) << '\n'
+			  << "  lerp(0.0, 100.0, 0.25)       = " << std::lerp(0.0, 100.0, 0.25) << '\n';
+}
+
 int main()
 {
 	std::cout << "\nAdvanced Fundamental Concepts:\n";
 
-	// Signed-to-unsigned reinterpretation
 	constexpr int neg = -1;
 	const auto u_neg = static_cast<unsigned int>(neg);
 	std::cout << "Signed -1 as unsigned: " << u_neg << '\n';
 
-	// Floating-point precision
 	const double fp_sum = 0.1 + 0.2;
 	std::cout << "0.1 + 0.2 = " << fp_sum << '\n';
 	std::cout << "float epsilon: " << std::numeric_limits<float>::epsilon() << '\n';
 
-	// Pointer basics
 	int value = 42;
 	int* ptr = &value;
 	std::cout << "Pointer: " << ptr << ", dereferenced: " << *ptr << '\n';
-
 	int* null_ptr = nullptr;
 	if (null_ptr == nullptr)
 		std::cout << "Pointer is null\n";
 
-	// Literal suffixes
 	constexpr auto big_num = 10'000'000'000LL;
 	constexpr auto precise = 3.14L;
 	std::cout << "big_num:  " << big_num << '\n';
@@ -119,6 +211,8 @@ int main()
 	reference_demo();
 	overflow_demo();
 	ascii_demo();
+	float_representation_demo();
+	literal_forms_demo();
 
 	int a = 5, b = 10;
 	std::cout << "\nBefore swap: " << a << ", " << b << '\n';
@@ -140,13 +234,18 @@ int main()
 	show_type_info<double>("double");
 
 	pointer_arithmetic_demo();
-
-	constexpr Day today = Day::Tuesday;
-	std::cout << "\nEnum Day::Tuesday = " << static_cast<int>(today) << '\n';
+	type_trait_checks_demo(std::is_enum_v<Day>);
+	enum_demo();
+	optional_demo();
+	structured_binding_demo();
+	midpoint_lerp_demo();
 
 	static_assert(sizeof(char) == 1);
 	static_assert(sizeof(int) >= 4);
 	static_assert(sizeof(float) == 4);
+	static_assert(std::is_enum_v<Day>);
+	static_assert(to_underlying(Day::Monday) == 0);
+
 	assert(ptr == &value);
 	assert(a == 10 && b == 5);
 

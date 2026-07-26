@@ -1,8 +1,9 @@
+#include <cassert>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <string_view>
-#include <memory>
-#include <cassert>
+#include <vector>
 
 class Friend;
 void friend_function();
@@ -75,6 +76,17 @@ public:
     }
 };
 
+class ReexposingDerived : private Base {
+public:
+    using Base::pub_member;
+    using Base::getPrivate;
+
+    void test() {
+        pub_member  = 9;
+        prot_member = 10;
+    }
+};
+
 void show_state(const Base& obj, std::string_view label) {
     std::cout << "[" << label << "] ";
     obj.print();
@@ -92,14 +104,57 @@ public:
 
 class Shape {
 public:
+    Shape() { std::cout << "Shape constructed\n"; }
     virtual void draw() const { std::cout << "Drawing Shape\n"; }
-    virtual ~Shape() = default;
+    [[nodiscard]] virtual double area() const noexcept { return 0.0; }
+    virtual ~Shape() { std::cout << "Shape destroyed\n"; }
 };
 
 class Circle final : public Shape {
 public:
-    void draw() const override { std::cout << "Drawing Circle\n"; }
+    explicit Circle(double radius) : radius_{radius} {
+        std::cout << "Circle constructed\n";
+    }
+    void draw() const override { std::cout << "Drawing Circle (r=" << radius_ << ")\n"; }
+    [[nodiscard]] double area() const noexcept override { return 3.14159265 * radius_ * radius_; }
+    ~Circle() override { std::cout << "Circle destroyed\n"; }
+
+private:
+    double radius_;
 };
+
+class Square final : public Shape {
+public:
+    explicit Square(double side) : side_{side} {
+        std::cout << "Square constructed\n";
+    }
+    void draw() const override { std::cout << "Drawing Square (side=" << side_ << ")\n"; }
+    [[nodiscard]] double area() const noexcept override { return side_ * side_; }
+    ~Square() override { std::cout << "Square destroyed\n"; }
+
+private:
+    double side_;
+};
+
+void polymorphic_container_demo() {
+    std::vector<std::unique_ptr<Shape>> shapes;
+    shapes.push_back(std::make_unique<Circle>(2.0));
+    shapes.push_back(std::make_unique<Square>(3.0));
+    for (const auto& shape : shapes) {
+        shape->draw();
+        std::cout << "  area=" << shape->area() << "\n";
+    }
+}
+
+void dynamic_cast_demo() {
+    const std::unique_ptr<Shape> shape = std::make_unique<Circle>(5.0);
+    if (const auto* circle = dynamic_cast<const Circle*>(shape.get()))
+        std::cout << "dynamic_cast to Circle succeeded, area=" << circle->area() << "\n";
+    if (const auto* square = dynamic_cast<const Square*>(shape.get()))
+        std::cout << "dynamic_cast to Square succeeded, area=" << square->area() << "\n";
+    else
+        std::cout << "dynamic_cast to Square correctly failed (it is really a Circle)\n";
+}
 
 void slicing_demo(Base obj) {
     std::cout << "Sliced Base copy: ";
@@ -124,6 +179,10 @@ public:
     explicit ConstDemo(int v) noexcept : value_{v} {}
     [[nodiscard]] int getValue() const noexcept { return value_; }
 
+    friend std::ostream& operator<<(std::ostream& os, const ConstDemo& cd) {
+        return os << "ConstDemo(" << cd.value_ << ")";
+    }
+
 private:
     int value_;
 };
@@ -134,6 +193,18 @@ public:
         std::cout << "Inspector (via getter): " << obj.getPrivate() << "\n";
     }
 };
+
+struct Animal {
+    [[nodiscard]] std::string_view name() const noexcept { return "Animal"; }
+};
+struct Bird : virtual Animal {};
+struct Horse : virtual Animal {};
+struct Pegasus : Bird, Horse {};
+
+void virtual_inheritance_demo() {
+    const Pegasus pegasus;
+    std::cout << "Pegasus resolves diamond-shared Animal::name() unambiguously: " << pegasus.name() << "\n";
+}
 
 int main() {
     Base obj;
@@ -160,6 +231,12 @@ int main() {
     PrivateDerived pr;
     pr.test();
 
+    std::cout << "\n--- Re-exposing inherited members with 'using' ---\n";
+    ReexposingDerived rd;
+    rd.test();
+    std::cout << "rd.pub_member (re-exposed public): " << rd.pub_member << "\n"
+              << "rd.getPrivate() (re-exposed public): " << rd.getPrivate() << "\n";
+
     std::cout << "\n--- setPrivate / getter ---\n";
     obj.setPrivate(99);
     show_state(obj, "after setPrivate(99)");
@@ -174,8 +251,17 @@ int main() {
     std::cout << "Counter::count: " << Counter::count << "\n";
 
     std::cout << "\n--- Polymorphism (unique_ptr) ---\n";
-    std::unique_ptr<Shape> shape = std::make_unique<Circle>();
+    std::unique_ptr<Shape> shape = std::make_unique<Circle>(1.5);
     shape->draw();
+
+    std::cout << "\n--- Polymorphic container (vector<unique_ptr<Shape>>) ---\n";
+    polymorphic_container_demo();
+
+    std::cout << "\n--- dynamic_cast ---\n";
+    dynamic_cast_demo();
+
+    std::cout << "\n--- Virtual destructor cleanup (base pointer, no leak/UB) ---\n";
+    shape.reset();
 
     std::cout << "\n--- Object slicing ---\n";
     slicing_demo(d);
@@ -192,7 +278,8 @@ int main() {
 
     std::cout << "\n--- Const member function ---\n";
     const ConstDemo cd{77};
-    std::cout << "Const value: " << cd.getValue() << "\n";
+    std::cout << "Const value: " << cd.getValue() << "\n"
+              << "Via friend operator<<: " << cd << "\n";
 
     std::cout << "\n--- AdvancedDerived ---\n";
     AdvancedDerived ad;
@@ -201,6 +288,9 @@ int main() {
 
     std::cout << "\n--- Inspector ---\n";
     Inspector::inspect(obj);
+
+    std::cout << "\n--- Virtual inheritance (diamond problem) ---\n";
+    virtual_inheritance_demo();
 
     assert(obj.getPrivate() == 123);
 

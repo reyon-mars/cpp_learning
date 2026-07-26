@@ -1,11 +1,14 @@
+#include <algorithm>
+#include <cassert>
+#include <concepts>
+#include <cstdlib>
+#include <cxxabi.h>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <string_view>
-#include <vector>
-#include <memory>
-#include <algorithm>
 #include <typeinfo>
-#include <cassert>
+#include <vector>
 
 class Animal {
 protected:
@@ -125,8 +128,15 @@ void showPetInfo(const PetVec& pets) {
     for (const auto& p : pets) { p->info(); }
 }
 
+[[nodiscard]] std::string demangled_type_name(const std::type_info& info) {
+    int status = 0;
+    const std::unique_ptr<char, void (*)(void*)> demangled{
+        abi::__cxa_demangle(info.name(), nullptr, nullptr, &status), std::free};
+    return status == 0 ? std::string{demangled.get()} : std::string{info.name()};
+}
+
 void printType(const Pet& p) {
-    std::cout << "Actual type: " << typeid(p).name() << "\n";
+    std::cout << "Actual type: " << demangled_type_name(typeid(p)) << "\n";
 }
 
 const Pet* findPet(const PetVec& pets, std::string_view target) {
@@ -137,9 +147,19 @@ const Pet* findPet(const PetVec& pets, std::string_view target) {
 }
 
 void sortPets(PetVec& pets) {
-    std::ranges::sort(pets, [](const auto& a, const auto& b) {
-        return a->getName() < b->getName();
-    });
+    std::ranges::sort(pets, {}, &Pet::getName);
+}
+
+template <typename T>
+concept Speaks = requires(const T& t) {
+    { t.makeSound() } -> std::same_as<void>;
+    { t.getName() } -> std::convertible_to<std::string_view>;
+};
+
+template <Speaks T>
+void announce(const T& speaker) {
+    std::cout << "[announce] " << speaker.getName() << " says: ";
+    speaker.makeSound();
 }
 
 int main() {
@@ -188,11 +208,22 @@ int main() {
     sortPets(pets);
     for (const auto& p : pets) { std::cout << p->getName() << "\n"; }
 
+    std::cout << "\nErasing pets named 'Tom':\n";
+    const auto removed = std::erase_if(pets, [](const auto& p) { return p->getName() == "Tom"; });
+    std::cout << "removed " << removed << " pet(s), remaining: " << pets.size() << "\n";
+    for (const auto& p : pets) { std::cout << p->getName() << "\n"; }
+
     std::cout << "\nSmart pointer demo:\n";
     auto smartPet = std::make_unique<Dog>("SmartDog");
     smartPet->makeSound();
 
-    assert(pets.size() == 3);
+    std::cout << "\nDuck typing across unrelated hierarchies (concept Speaks):\n";
+    const Cat cat_value{"Whiskers"};
+    const Parrot parrot_value{"Polly"};
+    announce(cat_value);
+    announce(parrot_value);
+
+    assert(pets.size() == 2);
 
     return 0;
 }

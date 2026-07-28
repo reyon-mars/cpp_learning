@@ -1,12 +1,13 @@
-#include <iostream>
-#include <string>
-#include <string_view>
-#include <vector>
-#include <memory>
 #include <algorithm>
+#include <cassert>
+#include <iostream>
+#include <memory>
 #include <ranges>
 #include <span>
-#include <cassert>
+#include <string>
+#include <string_view>
+#include <typeinfo>
+#include <vector>
 
 class Pet {
     std::string name_;
@@ -39,9 +40,19 @@ public:
     [[nodiscard]] const std::string& name() const noexcept { return name_; }
 };
 
-class Dog : public Pet {
+template <typename Derived, typename Base>
+class ClonablePet : public Base {
 public:
-    explicit Dog(std::string name) : Pet(std::move(name)) {}
+    using Base::Base;
+
+    [[nodiscard]] std::unique_ptr<Pet> clone() const override {
+        return std::make_unique<Derived>(static_cast<const Derived&>(*this));
+    }
+};
+
+class Dog : public ClonablePet<Dog, Pet> {
+public:
+    explicit Dog(std::string name) : ClonablePet{std::move(name)} {}
 
     void make_sound() const override {
         std::cout << name() << " says woof woof\n";
@@ -49,18 +60,14 @@ public:
 
     [[nodiscard]] std::string_view type() const noexcept override { return "Dog"; }
 
-    [[nodiscard]] std::unique_ptr<Pet> clone() const override {
-        return std::make_unique<Dog>(*this);
-    }
-
     void info() const override {
         std::cout << "Dog: " << name() << '\n';
     }
 };
 
-class GermanShepherd : public Dog {
+class GermanShepherd : public ClonablePet<GermanShepherd, Dog> {
 public:
-    explicit GermanShepherd(std::string name) : Dog(std::move(name)) {}
+    explicit GermanShepherd(std::string name) : ClonablePet{std::move(name)} {}
 
     void make_sound() const override {
         std::cout << name() << " says wuff wuff\n";
@@ -72,18 +79,14 @@ public:
 
     [[nodiscard]] std::string_view type() const noexcept override { return "GermanShepherd"; }
 
-    [[nodiscard]] std::unique_ptr<Pet> clone() const override {
-        return std::make_unique<GermanShepherd>(*this);
-    }
-
     void info() const override {
         std::cout << "GermanShepherd: " << name() << '\n';
     }
 };
 
-class MastinEspanol : public Dog {
+class MastinEspanol : public ClonablePet<MastinEspanol, Dog> {
 public:
-    explicit MastinEspanol(std::string name) : Dog(std::move(name)) {}
+    explicit MastinEspanol(std::string name) : ClonablePet{std::move(name)} {}
 
     void make_sound() const override {
         std::cout << name() << " says Guau Guau\n";
@@ -94,10 +97,6 @@ public:
     }
 
     [[nodiscard]] std::string_view type() const noexcept override { return "MastinEspanol"; }
-
-    [[nodiscard]] std::unique_ptr<Pet> clone() const override {
-        return std::make_unique<MastinEspanol>(*this);
-    }
 
     void info() const override {
         std::cout << "MastinEspanol: " << name() << '\n';
@@ -166,10 +165,20 @@ void print_all_info(std::span<Pet* const> pets) {
 void print_sorted_names(std::span<Pet* const> pets) {
     std::vector<std::string_view> names;
     names.reserve(pets.size());
-    std::ranges::transform(pets, std::back_inserter(names), [](const Pet* p) { return p->name(); });
+    std::ranges::transform(pets, std::back_inserter(names),
+                           [](const Pet* p) -> std::string_view { return p->name(); });
     std::ranges::sort(names);
     std::cout << "\nSorted names:\n";
     std::ranges::for_each(names, [](std::string_view n) { std::cout << n << '\n'; });
+}
+
+void verify_clone_preserves_dynamic_type(std::span<Pet* const> pets) {
+    std::cout << "\n--- Verifying clone() preserves each pet's exact dynamic type ---\n";
+    for (const Pet* original : pets) {
+        const auto copy = original->clone();
+        std::cout << original->type() << " clone type matches original: "
+                  << std::boolalpha << (typeid(*copy) == typeid(*original)) << '\n';
+    }
 }
 
 int main() {
@@ -236,6 +245,8 @@ int main() {
     std::ranges::for_each(clones, [](const auto& c) { c->make_sound(); });
 
     print_sorted_names(pets);
+
+    verify_clone_preserves_dynamic_type(pets);
 
     return 0;
 }

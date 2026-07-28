@@ -1,9 +1,11 @@
+#include <algorithm>
+#include <cassert>
 #include <iostream>
+#include <memory>
+#include <string>
+#include <typeinfo>
 #include <utility>
 #include <vector>
-#include <algorithm>
-#include <memory>
-#include <cassert>
 
 class MyClass {
 public:
@@ -42,6 +44,10 @@ public:
         std::cout << "MyClass(" << value_ << ")\n";
     }
 
+    [[nodiscard]] virtual bool equals(const MyClass& other) const {
+        return typeid(*this) == typeid(other) && value_ == other.value_;
+    }
+
     static void classInfo() {
         std::cout << "MyClass — static info\n";
     }
@@ -78,6 +84,25 @@ public:
     }
 };
 
+class TaggedDerived : public MyClass {
+public:
+    TaggedDerived(int v, std::string tag) noexcept : MyClass{v}, tag_{std::move(tag)} {}
+
+    void display() const override {
+        std::cout << "TaggedDerived(" << getValue() << ", tag=" << tag_ << ")\n";
+    }
+
+    [[nodiscard]] bool equals(const MyClass& other) const override {
+        if (typeid(*this) != typeid(other))
+            return false;
+        const auto& rhs = static_cast<const TaggedDerived&>(other);
+        return getValue() == rhs.getValue() && tag_ == rhs.tag_;
+    }
+
+private:
+    std::string tag_;
+};
+
 void showObject(const MyClass& obj) {
     std::cout << "[Helper] " << obj << "\n";
 }
@@ -88,7 +113,39 @@ void printVector(const std::vector<MyClass>& vec) {
 }
 
 void sortObjects(std::vector<MyClass>& vec) {
-    std::ranges::sort(vec);
+    std::ranges::sort(vec, [](const MyClass& lhs, const MyClass& rhs) { return lhs < rhs; });
+}
+
+void polymorphic_equality_and_slicing_hazard_demo() {
+    std::cout << "\n--- Polymorphic equality hazard (defaulted operator==) ---\n";
+    const MyClass base{10};
+    const Derived derived{10};
+    std::cout << std::boolalpha
+              << "base == derived (same value_, different dynamic type): " << (base == derived) << "\n"
+              << "(operator==(const MyClass&) silently slices 'derived' to compare only the base part)\n";
+
+    const TaggedDerived tagged_a{10, "left"};
+    const TaggedDerived tagged_b{10, "right"};
+    std::cout << "tagged_a == tagged_b (same value_, different tag_, naive operator==): "
+              << (tagged_a == tagged_b) << "\n"
+              << "tagged_a.equals(tagged_b) (virtual equals, dynamic-type + tag aware): "
+              << tagged_a.equals(tagged_b) << "\n";
+
+    std::cout << "\n--- Slicing through copy of a base reference ---\n";
+    const std::unique_ptr<MyClass> owned = std::make_unique<Derived>(77);
+    owned->display();
+    const MyClass sliced_copy = *owned;
+    std::cout << "sliced_copy.display() after copying through MyClass reference: ";
+    sliced_copy.display();
+}
+
+void polymorphic_container_demo() {
+    std::cout << "\n--- Polymorphic container (vector<unique_ptr<MyClass>>, no slicing) ---\n";
+    std::vector<std::unique_ptr<MyClass>> shapes;
+    shapes.push_back(std::make_unique<Derived>(1));
+    shapes.push_back(std::make_unique<FinalDerived>(2));
+    shapes.push_back(std::make_unique<TaggedDerived>(3, "alpha"));
+    for (const auto& s : shapes) { s->display(); }
 }
 
 int main() {
@@ -148,6 +205,9 @@ int main() {
     auto smartObj = std::make_unique<MyClass>(999);
     assert(smartObj != nullptr);
     smartObj->display();
+
+    polymorphic_equality_and_slicing_hazard_demo();
+    polymorphic_container_demo();
 
     return 0;
 }

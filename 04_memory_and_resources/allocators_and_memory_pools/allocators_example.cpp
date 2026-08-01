@@ -1,13 +1,16 @@
+#include <algorithm>
+#include <array>
+#include <cassert>
+#include <cstddef>
+#include <format>
 #include <iostream>
 #include <memory>
-#include <vector>
+#include <memory_resource>
 #include <new>
-#include <cstddef>
-#include <type_traits>
-#include <cassert>
-#include <algorithm>
 #include <span>
-#include <format>
+#include <string>
+#include <type_traits>
+#include <vector>
 
 template <typename T>
 class SimpleAllocator {
@@ -40,6 +43,10 @@ public:
 
     [[nodiscard]] bool operator==(const SimpleAllocator&) const noexcept = default;
 };
+
+static_assert(std::is_same_v<
+    std::allocator_traits<SimpleAllocator<int>>::rebind_alloc<double>,
+    SimpleAllocator<double>>);
 
 class IntPool {
 public:
@@ -74,6 +81,32 @@ struct Test {
         std::cout << std::format("Test destroyed   x={}\n", x);
     }
 };
+
+struct LoggedBuffer {
+    std::string payload;
+    explicit LoggedBuffer(std::string p) : payload{std::move(p)} {
+        std::cout << std::format("LoggedBuffer constructed, payload.size()={}\n", payload.size());
+    }
+    ~LoggedBuffer() {
+        std::cout << "LoggedBuffer destroyed\n";
+    }
+};
+
+void destructor_suppresses_move_demo() {
+    std::cout << "\n--- User-declared destructor suppresses the implicit move constructor ---\n";
+    std::cout << std::boolalpha
+              << "Test:         is_move_constructible=" << std::is_move_constructible_v<Test>
+              << " is_nothrow_move_constructible=" << std::is_nothrow_move_constructible_v<Test>
+              << " (fine here: Test's only member is a trivial int)\n"
+              << "LoggedBuffer: is_move_constructible=" << std::is_move_constructible_v<LoggedBuffer>
+              << " is_nothrow_move_constructible=" << std::is_nothrow_move_constructible_v<LoggedBuffer>
+              << " (NOT nothrow: no real move ctor exists, so std::move silently falls back to a full copy)\n";
+
+    LoggedBuffer a{std::string(64, 'x')};
+    LoggedBuffer b = std::move(a);
+    std::cout << "after std::move(a), a.payload is still full (a genuine move ctor would have emptied it): "
+              << "a.payload.size()=" << a.payload.size() << ", b.payload.size()=" << b.payload.size() << "\n";
+}
 
 template <typename T>
 class ObjectPool {
@@ -149,6 +182,42 @@ void allocator_vector_demo() {
     std::cout << std::format("size={}\n", objects.size());
 }
 
+void pool_exhaustion_demo() {
+    std::cout << "\n--- IntPool exhaustion ---\n";
+    IntPool small_pool{2};
+    [[maybe_unused]] int* first = small_pool.allocate();
+    [[maybe_unused]] int* second = small_pool.allocate();
+    print_pool_state(small_pool);
+    try {
+        [[maybe_unused]] int* third = small_pool.allocate();
+    } catch (const std::bad_alloc& e) {
+        std::cout << "Caught expected bad_alloc on exhausted IntPool: " << e.what() << "\n";
+    }
+
+    std::cout << "\n--- ObjectPool exhaustion ---\n";
+    ObjectPool<Test> small_object_pool{1};
+    Test* only_slot = small_object_pool.create(999);
+    std::cout << std::format("Occupied only slot with x={}\n", only_slot->x);
+    try {
+        [[maybe_unused]] Test* overflow = small_object_pool.create(1000);
+    } catch (const std::bad_alloc& e) {
+        std::cout << "Caught expected bad_alloc on exhausted ObjectPool: " << e.what() << "\n";
+    }
+    small_object_pool.destroy_all();
+}
+
+void pmr_demo() {
+    std::cout << "\n--- std::pmr as the modern alternative to a hand-rolled allocator ---\n";
+    std::array<std::byte, 256> stack_buffer{};
+    std::pmr::monotonic_buffer_resource resource{stack_buffer.data(), stack_buffer.size()};
+    std::pmr::vector<int> pmr_vec{&resource};
+    pmr_vec.reserve(4);
+    for (int v : {10, 20, 30, 40}) pmr_vec.push_back(v);
+    std::cout << "pmr::vector backed by a stack buffer, no heap allocation for small sizes: ";
+    for (int v : pmr_vec) std::cout << v << ' ';
+    std::cout << "\n";
+}
+
 int main() {
     std::cout << "\n--- SimpleAllocator vector ---\n";
     std::vector<int, SimpleAllocator<int>> vec;
@@ -174,6 +243,7 @@ int main() {
     Test* t = alloc.allocate(1);
     std::allocator_traits<SimpleAllocator<Test>>::construct(alloc, t, 42);
     std::cout << std::format("Test value={}\n", t->x);
+    std::cout << std::format("max_size()={}\n", alloc.max_size());
     std::allocator_traits<SimpleAllocator<Test>>::destroy(alloc, t);
     alloc.deallocate(t, 1);
 
@@ -199,7 +269,13 @@ int main() {
                              std::is_trivially_destructible_v<Test>,
                              std::is_move_constructible_v<Test>);
 
+    destructor_suppresses_move_demo();
+
     allocator_vector_demo();
+
+    pool_exhaustion_demo();
+
+    pmr_demo();
 
     std::cout << "\n--- End of main ---\n";
     return 0;

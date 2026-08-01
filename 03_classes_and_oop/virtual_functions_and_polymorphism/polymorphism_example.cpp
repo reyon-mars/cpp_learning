@@ -1,11 +1,11 @@
+#include <algorithm>
+#include <cassert>
 #include <iostream>
 #include <memory>
-#include <vector>
-#include <typeinfo>
-#include <algorithm>
-#include <numeric>
-#include <cassert>
 #include <numbers>
+#include <numeric>
+#include <typeinfo>
+#include <vector>
 
 class Shape {
 public:
@@ -18,9 +18,21 @@ public:
     [[nodiscard]] virtual double                  area()  const = 0;
     [[nodiscard]] virtual const char*             name()  const = 0;
     [[nodiscard]] virtual std::unique_ptr<Shape>  clone() const = 0;
+
+    friend std::ostream& operator<<(std::ostream& os, const Shape& s) {
+        return os << s.name() << "(area=" << s.area() << ")";
+    }
 };
 
-class Circle final : public Shape {
+template <typename Derived>
+class ClonableShape : public Shape {
+public:
+    [[nodiscard]] std::unique_ptr<Shape> clone() const override {
+        return std::make_unique<Derived>(static_cast<const Derived&>(*this));
+    }
+};
+
+class Circle final : public ClonableShape<Circle> {
 public:
     explicit Circle(double r) : radius_{r} {
         std::cout << "Circle constructed\n";
@@ -32,9 +44,6 @@ public:
 
     [[nodiscard]] double area()  const override { return std::numbers::pi * radius_ * radius_; }
     [[nodiscard]] const char* name() const override { return "Circle"; }
-    [[nodiscard]] std::unique_ptr<Shape> clone() const override {
-        return std::make_unique<Circle>(*this);
-    }
 
     [[nodiscard]] double getRadius() const noexcept { return radius_; }
 
@@ -42,7 +51,7 @@ private:
     double radius_;
 };
 
-class Rectangle final : public Shape {
+class Rectangle : public ClonableShape<Rectangle> {
 public:
     Rectangle(double w, double h) : width_{w}, height_{h} {
         std::cout << "Rectangle constructed\n";
@@ -56,15 +65,27 @@ public:
 
     [[nodiscard]] double area()  const override { return width_ * height_; }
     [[nodiscard]] const char* name() const override { return "Rectangle"; }
-    [[nodiscard]] std::unique_ptr<Shape> clone() const override {
-        return std::make_unique<Rectangle>(*this);
-    }
 
-private:
+protected:
     double width_, height_;
 };
 
-class Triangle final : public Shape {
+class Square final : public Rectangle {
+public:
+    explicit Square(double side) : Rectangle{side, side} {
+        std::cout << "Square constructed\n";
+    }
+    ~Square() override { std::cout << "Square destroyed\n"; }
+
+    void draw() const override { std::cout << "Drawing Square\n"; }
+    void info() const override { std::cout << "Square side=" << width_ << "\n"; }
+    [[nodiscard]] const char* name() const override { return "Square"; }
+    [[nodiscard]] std::unique_ptr<Shape> clone() const override {
+        return std::make_unique<Square>(*this);
+    }
+};
+
+class Triangle final : public ClonableShape<Triangle> {
 public:
     Triangle(double b, double h) : base_{b}, height_{h} {
         std::cout << "Triangle constructed\n";
@@ -78,9 +99,6 @@ public:
 
     [[nodiscard]] double area()  const override { return 0.5 * base_ * height_; }
     [[nodiscard]] const char* name() const override { return "Triangle"; }
-    [[nodiscard]] std::unique_ptr<Shape> clone() const override {
-        return std::make_unique<Triangle>(*this);
-    }
 
 private:
     double base_, height_;
@@ -99,6 +117,12 @@ using ShapeVec = std::vector<std::unique_ptr<Shape>>;
         [](const auto& s) { return s->area(); })->get();
 }
 
+[[nodiscard]] const Shape* smallestShape(const ShapeVec& shapes) {
+    if (shapes.empty()) return nullptr;
+    return std::ranges::min_element(shapes, {},
+        [](const auto& s) { return s->area(); })->get();
+}
+
 [[nodiscard]] long countCircles(const ShapeVec& shapes) {
     return std::ranges::count_if(shapes,
         [](const auto& s) { return dynamic_cast<const Circle*>(s.get()) != nullptr; });
@@ -112,10 +136,15 @@ using ShapeVec = std::vector<std::unique_ptr<Shape>>;
     return copies;
 }
 
+void sortByAreaAscending(ShapeVec& shapes) {
+    std::ranges::sort(shapes, {}, [](const auto& s) { return s->area(); });
+}
+
 [[nodiscard]] std::unique_ptr<Shape> createShape(int type) {
     switch (type) {
         case 1:  return std::make_unique<Circle>(3.0);
         case 2:  return std::make_unique<Rectangle>(2.0, 5.0);
+        case 3:  return std::make_unique<Square>(4.0);
         default: return std::make_unique<Triangle>(4.0, 6.0);
     }
 }
@@ -130,12 +159,23 @@ void printType(const Shape& s) {
     std::cout << "RTTI: " << typeid(s).name() << "\n";
 }
 
+void verifyCloneKeepsDynamicType(const ShapeVec& shapes) {
+    std::cout << "\n--- Verifying clone() preserves each shape's exact dynamic type ---\n";
+    for (const auto& original : shapes) {
+        const auto copy = original->clone();
+        std::cout << original->name() << " clone type matches original: "
+                  << std::boolalpha << (typeid(*copy) == typeid(*original)) << "\n";
+        assert(typeid(*copy) == typeid(*original));
+    }
+}
+
 int main() {
     ShapeVec shapes;
-    shapes.reserve(3);
+    shapes.reserve(4);
     shapes.push_back(std::make_unique<Circle>(5.0));
     shapes.push_back(std::make_unique<Rectangle>(4.0, 6.0));
     shapes.push_back(std::make_unique<Triangle>(3.0, 8.0));
+    shapes.push_back(std::make_unique<Square>(4.0));
     assert(!shapes.empty());
 
     std::cout << "\n--- Polymorphic draw + area ---\n";
@@ -168,25 +208,38 @@ int main() {
 
     std::cout << "\n--- Factory ---\n";
     createShape(2)->draw();
+    createShape(3)->draw();
 
     std::cout << "\n--- processShape ---\n";
     processShape(*shapes[2]);
 
-    std::cout << "\n--- Largest shape ---\n";
+    std::cout << "\n--- Largest / smallest shape ---\n";
     if (const Shape* lg = largestShape(shapes)) {
         std::cout << "Largest=" << lg->name() << " area=" << lg->area() << "\n";
+    }
+    if (const Shape* sm = smallestShape(shapes)) {
+        std::cout << "Smallest=" << sm->name() << " area=" << sm->area() << "\n";
     }
 
     std::cout << "\n--- Shape info ---\n";
     for (const auto& s : shapes) { s->info(); }
 
+    std::cout << "\n--- operator<< via friend ---\n";
+    for (const auto& s : shapes) { std::cout << *s << "\n"; }
+
     std::cout << "\n--- Circle count ---\n";
     std::cout << "Circles=" << countCircles(shapes) << "\n";
+
+    std::cout << "\n--- Sort by area ascending ---\n";
+    sortByAreaAscending(shapes);
+    for (const auto& s : shapes) { std::cout << *s << "\n"; }
 
     std::cout << "\n--- Clone all ---\n";
     for (const auto& s : cloneAll(shapes)) {
         std::cout << "Cloned " << s->name() << " area=" << s->area() << "\n";
     }
+
+    verifyCloneKeepsDynamicType(shapes);
 
     std::cout << "\n--- End of main ---\n";
     return 0;

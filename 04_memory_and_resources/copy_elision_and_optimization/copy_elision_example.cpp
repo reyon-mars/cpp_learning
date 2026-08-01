@@ -1,10 +1,10 @@
+#include <cassert>
+#include <format>
 #include <iostream>
+#include <string_view>
+#include <type_traits>
 #include <utility>
 #include <vector>
-#include <type_traits>
-#include <cassert>
-#include <string_view>
-#include <format>
 
 class Object {
 public:
@@ -69,7 +69,25 @@ public:
 }
 
 [[nodiscard]] Object create_const_object() {
-    return Object{321};
+    const Object temp{321};
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpessimizing-move"
+#endif
+    return std::move(temp);
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
+}
+
+void const_blocks_move_demo() {
+    std::cout << "\n--- const source forces a copy, in isolation ---\n";
+    const Object source{321};
+    std::cout << "std::move(source) has type 'const Object&&', which cannot bind to the move\n"
+                 "constructor's 'Object&&' parameter, so overload resolution falls back to the\n"
+                 "copy constructor instead:\n";
+    Object dest = std::move(source);
+    dest.print("dest");
 }
 
 [[nodiscard]] Object chain_create() {
@@ -122,6 +140,16 @@ void vector_demo() {
     std::cout << std::format("size={}\n", v.size());
 }
 
+void vector_growth_demo() {
+    std::cout << "\n--- Vector Growth (no reserve, reallocation triggers moves) ---\n";
+    std::vector<Object> v;
+    for (int i : {1, 2, 3, 4}) {
+        std::cout << std::format("push_back({}), capacity was {}\n", i, v.capacity());
+        v.push_back(Object{i});
+    }
+    std::cout << std::format("final capacity={}, size={}\n", v.capacity(), v.size());
+}
+
 void moved_from_demo() {
     std::cout << "\n--- Moved-from State ---\n";
     Object a{111};
@@ -169,14 +197,16 @@ int main() {
     std::cout << "\n--- Chained creation ---\n";
     Object obj5 = chain_create();
 
-    std::cout << "\n--- Const return (blocks move elision) ---\n";
+    std::cout << "\n--- Const source forces copy (was mislabeled: originally did nothing const-related) ---\n";
     Object obj6 = create_const_object();
+    const_blocks_move_demo();
 
     std::cout << "\n--- Assignment ---\n";
     obj2 = obj1;
     obj2 = std::move(obj3);
 
     vector_demo();
+    vector_growth_demo();
 
     std::cout << "\n--- Perfect forwarding ---\n";
     forwarding_demo(obj1);

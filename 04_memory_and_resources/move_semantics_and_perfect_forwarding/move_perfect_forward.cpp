@@ -1,10 +1,10 @@
-#include <iostream>
-#include <utility>
-#include <type_traits>
-#include <vector>
-#include <string_view>
-#include <format>
 #include <concepts>
+#include <format>
+#include <iostream>
+#include <string_view>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 class Widget {
 public:
@@ -43,6 +43,11 @@ public:
 
 void process(const Widget& w) { std::cout << std::format("process(const Widget&) data={}\n", w.data); }
 void process(Widget&& w)      { std::cout << std::format("process(Widget&&)       data={}\n", w.data); }
+
+void consume(Widget&& w) {
+    const Widget sink = std::move(w);
+    sink.show("consumed");
+}
 
 void check(const Widget&) { std::cout << "check: const lvalue\n";     }
 void check(Widget&)       { std::cout << "check: non-const lvalue\n"; }
@@ -96,9 +101,9 @@ void reference_demo(T&&) {
 template <typename T>
 void double_forward(T&& arg) {
     std::cout << "1st forward: ";
-    process(std::forward<T>(arg));
-    std::cout << "2nd forward (may be moved-from): ";
-    process(std::forward<T>(arg));
+    consume(std::forward<T>(arg));
+    std::cout << "2nd forward (genuinely moved-from this time): ";
+    consume(std::forward<T>(arg));
 }
 
 template <typename T>
@@ -107,8 +112,13 @@ void inspect(T&& value) {
     process(std::forward<T>(value));
 }
 
-[[nodiscard]] Widget generate_widget() {
+[[nodiscard]] Widget generate_widget_via_elision() {
     return Widget{1500};
+}
+
+[[nodiscard]] Widget generate_widget_via_nrvo() {
+    Widget temp{1501};
+    return temp;
 }
 
 void vector_forward_demo() {
@@ -172,7 +182,7 @@ int main() {
     reference_demo(w5);
     reference_demo(Widget{1101});
 
-    std::cout << "\n--- Double forward pitfall ---\n";
+    std::cout << "\n--- Double forward pitfall (fixed: now uses a truly consuming call) ---\n";
     double_forward(Widget{1200});
 
     std::cout << "\n--- inspect (universal ref) ---\n";
@@ -182,9 +192,13 @@ int main() {
 
     vector_forward_demo();
 
-    std::cout << "\n--- generate_widget (NRVO) ---\n";
-    Widget generated = generate_widget();
-    generated.show("generated");
+    std::cout << "\n--- generate_widget_via_elision (prvalue return, mandatory since C++17) ---\n";
+    Widget generated_elided = generate_widget_via_elision();
+    generated_elided.show("generated_elided");
+
+    std::cout << "\n--- generate_widget_via_nrvo (named local, elision permitted not guaranteed) ---\n";
+    Widget generated_nrvo = generate_widget_via_nrvo();
+    generated_nrvo.show("generated_nrvo");
 
     std::cout << "\n--- Type traits ---\n";
     std::cout << std::format(

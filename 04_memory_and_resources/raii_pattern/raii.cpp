@@ -1,15 +1,15 @@
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <string_view>
-#include <stdexcept>
-#include <vector>
 #include <algorithm>
-#include <numeric>
 #include <cctype>
 #include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <numeric>
 #include <ranges>
 #include <span>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <vector>
 
 namespace fs = std::filesystem;
 
@@ -157,15 +157,25 @@ void append_to_file(const fs::path& path, std::string_view text) {
     out << text << '\n';
 }
 
-int main() {
-    const fs::path filepath = "example.txt";
+void seed_file(const fs::path& path) {
+    std::ofstream seed(path, std::ios::trunc);
+    seed << "Hello world\n"
+         << "this is a test file\n"
+         << "test line three\n";
+}
 
-    if (!fs::exists(filepath)) {
-        std::ofstream seed(filepath);
-        seed << "Hello world\n"
-             << "this is a test file\n"
-             << "test line three\n";
+void missing_file_error_demo() {
+    std::cout << "\n--- file_guard error path (nonexistent file) ---\n";
+    try {
+        file_guard bad{fs::temp_directory_path() / "definitely_does_not_exist_12345.txt"};
+    } catch (const std::exception& e) {
+        std::cout << "Caught expected error: " << e.what() << '\n';
     }
+}
+
+int main() {
+    const fs::path filepath = fs::temp_directory_path() / "cpp_file_analysis_demo.txt";
+    seed_file(filepath);
 
     try {
         file_guard fg(filepath);
@@ -187,7 +197,8 @@ int main() {
         std::cout << "Preview (30):\n"; print_preview(fg, 30);
 
         append_to_file(filepath, "Appended line.");
-        std::cout << "\nAppended successfully.\n";
+        std::cout << "\nAppended successfully (already-open handle sees it after rewind).\n";
+        std::cout << "Line count after append: " << count_lines(fg) << '\n';
 
         std::cout << "\n--- Extra File Analysis ---\n";
         std::cout << "Vowel count:         " << count_vowels(fg)         << '\n';
@@ -202,8 +213,14 @@ int main() {
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << '\n';
+        fs::remove(filepath);
         return 1;
     }
+
+    missing_file_error_demo();
+
+    fs::remove(filepath);
+    std::cout << "\nCleaned up temp file: " << filepath << '\n';
 
     return 0;
 }

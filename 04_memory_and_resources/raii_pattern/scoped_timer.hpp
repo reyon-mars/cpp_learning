@@ -1,11 +1,11 @@
-#include <iostream>
 #include <chrono>
+#include <iostream>
+#include <numeric>
 #include <string>
 #include <string_view>
-#include <utility>
 #include <thread>
+#include <utility>
 #include <vector>
-#include <numeric>
 
 class scoped_timer {
 public:
@@ -91,7 +91,9 @@ void heavy_task() {
 }
 
 static void busy(long long n) {
-    for (volatile long long i = 0; i < n; ++i);
+    for (volatile long long i = 0; i < n;) {
+        i = i + 1;
+    }
 }
 
 int main() {
@@ -122,7 +124,7 @@ int main() {
     const long long t = measure_return([] { busy(150'000); });
     std::cout << "Returned=" << t << " us\n";
 
-    std::cout << "\n--- reset ---\n";
+    std::cout << "\n--- reset (while still running) ---\n";
     {
         scoped_timer timer{"Reset demo"};
         std::this_thread::sleep_for(std::chrono::milliseconds{20});
@@ -132,8 +134,41 @@ int main() {
         std::cout << "After reset=" << timer.elapsed_ms() << " ms\n";
     }
 
+    std::cout << "\n--- reset after an explicit stop (reusing one object twice) ---\n";
+    {
+        scoped_timer timer{"Reused timer, pass 1"};
+        std::this_thread::sleep_for(std::chrono::milliseconds{10});
+        timer.stop();
+        std::cout << "is_stopped after stop()=" << std::boolalpha << timer.is_stopped() << "\n";
+        timer.reset();
+        std::cout << "is_stopped after reset()=" << timer.is_stopped() << "\n";
+        std::this_thread::sleep_for(std::chrono::milliseconds{15});
+        timer.stop();
+    }
+
     std::cout << "\n--- Heavy task ---\n";
     measure("Vector accumulate", heavy_task);
+
+    std::cout << "\n--- Move construction (distinct from move assignment) ---\n";
+    {
+        scoped_timer source{"Move-constructed timer"};
+        std::this_thread::sleep_for(std::chrono::milliseconds{10});
+        scoped_timer moved_to = std::move(source);
+        std::cout << "source.is_stopped() after being moved from=" << std::boolalpha
+                  << source.is_stopped() << "\n";
+        std::this_thread::sleep_for(std::chrono::milliseconds{10});
+    }
+
+    std::cout << "\n--- vector<scoped_timer> growth triggers the move constructor ---\n";
+    {
+        std::vector<scoped_timer> timers;
+        for (int i = 1; i <= 3; ++i) {
+            std::cout << "emplace_back #" << i << ", capacity was " << timers.capacity() << "\n";
+            timers.emplace_back("Timer #" + std::to_string(i));
+            std::this_thread::sleep_for(std::chrono::milliseconds{5});
+        }
+        std::cout << "final capacity=" << timers.capacity() << "\n";
+    }
 
     std::cout << "\n--- Move assignment ---\n";
     scoped_timer t1{"Timer A"};

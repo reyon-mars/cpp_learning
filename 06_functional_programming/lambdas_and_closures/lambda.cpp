@@ -11,6 +11,11 @@
 #include <string_view>
 #include <ranges>
 #include <span>
+#include <concepts>
+#include <future>
+#include <stdexcept>
+#include <thread>
+#include <mutex>
 
 [[nodiscard]] auto sum_vector(std::vector<int> vec) {
     return [v = std::move(vec)]() mutable {
@@ -45,6 +50,22 @@ void measure(std::string_view label, Func&& func) {
               << " us\n";
 }
 
+void jthread_lambda_demo() {
+    std::mutex m;
+    int shared_total = 0;
+    {
+        std::vector<std::jthread> workers;
+        workers.reserve(4);
+        for (int i = 1; i <= 4; ++i) {
+            workers.emplace_back([&m, &shared_total, i] {
+                std::scoped_lock lock{m};
+                shared_total += i;
+            });
+        }
+    }
+    std::cout << "jthread lambda total: " << shared_total << '\n';
+}
+
 int main() {
     const std::vector<int> vec = {1, 2, 3, 4, 5};
 
@@ -59,6 +80,8 @@ int main() {
 
     constexpr auto square   = [](int n) noexcept { return n * n;      };
     constexpr auto is_even  = [](int n) noexcept { return n % 2 == 0; };
+    static_assert(square(6) == 36);
+    static_assert(is_even(10));
 
     std::cout << "Square of 6 = " << square(6) << '\n';
     std::cout << "Is 10 even?  " << (is_even(10) ? "Yes" : "No") << '\n';
@@ -78,8 +101,20 @@ int main() {
     auto ptr_lambda = [ptr = std::make_unique<int>(42)]() { return *ptr; };
     std::cout << "Moved unique_ptr value: " << ptr_lambda() << '\n';
 
+    std::move_only_function<int()> move_only_fn =
+        [ptr = std::make_unique<int>(7)]() { return *ptr * 10; };
+    std::cout << "move_only_function result: " << move_only_fn() << '\n';
+
     auto add = [](auto a, auto b) { return a + b; };
     std::cout << "Generic add: " << add(3, 4.5) << '\n';
+
+    auto add_constrained = []<std::integral T>(T a, T b) noexcept { return a + b; };
+    std::cout << "Constrained add(3, 4): " << add_constrained(3, 4) << '\n';
+
+    auto sum_all = []<typename... Ts>(Ts... args) noexcept {
+        return (args + ...);
+    };
+    std::cout << "sum_all(1,2,3,4): " << sum_all(1, 2, 3, 4) << '\n';
 
     auto make_multiplier = [](int factor) noexcept {
         return [factor](int x) noexcept { return x * factor; };
@@ -129,6 +164,24 @@ int main() {
 
     measure("accumulate", [&] { std::accumulate(vec.begin(), vec.end(), 0); });
 
+    std::cout << "\n--- Concurrency with lambdas ---\n";
+
+    jthread_lambda_demo();
+
+    auto risky = [](int n) {
+        if (n < 0) throw std::invalid_argument("negative input");
+        return n * n;
+    };
+    auto ok_future = std::async(std::launch::async, risky, 6);
+    std::cout << "Async result: " << ok_future.get() << '\n';
+
+    auto failing_future = std::async(std::launch::async, risky, -3);
+    try {
+        std::cout << "Async result: " << failing_future.get() << '\n';
+    } catch (const std::invalid_argument& e) {
+        std::cout << "Async exception propagated: " << e.what() << '\n';
+    }
+
     std::cout << "\n--- Extra Lambda Utilities ---\n";
 
     print_vector(vec, "Original vector");
@@ -148,6 +201,9 @@ int main() {
     assert(square(5) == 25);
     assert(factorial(factorial, 5) == 120);
     assert(average_vector(vec) == 3.0);
+    assert(add_constrained(3, 4) == 7);
+    assert(sum_all(1, 2, 3, 4) == 10);
+    assert(move_only_fn() == 70);
 
     auto power_of = [](int power) noexcept {
         return [power](int value) noexcept {
@@ -162,4 +218,3 @@ int main() {
     std::cout << "\nAll assertions passed.\n";
     return 0;
 }
-

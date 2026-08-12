@@ -13,6 +13,7 @@
 #include <format>
 #include <optional>
 #include <type_traits>
+#include <variant>
 
 class Adder {
     int value_;
@@ -116,6 +117,28 @@ template <std::invocable<int> F, std::invocable<int> G>
     };
 }
 
+template <std::invocable<int> F>
+[[nodiscard]] auto composeAll(F f) {
+    return [f](int x) { return std::invoke(f, x); };
+}
+
+template <std::invocable<int> F, std::invocable<int>... Rest>
+[[nodiscard]] auto composeAll(F f, Rest... rest) {
+    return [f, tail = composeAll(rest...)](int x) {
+        return std::invoke(f, tail(x));
+    };
+}
+
+template <typename... As>
+[[nodiscard]] Adder sumAdders(As... adders) {
+    return (adders + ...);
+}
+
+template <std::invocable<int>... Fs>
+[[nodiscard]] int invokeSum(int x, Fs... fs) {
+    return (std::invoke(fs, x) + ...);
+}
+
 template <std::invocable<int> Fn>
 [[nodiscard]] std::vector<int> transform_copy(std::span<const int> src, Fn&& fn) {
     std::vector<int> out(src.size());
@@ -128,6 +151,8 @@ template <std::predicate<int> Pred>
     const auto it = std::ranges::find_if(src, std::forward<Pred>(pred));
     return (it != src.end()) ? std::optional{*it} : std::nullopt;
 }
+
+[[nodiscard]] int addThree(int a, int b, int c) noexcept { return a + b + c; }
 
 int main() {
     std::vector<int> values = {1, 2, 3, 4, 5};
@@ -206,6 +231,14 @@ int main() {
     auto square_then_add = compose(Adder(3), Square{});
     std::cout << std::format("compose(Adder(3), Square)(4) = {}\n", square_then_add(4));
 
+    std::cout << "\n--- composeAll (variadic) ---\n";
+    auto pipeline_fn = composeAll(Adder(1), Square{}, Adder(3));
+    std::cout << std::format("composeAll(Adder(1), Square, Adder(3))(4) = {}\n", pipeline_fn(4));
+
+    std::cout << "\n--- invokeSum (fold expression) ---\n";
+    std::cout << std::format("invokeSum(4, Adder(1), Square, Adder(3)) = {}\n",
+                             invokeSum(4, Adder(1), Square{}, Adder(3)));
+
     std::cout << "\n--- Negated & Both ---\n";
     Negated not_even{IsEven{}};
     std::cout << std::format("Odd count: {}\n",
@@ -225,6 +258,44 @@ int main() {
     const auto adder_sum = Adder(3) + Adder(7);
     std::cout << std::format("Adder(3) + Adder(7) applied to 0: {}\n", adder_sum(0));
 
+    std::cout << "\n--- sumAdders (fold expression) ---\n";
+    const auto triple_sum = sumAdders(Adder(1), Adder(2), Adder(3));
+    std::cout << std::format("sumAdders(1,2,3) applied to 10: {}\n", triple_sum(10));
+
+    std::cout << "\n--- std::bind_front ---\n";
+    const auto addFive = std::bind_front(addThree, 2, 3);
+    std::cout << std::format("bind_front(addThree, 2, 3)(4) = {}\n", addFive(4));
+
+    std::cout << "\n--- views::enumerate ---\n";
+    for (const auto& [idx, val] : values | std::views::enumerate) {
+        std::cout << std::format("[{}]={} ", idx, val);
+    }
+    std::cout << '\n';
+
+    std::cout << "\n--- views::zip ---\n";
+    const std::vector<int> weights{1, 2, 3, 4, 5};
+    for (const auto& [val, w] : std::views::zip(values, weights)) {
+        std::cout << std::format("({},{}) ", val, w);
+    }
+    std::cout << '\n';
+
+    std::cout << "\n--- views::chunk ---\n";
+    for (const auto part : values | std::views::chunk(2)) {
+        std::cout << "[ ";
+        for (int v : part) std::cout << std::format("{} ", v);
+        std::cout << "] ";
+    }
+    std::cout << '\n';
+
+    std::cout << "\n--- variant of operations (std::visit) ---\n";
+    using Operation = std::variant<Adder, Square, Clamp>;
+    const std::vector<Operation> ops{Adder(5), Square{}, Clamp(0, 20)};
+    for (const auto& op : ops) {
+        const int result = std::visit([](const auto& f) { return f(7); }, op);
+        std::cout << std::format("{} ", result);
+    }
+    std::cout << '\n';
+
     std::cout << "\n--- views pipeline with functors ---\n";
     auto pipeline = values
         | std::views::filter(InRange(10, 15))
@@ -240,11 +311,15 @@ int main() {
     assert(!IsEven{}(3));
     assert(add_then_square(4) == (4 + 3) * (4 + 3));
     assert(square_then_add(4) == 4 * 4 + 3);
+    assert(pipeline_fn(4) == (4 + 3) * (4 + 3) + 1);
+    assert(invokeSum(4, Adder(1), Square{}, Adder(3)) == (4 + 1) + (4 * 4) + (4 + 3));
     assert(Clamp(0, 10)(15) == 10);
     assert(Clamp(0, 10)(-5) == 0);
     assert(not_even(3));
     assert(!not_even(4));
     assert(adder_sum(0) == 10);
+    assert(triple_sum(10) == 16);
+    assert(addFive(4) == 9);
     assert(find_first(values, GreaterThan(100)) == std::nullopt);
 
     std::cout << "\nAll assertions passed.\n";

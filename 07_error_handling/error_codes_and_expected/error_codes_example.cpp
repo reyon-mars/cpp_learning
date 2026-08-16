@@ -1,17 +1,17 @@
-#include <iostream>
-#include <string_view>
-#include <string>
-#include <vector>
-#include <functional>
-#include <concepts>
 #include <cassert>
+#include <cmath>
+#include <compare>
+#include <concepts>
+#include <functional>
+#include <iostream>
+#include <optional>
 #include <span>
 #include <stdexcept>
-#include <optional>
-#include <compare>
+#include <string>
+#include <string_view>
 #include <type_traits>
 #include <variant>
-#include <cmath>
+#include <vector>
 
 enum class ErrorCode { OK = 0, InvalidInput = 1, DivisionByZero = 2, Overflow = 3, OutOfRange = 4 };
 
@@ -29,6 +29,18 @@ enum class ErrorCode { OK = 0, InvalidInput = 1, DivisionByZero = 2, Overflow = 
 std::ostream& operator<<(std::ostream& os, ErrorCode e) {
     return os << to_string(e);
 }
+
+template<typename T>
+class Result;
+
+template<typename T>
+struct is_result : std::false_type {};
+
+template<typename T>
+struct is_result<Result<T>> : std::true_type {};
+
+template<typename T>
+inline constexpr bool is_result_v = is_result<T>::value;
 
 template<typename T>
 class Result {
@@ -91,7 +103,7 @@ public:
     template<std::invocable<const T&> Func>
     [[nodiscard]] auto and_then(Func f) const -> std::invoke_result_t<Func, const T&> {
         using R = std::invoke_result_t<Func, const T&>;
-        static_assert(std::is_same_v<typename R::value_type, typename R::value_type>);
+        static_assert(is_result_v<R>, "and_then's callback must return a Result<U> for some U");
         if (is_ok()) return std::invoke(f, std::get<T>(storage_));
         return R::err(error());
     }
@@ -168,6 +180,9 @@ void print_results(std::span<const Result<T>> results) {
 }
 
 int main() {
+    static_assert(is_result_v<Result<int>>);
+    static_assert(!is_result_v<int>);
+
     print_result(divide(10, 2));
     print_result(divide(10, 0));
     print_result(safe_add(5, 7));

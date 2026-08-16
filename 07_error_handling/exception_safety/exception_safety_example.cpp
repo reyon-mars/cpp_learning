@@ -1,16 +1,16 @@
-#include <iostream>
-#include <vector>
-#include <stdexcept>
 #include <algorithm>
+#include <cassert>
+#include <compare>
+#include <concepts>
+#include <initializer_list>
+#include <iostream>
 #include <numeric>
+#include <optional>
 #include <ranges>
 #include <span>
-#include <cassert>
-#include <optional>
-#include <initializer_list>
-#include <compare>
+#include <stdexcept>
 #include <utility>
-#include <concepts>
+#include <vector>
 
 class SafeVector {
     std::vector<int> data_;
@@ -186,6 +186,34 @@ std::ostream& operator<<(std::ostream& os, const SafeVector& sv) {
     return os << ']';
 }
 
+void strong_guarantee_exception_demo() {
+    std::cout << "\n--- Proving the strong exception guarantee (not just implementing it) ---\n";
+    SafeVector guarded{1, 2, 3};
+    std::cout << "Before failed resize_strong: " << guarded << '\n';
+    try {
+        guarded.resize_strong(static_cast<std::size_t>(-1));
+        std::cout << "unexpectedly did not throw\n";
+    } catch (const std::exception& e) {
+        std::cout << "Caught expected allocation failure during resize_strong\n";
+    }
+    std::cout << "After failed resize_strong (must be unchanged): " << guarded << '\n';
+    assert((guarded == SafeVector{1, 2, 3}));
+    std::cout << "Confirmed: guarded is byte-for-byte the same object it was before the failed call, "
+                 "because copy_and_apply mutates a temporary and only commits via data_ = std::move(temp) "
+                 "after the operation succeeds\n";
+}
+
+void capacity_management_demo() {
+    std::cout << "\n--- capacity() / reserve() / shrink_to_fit() ---\n";
+    SafeVector v;
+    v.reserve(100);
+    v.add_element_basic(1);
+    v.add_element_basic(2);
+    std::cout << "size=" << v.size() << " capacity=" << v.capacity() << " (capacity >= reserved)\n";
+    v.shrink_to_fit();
+    std::cout << "after shrink_to_fit: size=" << v.size() << " capacity=" << v.capacity() << "\n";
+}
+
 int main() {
     SafeVector sv;
 
@@ -313,8 +341,11 @@ int main() {
     for (int v : from_range.view()) std::cout << v << ' ';
     std::cout << '\n';
 
+    capacity_management_demo();
+    strong_guarantee_exception_demo();
+
     sv.clear();
-    std::cout << "After final clear: "; sv.print();
+    std::cout << "\nAfter final clear: "; sv.print();
     std::cout << "Empty? " << (sv.empty() ? "Yes" : "No") << '\n';
 
     assert(sv.empty());

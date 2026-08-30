@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cassert>
 #include <format>
 #include <iostream>
 #include <iterator>
@@ -73,6 +74,20 @@ void show_vectors(std::ostream& os, std::vector<std::vector<int>>& v)
 	}
 }
 
+void check_properties(const std::vector<std::vector<int>>& triangle)
+{
+    size_t row_num{1};
+
+	for (const auto& row : triangle)
+	{
+		assert(row.front() == 1);
+		assert(row.back() == 1);
+
+        assert( row.size() == row_num );
+        row_num++;
+	}
+}
+
 int main()
 {
 	std::println("Please enter the number of rows: ");
@@ -82,7 +97,7 @@ int main()
 
 	auto triangle{generate_triangle(num_rows)};
 
-    show_vectors( std::cout, triangle );
+	show_vectors(std::cout, triangle);
 
 	return 0;
 }

@@ -76,6 +76,15 @@ void show_vectors(std::ostream& os, std::vector<std::vector<int>>& v)
 	}
 }
 
+bool is_palindrome( const std::vector<int>& row )
+{
+    auto forward = row | std::ranges::views::take( row.size() >> 1 );
+
+    auto backward = row | std::ranges::views::reverse | std::ranges::views::take( row.size() >> 1 );
+
+    return std::ranges::equal(forward, backward );
+}
+
 void check_properties(const std::vector<std::vector<int>>& triangle)
 {
 	size_t row_num{1};
@@ -94,6 +103,8 @@ void check_properties(const std::vector<std::vector<int>>& triangle)
 
 		assert(expected_sum == std::accumulate(row.begin(), row.end(), 0));
         assert( std::ranges::all_of(row, []( auto x ){ return x >= 0; }));
+
+        assert( is_palindrome( row ) );
 
 		row_num++;
 		expected_sum <<= 1;

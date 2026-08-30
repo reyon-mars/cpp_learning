@@ -10,7 +10,7 @@ std::ostream& operator<<(std::ostream& os, const std::vector<std::vector<T>>& tr
 {
     for( const auto& row : triangle )
     {
-        std::ranges::copy( row, std::ostream_iterator<T>( os, ' ' ));
+        std::ranges::copy( row, std::ostream_iterator<T>( os, " " ));
         os << '\n';
     }
     return os;

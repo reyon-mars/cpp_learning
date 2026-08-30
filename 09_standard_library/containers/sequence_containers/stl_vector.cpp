@@ -6,6 +6,7 @@
 #include <numeric>
 #include <ostream>
 #include <print>
+#include <ranges>
 #include <string>
 #include <vector>
 
@@ -77,33 +78,40 @@ void show_vectors(std::ostream& os, std::vector<std::vector<int>>& v)
 
 void check_properties(const std::vector<std::vector<int>>& triangle)
 {
-    size_t row_num{1};
-    size_t expected_sum{1};
+	size_t row_num{1};
+	int expected_sum{1};
 
 	for (const auto& row : triangle)
 	{
 		assert(row.front() == 1);
 		assert(row.back() == 1);
 
-        assert( row.size() == row_num );
+		assert(row.size() == row_num);
 
-        assert( expected_sum == std::accumulate( row.begin(), row.end(), 0 ));
+        auto negatives = row | std::ranges::views::filter([]( int x ) { return x < 0; });
         
-        row_num++;
-        expected_sum <<= 1;
+        assert( negatives.empty() );
+
+		assert(expected_sum == std::accumulate(row.begin(), row.end(), 0));
+        assert( std::ranges::all_of(row, []( auto x ){ return x >= 0; }));
+
+		row_num++;
+		expected_sum <<= 1;
 	}
 }
 
 int main()
 {
-	std::println("Please enter the number of rows: ");
 	int num_rows{};
+	while (true)
+	{
+		std::println("Please enter the number of rows: ");
+		std::cin >> num_rows;
 
-	std::cin >> num_rows;
+		auto triangle{generate_triangle(num_rows)};
+        check_properties(triangle);
 
-	auto triangle{generate_triangle(num_rows)};
-
-	show_vectors(std::cout, triangle);
-
+		show_vectors(std::cout, triangle);
+	}
 	return 0;
 }

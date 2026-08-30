@@ -3,6 +3,7 @@
 #include <format>
 #include <iostream>
 #include <iterator>
+#include <numeric>
 #include <ostream>
 #include <print>
 #include <string>
@@ -77,6 +78,7 @@ void show_vectors(std::ostream& os, std::vector<std::vector<int>>& v)
 void check_properties(const std::vector<std::vector<int>>& triangle)
 {
     size_t row_num{1};
+    size_t expected_sum{1};
 
 	for (const auto& row : triangle)
 	{
@@ -84,7 +86,11 @@ void check_properties(const std::vector<std::vector<int>>& triangle)
 		assert(row.back() == 1);
 
         assert( row.size() == row_num );
+
+        assert( expected_sum == std::accumulate( row.begin(), row.end(), 0 ));
+        
         row_num++;
+        expected_sum <<= 1;
 	}
 }
 

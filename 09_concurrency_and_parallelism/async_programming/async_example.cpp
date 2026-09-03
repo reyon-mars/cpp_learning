@@ -211,7 +211,7 @@ public:
 };
 
 void async_exception_propagation_demo() {
-    auto fut = std::async(std::launch::async, [] -> int {
+    auto fut = std::async(std::launch::async, []() -> int {
         throw std::runtime_error("async failure");
     });
     try {

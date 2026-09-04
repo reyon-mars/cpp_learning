@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cassert>
+#include <cstddef>
 #include <format>
 #include <iostream>
 #include <iterator>
@@ -119,6 +120,33 @@ void check_properties(const std::vector<std::vector<int>>& triangle)
 	}
 }
 
+void show_odds(std::ostream& os, const std::vector<std::vector<int>>& triangle)
+{
+	std::string spaces(triangle.back().size(), ' ');
+
+	for (const auto& row : triangle)
+	{
+		os << spaces;
+
+		if (spaces.size())
+		{
+			spaces.resize(spaces.size() - 1);
+		}
+
+		auto odds = row | std::views::transform(
+							  [](int x)
+							  {
+								  return (x & 1) ? '*' : ' ';
+							  });
+		for (const auto& data : odds)
+		{
+			os << data << ' ';
+		}
+
+		os << '\n';
+	}
+}
+
 int main()
 {
 	int num_rows{};
@@ -131,6 +159,8 @@ int main()
 		check_properties(triangle);
 
 		show_vectors(std::cout, triangle);
+
+		show_odds(std::cout, triangle);
 	}
 	return 0;
 }

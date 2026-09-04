@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
 #include <format>
 #include <iostream>
 #include <iterator>
@@ -10,6 +11,12 @@
 #include <ranges>
 #include <string>
 #include <vector>
+
+enum class Parity : uint8_t
+{
+	even = 0,
+	odd = 1
+};
 
 template <typename T>
 std::ostream& operator<<(std::ostream& os, const std::vector<std::vector<T>>& triangle)
@@ -120,7 +127,7 @@ void check_properties(const std::vector<std::vector<int>>& triangle)
 	}
 }
 
-void show_odds(std::ostream& os, const std::vector<std::vector<int>>& triangle)
+inline void show_pattern(std::ostream& os, const std::vector<std::vector<int>>& triangle, Parity p)
 {
 	std::string spaces(triangle.back().size(), ' ');
 
@@ -132,17 +139,30 @@ void show_odds(std::ostream& os, const std::vector<std::vector<int>>& triangle)
 		{
 			spaces.resize(spaces.size() - 1);
 		}
-
-		auto odds = row | std::views::transform(
-							  [](int x)
-							  {
-								  return (x & 1) ? '*' : ' ';
-							  });
-		for (const auto& data : odds)
+		if (p == Parity::even)
 		{
-			os << data << ' ';
+			auto even = row | std::views::transform(
+								  [](int x)
+								  {
+									  return (x & 2) ? '*' : ' ';
+								  });
+			for (const auto& data : even)
+			{
+				os << data << ' ';
+			}
 		}
-
+		else
+		{
+			auto odds = row | std::views::transform(
+								  [](int x)
+								  {
+									  return (x & 1) ? '*' : ' ';
+								  });
+			for (const auto& data : odds)
+			{
+				os << data << ' ';
+			}
+		}
 		os << '\n';
 	}
 }
@@ -160,7 +180,7 @@ int main()
 
 		show_vectors(std::cout, triangle);
 
-		show_odds(std::cout, triangle);
+		show_pattern(std::cout, triangle, Parity::even);
 	}
 	return 0;
 }

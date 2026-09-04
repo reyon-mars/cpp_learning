@@ -4,3 +4,6 @@
 # Ignore macOS metadata
 .DS_Store
 
+# Ignore build executables and outputs
+*.out
+*.exe

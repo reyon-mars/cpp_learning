@@ -6,10 +6,19 @@
 #include <limits>
 #include <optional>
 #include <print>
+#include <random>
 
 unsigned const_number()
 {
 	return 42;
+}
+
+unsigned generate_random_number()
+{
+	std::random_device rd;
+	std::mt19937 random_engine(rd());
+	std::uniform_int_distribution<unsigned int> dist(1, 100);
+	return dist(random_engine);
 }
 
 std::optional<int> read_number(std::istream& in)
@@ -75,7 +84,7 @@ int main()
 {
 	auto make_message = [](int number, int guess)
 	{
-		return std::format("Your guess was too {}", number < guess ? "big" : "small");
+		return std::format("Your guess was too {}\n", number < guess ? "big" : "small");
 	};
 	guess_number_or_quit(const_number(), make_message);
 

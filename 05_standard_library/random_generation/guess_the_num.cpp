@@ -1,3 +1,5 @@
+#include <format>
+#include <functional>
 #include <ios>
 #include <iostream>
 #include <istream>
@@ -51,7 +53,7 @@ void guess_number(unsigned number)
 	std::println("Well done.");
 }
 
-void guess_number_or_quit(int number)
+void guess_number_or_quit(int number, std::function<std::string(int, int)> message)
 {
 	std::print("Guess the number. \n > ");
 	std::optional<int> guess;
@@ -63,14 +65,19 @@ void guess_number_or_quit(int number)
 			std::println("Well done.");
 			return;
 		}
-		std::print("{} is wrong. Try again. \n> ", guess.value());
+		std::print("{}", message(number, guess.value()));
+		std::print("> ");
 	}
 	std::println("The number was {}", const_number());
 }
 
 int main()
 {
-	guess_number_or_quit(const_number());
+	auto make_message = [](int number, int guess)
+	{
+		return std::format("Your guess was too {}", number < guess ? "big" : "small");
+	};
+	guess_number_or_quit(const_number(), make_message);
 
 	return 0;
 }

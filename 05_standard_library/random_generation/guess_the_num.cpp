@@ -1,3 +1,4 @@
+#include <cassert>
 #include <cstddef>
 #include <format>
 #include <functional>
@@ -16,7 +17,7 @@ unsigned const_number()
 	return 42;
 }
 
-std::vector<bool> generate_primes(int bound)
+std::vector<bool> generate_primes(unsigned int bound)
 {
 	std::vector<bool> primes{};
 	primes.reserve(bound + 1);
@@ -116,6 +117,19 @@ std::string rank_similarity(int number, int guess)
 		if (i < number_str.size() && number_str[i] == guess_char)
 		{
 			matches[i] = '*';
+			number_str[i] = '*';
+		}
+	}
+	for (size_t i = 0, end = guess_str.length(); i < end; i++)
+	{
+		char guess_char = guess_str[i];
+		if (i < number_str.length() && matches[i] != '*')
+		{
+			if (auto idx = number_str.find(guess_char); idx != std::string::npos)
+			{
+				matches[i] = '^';
+				number_str[idx] = '^';
+			}
 		}
 	}
 	return matches;
@@ -141,6 +155,7 @@ void guess_number_or_quit(int number, std::function<std::string(int, int)> messa
 
 int main()
 {
+	assert( rank_similarity( 1234567, 7654321) ==  "^^^^^^^" );
 	auto make_message = [](int number, int guess)
 	{
 		return std::format("Your guess was too {}\n", number < guess ? "big" : "small");

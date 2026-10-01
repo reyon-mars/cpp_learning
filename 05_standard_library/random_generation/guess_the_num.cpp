@@ -154,18 +154,18 @@ void guess_number_or_quit(int number, std::function<std::string(int, int)> messa
 		std::print("{}", message(number, guess.value()));
 		std::print("> ");
 	}
-	std::println("The number was {}", const_number());
+	std::println("The number was {:0>5}", const_number());
 }
 
 int main()
 {
 	assert(rank_similarity(1234567, 7654321) == "^^^^^^^");
 
-	auto make_message = [](int number, int guess)
+	auto messsage = [](int number, int guess) -> std::string
 	{
-		return std::format("Your guess was too {}\n", number < guess ? "big" : "small");
+		return std::format("{}\n", rank_similarity(number, guess));
 	};
-	guess_number_or_quit(generate_random_prime(1, 10'000), make_message);
+	guess_number_or_quit(generate_random_prime(1, 10'000), messsage);
 
 	return 0;
 }

@@ -108,22 +108,26 @@ std::string rank_similarity(int number, int guess)
 {
 	auto number_str = std::format("{:0>5}", (number));
 	auto guess_str = std::format("{:0>5}", guess);
-
 	std::string matches(5, '.');
-	for (size_t i = 0, end = number_str.size(); i < end; i++)
-	{
-		char guess_char = guess_str[i];
 
-		if (i < number_str.size() && number_str[i] == guess_char)
+	const size_t n = number_str.size();
+
+	for (size_t i = 0; i < n; ++i)
+	{
+		auto guess_char = guess_str[i];
+
+		if (i < n && guess_char == number_str[i])
 		{
 			matches[i] = '*';
 			number_str[i] = '*';
 		}
 	}
-	for (size_t i = 0, end = guess_str.length(); i < end; i++)
+
+	for (size_t i = 0; i < n; ++i)
 	{
-		char guess_char = guess_str[i];
-		if (i < number_str.length() && matches[i] != '*')
+		auto guess_char = guess_str[i];
+
+		if (i < n && matches[i] != '*')
 		{
 			if (auto idx = number_str.find(guess_char); idx != std::string::npos)
 			{
@@ -155,7 +159,8 @@ void guess_number_or_quit(int number, std::function<std::string(int, int)> messa
 
 int main()
 {
-	assert( rank_similarity( 1234567, 7654321) ==  "^^^^^^^" );
+	assert(rank_similarity(1234567, 7654321) == "^^^^^^^");
+
 	auto make_message = [](int number, int guess)
 	{
 		return std::format("Your guess was too {}\n", number < guess ? "big" : "small");

@@ -139,7 +139,7 @@ std::string rank_similarity(int number, int guess)
 	return matches;
 }
 
-void guess_number_or_quit(int number, std::function<std::string(int, int)> message)
+void guess_number_or_quit(int number, auto messages)
 {
 	std::print("Guess the number. \n > ");
 	std::optional<int> guess;
@@ -151,8 +151,16 @@ void guess_number_or_quit(int number, std::function<std::string(int, int)> messa
 			std::println("Well done.");
 			return;
 		}
-		std::print("{}", message(number, guess.value()));
-		std::print("> ");
+		std::println("{:0>5} is wrong. Try again.", guess.value());
+		for (auto message : messages)
+		{
+			auto clue = message(guess.value());
+			if (!clue.empty())
+			{
+				std::println("{}", clue);
+				break;
+			}
+		}
 	}
 	std::println("The number was {:0>5}", (number));
 }
@@ -160,12 +168,26 @@ void guess_number_or_quit(int number, std::function<std::string(int, int)> messa
 int main()
 {
 	assert(rank_similarity(12347, 23471) == "^^^^^");
+	const unsigned int random_prime{generate_random_prime(1, 99'999)};
 
-	auto messsage = [](int number, int guess) -> std::string
+	auto check_prime = [](int guess) -> std::string
 	{
-		return std::format("{}\n", rank_similarity(number, guess));
+		return primes[guess] ? "" : "Not prime\n";
 	};
-	guess_number_or_quit(generate_random_prime(1, 99'999), messsage);
+
+	auto check_length = [](int guess) -> std::string
+	{
+		return guess < 10000 ? "" : "Too long\n";
+	};
+
+	auto check_digit = [random_prime](int guess) -> std::string
+	{
+		return std::format("{}\n", rank_similarity(random_prime, guess));
+	};
+
+	std::vector<std::function<std::string(int)>> messages{check_length, check_prime, check_digit};
+
+	guess_number_or_quit(random_prime, messages);
 
 	return 0;
 }
